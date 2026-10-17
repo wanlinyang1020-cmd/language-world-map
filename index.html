@@ -3349,6 +3349,114 @@ const LABELS = [
 ["太 平 洋",-150,5,1],["大 西 洋",-35,25,1],["印 度 洋",80,-20,1],["北 冰 洋",0,80,1],
 ];
 
+// ===== 自己网站的后台（Supabase + AI 中转）=====
+// 在 claude.ai 里打开时用 Claude 自带的登录、数据库和 AI；在 heyvoyo.com 上打开时用这里的实现。
+// 对外提供和 claude.ai 一样的接口：HV.user（id / isOwner / can / profiles）、HV.db（collection / doc）、HV.sample.json()。
+// HV_CONFIG 由 deploy.sh 从 ../后台/config.json 填进来；没填时整个后台不启用。
+var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": ""};
+var HV = {sb: null, session: null, user: null, db: null, sample: null, ready: false};
+
+function hvLoadScript(src){ return new Promise((ok, bad)=>{ const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
+
+async function hvInit(){
+  if (window.claude || !HV_CONFIG || !HV_CONFIG.url || !HV_CONFIG.anonKey) return false;
+  if (!window.supabase) await hvLoadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js");
+  HV.sb = window.supabase.createClient(HV_CONFIG.url, HV_CONFIG.anonKey, {auth: {persistSession: true, detectSessionInUrl: true}});
+  const {data} = await HV.sb.auth.getSession();
+  HV.session = data.session;
+  HV.sb.auth.onAuthStateChange((ev, session)=>{ const was = !!HV.session; HV.session = session; if (!!session !== was) location.reload(); });
+  if (!HV.session) return true;
+  const uid = HV.session.user.id, email = HV.session.user.email || "";
+  let admin = false; try { const r = await HV.sb.from("admins").select("uid").eq("uid", uid).maybeSingle(); admin = !!(r.data); } catch(e){}
+  HV.user = {
+    id: async ()=>uid, isOwner: async ()=>admin, canEdit: ()=>admin, can: async ()=>true, email,
+    profiles: async ids => { const out = {}; if (!ids.length) return out;
+      const r = await HV.sb.from("docs").select("id,data").eq("coll", "profiles").in("id", ids);
+      (r.data || []).forEach(d=>{ out[d.id] = {name: d.data && d.data.name || "", avatarUrl: ""}; });
+      ids.forEach(id=>{ if (!out[id]) out[id] = {name: "", avatarUrl: ""}; }); return out; }
+  };
+  HV.db = hvDb();
+  if (HV_CONFIG.ai) HV.sample = hvSample();  // 没填 ai 地址时，网站上的 AI 功能先关着
+  HV.ready = true;
+  return true;
+}
+
+// ---- 文档数据库：模仿 claude.ai 的 collection / doc / onSnapshot 接口，背后是一张 docs 表
+function hvDb(){
+  const sb = HV.sb, uid = () => HV.session && HV.session.user.id;
+  const split = path => { const i = path.lastIndexOf("/"); return [path.slice(0, i), path.slice(i + 1)]; };
+  const snapDoc = row => ({id: row ? row.id : "", exists: !!row, data: () => row ? row.data : undefined, metadata: {fromCache: false, hasPendingWrites: false}});
+  const field = f => "data->>" + f;
+  function docRef(coll, id){
+    return {
+      id, path: coll + "/" + id,
+      async get(){ const r = await sb.from("docs").select("id,data").eq("coll", coll).eq("id", id).maybeSingle(); if (r.error) throw r.error; return snapDoc(r.data); },
+      async set(data){ const r = await sb.from("docs").upsert({coll, id, data}, {onConflict: "coll,id"}); if (r.error) throw r.error; },  // owner 新建时自动是自己，修改时保留原作者
+      async update(data){ const cur = await this.get(); if (!cur.exists) throw {code: "invalid_argument"}; return this.set({...cur.data(), ...data}); },
+      async delete(){ const r = await sb.from("docs").delete().eq("coll", coll).eq("id", id); if (r.error) throw r.error; },
+      onSnapshot(next, err){ let alive = true; const run = async ()=>{ try { const s = await this.get(); if (alive) next(s); } catch(e){ if (err) err(e); } };
+        run(); const ch = sb.channel("d:" + coll + "/" + id + ":" + Math.random()).on("postgres_changes", {event: "*", schema: "public", table: "docs", filter: "coll=eq." + coll}, p=>{ const row = p.new && p.new.id ? p.new : p.old; if (row && row.id === id) run(); }).subscribe();
+        return ()=>{ alive = false; sb.removeChannel(ch); }; },
+      collection: sub => coll2(coll + "/" + id + "/" + sub)
+    };
+  }
+  function query(coll, opts){
+    const q = {
+      where: (f, op, v) => query(coll, {...opts, where: [...(opts.where || []), [f, op, v]]}),
+      orderBy: (f, dir) => query(coll, {...opts, order: [f, dir || "asc"]}),
+      limit: n => query(coll, {...opts, limit: n}),
+      async get(){
+        let r = sb.from("docs").select("id,data").eq("coll", coll);
+        (opts.where || []).forEach(([f, op, v])=>{ if (op === "==") r = r.eq(field(f), String(v)); else if (op === "in") r = r.in(field(f), v.map(String)); });
+        if (opts.order){ const f = opts.order[0], num = f === "ts"; r = r.order(num ? "created_at" : field(f), {ascending: opts.order[1] !== "desc"}); }
+        if (opts.limit) r = r.limit(opts.limit);
+        const res = await r; if (res.error) throw res.error;
+        let rows = res.data || [];
+        if (opts.order && opts.order[0] === "ts") rows.sort((a, b)=>((a.data.ts || 0) - (b.data.ts || 0)) * (opts.order[1] === "desc" ? -1 : 1));
+        const docs = rows.map(snapDoc);
+        return {docs, size: docs.length, empty: !docs.length, docChanges: ()=>[], metadata: {fromCache: false, hasPendingWrites: false}};
+      },
+      onSnapshot(next, err){ let alive = true, t = null; const run = async ()=>{ try { const s = await q.get(); if (alive) next(s); } catch(e){ if (err) err(e); } };
+        run(); const ch = sb.channel("q:" + coll + ":" + Math.random()).on("postgres_changes", {event: "*", schema: "public", table: "docs", filter: "coll=eq." + coll}, ()=>{ clearTimeout(t); t = setTimeout(run, 250); }).subscribe();
+        return ()=>{ alive = false; clearTimeout(t); sb.removeChannel(ch); }; }
+    };
+    return q;
+  }
+  function coll2(coll){
+    const q = query(coll, {});
+    q.path = coll;
+    q.doc = id => docRef(coll, id || (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "").slice(0, 20) : String(Date.now()) + Math.random().toString(36).slice(2, 8)));
+    q.add = async data => { const ref = q.doc(); await ref.set(data); return ref; };
+    return q;
+  }
+  return {collection: coll2, doc: path => { const [c, id] = split(path); return docRef(c, id); }};
+}
+
+// ---- AI：通过 Supabase 云函数（后台/functions/ai）调用，网页里不放任何密钥
+function hvSample(){
+  async function call(input, opts){
+    const messages = typeof input === "string" ? [{role: "user", content: input}] : input;
+    const r = await fetch(HV_CONFIG.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey},
+      body: JSON.stringify({messages, tier: (opts && opts.modelTier) || "default"})});
+    const j = await r.json().catch(()=>({}));
+    if (!r.ok) throw {code: j.code || "ai_error", message: j.message || "AI 暂时用不了"};
+    return j;
+  }
+  const s = async (input, opts) => { const j = await call(input, opts); return {text: j.text || "", truncated: !!j.truncated}; };
+  s.json = async (input, opts) => { const j = await call(input, {...(opts || {}), json: true}); const t = String(j.text || "").trim();
+    const m = t.match(/\{[\s\S]*\}|\[[\s\S]*\]/); try { return JSON.parse(m ? m[0] : t); } catch(e){ throw {code: "bad_json", message: "AI 返回的内容看不懂"}; } };
+  return s;
+}
+
+var HV_BOOT = hvInit().catch(e=>{ console.warn('后台没连上', e); return false; });
+
+// ---- 登录界面：邮箱里点一下链接就登录
+async function hvSignIn(email){
+  const r = await HV.sb.auth.signInWithOtp({email, options: {emailRedirectTo: location.origin + location.pathname}});
+  if (r.error) throw r.error;
+}
+async function hvSignOut(){ await HV.sb.auth.signOut(); }
+
 </script>
 <script>
 (function(){
@@ -4152,7 +4260,7 @@ npcOnlyBtn.onclick = ()=>setPersonMode(npcOnly ? null : "npc");
 // ---- 🎭 对话练习：AI 演场景里的另一方（用 sample 能力）
 const prac = document.getElementById("prac"), prLog = document.getElementById("prLog");
 let prS = null, prTurns = [], prBusy = false, prSample = null;
-(async()=>{ try { prSample = window.claude ? await window.claude.use("sample") : null; } catch(e){ prSample = null; } })();
+(async()=>{ try { if (window.claude) prSample = await window.claude.use("sample"); else { await HV_BOOT; prSample = HV.sample; } } catch(e){ prSample = null; } })();
 const LANG_OF = {"中国":["中文","zh-CN"],"德国":["德语","de-DE"],"意大利":["意大利语","it-IT"],"日本":["日语","ja-JP"],"法国":["法语","fr-FR"],"西班牙":["西班牙语","es-ES"],"美国":["英语","en-US"],"英国":["英语","en-GB"]};
 const CITY_C = {"上海":"中国","慕尼黑":"德国","罗马":"意大利"};
 function langFor(r){
@@ -4364,7 +4472,7 @@ document.getElementById("mnSave").onclick = ()=>{
 
 // ---- 🤝 伙伴（小范围测试）：资料、关注、伙伴圈贴纸、评论、互关后私信
 var SOC = {db:null, user:null, uid:null, canWrite:null, ready:false, owner:false, members:{}, invites:[], myCodes:[], profiles:{}, follows:[], posts:[], reviews:[], subs:[], subvotes:[], questions:[], answers:[], ansvotes:[], clubs:[], clubmem:[], clubposts:[], topics:[], likes:[], comments:[], names:{}, view:null};
-const isMember = id => (id === SOC.uid && SOC.owner) || !!SOC.members[id];
+const isMember = id => SOC.site ? !!id : ((id === SOC.uid && SOC.owner) || !!SOC.members[id]);
 const isBot = id => !!(SOC.profiles[id] && SOC.profiles[id].bot);
 const socName = id => id === SOC.uid ? "我" : (isBot(id) ? (SOC.profiles[id].name || "测试伙伴") : (SOC.names[id] || ""));
 const SOC_BLOCK_KEY = "soc.block.v1";
@@ -4393,8 +4501,8 @@ function socChanged(){
 }
 (async()=>{
   try {
-    if (!window.claude) return;
-    SOC.user = await window.claude.use("user"); SOC.db = await window.claude.use("db");
+    if (window.claude){ SOC.user = await window.claude.use("user"); SOC.db = await window.claude.use("db"); }
+    else { await HV_BOOT; if (!HV.ready) return; SOC.user = HV.user; SOC.db = HV.db; SOC.site = true; }
     if (!SOC.db || !SOC.user) return;
     SOC.uid = await SOC.user.id(); SOC.canWrite = await SOC.user.can("data.write");
     if (!SOC.uid) return;
@@ -4440,6 +4548,7 @@ async function redeem(code){
   return "";
 }
 function inviteHtml(){
+  if (SOC.site) return `<p class="note">已登录：${esc(HV.user && HV.user.email || "")} · <button class="chip" id="hvOut">退出登录</button></p>`;
   if (SOC.owner){
     const codes = SOC.myCodes.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
     return `<section><h3>🎟️ 邀请码（只有你能看到）</h3>
@@ -4463,6 +4572,17 @@ function bindInvite(){
 function openSoc(){
   SOC.view = "list";
   if (selected) selected.el.classList.remove("sel"); selected = null;
+  if (!SOC.ready && !window.claude && typeof HV !== "undefined" && HV.sb && !HV.session){
+    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">🤝</div><div><h2>登录 HeyVoyo</h2><span class="c-cat" style="background:#2f9e8f">找同行者 · 进圈子${HV_CONFIG && HV_CONFIG.ai ? " · AI 陪练" : ""}</span></div></div>
+      <p>输入邮箱，我们会发一封邮件给你，点里面的链接就能登录，不用设密码。第一次登录就是注册。</p>
+      <div class="soc-form"><label for="hvEmail">邮箱</label><input id="hvEmail" type="email" autocomplete="email" placeholder="you@example.com"><button class="chip hot" id="hvSend">发登录链接</button><span class="note" id="hvNote"></span></div>
+      <p class="note">登录以后可以填资料、找同行者、加入圈子、推荐视频、问过来人。地图和视频不登录也能看。</p>`;
+    card.hidden = false; card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
+    card.querySelector("#hvSend").onclick = async ()=>{ const em = card.querySelector("#hvEmail").value.trim(), n = card.querySelector("#hvNote");
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ n.textContent = "请输入正确的邮箱。"; return; }
+      n.textContent = "正在发送…"; try { await hvSignIn(em); n.textContent = "已发送！去邮箱点登录链接（看不到的话找找垃圾邮件）。"; } catch(e){ n.textContent = "没发出去：" + (e && e.message || "请稍后再试"); } };
+    return;
+  }
   if (!SOC.ready){
     card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">🤝</div><div><h2>伙伴</h2><span class="c-cat" style="background:#2f9e8f">小范围测试</span></div></div>
       <p>伙伴功能要在 Claude 里、登录后打开这张地图才能用：大家互相关注，互关以后就能聊天。</p><p class="note">请分享这张地图的人把你加进来（用邮箱邀请）。</p>`;
@@ -4481,6 +4601,7 @@ function openSoc(){
     ${isMember(SOC.uid) ? clubsHtml(me) : ""}
     ${SOC.owner ? topicBankHtml() : ""}
     ${isMember(SOC.uid) ? "" : "<!--"}<section><h3>我的资料</h3><div class="soc-form">
+      ${SOC.site ? `<label for="spName">我的名字（别人看到的）</label><input id="spName" maxlength="20" value="${esc(me.name||"")}" placeholder="例如：小雨">` : ""}
       <label for="spNative">我的母语</label><input id="spNative" value="${esc(me.native||"中文")}">
       <label for="spLearn">我在学</label><input id="spLearn" value="${esc(me.learning||"")}" placeholder="例如：意大利语、日语">
       <label for="spBio">一句话介绍自己</label><input id="spBio" value="${esc(me.bio||"")}" placeholder="例如：上海的大学生，喜欢拍街头美食">
@@ -4509,13 +4630,14 @@ function openSoc(){
   bindInvite();
   const sp = card.querySelector("#spSave"); if (sp) sp.onclick = async e=>{ const b = e.target; b.disabled = true;
     const goals = [...card.querySelectorAll("#spGoals button[aria-pressed=true]")].map(x=>x.dataset.g), stg = card.querySelector("#spStage button[aria-pressed=true]");
-    try { await SOC.db.doc("profiles/"+SOC.uid).set({native: document.getElementById("spNative").value.trim().slice(0,30), learning: document.getElementById("spLearn").value.trim().slice(0,40), bio: scrub(document.getElementById("spBio").value.trim()).slice(0,60), goals, stage: stg ? stg.dataset.g : "", fields: scrub(document.getElementById("spFields").value.trim()).slice(0,80), creators: document.getElementById("spCreators").value.trim().slice(0,160), guideOf: scrub(document.getElementById("spGuide").value.trim()).slice(0,60), canAnswer: document.getElementById("spAnswer").checked, ts: Date.now()}); b.textContent = "已保存"; }
+    try { await SOC.db.doc("profiles/"+SOC.uid).set({native: document.getElementById("spNative").value.trim().slice(0,30), learning: document.getElementById("spLearn").value.trim().slice(0,40), bio: scrub(document.getElementById("spBio").value.trim()).slice(0,60), goals, stage: stg ? stg.dataset.g : "", fields: scrub(document.getElementById("spFields").value.trim()).slice(0,80), creators: document.getElementById("spCreators").value.trim().slice(0,160), guideOf: scrub(document.getElementById("spGuide").value.trim()).slice(0,60), canAnswer: document.getElementById("spAnswer").checked, ...(SOC.site ? {name: scrub(document.getElementById("spName").value.trim()).slice(0,20)} : {}), ts: Date.now()}); b.textContent = "已保存"; }
     catch(err){ b.textContent = "没保存上（可能只有查看权限）"; } finally { b.disabled = false; } };
   card.querySelectorAll("button[data-follow]").forEach(b=>b.onclick = async ()=>{ if (!isMember(SOC.uid)) return; const id = b.dataset.follow, ref = SOC.db.doc("follows/"+SOC.uid+"__"+id); b.disabled = true;
     try { if (follows(SOC.uid, id)) await ref.delete(); else await ref.set({from:SOC.uid, to:id, ts:Date.now()}); } catch(e){ b.textContent = "没成功"; } });
   card.querySelectorAll("button[data-chat]").forEach(b=>b.onclick = ()=>openChat(b.dataset.chat));
   card.querySelectorAll("#spGoals button").forEach(b=>b.onclick = ()=>b.setAttribute("aria-pressed", b.getAttribute("aria-pressed")!=="true"));
   bindContrib(); bindClubs(); bindTopicBank();
+  const ho = card.querySelector("#hvOut"); if (ho) ho.onclick = ()=>hvSignOut();
   card.querySelectorAll("#spStage button").forEach(b=>b.onclick = ()=>card.querySelectorAll("#spStage button").forEach(x=>x.setAttribute("aria-pressed", x===b && b.getAttribute("aria-pressed")!=="true")));
 }
 document.getElementById("socBtn").onclick = openSoc;
