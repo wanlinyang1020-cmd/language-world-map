@@ -4548,7 +4548,7 @@ async function redeem(code){
   return "";
 }
 function inviteHtml(){
-  if (SOC.site) return `<p class="note">已登录：${esc(HV.user && HV.user.email || "")} · <button class="chip" id="hvOut">退出登录</button></p>`;
+  if (SOC.site) return `<p class="note">已登录：${esc(HV.user && HV.user.email || "")} · <button class="chip" id="hvOut">退出登录</button>${SOC.owner ? ` · <button class="chip" id="hvUsage">📊 AI 用量（只有你能看到）</button>` : ""}</p>`;
   if (SOC.owner){
     const codes = SOC.myCodes.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
     return `<section><h3>🎟️ 邀请码（只有你能看到）</h3>
@@ -4638,9 +4638,37 @@ function openSoc(){
   card.querySelectorAll("#spGoals button").forEach(b=>b.onclick = ()=>b.setAttribute("aria-pressed", b.getAttribute("aria-pressed")!=="true"));
   bindContrib(); bindClubs(); bindTopicBank();
   const ho = card.querySelector("#hvOut"); if (ho) ho.onclick = ()=>hvSignOut();
+  const hu = card.querySelector("#hvUsage"); if (hu) hu.onclick = ()=>openUsage(30);
   card.querySelectorAll("#spStage button").forEach(b=>b.onclick = ()=>card.querySelectorAll("#spStage button").forEach(x=>x.setAttribute("aria-pressed", x===b && b.getAttribute("aria-pressed")!=="true")));
 }
 document.getElementById("socBtn").onclick = openSoc;
+// ===== 管理员：每个用户的 AI 用量（只在 heyvoyo.com 上，数据来自后台的 ai_usage_report）=====
+const AI_PRICE = {in: 4, out: 20};  // claude-opus-5-5，美元 / 百万 token；缓存读取更便宜，这里按上限估
+const aiCost = (i, o) => (i * AI_PRICE.in + o * AI_PRICE.out) / 1e6;
+const usd = v => v < 0.01 && v > 0 ? "<$0.01" : "$" + v.toFixed(2);
+const ktok = v => v >= 1e6 ? (v/1e6).toFixed(1) + "M" : v >= 1e3 ? (v/1e3).toFixed(1) + "k" : String(v);
+async function openUsage(days){
+  SOC.view = "usage";
+  const head = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">📊</div><div><h2>AI 用量</h2><span class="c-cat" style="background:#2f9e8f">只有管理员能看到 · 网站 AI 现在${HV_CONFIG && HV_CONFIG.ai ? "已开放" : "关着"}</span></div></div>
+    <div class="cm-form">${[[1,"今天"],[7,"最近 7 天"],[30,"最近 30 天"]].map(([d,t])=>`<button class="chip${d===days?" hot":""}" data-days="${d}">${t}</button>`).join("")}<button class="chip" id="usBack">← 返回</button></div>`;
+  const bind = () => { card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
+    card.querySelectorAll("button[data-days]").forEach(b=>b.onclick = ()=>openUsage(+b.dataset.days));
+    card.querySelector("#usBack").onclick = ()=>openSoc(); };
+  card.innerHTML = head + `<p class="note">正在读取……</p>`; card.hidden = false; bind();
+  const r = await HV.sb.rpc("ai_usage_report", {p_days: days});
+  if (SOC.view !== "usage") return;
+  if (r.error){ card.innerHTML = head + `<p class="note">读不到用量：${esc(r.error.message || "")}</p>`; bind(); return; }
+  const rows = (r.data || []).map(u=>({...u, n: days === 1 ? u.today_n : u.period_n, i: days === 1 ? u.today_in : u.period_in, o: days === 1 ? u.today_out : u.period_out}));
+  rows.sort((a,b)=>aiCost(b.i,b.o) - aiCost(a.i,a.o) || b.n - a.n);
+  const sum = rows.reduce((t,u)=>({n:t.n+u.n, i:t.i+u.i, o:t.o+u.o}), {n:0,i:0,o:0});
+  const active = rows.filter(u=>u.n>0).length;
+  const day = s => s ? new Date(s).toLocaleDateString("zh-CN", {month:"numeric", day:"numeric"}) : "—";
+  card.innerHTML = head + `
+    <p><b>${rows.length}</b> 个注册用户 · <b>${active}</b> 人用过 AI · 共 <b>${sum.n}</b> 次 · ${ktok(sum.i+sum.o)} token · 估算花费 <b>${usd(aiCost(sum.i,sum.o))}</b></p>
+    ${rows.map(u=>`<div class="learn-row"><div><b>${esc(u.email||"(无邮箱)")}${u.admin?" 👑":""}</b><small>${u.n} 次 · 输入 ${ktok(u.i)} · 输出 ${ktok(u.o)} · 累计 ${u.total_n} 次 ${usd(aiCost(u.total_in,u.total_out))} · 注册 ${day(u.joined)} · 最近登录 ${day(u.last_seen)}</small></div><div><b>${usd(aiCost(u.i,u.o))}</b></div></div>`).join("")}
+    <p class="note">花费按 Claude Opus 5.5 的价格估算（输入 $4、输出 $20 / 百万 token，输出包含 AI 的思考），实际以 Anthropic 后台账单为准。次数从今天起开始记 token，之前的调用只有次数。</p>`;
+  bind();
+}
 // ===== 怎么跟当地人开口：同一个场景，每种语言的常用说法不一样 =====
 function openExpr(lang, back){
   if (typeof EXPRESSIONS === "undefined") return;
