@@ -387,7 +387,8 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .cmp-fields{display:flex;gap:5px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
 .cmp-fields .chip{flex:0 0 auto;font-size:12.5px;padding:3px 9px;box-shadow:none;white-space:nowrap}
 .cmp-fields .chip[aria-pressed="true"]{background:var(--ink);color:#fff}
-#ctrl #cmpBtn[aria-pressed="true"],#ctrl #peopleBtn[aria-pressed="true"],#ctrl #npcOnlyBtn[aria-pressed="true"],#ctrl #mineBtn[aria-pressed="true"]{background:var(--gold)}
+#ctrl #cmpBtn[aria-pressed="true"],#ctrl #peopleBtn[aria-pressed="true"],#ctrl #npcOnlyBtn[aria-pressed="true"],#ctrl #mineBtn[aria-pressed="true"],#ctrl #liveBtn[aria-pressed="true"]{background:var(--gold)}
+.live-only #stickerG,.live-only #regionG,.live-only #cityG,.live-only #npcG,.live-only #mineG{display:none}
 @media (max-width:1100px){#cmpBar{left:16px;right:76px;transform:none;width:auto;top:auto;bottom:104px;min-width:0}}
 #hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,48,92,.86);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;pointer-events:none;transition:opacity .6s;text-align:center;line-height:1.6}
 @media (max-width:700px){
@@ -435,7 +436,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
     <button id="npcOnlyBtn" title="只看 NPC" aria-label="只看 NPC：隐藏所有贴纸，只显示 NPC 人物" aria-pressed="false">🙋</button>
     <button id="mineBtn" title="我的" aria-label="我的：只看我自己发的贴纸，也可以发一张新的" aria-pressed="false">📷</button>
     <button id="socBtn" title="伙伴" aria-label="伙伴：关注别人，互相关注后可以聊天">🤝</button>
-    <button id="liveBtn" title="正在发生" aria-label="正在发生：世界上正在进行的项目和能参加的活动">📡</button>
+    <button id="liveBtn" title="只看正在发生" aria-label="只看正在发生：隐藏其他贴纸，只显示世界上正在进行的项目和能参加的活动" aria-pressed="false">📡</button>
     <button id="exprBtn" title="怎么开口" aria-label="怎么跟当地人开口：每种语言常用的问法">💬</button>
     <button id="npcBtn" title="地图上的人" aria-label="地图上的人：跟着 NPC 走一天">👥</button>
     <button id="dirBtn" title="贴纸目录" aria-label="打开贴纸目录" aria-pressed="false">📚</button>
@@ -3894,7 +3895,7 @@ ribbons.each(function(d){
 });
 function placeRibbons(t, rel){
   ribbons.attr("transform", d=>{ const [x,y]=t.apply(d.p); return `translate(${x},${y})`; })
-    .style("opacity", rel < 3.4 && !peopleOnly && !npcOnly ? 1 : 0).style("pointer-events", rel < 3.4 && !peopleOnly && !npcOnly ? null : "none");
+    .style("opacity", rel < 3.4 && !peopleOnly && !npcOnly && !liveOnly ? 1 : 0).style("pointer-events", rel < 3.4 && !peopleOnly && !npcOnly && !liveOnly ? null : "none");
 }
 function openRegion(r){
   if (selected) selected.el.classList.remove("sel");
@@ -4184,7 +4185,7 @@ npcOff.append("text").attr("class","nn").attr("y",17).text(d=>d.name);
 npcOff.append("text").attr("class","nt").attr("y",33).text(d=>"NPC · "+d.type.split(" ")[0]);
 const NPC_RING = [[0,0],[64,0],[-64,0],[32,-104],[-32,-104],[32,104],[-32,104],[128,0],[-128,0],[96,-104],[-96,-104],[96,104],[-96,104]];
 function placeNpcs(t, rel){
-  const on = (rel >= NPC_REL || peopleOnly || npcOnly) && !cmpDim && !mineOnly, placed = [];
+  const on = (rel >= NPC_REL || peopleOnly || npcOnly) && !cmpDim && !mineOnly && !liveOnly, placed = [];
   npcEls.each(function(d){
     const [x,y] = t.apply(d.p); let ok = false, dx = 0, dy = 0;
     if (on && x>-40 && x<W+40 && y>-40 && y<H+40) for (const [ox,oy] of NPC_RING){
@@ -4250,7 +4251,7 @@ function openNpc(n){
   card.querySelectorAll(".chip[data-stop]").forEach(b=>b.onclick=()=>flyTo(stops[+b.dataset.stop].s));
   card.querySelectorAll(".chip[data-npc]").forEach(b=>b.onclick=()=>openNpc(npcById(b.dataset.npc)));
   card.querySelector("#npcWalk").onclick = ()=>{ const list = stops.map(r=>r.s).filter(Boolean); if (!list.length) return;
-    if (peopleOnly || npcOnly || mineOnly) setPersonMode(null);
+    if (peopleOnly || npcOnly || mineOnly || liveOnly) setPersonMode(null);
     setFocus(`${n.name}的一天`, list); svg.transition().duration(1400).ease(d3.easeCubicInOut).call(zoom.transform, fitGroup(list)); };
 }
 function openNpcList(){
@@ -4277,16 +4278,17 @@ setViewStyle(VIEW_STYLE, true);
 
 // ---- 只看人物：只留名人贴纸（P）和 NPC
 // 两种人物模式：people = 名人贴纸 + NPC；npc = 只有 NPC（不显示任何贴纸）
-var peopleOnly = false, npcOnly = false, mineOnly = false, savedCats = null;
+var peopleOnly = false, npcOnly = false, mineOnly = false, liveOnly = false, savedCats = null;
 const peopleBtn = document.getElementById("peopleBtn"), npcOnlyBtn = document.getElementById("npcOnlyBtn");
 function setPersonMode(mode){
-  const wasOn = peopleOnly || npcOnly || mineOnly;
+  const wasOn = peopleOnly || npcOnly || mineOnly || liveOnly;
   if (mode && !wasOn){ if (cmpDim) setCmp(null); savedCats = new Set(activeCats); }
-  peopleOnly = mode === "people"; npcOnly = mode === "npc"; mineOnly = mode === "mine";
+  peopleOnly = mode === "people"; npcOnly = mode === "npc"; mineOnly = mode === "mine"; liveOnly = mode === "live";
+  document.getElementById("app").classList.toggle("live-only", liveOnly); document.getElementById("liveBtn").setAttribute("aria-pressed", liveOnly);
   peopleBtn.setAttribute("aria-pressed", peopleOnly); npcOnlyBtn.setAttribute("aria-pressed", npcOnly); document.getElementById("mineBtn").setAttribute("aria-pressed", mineOnly);
   activeCats.clear();
   if (peopleOnly) activeCats.add("P");
-  else if (!npcOnly && !mineOnly) (savedCats && savedCats.size ? savedCats : new Set(Object.keys(CAT))).forEach(k=>activeCats.add(k));
+  else if (!npcOnly && !mineOnly && !liveOnly) (savedCats && savedCats.size ? savedCats : new Set(Object.keys(CAT))).forEach(k=>activeCats.add(k));
   syncCats(); render();
 }
 peopleBtn.onclick = ()=>setPersonMode(peopleOnly ? null : "people");
@@ -4295,7 +4297,6 @@ npcOnlyBtn.onclick = ()=>setPersonMode(npcOnly ? null : "npc");
 
 
 // ---- 🌍 正在发生：现场告示牌（看进展、聊话题）和活动票根（去参加）。数据来自 content-skeleton/live.json
-const LIVE_REL = 2.4;                 // 放大到这个程度才把小红旗展开成完整的牌子
 const LIVE_LANG = {"法语": "fr-FR", "西班牙语": "es-ES", "英语": "en-US", "日语": "ja-JP", "中文": "zh-CN"};
 const DAY_MS = 864e5;
 const liveItems = (typeof LIVE !== "undefined" ? LIVE : []).map(it=>({...it, p: projection([it.lon, it.lat])}));
@@ -4370,7 +4371,8 @@ function drawLive(){
 }
 function placeLive(t, rel){
   if (!liveEls) return;
-  const off = !!cmpDim || peopleOnly || npcOnly || mineOnly, big = rel >= LIVE_REL, placed = [];
+  // 平时只插小旗，不挡别的贴纸；点了 📡 进入“只看正在发生”，才展开成完整的牌子
+  const off = !!cmpDim || peopleOnly || npcOnly || mineOnly, big = liveOnly, placed = [];
   liveEls.each(function(d){
     const [x, y] = t.apply(d.p), inView = x > -120 && x < W + 120 && y > -20 && y < H + 120;
     let full = false;
@@ -4422,7 +4424,7 @@ function openLiveList(){
   const row = it => `<button class="lv-row" data-live="${esc(it.id)}"><span class="e">${it.emo}</span><span><b>${esc(it.name)}</b><small>${esc(it.place)} · ${esc(liveStatus(it))}${it.kind === "ticket" ? " · " + esc(it.date) + (it.date_tentative ? "（待定）" : "") : ""}${owner && liveOverdue(it) ? " · ⚠️ 该复查了" : ""}</small></span></button>`;
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
     <div class="c-top"><div class="c-emo" style="border-color:var(--accent)">📡</div><div><h2>正在发生</h2><span class="c-cat" style="background:var(--accent)">世界上正在进行的事 · ${liveItems.length} 个</span></div></div>
-    <p>经典地标讲过去，这里讲现在：还在盖的、正在试的、这个月就能参加的。地图上插着红旗的地方就是，放大能看到完整的牌子。</p>
+    <p>经典地标讲过去，这里讲现在：还在盖的、正在试的、这个月就能参加的。现在地图上只显示正在发生的牌子，再点一次右边的 📡 就回到全部贴纸。</p>
     <section><h3>📡 正在进行的项目</h3>${boards.map(row).join("")}</section>
     <section><h3>🎟️ 能参加的活动</h3>${tickets.map(row).join("")}</section>
     <p class="note">每一条都写了信息来源和最后核实的日期。</p>`;
@@ -4430,7 +4432,7 @@ function openLiveList(){
   card.querySelector(".x").onclick = closeCard;
   card.querySelectorAll("button[data-live]").forEach(b=>b.onclick = ()=>{ const it = liveItems.find(x=>x.id === b.dataset.live); svg.transition().duration(1200).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(it.p, Math.max(d3.zoomTransform(svg.node()).k, kOf(4)))); openLive(it); });
 }
-document.getElementById("liveBtn").onclick = openLiveList;
+document.getElementById("liveBtn").onclick = ()=>{ setPersonMode(liveOnly ? null : "live"); if (liveOnly) openLiveList(); else closeCard(); };
 drawLive();
 
 // ---- 🎭 对话练习：AI 演场景里的另一方（用 sample 能力）
@@ -4541,7 +4543,7 @@ function drawMine(){
   render();
 }
 function placeMine(t, rel){
-  const on = (rel >= NPC_REL || mineOnly) && !cmpDim && !npcOnly && !peopleOnly, placed = [];
+  const on = (rel >= NPC_REL || mineOnly) && !cmpDim && !npcOnly && !peopleOnly && !liveOnly, placed = [];
   mineEls.each(function(d){
     const [x,y] = t.apply(d.p); let ok = false, dx = 0, dy = 0;
     if (on && x>-40 && x<W+40 && y>-80 && y<H+40) for (const [ox,oy] of NPC_RING){
@@ -5394,6 +5396,7 @@ function syncCats(){
   if (peopleOnly && !(activeCats.size===1 && activeCats.has("P"))){ peopleOnly = false; peopleBtn.setAttribute("aria-pressed", false); }
   if (npcOnly && activeCats.size){ npcOnly = false; npcOnlyBtn.setAttribute("aria-pressed", false); }
   if (mineOnly && activeCats.size){ mineOnly = false; document.getElementById("mineBtn").setAttribute("aria-pressed", false); }
+  if (liveOnly && activeCats.size){ liveOnly = false; document.getElementById("liveBtn").setAttribute("aria-pressed", false); document.getElementById("app").classList.remove("live-only"); }
   const all = allOn();
   if (!all && !openGroup){ const g = GROUPS.find(g=>g.cats.some(k=>activeCats.has(k))); if (g && [...activeCats].every(k=>g.cats.includes(k))) openGroup = g; }
   if (all) openGroup = null;
