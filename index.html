@@ -4016,7 +4016,7 @@ document.addEventListener("click", e=>{
 });
 document.addEventListener("click", e=>{ const b = e.target.closest("[data-say]"); if (!b || b.dataset.say === undefined) return;
   const v = b.dataset.npc && npcVoice(b.dataset.npc, b.dataset.tts);
-  if (v) sayIt(b.dataset.say, v.code, v.rate, v.pitch); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); });
+  if (v) sayIt(b.dataset.say, v.code, v.rate); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); });
 // ===== 声音：开关、反馈音、自动朗读、NPC 各自的口音 =====
 const SOUND = {on: true, touched: false, ac: null};
 try { SOUND.on = localStorage.getItem("hv.sound") !== "off"; } catch(e){}
@@ -4034,7 +4034,7 @@ function autoSay(root, delay){
   if (!SOUND.on || !SOUND.touched) return;
   setTimeout(()=>{ const b = [...(root || card).querySelectorAll("[data-auto]")].find(x=>x.offsetParent); if (!b) return;
     const v = b.dataset.npc && npcVoice(b.dataset.npc, b.dataset.tts);
-    if (v) sayIt(b.dataset.say, v.code, v.rate, v.pitch); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); }, delay || 350);
+    if (v) sayIt(b.dataset.say, v.code, v.rate); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); }, delay || 350);
 }
 // NPC 的口音：按国家选英语的地区口音；年纪大的慢一点；每个人音高略有不同
 function npcVoice(npcId, tts){
@@ -4042,8 +4042,7 @@ function npcVoice(npcId, tts){
   let n = null; for (const k in CLUB_NPCS){ const x = (CLUB_NPCS[k]||[]).find(y=>y.id===npcId); if (x){ n = x; break; } } if (!n) return null;
   let code = tts || "en-US";
   if (/^en/.test(code)){ const c = n.country || ""; code = /英国/.test(c) ? "en-GB" : /澳大利亚/.test(c) ? "en-AU" : /印度/.test(c) && !/印度尼西亚/.test(c) ? "en-IN" : /南非/.test(c) ? "en-ZA" : /爱尔兰/.test(c) ? "en-IE" : /加拿大/.test(c) ? "en-CA" : /尼日利亚|加纳|肯尼亚/.test(c) ? "en-GB" : "en-US"; }
-  let h = 0; for (const ch of npcId) h = (h*31 + ch.charCodeAt(0)) % 997;
-  return {code, rate: n.age >= 60 ? .85 : /B1/.test(n.style||"") ? .9 : 1, pitch: .9 + (h % 30) / 100};
+  return {code, rate: n.age >= 60 ? .9 : .95};
 }
 function soundBtnSync(){ const b = document.getElementById("soundBtn"); if (b){ b.textContent = SOUND.on ? "🔊" : "🔇"; b.title = SOUND.on ? "声音：开（点一下关掉）" : "声音：关（点一下打开）"; } }
 document.addEventListener("click", e=>{ const b = e.target.closest("button[data-slpick]"); if (!b) return; const box = b.closest("#card") || card;
@@ -5775,7 +5774,7 @@ function openClub(id){
       const x = Array.isArray(res) ? res[0] : res;
       if (x && x.text && clubNpc(id, x.npc)){ await SOC.db.collection("clubposts").add({club:id, by:"npc:" + x.npc, kind:"NPC 回应", topic: parent.startsWith("upd:") ? "" : topic, parent, text:String(x.text).slice(0,600), zh:String(x.zh||"").slice(0,400), ts:Date.now()});
         // 新消息：叮一声，再用这位 NPC 自己的口音读出来
-        if (SOC.view === "club:" + id && SOUND.on){ fx("msg"); const v = npcVoice(x.npc, tts); setTimeout(()=>{ if (v) sayIt(String(x.text).slice(0,600), v.code, v.rate, v.pitch); else sayIt(String(x.text).slice(0,600), tts, .95); }, 450); } }
+        if (SOC.view === "club:" + id && SOUND.on){ fx("msg"); const v = npcVoice(x.npc, tts); setTimeout(()=>{ if (v) sayIt(String(x.text).slice(0,600), v.code, v.rate); else sayIt(String(x.text).slice(0,600), tts, .95); }, 450); } }
     } catch(e){}
     finally { CLUBUI.typing[id] = null; if (SOC.view === "club:" + id) rerender(); }
   };
@@ -5936,9 +5935,20 @@ const codeOf = name => { name = name || ""; const k = Object.keys(LANG_CODE).fin
 const LEARN_KEY = "learn.v1";
 const loadLearn = () => { try { return JSON.parse(localStorage.getItem(LEARN_KEY) || "[]"); } catch(e){ return []; } };
 const saveLearn = l => { try { localStorage.setItem(LEARN_KEY, JSON.stringify(l.slice(-300))); } catch(e){} };
-function sayIt(text, code, rate, pitch){ if (!("speechSynthesis" in window)) return false; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); if (code) u.lang = code; u.rate = rate || 1; if (pitch) u.pitch = pitch;
-  const vs = speechSynthesis.getVoices(), lc = (code||"").toLowerCase(), norm = v => v.lang.replace("_","-").toLowerCase();
-  const v = code && (vs.find(v=>norm(v) === lc) || vs.find(v=>norm(v).startsWith(lc.slice(0,2)))); if (v) u.voice = v; speechSynthesis.speak(u); return true; }
+// 挑声音：苹果电脑自带很多“怪声”（Bad News、Whisper、Zarvox、Grandpa…），一律不用；优先自然、高质量的人声
+const BAD_VOICE = /albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|grandma|grandpa|eddy|flo\b|reed|rocko|sandy|shelley|deranged|hysterical|pipe organ|novelty|espeak/i;
+const GOOD_VOICE = /premium|enhanced|natural|neural|online|siri/i, NICE_VOICE = /google|samantha|daniel|karen|moira|rishi|tessa|ava|allison|susan|serena|evan|nathan|zoe|kyoko|otoya|thomas|amélie|amelie|aurélie|mónica|monica|paulina|jorge|anna|yuna|tingting|meijia|aria|jenny|guy|sonia|libby|ryan|natasha|neerja|luciana|alice|luca|jacques|thomas|kate|oliver|fiona|lekha|veena|xander|ellen|alva|tingting|sinji/i;
+function voiceScore(v){ return (GOOD_VOICE.test(v.name) ? 6 : 0) + (NICE_VOICE.test(v.name) ? 3 : 0) + (v.localService === false ? 1 : 0); }
+function pickVoice(code){
+  const vs = speechSynthesis.getVoices().filter(v=>!BAD_VOICE.test(v.name)), lc = (code||"").toLowerCase(), norm = v => v.lang.replace("_","-").toLowerCase();
+  const same = vs.filter(v=>norm(v).startsWith(lc.slice(0,2))); if (!same.length) return null;
+  const best = l => l.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0];
+  const all = best(same), region = best(same.filter(v=>norm(v) === lc));
+  // 只有这个地区的口音也够好听时才用它，不然宁可用同一语言里最好听的声音
+  return region && voiceScore(region) >= voiceScore(all) - 2 ? region : all;
+}
+function sayIt(text, code, rate){ if (!("speechSynthesis" in window)) return false; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); if (code) u.lang = code; u.rate = rate || 1;
+  const v = code && pickVoice(code); if (v){ u.voice = v; u.lang = v.lang; } speechSynthesis.speak(u); return true; }
 let shadowItem = null;
 function openShadow(item){
   shadowItem = {...item, reps: 0}; const box = document.getElementById("chShadow"); box.hidden = false; renderShadow();
