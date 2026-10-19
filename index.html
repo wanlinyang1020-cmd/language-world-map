@@ -430,7 +430,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 
   <header id="head" class="panel">
     <h1>环球文化<span>贴纸</span>地图</h1>
-    <button id="meBtn" class="chip hot" style="position:absolute;top:10px;right:10px;font-size:12.5px;padding:3px 10px">登录 / 注册</button>
+    <button id="meBtn" class="chip hot" style="position:absolute;top:10px;right:10px;font-size:12.5px;padding:3px 10px">👤 我</button>
     <div class="sub"><span class="passport" title="点开贴纸即可收集印章">🛂 护照印章 <b id="stampN">0</b>/<b id="stampT">0</b></span><span id="stats"></span></div>
     <div class="search"><input id="q" type="search" placeholder="搜索：熊猫、刀削面、拿破仑、现在大家在聊…" autocomplete="off" aria-label="搜索贴纸"><div id="results" hidden></div></div>
   </header>
@@ -4205,11 +4205,13 @@ function openPrefs(first){
   const chip = (k, v, on) => `<button class="chip" data-pk="${k}" data-pv="${esc(v)}" ${on?'aria-pressed="true" style="background:#eef3fb;border-color:#1c7ed6;color:#1c5fa8"':""}>${esc(v)}</button>`;
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
     <div class="c-top"><div class="c-emo" style="border-color:#1c7ed6">✨</div><div><h2>${first ? "先认识一下你" : "我的推荐偏好"}</h2><span class="c-cat" style="background:#1c7ed6">地图会挑适合你的贴纸</span></div></div>
-    <p class="note">点一下就好，可以跳过。只存在这台设备上，随时可以在「👤 我」里改。</p>
+    <p class="note">点一下选中，再点一下取消。只存在这台设备上，以后随时可以点右上角的「👤 我」来改。</p>
     <section><h3>① 你在学什么语言？</h3><div class="chips">${PREF_LANGS.map(l=>chip("lang", l, p.lang===l)).join("")}</div></section>
     <section><h3>② 你现在是？</h3><div class="chips">${PREF_STAGES.map(l=>chip("stage", l, p.stage===l)).join("")}</div></section>
     <section><h3>③ 你最关心什么？（可多选）</h3><div class="chips">${Object.keys(PREF_TOPICS).map(l=>chip("topics", l, (p.topics||[]).includes(l))).join("")}</div></section>
-    <div class="chips"><button class="chip hot" id="prefGo">看我的地图</button><button class="chip" id="prefSkip">${first ? "跳过" : "取消"}</button></div>`;
+    <div style="position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 6px;margin:8px -2px 0;border-top:1px solid #eee8da;display:flex;gap:8px;align-items:center">
+      <button id="prefGo" style="flex:1;padding:11px;border:none;border-radius:12px;background:#1c7ed6;color:#fff;font-size:16px;font-weight:700;cursor:pointer">✓ 完成，看我的地图</button>
+      <button class="chip" id="prefSkip" style="border:none;background:none;color:var(--muted);text-decoration:underline;flex:none">${first ? "先跳过" : "取消"}</button></div>`;
   card.hidden = false; card.scrollTop = 0;
   const close = ()=>{ if (first) savePrefs({...(loadPrefs()||{}), skipped:true}); closeCard(); };
   card.querySelector(".x").onclick = close; card.querySelector("#prefSkip").onclick = close;
@@ -5324,12 +5326,15 @@ function bindLogin(root){
 function updateMeBtn(){
   const b = document.getElementById("meBtn"); if (!b) return;
   if (SOC.ready){ const me = SOC.profiles[SOC.uid] || {}; b.textContent = "👤 " + (me.name || (SOC.site && HV.user && HV.user.email ? HV.user.email.split("@")[0] : "我")); b.classList.remove("hot"); }
-  else if (!SITE_LOGIN()) b.hidden = true;
+  else b.textContent = "👤 我";
 }
 function openMe(){
   if (!SOC.ready){ SOC.view = null; if (selected) selected.el.classList.remove("sel"); selected = null;
-    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">👤</div><div><h2>登录 / 注册</h2><span class="c-cat" style="background:#2f9e8f">进圈子 · 找同行者 · 记住你的练习</span></div></div>${loginHtml("", "")}<div class="chips"><button class="chip" id="mePrefs2">✨ 我的推荐偏好（不用登录）</button></div>`;
-    card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard; bindLogin(card); card.querySelector("#mePrefs2").onclick = ()=>openPrefs(false); return; }
+    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">👤</div><div><h2>我</h2><span class="c-cat" style="background:#2f9e8f">还没登录</span></div></div>
+      <button class="chip" id="mePrefs2" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">✨ <span><b>我的推荐偏好</b><br><small class="note">语言、阶段、关心的事 · 不用登录</small></span></button>
+      <button class="chip" id="meLearn2" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">⭐ <span><b>我的跟读本</b><br><small class="note">${loadLearn().length} 句 · 存在这台设备上</small></span></button>
+      ${SITE_LOGIN() ? loginHtml("登录 / 注册：进圈子、找同行者", "") : `<p class="note">进圈子、找同行者需要登录。</p>`}`;
+    card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard; bindLogin(card); card.querySelector("#mePrefs2").onclick = ()=>openPrefs(false); card.querySelector("#meLearn2").onclick = openLearnBook; return; }
   SOC.view = null; if (selected) selected.el.classList.remove("sel"); selected = null;
   const mine = SOC.clubmem.filter(m=>m.by===SOC.uid).map(m=>SOC.clubs.find(c=>c.id===m.club)).filter(Boolean);
   const me = SOC.profiles[SOC.uid] || {}, row = (id, ic, t, sub) => `<button class="chip" id="${id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">${ic} <span><b>${t}</b>${sub?`<br><small class="note">${sub}</small>`:""}</span></button>`;
@@ -5352,6 +5357,12 @@ function openMe(){
 document.getElementById("meBtn").onclick = openMe;
 // 圈子列表：不登录也能逛（网站上没登录时用内置的圈子种子）
 const CLUB_GROUPS = [["生活", ["body_mind","eat_well","first_money","social_money","economy_club","life_abroad","trends_now","see_world","people_values"]], ["职场", ["med_club","dev_club","founder_club"]], ["想一想", ["life_questions"]]];
+function openLearnBook(){
+  const l = loadLearn().slice().reverse();
+  card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#e9a400">⭐</div><div><h2>我的跟读本 · ${l.length}</h2><span class="c-cat" style="background:#e9a400">存在这台设备上</span></div></div>
+    ${l.length ? l.slice(0,60).map((x,i)=>`<div class="learn-row"><div>${esc(x.text)}<small>${x.cn?esc(x.cn)+" · ":""}跟读 ${x.reps||0} 次</small></div><button class="chip" data-say="${esc(x.text)}" data-tts="${esc(x.code||"")}">🔊</button></div>`).join("") : `<p class="note">在贴纸或圈子里点 ⭐ 或「🎤 跟读」，句子就会收进来。</p>`}`;
+  card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard;
+}
 function openClubs(){
   SOC.view = "clubs"; if (selected) selected.el.classList.remove("sel"); selected = null;
   const list = SOC.ready ? SOC.clubs : (typeof CLUB_SEEDS !== "undefined" ? CLUB_SEEDS : []);
