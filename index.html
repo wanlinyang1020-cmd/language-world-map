@@ -64,6 +64,8 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .c-emo.sym{font-family:Georgia,"Times New Roman",var(--f-display);font-weight:700;color:#c27c0e}
 .st .name{font-family:var(--f-display);font-size:12.5px;fill:var(--sticker-ink);text-anchor:middle;paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round}
 .st.sel circle.disc{stroke:var(--accent)!important;stroke-width:4px}
+.st.rec circle.disc{stroke:#1c7ed6!important;stroke-width:3.5px}
+#app.flat .st.rec .emo{filter:drop-shadow(0 0 5px #4dabf7)}
 .mover{pointer-events:none;font-size:26px;text-anchor:middle;dominant-baseline:central}
 #plane{font-size:30px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
 
@@ -3688,13 +3690,14 @@ function render(){
   const ring = filtered ? OFFS_WIDE : OFFS;
   let hidden = 0;
   const placed = [];
-  const seq = selected ? [selected, ...order.filter(s=>s!==selected)] : order;
+  const base = REC.ids.size ? REC.order : order;
+  const seq = selected ? [selected, ...base.filter(s=>s!==selected)] : base;
   const fewShown = filtered && order.filter(s=>activeCats.has(s.c) && (!focus || focus.ids.has(s.id))).length <= 80;
   for (const s of seq){
     const [x,y] = t.apply(s.p); s.x=x; s.y=y;
     const inView = x>-20 && x<W+20 && y>-20 && y<H+20;
     const want = activeCats.has(s.c) && inView && (!focus || focus.ids.has(s.id));
-    let show = s===selected || (want && (filtered || rel >= TIER_MIN[s.t]));
+    let show = s===selected || (want && (filtered || rel >= TIER_MIN[s.t] || REC.ids.has(s.id)));
     let dx=0, dy=0;
     if (show){
       show = false;
@@ -3756,6 +3759,7 @@ function openCard(d){
     <button class="x" aria-label="关闭">✕</button>
     <div class="c-top"><div class="c-emo${d.sym?" sym":""}" style="border-color:${c.color}${d.sym?`;font-size:${parseFloat(symSize(d.e))*1.5}px`:""}">${esc(d.e)}</div>
       <div><h2>${esc(d.n)}</h2><div class="c-region">📍 ${esc(d.r)}</div><span class="c-cat" style="background:${c.color}">${c.icon} ${c.name}</span> <span class="c-cat" style="background:var(--muted)">${TIER_NAME[d.t]}</span></div></div>
+    ${REC.why[d.id] ? `<p class="note" style="color:#1c5fa8">✨ 为你推荐：${esc(REC.why[d.id].join(" · "))}</p>` : ""}
     ${photoHtml(d.n)}
     ${storyTop(d.n)}
     <p>${esc(d.d)}</p>
@@ -4149,6 +4153,77 @@ function setFocus(name, list){
   render();
 }
 focusChip.onclick = ()=>{ setFocus(null); if (card.hidden) setHL(null); };
+// ===== ✨ 为你：按每个人的语言、阶段、关心的事（登录后再加上身份、圈子、盖过的章）给贴纸打分 =====
+const REC = {ids:new Set(), why:{}, order:[], list:[]};
+const PREF_LANGS = ["英语","日语","法语","西班牙语","其他"], PREF_STAGES = ["学生","刚工作","工作多年","转行中","退休"];
+const PREF_TOPICS = {"出国生活":{cats:["R1","R2","R3","R4","R5"]}, "医疗工作":{cats:["W1"], clubs:["白大褂"]}, "科技":{cats:["W2"], clubs:["写代码的人"]}, "创业":{cats:["W3"], clubs:["创业者"]},
+  "钱":{cats:["E1","E2","E3"]}, "健康":{cats:["Y1","Y2","Y3"]}, "旅行":{cats:["K2"]}, "流行":{cats:["K1"]}, "人物和观点":{cats:["K3"]}, "人生":{cats:["K4"]}};
+const STAGE_CATS = {"学生":["E1","K4","R3"], "刚工作":["E1","E2","R3"], "工作多年":["E2","E3"], "转行中":["W1","W2","W3"], "退休":["K4","Y1"]};
+const loadPrefs = () => { try { return JSON.parse(localStorage.getItem("hv.prefs") || "null"); } catch(e){ return null; } };
+const savePrefs = p => { try { localStorage.setItem("hv.prefs", JSON.stringify(p)); } catch(e){} };
+const dayHash = id => { let h = 0; const k = isoDayStr() + ":" + id; for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) | 0; return (h >>> 0) % 1000 / 1000; };
+function isoDayStr(){ const d = new Date(), z = new Date(d.getTime() - d.getTimezoneOffset()*6e4); return z.toISOString().slice(0,10); }
+function computeRec(){
+  const p = loadPrefs() || {}, ms = typeof MONEY_STORIES !== "undefined" ? MONEY_STORIES : {};
+  const me = (typeof SOC !== "undefined" && SOC.ready && SOC.profiles[SOC.uid]) || {};
+  const lang = p.lang || (me.learning && PREF_LANGS.find(l=>me.learning.includes(l.slice(0,2)))) || "";
+  const stage = p.stage || me.stage || "";
+  const topics = p.topics || [];
+  // 登录后：身份里的关键词、加入的圈子
+  const idText = typeof myIds === "function" && SOC.ready ? myIds().map(x=>x.who).join(" ") : "";
+  const idCats = [[/医|护|doctor|nurse|medical/i,"W1","你的身份"],[/程序|开发|工程师|developer|engineer|coder/i,"W2","你的身份"],[/创业|创始|founder|startup/i,"W3","你的身份"]].filter(([re])=>re.test(idText));
+  const myClubs = SOC.ready ? SOC.clubmem.filter(m=>m.by===SOC.uid).map(m=>(SOC.clubs.find(c=>c.id===m.club)||{}).name).filter(Boolean) : [];
+  const clubCat = {"白大褂":"W1","写代码的人":"W2","创业者":"W3","时下流行":"K1","看世界":"K2","人物和观点":"K3","人生课题":"K4","第一笔钱":"E1","社会的钱":"E2","看懂经济":"E3","身心健康":"Y1","吃得好":"Y1","在国外生活":"R1"};
+  const scored = [];
+  for (const s of data){
+    let sc = 0; const why = [];
+    const st = ms[s.n];
+    for (const t of topics){ const T = PREF_TOPICS[t]; if (T && T.cats.some(c=>c===s.c || (c.length===1 ? false : s.c.startsWith(c.slice(0,1)) && c.slice(0,1)==="Y" && s.c.startsWith("Y")))){ sc += 4; why.push("你关心" + t); } }
+    if (stage && (STAGE_CATS[stage]||[]).includes(s.c)){ sc += 1; why.push("你" + (stage === "转行中" ? "在转行" : "是" + stage)); }
+    if (st && lang && lang !== "其他" && st.words && st.words[lang] && sc > 0){ sc += 1; why.push("有" + lang + "练习"); }
+    for (const [re, cat, w] of idCats) if (s.c === cat){ sc += 4; why.push("和" + w + "有关"); break; }
+    for (const cn of myClubs){ if (clubCat[cn] && (clubCat[cn] === s.c || (cn === "吃得好" || cn === "身心健康") && s.c.startsWith("Y") || cn === "在国外生活" && s.c.startsWith("R"))){ sc += 4; why.push("你在「" + cn + "」圈子"); break; } }
+    if (typeof PRO_LINK !== "undefined" && PRO_LINK[s.n] && myClubs.includes(PRO_LINK[s.n].club)){ sc += 3; why.push("你在「" + PRO_LINK[s.n].club + "」圈子"); }
+    if (!sc) continue;
+    if (st) sc += 0.5;
+    if (stamps.has(s.id)) sc -= 2;
+    sc += dayHash(s.id) * 0.8;   // 每天换一点，别总是同一批
+    scored.push([s, sc, [...new Set(why)].slice(0,2), sc >= 3]);
+  }
+  scored.sort((a,b)=>b[1]-a[1]);
+  // 强匹配（关心的事、身份、圈子）优先；只因为“阶段”匹配的，最多补 8 张
+  const strong = scored.filter(x=>x[3]).slice(0, 40), weak = scored.filter(x=>!x[3] && x[1] > 0.5).slice(0, Math.min(8, 40 - strong.length));
+  const top = [...strong, ...weak];
+  REC.ids = new Set(top.map(x=>x[0].id)); REC.why = {}; top.forEach(([s,,w])=>{ REC.why[s.id] = w; });
+  REC.list = top.map(x=>x[0]); REC.order = [...REC.list, ...order.filter(s=>!REC.ids.has(s.id))];
+  data.forEach(s=>s.el && s.el.classList.toggle("rec", REC.ids.has(s.id)));
+  const b = document.getElementById("forYouBtn"); if (b) b.innerHTML = `✨ 为你${REC.list.length ? " " + REC.list.length : ""}`;
+}
+function openPrefs(first){
+  if (selected) selected.el.classList.remove("sel"); selected = null;
+  const p = loadPrefs() || {topics:[]};
+  const chip = (k, v, on) => `<button class="chip" data-pk="${k}" data-pv="${esc(v)}" ${on?'aria-pressed="true" style="background:#eef3fb;border-color:#1c7ed6;color:#1c5fa8"':""}>${esc(v)}</button>`;
+  card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
+    <div class="c-top"><div class="c-emo" style="border-color:#1c7ed6">✨</div><div><h2>${first ? "先认识一下你" : "我的推荐偏好"}</h2><span class="c-cat" style="background:#1c7ed6">地图会挑适合你的贴纸</span></div></div>
+    <p class="note">点一下就好，可以跳过。只存在这台设备上，随时可以在「👤 我」里改。</p>
+    <section><h3>① 你在学什么语言？</h3><div class="chips">${PREF_LANGS.map(l=>chip("lang", l, p.lang===l)).join("")}</div></section>
+    <section><h3>② 你现在是？</h3><div class="chips">${PREF_STAGES.map(l=>chip("stage", l, p.stage===l)).join("")}</div></section>
+    <section><h3>③ 你最关心什么？（可多选）</h3><div class="chips">${Object.keys(PREF_TOPICS).map(l=>chip("topics", l, (p.topics||[]).includes(l))).join("")}</div></section>
+    <div class="chips"><button class="chip hot" id="prefGo">看我的地图</button><button class="chip" id="prefSkip">${first ? "跳过" : "取消"}</button></div>`;
+  card.hidden = false; card.scrollTop = 0;
+  const close = ()=>{ if (first) savePrefs({...(loadPrefs()||{}), skipped:true}); closeCard(); };
+  card.querySelector(".x").onclick = close; card.querySelector("#prefSkip").onclick = close;
+  card.querySelectorAll("[data-pk]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.pk, v = b.dataset.pv, cur = loadPrefs() || {topics:[]};
+    if (k === "topics"){ const t = new Set(cur.topics||[]); if (t.has(v)) t.delete(v); else t.add(v); cur.topics = [...t]; } else cur[k] = cur[k] === v ? "" : v;
+    savePrefs(cur); const st = card.scrollTop; openPrefs(first); card.scrollTop = st; });
+  card.querySelector("#prefGo").onclick = ()=>{ computeRec(); closeCard(); if (REC.list.length) setFocus("✨ 为你", REC.list); };
+}
+function forYou(){
+  const p = loadPrefs(); if (!p || (!p.lang && !p.stage && !(p.topics||[]).length)){ if (!(SOC.ready && myIds().length)){ openPrefs(true); return; } }
+  computeRec(); if (!REC.list.length){ openPrefs(false); return; }
+  if (focus && focus.name === "✨ 为你") setFocus(null); else setFocus("✨ 为你", REC.list);
+}
+setTimeout(()=>{ computeRec(); render(); const p = loadPrefs(); if (!p && !window.claude) setTimeout(()=>{ if (card.hidden) openPrefs(true); }, 1500); }, 0);
 function byGroup(list){
   return GROUPS.filter(g=>!g.shared).map(g=>[g, list.filter(s=>g.cats.includes(s.c))]).filter(([,l])=>l.length);
 }
@@ -4907,7 +4982,7 @@ function socChanged(){
     SOC.uid = await SOC.user.id(); SOC.canWrite = await SOC.user.can("data.write");
     if (!SOC.uid) return;
     SOC.ready = true;
-    setTimeout(updateMeBtn, 0);
+    setTimeout(updateMeBtn, 0); setTimeout(()=>{ computeRec(); render(); }, 2500);
     try { const a = localStorage.getItem("hv.after"); if (a){ localStorage.removeItem("hv.after"); SOC.view = a === "clubs" ? "clubs" : "club:" + a; setTimeout(()=>{ if (a === "clubs") openClubs(); else openClub(a); }, 600); } } catch(e){}
     const sub = (q, key, map) => q.onSnapshot(snap=>{ const arr = snap.docs.map(d=>({id:d.id, ...d.data()})); if (map) map(arr); else SOC[key] = arr; socChanged(); }, ()=>{});
     SOC.owner = await SOC.user.isOwner();
@@ -5253,8 +5328,8 @@ function updateMeBtn(){
 }
 function openMe(){
   if (!SOC.ready){ SOC.view = null; if (selected) selected.el.classList.remove("sel"); selected = null;
-    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">👤</div><div><h2>登录 / 注册</h2><span class="c-cat" style="background:#2f9e8f">进圈子 · 找同行者 · 记住你的练习</span></div></div>${loginHtml("", "")}`;
-    card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard; bindLogin(card); return; }
+    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">👤</div><div><h2>登录 / 注册</h2><span class="c-cat" style="background:#2f9e8f">进圈子 · 找同行者 · 记住你的练习</span></div></div>${loginHtml("", "")}<div class="chips"><button class="chip" id="mePrefs2">✨ 我的推荐偏好（不用登录）</button></div>`;
+    card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard; bindLogin(card); card.querySelector("#mePrefs2").onclick = ()=>openPrefs(false); return; }
   SOC.view = null; if (selected) selected.el.classList.remove("sel"); selected = null;
   const mine = SOC.clubmem.filter(m=>m.by===SOC.uid).map(m=>SOC.clubs.find(c=>c.id===m.club)).filter(Boolean);
   const me = SOC.profiles[SOC.uid] || {}, row = (id, ic, t, sub) => `<button class="chip" id="${id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">${ic} <span><b>${t}</b>${sub?`<br><small class="note">${sub}</small>`:""}</span></button>`;
@@ -5263,6 +5338,7 @@ function openMe(){
     ${row("meClubs","👥","我加入的圈子", mine.length ? esc(mine.map(c=>c.name).join("、")) : "还没加入，去看看所有圈子")}
     ${row("meSoc","🤝","伙伴：资料、关注和私信","")}
     ${row("meLearn","⭐","我的跟读本",`${loadLearn().length} 句`)}
+    ${row("mePrefs","✨","我的推荐偏好","语言、阶段、关心的事")}
     ${SOC.site ? row("meOut","↩️","退出登录","") : ""}`;
   card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard;
   const go = (sel, fn) => { const x = card.querySelector(sel); if (x) x.onclick = fn; };
@@ -5271,6 +5347,7 @@ function openMe(){
   go("#meSoc", ()=>openSoc());
   go("#meLearn", ()=>{ openSoc(); const h = [...card.querySelectorAll("h3")].find(x=>x.textContent.includes("跟读本")); if (h) h.scrollIntoView(); });
   go("#meOut", ()=>hvSignOut());
+  go("#mePrefs", ()=>openPrefs(false));
 }
 document.getElementById("meBtn").onclick = openMe;
 // 圈子列表：不登录也能逛（网站上没登录时用内置的圈子种子）
@@ -6029,6 +6106,7 @@ GROUPS.forEach(g=>{
       if (g.pro && openGroup === g) openPro();   // 职场：地图上只看医生 / 程序员 / 创业者的贴纸，同时打开职场英语
     });
 });
+cats.insert("button", ":first-child").attr("class","chip hot").attr("id","forYouBtn").html("✨ 为你").style("border-color","#1c7ed6").on("click", ()=>forYou());
 cats.insert("button", ":first-child").attr("class","chip hot").attr("id","clubsBtn").html("👥 圈子").style("border-color","#2f9e8f").on("click", ()=>openClubs());
 function buildSubcats(){
   subcats.selectAll("*").remove();
