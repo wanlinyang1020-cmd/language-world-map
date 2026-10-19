@@ -5272,6 +5272,7 @@ function socChanged(){
     sub(SOC.db.collection("clubmembers"), "clubmem");
     sub(SOC.db.collection("clubposts").orderBy("ts","desc").limit(600), "clubposts");
     sub(SOC.db.collection("topics").limit(1000), "topics");
+    sub(SOC.db.collection("meetings").limit(300), "umeets");
     sub(SOC.db.collection("comments").orderBy("ts","asc").limit(1000), "comments");
   } catch(e){ SOC.ready = false; }
 })();
@@ -6779,7 +6780,9 @@ function openPath(k){
     else if (g === "s"){ if (nextScene >= 0 && SR) sceneTalk(nextScene, k); else openScenes(k); } });
 }
 // ===== 🗓️ 多岗位会议：同一场会，你选一个岗位来演，其他人由圈子里的 NPC 说；可以换岗位再演一次（科技 / 医疗 / 时尚）=====
-const meetings = k => (typeof MEETINGS !== "undefined" && MEETINGS[k]) || [];
+const umeetOk = m => m && m.title && m.zh && m.roles && m.cast && Array.isArray(m.lines) && m.lines.length && m.why;
+const umeets = (k, st) => (typeof SOC !== "undefined" && SOC.umeets || []).filter(m=>m.path === k && m.status === st && umeetOk(m)).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(m=>({...m, id: "u_" + m.id, did: m.id}));
+const meetings = k => [...((typeof MEETINGS !== "undefined" && MEETINGS[k]) || []), ...umeets(k, "通过")];
 const meetRole = (m, r) => m.roles[r] || {icon:"👤", zh:r};
 const MEET_DEFAULT = {med:"doctor", fashion:"buyer"};
 function meetScene(m, me){
@@ -6792,11 +6795,15 @@ function openMeetings(k){
     <div class="c-top"><div class="c-emo" style="border-color:${P.color}">🗓️</div><div><h2>多岗位会议 · ${M.length} 场</h2><span class="c-cat" style="background:${P.color}">${P.icon} ${esc(P.industry || P.clubName)} · 同一场会，选一个岗位来演</span></div></div>
     <div class="chips"><button class="chip" id="mtBack">${t_("backPath")}</button></div>
     <p class="note">现实里的工作就是这样：不同岗位的人在同一场会里各说各的担心，最后一起做决定。你演一个岗位，其他人由「${esc(P.clubName)}」圈子的人来说；演完可以换个岗位再来一次，体会对方为什么那样说。</p>
+    ${SOC.owner && prSample ? `<div class="chips"><button class="chip hot" id="mtDraft">✍️ 用我的真实处境起草一场会</button></div>` : ""}
+    ${SOC.owner && umeets(k, "待审").length ? `<section style="background:#fff4e6;border-radius:12px;padding:6px 12px"><h3>🗂️ 待审 · ${umeets(k, "待审").length}</h3><p class="note">只有你看得到。看过、改过、点「通过」，大家才能用。</p>${umeets(k, "待审").map(m=>`<button class="chip" data-mtrev="${esc(m.did)}" style="justify-content:flex-start;width:100%;white-space:normal;text-align:left;margin:3px 0">${esc(m.icon||"🗓️")} <b>${esc(m.zh)}</b></button>`).join("")}</section>` : ""}
     ${M.map((m,i)=>{ const n = Object.keys(m.cast).filter(r=>done.has(k + ":" + m.id + ":" + r)).length;
       return `<button class="chip" data-mt="${i}" style="justify-content:flex-start;width:100%;white-space:normal;text-align:left;margin:4px 0">${m.icon} <span><b>${esc(m.zh)}</b><br><small class="note">${Object.keys(m.cast).map(r=>meetRole(m, r).icon + " " + esc(m.cast[r])).join(" · ")}${n ? ` · 演过 ${n} 个岗位` : ""}</small></span></button>`; }).join("")}`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard; card.querySelector("#mtBack").onclick = ()=>openPath(k);
   card.querySelectorAll("[data-mt]").forEach(b=>b.onclick = ()=>openMeeting(k, +b.dataset.mt));
+  if (card.querySelector("#mtDraft")) card.querySelector("#mtDraft").onclick = ()=>openMeetDraft(k);
+  card.querySelectorAll("[data-mtrev]").forEach(b=>b.onclick = ()=>openMeetReview(k, b.dataset.mtrev));
 }
 function openMeeting(k, mi, me){
   const m = meetings(k)[mi]; if (!m) return; const roles = Object.keys(m.cast), done = pathSet("scn"), P = PATHS[k];
@@ -6819,6 +6826,79 @@ function openMeeting(k, mi, me){
   card.querySelectorAll("[data-mshow]").forEach(b=>b.onclick = ()=>{ card.querySelector(`[data-mans="${b.dataset.mshow}"]`).hidden = false; b.hidden = true; });
   card.querySelector("#mtNext").onclick = ()=>openMeeting(k, mi, roles[(roles.indexOf(me) + 1) % roles.length]);
   if (card.querySelector("#mtTalk")) card.querySelector("#mtTalk").onclick = ()=>sceneTalk(0, k, meetScene(m, me), ()=>openMeeting(k, mi, me));
+}
+// ✍️ 用真实处境起草一场会（AI 只给地图主人用）：AI 按同样的格式起草 → 进「待审」→ 主人改过、通过 → 进「多岗位会议」，所有人能用
+const MEET_HINT = {dev:"下周一和我的经理、HR 谈加薪。我做了两年后端，去年带的项目按时上线，但公司今年预算紧。", med:"明天交班时要告诉夜班护士和药剂师，一位老人的药可能要改，他女儿也在。", fashion:"下周要和工厂、设计师开会：一批外套交期要晚三周，可是门店已经排好了上新。"};
+async function meetAI(k, sit){
+  const club = PATHS[k].clubName, cards = ((typeof CLUB_NPCS !== "undefined" && CLUB_NPCS[PATHS[k].club]) || []).map(n=>`- ${n.name}：${n.job}，${n.city}`).join("\n");
+  const ex = meetings(k)[0], shape = JSON.stringify({ok:true, icon:"🗓️", title:"英文标题", zh:"中文标题", situation:"中文情境：在哪、谁在场、要定下什么事、每个人的担心（2-3 句）", roles:{me:{icon:"👩‍💻", zh:"岗位（中文）"}, r2:{icon:"👔", zh:"岗位"}}, cast:{me:"人名", r2:"人名"}, lines:[{role:"me", en:"English line", zh:"中文"}], why:{me:{h:"演这个岗位，你要练的是：……", ph:["English pattern …"]}}});
+  return prSample.json([{role:"user", content:`你在为成年人的职场英语练习写一场「多岗位会议」：同一场会里有 3-5 个不同岗位的人，各有立场，最后一起做出一个决定。学习者会选其中一个岗位来演。
+用户的真实处境：${sit}
+行业：${club}。可以用这些圈子成员当角色（名字和身份不要改错），也可以新加角色：
+${cards}
+规则：
+1. 必须有：一个具体的场合、在场的人、一件要解决的事。如果用户的处境里缺了其中任何一样、没法写，就返回 {"ok":false,"ask":"用中文问用户一个问题"}。
+2. 用户本人的岗位要是其中一个角色。
+3. 10-14 句台词，每个角色至少 2 句；英语是真实职场里会说的话：简单、自然、正确，不要课本腔；每句附自然的中文翻译。
+4. 结尾要有人把决定说出来。不要政治、不要具体的投资、法律或医疗建议。
+5. why：每个角色一段「演这个岗位，你要练的是：……」和 3-4 个可以替换的英语句型。
+6. 角色 key 用小写英文单词。
+只返回 JSON，格式：${shape}
+参考一场已有的会（只看格式和语气，不要照抄内容）：${ex ? JSON.stringify({zh: ex.zh, lines: ex.lines.slice(0,4).map(l=>({role:l.role, en:l.en, zh:l.zh}))}) : ""}`}], {modelTier:"complex", cache:false});
+}
+function meetFix(r){
+  if (!r || r.ok === false) return null;
+  const roles = {}, cast = {}, why = {}, keys = Object.keys(r.cast || {}).slice(0, 5);
+  keys.forEach(k=>{ const ro = (r.roles||{})[k] || {}; roles[k] = {icon: [...String(ro.icon||"👤")].slice(0,6).join(""), zh: String(ro.zh||k).slice(0,20)}; cast[k] = String(r.cast[k]).slice(0,30); const w = (r.why||{})[k] || {}; why[k] = {h: String(w.h||"").slice(0,200), ph: (w.ph||[]).slice(0,5).map(x=>String(x).slice(0,80))}; });
+  const lines = (r.lines||[]).filter(l=>cast[l.role] && l.en).slice(0,18).map(l=>({role: l.role, en: String(l.en).slice(0,300), zh: String(l.zh||"").slice(0,300), py: ""}));
+  if (keys.length < 2 || lines.length < 6 || keys.some(k=>lines.filter(l=>l.role===k).length < 2)) return null;
+  return {icon: [...String(r.icon||"🗓️")].slice(0,6).join(""), title: String(r.title||"").slice(0,120), zh: String(r.zh||"").slice(0,80), situation: String(r.situation||"").slice(0,500), roles, cast, lines, why};
+}
+function openMeetDraft(k, keep){
+  const P = PATHS[k];
+  card.innerHTML = `<button class="x" aria-label="${t_("close")}">✕</button>
+    <div class="c-top"><div class="c-emo" style="border-color:${P.color}">✍️</div><div><h2>用我的真实处境起草一场会</h2><span class="c-cat" style="background:${P.color}">${P.icon} ${esc(P.industry || P.clubName)} · 只有你能用</span></div></div>
+    <div class="chips"><button class="chip" id="mdBack">← 多岗位会议</button></div>
+    <section><p><b>下周你要面对一场什么样的对话？</b></p><p class="note">写一两句就行：在哪、和谁、要解决什么事。AI 会按「场合 + 人 + 事件」起草；缺了哪一样，会先问你。</p>
+      <textarea id="mdSit" rows="4" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="${esc(MEET_HINT[k] || "")}">${esc(keep || "")}</textarea>
+      <div class="chips"><button class="chip hot" id="mdGo">🤖 起草一场会</button><span class="note" id="mdNote"></span></div></section>
+    <p class="note">起草出来的会先进「待审」。你看过、改过、点「通过」之后，它才会出现在「多岗位会议」里，所有人都能选岗位来练。</p>`;
+  card.hidden = false; card.scrollTop = 0;
+  card.querySelector(".x").onclick = closeCard; card.querySelector("#mdBack").onclick = ()=>openMeetings(k);
+  card.querySelector("#mdGo").onclick = async ()=>{
+    const ta = card.querySelector("#mdSit"), sit = (ta.value.trim() || "").slice(0, 600), note = card.querySelector("#mdNote"), b = card.querySelector("#mdGo");
+    if (sit.length < 8){ note.textContent = "多写一点：在哪、和谁、要解决什么事。"; return; }
+    if (!prSample){ note.textContent = "AI 在这里用不了。"; return; }
+    b.disabled = true; note.textContent = "AI 在起草，大约半分钟…";
+    try { const r = await meetAI(k, sit);
+      if (r && r.ok === false){ note.textContent = "❓ " + String(r.ask || "能再多说一点吗？"); return; }
+      const m = meetFix(r); if (!m){ note.textContent = "这次起草的格式不对，再试一次。"; return; }
+      const ref = await SOC.db.collection("meetings").add({...m, path: k, status: "待审", sit, by: SOC.uid, ts: Date.now()});
+      note.textContent = "✓ 起草好了，已放进待审。"; setTimeout(()=>openMeetReview(k, ref && ref.id ? ref.id : null), 1500); }
+    catch(e){ note.textContent = "这次没起草成功，稍后再试。"; } finally { b.disabled = false; }
+  };
+}
+function openMeetReview(k, did){
+  const P = PATHS[k], d = (SOC.umeets || []).find(x=>x.id === did) || (SOC.umeets || []).filter(x=>x.path===k && x.status==="待审").slice(-1)[0];
+  if (!d){ openMeetings(k); return; }
+  const save = async patch => { const body = {...d, ...patch}; delete body.id; try { await SOC.db.doc("meetings/" + d.id).set(body); } catch(e){} };
+  card.innerHTML = `<button class="x" aria-label="${t_("close")}">✕</button>
+    <div class="c-top"><div class="c-emo" style="border-color:#e8590c">${esc(d.icon||"🗓️")}</div><div><h2>${esc(d.zh)}</h2><span class="c-cat" style="background:#e8590c">待审 · ${esc(d.title)}</span></div></div>
+    <div class="chips"><button class="chip" id="mrBack">← 多岗位会议</button></div>
+    <section><p class="note">你写的处境：${esc(d.sit||"")}</p><p>${esc(d.situation)}</p>
+      <div class="chips">${Object.keys(d.cast).map(r=>`<span class="tagx">${esc(d.roles[r].icon)} ${esc(d.roles[r].zh)} · ${esc(d.cast[r])}</span>`).join("")}</div></section>
+    <section><h3>对话 · 点「改」修改这一句</h3>${d.lines.map((l,j)=>`<div class="ex-line"><small class="note">${esc(d.roles[l.role].icon)} ${esc(d.cast[l.role])} · ${esc(d.roles[l.role].zh)}</small><br><b>${esc(l.en)}</b> ${sayB(l.en)} <button class="chip" data-mredit="${j}">改</button><br><span class="note">${esc(l.zh)}</span></div>`).join("")}</section>
+    <section style="background:#fff7e6;border-radius:12px;padding:6px 12px">${Object.keys(d.cast).map(r=>`<p><b>${esc(d.roles[r].icon)} ${esc(d.why[r] ? d.why[r].h : "")}</b><br><span class="note">${esc(((d.why[r]||{}).ph||[]).join(" · "))}</span></p>`).join("")}</section>
+    <div class="chips"><button class="chip hot" id="mrOk">✓ 通过</button><button class="chip" id="mrRe">↻ 重新起草</button><button class="chip" id="mrNo">不用</button><span class="note" id="mrNote"></span></div>`;
+  card.hidden = false; card.scrollTop = 0;
+  card.querySelector(".x").onclick = closeCard; card.querySelector("#mrBack").onclick = ()=>openMeetings(k);
+  card.querySelectorAll("[data-mredit]").forEach(b=>b.onclick = async ()=>{ const j = +b.dataset.mredit, l = d.lines[j];
+    const en = prompt("改英文（不改就直接确定）", l.en); if (en === null) return; const zh = prompt("改中文（不改就直接确定）", l.zh); if (zh === null) return;
+    const lines = d.lines.map((x,i)=>i===j ? {...x, en: en.trim().slice(0,300) || x.en, zh: zh.trim().slice(0,300) || x.zh} : x);
+    await save({lines}); d.lines = lines; openMeetReview(k, d.id); });
+  card.querySelector("#mrOk").onclick = async ()=>{ await save({status: "通过", reviewedTs: Date.now()}); fx("good"); openMeetings(k); };
+  card.querySelector("#mrNo").onclick = async ()=>{ await save({status: "不用", reviewedTs: Date.now()}); openMeetings(k); };
+  card.querySelector("#mrRe").onclick = ()=>{ save({status: "不用", reviewedTs: Date.now()}); openMeetDraft(k, d.sit || ""); };
 }
 function youHtml(k){
   const Q = YOU_Q[k] || [], mine = lifeMap().filter(x=>x.path === k); if (!Q.length) return "";
