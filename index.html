@@ -4916,6 +4916,7 @@ function openSoc(){
     ${inviteHtml()}
     ${isMember(SOC.uid) ? clubsHtml(me) : ""}
     ${SOC.owner ? topicBankHtml() : ""}
+    ${isMember(SOC.uid) ? idsHtml() : ""}
     ${isMember(SOC.uid) ? "" : "<!--"}<section><h3>我的资料</h3><div class="soc-form">
       ${SOC.site ? `<label for="spName">我的名字（别人看到的）</label><input id="spName" maxlength="20" value="${esc(me.name||"")}" placeholder="例如：小雨">` : ""}
       <label for="spNative">我的母语</label><input id="spNative" value="${esc(me.native||"中文")}">
@@ -4943,10 +4944,10 @@ function openSoc(){
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
   card.querySelectorAll("button[data-learn]").forEach(b=>b.onclick=()=>{ const x = loadLearn().slice().reverse()[+b.dataset.learn]; if (x) sayIt(x.text, x.code, .85); });
-  bindInvite();
+  bindInvite(); bindIds();
   const sp = card.querySelector("#spSave"); if (sp) sp.onclick = async e=>{ const b = e.target; b.disabled = true;
     const goals = [...card.querySelectorAll("#spGoals button[aria-pressed=true]")].map(x=>x.dataset.g), stg = card.querySelector("#spStage button[aria-pressed=true]");
-    try { await SOC.db.doc("profiles/"+SOC.uid).set({native: document.getElementById("spNative").value.trim().slice(0,30), learning: document.getElementById("spLearn").value.trim().slice(0,40), bio: scrub(document.getElementById("spBio").value.trim()).slice(0,60), goals, stage: stg ? stg.dataset.g : "", fields: scrub(document.getElementById("spFields").value.trim()).slice(0,80), creators: document.getElementById("spCreators").value.trim().slice(0,160), guideOf: scrub(document.getElementById("spGuide").value.trim()).slice(0,60), canAnswer: document.getElementById("spAnswer").checked, ...(SOC.site ? {name: scrub(document.getElementById("spName").value.trim()).slice(0,20)} : {}), ts: Date.now()}); b.textContent = "已保存"; }
+    try { await SOC.db.doc("profiles/"+SOC.uid).set({native: document.getElementById("spNative").value.trim().slice(0,30), learning: document.getElementById("spLearn").value.trim().slice(0,40), bio: scrub(document.getElementById("spBio").value.trim()).slice(0,60), goals, stage: stg ? stg.dataset.g : "", fields: scrub(document.getElementById("spFields").value.trim()).slice(0,80), creators: document.getElementById("spCreators").value.trim().slice(0,160), guideOf: scrub(document.getElementById("spGuide").value.trim()).slice(0,60), canAnswer: document.getElementById("spAnswer").checked, ids: (SOC.profiles[SOC.uid]||{}).ids || [], ...(SOC.site ? {name: scrub(document.getElementById("spName").value.trim()).slice(0,20)} : {}), ts: Date.now()}); b.textContent = "已保存"; }
     catch(err){ b.textContent = "没保存上（可能只有查看权限）"; } finally { b.disabled = false; } };
   card.querySelectorAll("button[data-follow]").forEach(b=>b.onclick = async ()=>{ if (!isMember(SOC.uid)) return; const id = b.dataset.follow, ref = SOC.db.doc("follows/"+SOC.uid+"__"+id); b.disabled = true;
     try { if (follows(SOC.uid, id)) await ref.delete(); else await ref.set({from:SOC.uid, to:id, ts:Date.now()}); } catch(e){ b.textContent = "没成功"; } });
@@ -5061,6 +5062,47 @@ new MutationObserver(()=>fillReviews(card)).observe(card, {childList: true});
 const CLUB_LANGS = ["英语","中文","日语","法语","西班牙语","韩语","意大利语","德语"];
 const clubMembers = id => SOC.clubmem.filter(m=>m.club===id && !socBlocked().includes(m.by));
 const inClub = id => SOC.clubmem.some(m=>m.club===id && m.by===SOC.uid);
+// 身份：一个人可以有好几个真实身份（程序员、医生、时尚买手……），每个圈子选一个。
+// 身份列表存在 profile.ids；圈子成员记录里存一份快照 idt，圈子里只显示这一份。
+const ID_ICONS = ["🙂","💻","🩺","👗","🎓","💼","✈️","🍳","📷","🎵","🌱","🏃","💰","🎨","📚","🧪"];
+const myIds = () => ((SOC.profiles[SOC.uid]||{}).ids) || [];
+const memOf = (club, by) => SOC.clubmem.find(m=>m.club===club && m.by===by);
+const idtOf = (club, by) => { const m = memOf(club, by); return m && m.idt && m.idt.who ? m.idt : null; };
+const idStop = /怎么|如何|什么|有没有|可以|一下|\b(how|what|the|and|for|with|to|do|is|a|in|of)\b/gi;
+const canHelp = (helper, asker) => !!(helper && asker && helper.help && asker.ask && simT(String(helper.help).replace(idStop,""), String(asker.ask).replace(idStop,"")) >= 0.15);
+const idForm = (pre, x) => { x = x || {}; return `<div class="soc-form">
+  <label>图标</label><div class="chips">${ID_ICONS.map(ic=>`<button type="button" class="chip" data-idicon="${pre}" data-ic="${ic}" ${(x.icon||"🙂")===ic?'aria-pressed="true" style="background:#eef3fb;border-color:#9cc3ee"':""}>${ic}</button>`).join("")}</div><input type="hidden" id="${pre}Icon" value="${esc(x.icon||"🙂")}">
+  <label for="${pre}Who">我是谁（一句话）</label><input id="${pre}Who" maxlength="60" value="${esc(x.who||"")}" placeholder="例如：急诊科医生，在读规培">
+  <label for="${pre}Help">我能帮什么（选填）</label><input id="${pre}Help" maxlength="60" value="${esc(x.help||"")}" placeholder="例如：国内急诊是什么样">
+  <label for="${pre}Ask">我想问什么（选填）</label><input id="${pre}Ask" maxlength="60" value="${esc(x.ask||"")}" placeholder="例如：怎么考 OET"></div>`; };
+const bindIdIcons = root => root.querySelectorAll("[data-idicon]").forEach(b=>b.onclick = ()=>{ const pre = b.dataset.idicon; root.querySelector("#" + pre + "Icon").value = b.dataset.ic; root.querySelectorAll(`[data-idicon="${pre}"]`).forEach(x=>{ const on = x === b; x.style.background = on ? "#eef3fb" : ""; x.style.borderColor = on ? "#9cc3ee" : ""; if (on) x.setAttribute("aria-pressed","true"); else x.removeAttribute("aria-pressed"); }); });
+const readIdForm = (root, pre, k) => { const v = n => scrub(root.querySelector("#" + pre + n).value.trim()).slice(0,60); return {k: k || "i" + Date.now().toString(36), icon: root.querySelector("#" + pre + "Icon").value || "🙂", who: v("Who"), help: v("Help"), ask: v("Ask")}; };
+async function saveMyIds(ids){
+  const me = {...(SOC.profiles[SOC.uid]||{})}; delete me.id;
+  await SOC.db.doc("profiles/" + SOC.uid).set({...me, ids, ts: Date.now()});
+  for (const m of SOC.clubmem.filter(m=>m.by===SOC.uid && m.idk)){ const x = ids.find(i=>i.k===m.idk), body = {...m}; delete body.id;
+    if (x) body.idt = {icon:x.icon, who:x.who, help:x.help, ask:x.ask}; else { body.idk = ""; body.idt = null; }
+    try { await SOC.db.doc("clubmembers/" + m.id).set(body); } catch(e){} }
+}
+const ID_UI = {edit:null};
+function idsHtml(){
+  const ids = myIds(), clubsOf = k => SOC.clubmem.filter(m=>m.by===SOC.uid && m.idk===k).map(m=>(SOC.clubs.find(c=>c.id===m.club)||{}).name).filter(Boolean);
+  return `<section><h3>我的身份 · ${ids.length}</h3><p class="note">你可以同时有好几个真实身份，比如程序员、医生、时尚买手。每个圈子选一个，圈子里只显示那一个。</p>
+    ${ids.map(x=>ID_UI.edit === x.k ? `<div style="border:2px solid #9cc3ee;border-radius:10px;padding:8px;margin:6px 0">${idForm("idE", x)}<div class="chips"><button class="chip hot" id="idSave" data-k="${esc(x.k)}">保存</button><button class="chip" id="idCancel">取消</button></div></div>` : `<div class="learn-row"><div>${esc(x.icon)} <b>${esc(x.who)}</b><small>${x.help?`能帮：${esc(x.help)}`:""}${x.help&&x.ask?" · ":""}${x.ask?`想问：${esc(x.ask)}`:""}${clubsOf(x.k).length?` · 用在：${esc(clubsOf(x.k).join("、"))}`:""}</small></div><div><button class="chip" data-idedit="${esc(x.k)}">改</button><button class="chip" data-iddel="${esc(x.k)}">删</button></div></div>`).join("") || `<p class="note">还没有身份。加入圈子时也可以当场写。</p>`}
+    ${ID_UI.edit === "new" ? `<div style="border:2px solid #9cc3ee;border-radius:10px;padding:8px;margin:6px 0">${idForm("idE")}<div class="chips"><button class="chip hot" id="idSave" data-k="">保存</button><button class="chip" id="idCancel">取消</button></div></div>` : `<button class="chip" id="idAdd">＋ 加一个身份</button>`}<span class="note" id="idNote"></span></section>`;
+}
+function bindIds(){
+  const $ = x => card.querySelector(x), st = card.scrollTop, again = ()=>{ openSoc(); card.scrollTop = st; };
+  if ($("#idAdd")) $("#idAdd").onclick = ()=>{ ID_UI.edit = "new"; again(); };
+  if ($("#idCancel")) $("#idCancel").onclick = ()=>{ ID_UI.edit = null; again(); };
+  card.querySelectorAll("[data-idedit]").forEach(b=>b.onclick = ()=>{ ID_UI.edit = b.dataset.idedit; again(); });
+  card.querySelectorAll("[data-iddel]").forEach(b=>b.onclick = async ()=>{ if (!confirm("删掉这个身份？用它的圈子里会变成没有身份。")) return; try { await saveMyIds(myIds().filter(x=>x.k!==b.dataset.iddel)); } catch(e){} });
+  bindIdIcons(card);
+  if ($("#idSave")) $("#idSave").onclick = async e=>{ const k = e.target.dataset.k, x = readIdForm(card, "idE", k);
+    if (!x.who){ $("#idNote").textContent = "先写一句「我是谁」"; return; }
+    const ids = k ? myIds().map(i=>i.k===k ? x : i) : [...myIds(), x];
+    try { await saveMyIds(ids); ID_UI.edit = null; again(); } catch(err){ $("#idNote").textContent = "没保存上（可能只有查看权限）"; } };
+}
 const clubHostName = c => !c.host || c.host === "ai" ? "🤖 AI 主持人" : "🎙️ " + (socName(c.host) || "一位伙伴");
 function clubsHtml(me){
   const list = SOC.clubs.slice().map(c=>({...c, n: clubMembers(c.id).length, mine: inClub(c.id), fit: (me.goals||[]).includes(c.goal)}))
@@ -5103,7 +5145,7 @@ function npcTalkHtml(id, tid, lang){
     return `<div style="border-left:3px solid #9cc3ee;padding:4px 8px;margin:6px 0"><b>${n.icon} ${esc(n.name)}</b> ${npcBadge} <small class="note">${esc(n.city)} · ${esc(n.job)}</small><div>${esc(x.text)} <button class="chip" data-say="${esc(x.text)}" data-tts="${STORY_TTS[lang]||""}">🔊</button></div><div class="note">${esc(x.zh)}</div></div>`; }).join("");
 }
 // 圈子页面：像群聊一样——置顶话题、大家的发言（NPC 和真人）、点赞、回复、底部输入框和快捷回复
-const CLUBUI = {topic:{}, draft:{}, reply:{}, zh:new Set(), typing:{}, story:{}, tab:{}, qa:{}, qform:{}, qfilter:{}, qtag:{}};
+const CLUBUI = {topic:{}, draft:{}, reply:{}, zh:new Set(), typing:{}, story:{}, tab:{}, qa:{}, qform:{}, qfilter:{}, qtag:{}, join:{}, pick:{}};
 // 问答：提问的开头、回答的快捷开头、问题的类别
 const ASK_START = {"英语":["Has anyone…? ","How do you say…? ","Is it normal that… ","What's the best way to… ","Any tips for… "], "日语":["誰か…したことありますか？","…は日本語で何と言いますか？","…のコツはありますか？"], "中文":["有没有人…？","…怎么说？","…有什么经验吗？"]};
 const ANS_QUICK = {"英语":[["For me, ","对我来说，"],["What helped me was ","对我有用的是"],["Same here! ","我也是！"],["Good question! ","好问题！"],["In my country, ","在我们国家，"],["I'm not sure, but ","我不太确定，不过"]], "日语":[["私の場合は、","我的话，"],["私も同じです！","我也一样！"],["いい質問ですね！","好问题！"]], "中文":[["我的经验是，",""],["我也是！",""],["好问题！",""]]};
@@ -5150,13 +5192,13 @@ function openClub(id){
   const who = by => {
     if (String(by).startsWith("npc:")){ const n = clubNpc(id, by.slice(4)); return n ? {name:n.name, av:n.icon, npc:n} : {name:"NPC", av:"🙂"}; }
     if (by === "ai_host") return {name:"AI 主持人", av:"🤖"};
-    const nm = by === SOC.uid ? "我" : (socName(by) || "一位伙伴"); return {name:nm, av:esc(nm.slice(0,1)), bg:avColor(by)};
+    const nm = by === SOC.uid ? "我" : (socName(by) || "一位伙伴"); return {name:nm, av:esc(nm.slice(0,1)), bg:avColor(by), idt:idtOf(id, by)};
   };
   const likeN = key => SOC.likes.filter(l=>l.post===key), liked = key => likeN(key).some(l=>l.by===SOC.uid);
   const msg = (it, topKey, isRep) => { const w = who(it.by), zhOn = CLUBUI.zh.has(it.key);
     return `<div style="display:flex;gap:8px;${isRep?"margin:6px 0 0 34px;padding-left:8px;border-left:2px solid #e6e1d4":"padding:8px 0;border-bottom:1px solid #eee8da"}">
       <div style="width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${w.npc||w.name==="AI 主持人"?16:13}px;background:${w.bg||"#eef3fb"}">${w.av}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:13px"><b>${esc(w.name)}</b>${w.npc?` ${npcBadge} <small class="note">${esc(w.npc.city)}</small>`:""}${it.kind==="主持人总结"?` <span class="soc-badge">总结</span>`:""}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px"><b>${esc(w.name)}</b>${w.npc?` ${npcBadge} <small class="note">${esc(w.npc.city)}</small>`:""}${w.idt?` <small class="note">${esc(w.idt.icon)} ${esc(w.idt.who)}</small>`:""}${it.kind==="主持人总结"?` <span class="soc-badge">总结</span>`:""}</div>
         <div style="white-space:pre-wrap;margin-top:2px">${esc(it.text)}</div>${it.url?`<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url.slice(0,50))}</a>`:""}
         ${zhOn && it.zh ? `<div class="note" style="margin-top:2px">${esc(it.zh)}</div>` : ""}
         <div style="display:flex;gap:14px;margin-top:4px;font-size:12px;color:#7a7466">
@@ -5180,9 +5222,28 @@ function openClub(id){
   const ansOfQ = q => [...q.pre, ...repliesOf(q.key)];
   const curQ = tab === "qa" && CLUBUI.qa[id] ? qs.find(q=>q.key === CLUBUI.qa[id]) : null;
   const quick = curQ ? (ANS_QUICK[lang] || ANS_QUICK["英语"]) : cur && cur.challenge ? cur.challenge.starters.map(x=>[x, ""]) : (QUICK[lang] || QUICK["英语"]);
+  // 选身份：加入时选，老成员没选过也可以补
+  const myIdt = idtOf(id, SOC.uid), joining = CLUBUI.join[id];
+  const pickHtml = () => { const ids = myIds(), pk = CLUBUI.pick[id] || (myIdt && memOf(id, SOC.uid).idk) || (ids[0] ? ids[0].k : "new");
+    return `<div style="border:2px solid #9cc3ee;border-radius:12px;padding:10px 12px;margin:6px 0">
+      <b>你在「${esc(c.name)}」里是谁？</b><div class="note">圈子里会显示在你的名字旁边。你在别的圈子用的身份，这里不会显示。</div>
+      ${ids.map(x=>`<button class="chip" data-idpick="${esc(x.k)}" style="display:block;width:100%;text-align:left;white-space:normal;margin:6px 0;${pk===x.k?"border:2px solid #1c5fa8;background:#eef3fb":""}">${esc(x.icon)} ${esc(x.who)}${x.help||x.ask?`<br><small class="note">${x.help?`能帮：${esc(x.help)}`:""}${x.help&&x.ask?" · ":""}${x.ask?`想问：${esc(x.ask)}`:""}</small>`:""}</button>`).join("")}
+      <button class="chip" data-idpick="new" style="display:block;width:100%;text-align:left;margin:6px 0;${pk==="new"?"border:2px solid #1c5fa8;background:#eef3fb":""}">✏️ 写一个新的…</button>
+      ${pk === "new" ? idForm("jn") : ""}
+      <div class="chips" style="margin-top:6px"><button class="chip hot" id="idJoin">${joined ? "就用这个" : "加入"}</button><button class="chip" id="idJoinX">取消</button><span class="note" id="idJoinNote"></span></div></div>`; };
+  const memHtml = () => {
+    const others = mem.filter(m=>m.by!==SOC.uid), tag = t => `<span style="display:inline-block;font-size:11px;padding:1px 7px;border-radius:8px;margin:3px 4px 0 0;background:#eaf6e8;color:#2b6a1f">${t}</span>`;
+    const row = (av, bg, name, line, sub, tags) => `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #eee8da"><div style="width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${bg||"#eef3fb"}">${av}</div><div style="flex:1;min-width:0"><b>${name}</b> <small class="note">${line}</small>${sub?`<div class="note" style="font-size:12px">${sub}</div>`:""}${tags||""}</div></div>`;
+    const hs = x => x ? [x.help?`能帮：${esc(x.help)}`:"", x.ask?`想问：${esc(x.ask)}`:""].filter(Boolean).join(" · ") : "";
+    return `${joined ? `<div style="background:#eef3fb;border-radius:12px;padding:8px 12px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="note">你在这里是</span><button class="chip" id="idChange" style="font-size:12px">${myIdt?"换一个身份":"选一个身份"}</button></div>${myIdt?`<div>${esc(myIdt.icon)} <b>${esc(myIdt.who)}</b></div><div class="note" style="font-size:12px">${hs(myIdt)}</div>`:`<div class="note">还没选。选一个，大家就知道你是谁。</div>`}</div>` : ""}
+      ${npcs.length ? `<p class="note" style="margin:10px 0 0">NPC · 虚构的成员</p>${npcs.map(n=>row(n.icon, "#fff", esc(n.name) + " " + npcBadge, esc(n.city) + " · " + esc(n.job), "")).join("")}` : ""}
+      <p class="note" style="margin:10px 0 0">真人成员 · ${others.length}</p>
+      ${others.map(m=>{ const t = idtOf(id, m.by), nm = socName(m.by) || "一位伙伴"; return row(esc(nm.slice(0,1)), avColor(m.by), esc(nm) + (m.by===c.host?" 🎙️":""), t ? esc(t.icon) + " " + esc(t.who) : "还没选身份", hs(t), (canHelp(myIdt, t) ? tag("你可以帮 TA") : "") + (canHelp(t, myIdt) ? tag("TA 可以帮你") : "")); }).join("") || `<p class="note">还没有别的真人成员。邀请朋友来吧。</p>`}
+      ${joined ? "" : `<button class="chip hot" id="clJoin2" style="width:100%;margin-top:8px">加入圈子</button>`}`;
+  };
   const qaHtml = () => {
     const wantN = q => likeN("want:" + q.key).length, solved = q => !!q.best && ansOfQ(q).some(a=>a.key === q.best);
-    const qLine = by => { if (String(by).startsWith("npc:")){ const n = clubNpc(id, by.slice(4)); return n ? `${esc(n.name)} ${npcBadge} · ${esc(n.city)} · ${esc(n.job)}` : ""; } const w = who(by), bio = (SOC.profiles[by]||{}).bio; return esc(w.name) + (bio ? " · " + esc(bio) : ""); };
+    const qLine = by => { if (String(by).startsWith("npc:")){ const n = clubNpc(id, by.slice(4)); return n ? `${esc(n.name)} ${npcBadge} · ${esc(n.city)} · ${esc(n.job)}` : ""; } const w = who(by), bio = w.idt ? w.idt.icon + " " + w.idt.who : (SOC.profiles[by]||{}).bio; return esc(w.name) + (bio ? " · " + esc(bio) : ""); };
     const pill = (t, st) => `<span style="display:inline-block;font-size:11px;padding:1px 7px;border-radius:8px;border:1px solid #ddd5c0;margin-right:4px;${st||""}">${t}</span>`;
     const ok = "background:#eaf6e8;color:#2b6a1f;border-color:#bfe0b6";
     const composer = (ph) => joined ? `<div style="position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;border-top:1px solid #eee8da;margin:0 -2px">${rp ? `<div class="note" style="margin-bottom:4px">回复 ${esc(rp.name)} · <span role="button" tabindex="0" id="rpX" style="cursor:pointer;text-decoration:underline">取消</span></div>` : ""}
@@ -5211,7 +5272,7 @@ function openClub(id){
         <textarea id="qaQ" rows="2" maxlength="200" placeholder="例如：Any tips for my first night shift?" style="width:100%;margin-top:6px">${esc(CLUBUI.draft["q:" + id] || "")}</textarea>
         <div class="note" style="margin:6px 0 4px">多说一句背景（选填）</div><textarea id="qaCtx" rows="2" maxlength="300" placeholder="I start on a surgical ward next week…" style="width:100%"></textarea>
         <div class="note" style="margin:6px 0 4px">这是关于</div><div class="chips">${QA_TAGS.map(t=>`<button class="chip" data-qtag="${esc(t)}" ${t===tag?'aria-pressed="true"':""} style="${t===tag?ok:""}">${esc(t)}</button>`).join("")}</div>
-        ${me.bio ? `<p class="note">会显示：${esc(socName(SOC.uid)==="我"?(me.name||"我"):socName(SOC.uid))} · ${esc(me.bio)}</p>` : `<div class="note" style="margin:6px 0 4px">一句话介绍自己（会显示在问题旁边，让大家知道你是谁）</div><input id="qaBio" maxlength="60" placeholder="例如：成都的护理专业学生，想去澳洲工作" style="width:100%">`}
+        ${idtOf(id, SOC.uid) ? `<p class="note">会显示：${esc(idtOf(id, SOC.uid).icon)} ${esc(idtOf(id, SOC.uid).who)}</p>` : me.bio ? `<p class="note">会显示：${esc(socName(SOC.uid)==="我"?(me.name||"我"):socName(SOC.uid))} · ${esc(me.bio)}</p>` : `<div class="note" style="margin:6px 0 4px">一句话介绍自己（会显示在问题旁边，让大家知道你是谁）</div><input id="qaBio" maxlength="60" placeholder="例如：成都的护理专业学生，想去澳洲工作" style="width:100%">`}
         <div class="chips" style="margin-top:8px"><button class="chip hot" id="qaPost">发出去</button><button class="chip" id="qaCancel">取消</button><span class="note" id="qaNote"></span></div></div>`;
     }
     const f = CLUBUI.qfilter[id] || "hot";
@@ -5229,8 +5290,9 @@ function openClub(id){
       ${joined?`<button class="chip" id="clLeave">已加入</button>`:`<button class="chip hot" id="clJoin">加入</button>`}</div>
     ${storyNpcs.length ? `<div><div class="note" style="margin-bottom:4px">今天的动态</div><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px">${storyNpcs.map(x=>{ const fresh = !seen.has(x.list[0].id); return `<button data-story="${esc(x.n.id)}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;width:54px;flex:none"><span style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff;border:2.5px solid ${fresh?"#e8322f":"#d8d2bf"}${CLUBUI.story[id]===x.n.id?";box-shadow:0 0 0 2px #1c5fa8":""}">${x.n.icon}</span><small style="font-size:11px">${esc(x.n.name)}</small></button>`; }).join("")}</div>
       ${openStory ? `<div style="border:2px solid #e4dcc2;border-radius:12px;padding:8px 10px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><b>${openStory.n.icon} ${esc(openStory.n.name)} ${npcBadge}</b><button class="chip" id="stX" aria-label="关闭动态" style="padding:0 8px">✕</button></div><small class="note">${esc(openStory.n.country)}${esc(openStory.n.city)} · ${esc(openStory.n.job)}</small>${openStory.list.slice(0,3).map(u=>`<div class="note" style="margin-top:6px">${esc(u.date.slice(5).replace("-","月"))}日</div>` + thread(upItem(u))).join("")}</div>` : ""}</div>` : ""}
-    <div style="display:flex;gap:6px;border-bottom:1px solid #eee8da;padding-bottom:6px">${[["talk","💬 话题"],["qa",`❓ 问答 · ${qs.length}`]].map(([k,t])=>`<button class="chip" data-ctab="${k}" ${tab===k?'aria-pressed="true"':""} style="${tab===k?"background:#1c5fa8;color:#fff;border-color:#1c5fa8":""}">${t}</button>`).join("")}</div>
-    ${tab === "qa" ? qaHtml() : `${ch ? `<div style="background:#eaf6e8;border-radius:12px;padding:10px 12px">
+    ${joining ? pickHtml() : joined && !myIdt ? `<div style="background:#fff6e0;border-radius:10px;padding:6px 10px;font-size:13px">选一个你在「${esc(c.name)}」里的身份，大家就知道你是谁。 <button class="chip" id="idChange" style="font-size:12px">选身份</button></div>` : ""}
+    <div style="display:flex;gap:6px;border-bottom:1px solid #eee8da;padding-bottom:6px;overflow-x:auto">${[["talk","💬 话题"],["qa",`❓ 问答 · ${qs.length}`],["mem",`👥 成员 · ${mem.length}`]].map(([k,t])=>`<button class="chip" data-ctab="${k}" ${tab===k?'aria-pressed="true"':""} style="${tab===k?"background:#1c5fa8;color:#fff;border-color:#1c5fa8":""}">${t}</button>`).join("")}</div>
+    ${tab === "qa" ? qaHtml() : tab === "mem" ? memHtml() : `${ch ? `<div style="background:#eaf6e8;border-radius:12px;padding:10px 12px">
       <div style="display:flex;justify-content:space-between;font-size:12px;color:#2b6a1f"><span>🏁 本周小挑战</span><span>${chLeft ? `还剩 ${chLeft} 天` : "已结束"} · ${chDone.length} 人完成${chDone.includes(SOC.uid)?" · ✓ 你完成了":""}</span></div>
       <div style="font-weight:600;margin-top:4px">${esc(ch.title)} <button class="chip" data-say="${esc(ch.title)}" data-tts="${tts}" style="padding:0 6px">🔊</button></div><div class="note">${esc(ch.zh)}</div>
       ${onCh ? "" : `<div class="note" style="margin-top:4px">${(n=>n?`${n.icon} ${esc(n.name)} 也在做：`:"")(clubNpc(id, ch.example.npc))}${esc(ch.example.text)}</div>`}
@@ -5261,8 +5323,26 @@ function openClub(id){
   $("#clBack").onclick = openSoc;
   const memRef = SOC.db.doc("clubmembers/" + id + "__" + SOC.uid);
   const join = async ()=>{ try { await memRef.set({club:id, by:SOC.uid, ts:Date.now()}); } catch(e){} };
-  if ($("#clJoin")) $("#clJoin").onclick = join;
-  if ($("#clJoin2")) $("#clJoin2").onclick = join;
+  const openPick = ()=>{ CLUBUI.join[id] = true; CLUBUI.pick[id] = null; openClub(id); card.scrollTop = 0; };
+  if ($("#clJoin")) $("#clJoin").onclick = openPick;
+  if ($("#clJoin2")) $("#clJoin2").onclick = openPick;
+  card.querySelectorAll("#idChange").forEach(b=>b.onclick = openPick);
+  card.querySelectorAll("[data-idpick]").forEach(b=>b.onclick = ()=>{ CLUBUI.pick[id] = b.dataset.idpick; rerender(); });
+  bindIdIcons(card);
+  if ($("#idJoinX")) $("#idJoinX").onclick = ()=>{ CLUBUI.join[id] = false; rerender(); };
+  if ($("#idJoin")) $("#idJoin").onclick = async ()=>{
+    const note = x => { const n = $("#idJoinNote"); if (n) n.textContent = x; };
+    const ids = myIds(), pk = CLUBUI.pick[id] || (myIdt && memOf(id, SOC.uid).idk) || (ids[0] ? ids[0].k : "new");
+    let x = ids.find(i=>i.k===pk);
+    if (!x){ x = readIdForm(card, "jn"); if (!x.who){ note("先写一句「我是谁」"); return; } }
+    $("#idJoin").disabled = true;
+    try {
+      if (!ids.some(i=>i.k===x.k)) await saveMyIds([...ids, x]);
+      const old = memOf(id, SOC.uid);
+      await memRef.set({club:id, by:SOC.uid, ts: old && old.ts || Date.now(), idk:x.k, idt:{icon:x.icon, who:x.who, help:x.help, ask:x.ask}});
+      CLUBUI.join[id] = false; rerender();
+    } catch(e){ note("没保存上（可能只有查看权限）"); const b = $("#idJoin"); if (b) b.disabled = false; }
+  };
   if ($("#clLeave")) $("#clLeave").onclick = async ()=>{ if (!confirm("退出这个圈子？")) return; try { await memRef.delete(); } catch(e){} };
   const rerender = ()=>{ const st = card.scrollTop; openClub(id); card.scrollTop = st; };
   card.querySelectorAll("[data-story]").forEach(b=>b.onclick = ()=>{ const nid = b.dataset.story; CLUBUI.story[id] = CLUBUI.story[id] === nid ? null : nid; const x = storyNpcs.find(s=>s.n.id===nid); if (x) markSeen(x.list.map(u=>u.id)); rerender(); });
