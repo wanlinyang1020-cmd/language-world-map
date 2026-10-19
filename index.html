@@ -136,6 +136,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .c-top h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.15;text-wrap:balance}
 .c-region{font-size:13px;color:var(--muted);margin-top:3px}
 .c-cat{display:inline-block;color:#fff;font-size:12px;border-radius:99px;padding:2px 9px;font-weight:700;margin-top:6px}
+#card > *{min-width:0}
 #card p{margin:0;font-size:14.5px;line-height:1.75}
 .c-stamp{font-size:12.5px;background:#fff6d6;border:1.5px dashed var(--gold);border-radius:8px;padding:6px 9px}
 .c-near h3{margin:4px 0 6px;font-size:12px;letter-spacing:.12em;color:var(--muted);font-weight:700}
@@ -5097,85 +5098,154 @@ function npcTalkHtml(id, tid, lang){
   return `<p><b>${esc(t.text)}</b></p>${t.zh?`<p class="note">${esc(t.zh)}</p>`:""}` + t.posts.map(x=>{ const n = clubNpc(id, x.npc); if (!n) return "";
     return `<div style="border-left:3px solid #9cc3ee;padding:4px 8px;margin:6px 0"><b>${n.icon} ${esc(n.name)}</b> ${npcBadge} <small class="note">${esc(n.city)} · ${esc(n.job)}</small><div>${esc(x.text)} <button class="chip" data-say="${esc(x.text)}" data-tts="${STORY_TTS[lang]||""}">🔊</button></div><div class="note">${esc(x.zh)}</div></div>`; }).join("");
 }
+// 圈子页面：像群聊一样——置顶话题、大家的发言（NPC 和真人）、点赞、回复、底部输入框和快捷回复
+const CLUBUI = {topic:{}, draft:{}, reply:{}, zh:new Set(), typing:{}};
+const QUICK = {
+  "英语": [["I agree 👍","我同意"],["Same here!","我也是！"],["Good point!","说得好！"],["Why do you think so?","你为什么这么想？"],["In my country, ","在我们国家，"],["I'm not sure, but ","我不太确定，不过"]],
+  "日语": [["わかります！","我懂！"],["私もです！","我也是！"],["いいですね！","真好！"],["どうしてそう思いますか？","你为什么这么想？"],["私の国では、","在我们国家，"]],
+  "中文": [["同意！","同意！"],["我也是！","我也是！"],["说得好！","说得好！"],["为什么这么想？","为什么这么想？"],["在我们那里，","在我们那里，"]]
+};
+const topicQ = t => { const m = String(t.text||"").match(/Then answer:\s*(.+?)(?:\s*Share your|$)/); return (m ? m[1] : t.text || "").trim(); };
+const avColor = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 60% 88%)`; };
 function openClub(id){
   const c = SOC.clubs.find(x=>x.id===id);
   if (!c){ if (SOC.view === "club:" + id){ card.innerHTML = `<button class="x" aria-label="关闭">✕</button><p class="note">圈子正在建好……</p>`; card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); }; return; } openSoc(); return; }
   SOC.view = "club:" + id;
-  const mem = clubMembers(id), joined = inClub(id), me = SOC.profiles[SOC.uid] || {};
+  const mem = clubMembers(id), joined = inClub(id);
   const isHost = c.host === SOC.uid, canHost = SOC.owner || isHost;
-  const posts = SOC.clubposts.filter(p=>p.club===id && !socBlocked().includes(p.by)).slice(0,60);
+  const all = SOC.clubposts.filter(p=>p.club===id && !socBlocked().includes(p.by));
   const daily = c.cadence === "每天";
   const wk = c.weekly && c.weekly.topic && (Date.now() - (c.weekly.ts||0) < (daily ? 1.5 : 8)*864e5) ? c.weekly : null;
   const npcs = clubNpcs(id), npcTalks = typeof NPC_TALK !== "undefined" ? Object.keys(NPC_TALK).filter(tid=>NPC_TALK[tid].posts.some(x=>npcs.some(n=>n.id===x.npc))) : [];
-  const npcCur = wk && npcTalks.includes(wk.topicId) ? wk.topicId : npcTalks[0];
+  const topics = npcTalks.map(tid=>({id:tid, q:topicQ(NPC_TALK[tid]), zh:npcTopicLabel(NPC_TALK[tid]), posts:NPC_TALK[tid].posts}));
+  if (wk && !npcTalks.includes(wk.topicId)) topics.unshift({id:"weekly", q:wk.topic, zh: wk.zh && wk.zh !== wk.topic ? wk.zh : "", posts:[]});
+  let ti = topics.findIndex(t=>t.id === (CLUBUI.topic[id] || (wk && wk.topicId) || "weekly")); if (ti < 0) ti = 0;
+  const cur = topics[ti]; CLUBUI.topic[id] = cur ? cur.id : "";
+  const lang = c.lang || "英语", tts = STORY_TTS[lang] || LANG_CODE[lang] || "";
+  // 这个话题下的发言：NPC 预写的 + 真人发的（按时间），回复挂在第一层下面
+  const items = [];
+  if (cur) cur.posts.forEach((x,i)=>items.push({key:`npc:${cur.id}:${i}`, by:"npc:"+x.npc, text:x.text, zh:x.zh, ts:0}));
+  all.filter(p=>!p.parent && (cur ? p.topic === cur.id : true)).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(p=>items.push({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind, ts:p.ts}));
+  const older = cur ? all.filter(p=>!p.parent && !p.topic).sort((a,b)=>(b.ts||0)-(a.ts||0)) : [];
+  const repliesOf = key => all.filter(p=>p.parent===key).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(p=>({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, ts:p.ts}));
+  const who = by => {
+    if (String(by).startsWith("npc:")){ const n = clubNpc(id, by.slice(4)); return n ? {name:n.name, av:n.icon, npc:n} : {name:"NPC", av:"🙂"}; }
+    if (by === "ai_host") return {name:"AI 主持人", av:"🤖"};
+    const nm = by === SOC.uid ? "我" : (socName(by) || "一位伙伴"); return {name:nm, av:esc(nm.slice(0,1)), bg:avColor(by)};
+  };
+  const likeN = key => SOC.likes.filter(l=>l.post===key), liked = key => likeN(key).some(l=>l.by===SOC.uid);
+  const msg = (it, topKey, isRep) => { const w = who(it.by), zhOn = CLUBUI.zh.has(it.key);
+    return `<div style="display:flex;gap:8px;${isRep?"margin:6px 0 0 34px;padding-left:8px;border-left:2px solid #e6e1d4":"padding:8px 0;border-bottom:1px solid #eee8da"}">
+      <div style="width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${w.npc||w.name==="AI 主持人"?16:13}px;background:${w.bg||"#eef3fb"}">${w.av}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px"><b>${esc(w.name)}</b>${w.npc?` ${npcBadge} <small class="note">${esc(w.npc.city)}</small>`:""}${it.kind==="主持人总结"?` <span class="soc-badge">总结</span>`:""}</div>
+        <div style="white-space:pre-wrap;margin-top:2px">${esc(it.text)}</div>${it.url?`<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url.slice(0,50))}</a>`:""}
+        ${zhOn && it.zh ? `<div class="note" style="margin-top:2px">${esc(it.zh)}</div>` : ""}
+        <div style="display:flex;gap:14px;margin-top:4px;font-size:12px;color:#7a7466">
+          <span role="button" tabindex="0" data-like="${esc(it.key)}" style="cursor:pointer">${liked(it.key)?"❤️":"🤍"} ${likeN(it.key).length || ""}</span>
+          ${joined?`<span role="button" tabindex="0" data-reply="${esc(topKey)}" data-rname="${esc(w.name)}" data-rnpc="${w.npc?esc(w.npc.id):""}" style="cursor:pointer">💬 回复</span>`:""}
+          ${it.zh?`<span role="button" tabindex="0" data-czh="${esc(it.key)}" style="cursor:pointer">${zhOn?"收起中文":"中文"}</span>`:""}
+          <span role="button" tabindex="0" data-say="${esc(it.text)}" data-tts="${tts}" style="cursor:pointer">🔊</span>
+        </div></div></div>`; };
+  const thread = it => msg(it, it.key) + repliesOf(it.key).map(r=>msg(r, it.key, true)).join("");
+  const rp = CLUBUI.reply[id], typing = CLUBUI.typing[id];
+  const quick = QUICK[lang] || QUICK["英语"];
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
-    <div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">👥</div><div><h2>${esc(c.name)}</h2><span class="c-cat" style="background:#2f9e8f">${esc(c.goal||"")}${c.city?` · ${esc(c.city)}`:""} · 用${esc(c.lang||"")}聊 · ${mem.length} 人</span></div></div>
-    ${c.desc?`<p>${esc(c.desc)}</p>`:""}
-    <p class="note">主持人：${esc(clubHostName(c))}${(!c.host || c.host==="ai") && joined ? ` · <button class="chip" id="clBeHost">我来当主持人</button>` : ""}</p>
-    <div class="chips"><button class="chip" id="clBack">← 回到伙伴</button>${joined?`<button class="chip" id="clLeave">退出圈子</button>`:`<button class="chip hot" id="clJoin">加入圈子</button>`}</div>
-    <section><h3>📌 ${daily?"今日话题":"本周话题"}</h3>${wk?`<p><b>${esc(wk.topic)}</b></p>${wk.zh && wk.zh !== wk.topic && c.lang !== "中文"?`<p class="note">${esc(wk.zh)}</p>`:""}<p class="note">${esc(wk.by==="ai"?"🤖 AI 主持人从话题库选的":"🎙️ "+(socName(wk.by)||"主持人")+" 出的题")}</p>`:`<p class="note">${daily?"今天":"这周"}还没有话题。</p>`}
-      ${joined ? `<div class="chips">${(canHost || !c.host || c.host==="ai")?`<button class="chip" id="clTopicBank">🎲 从话题库选一题</button>`:""}${canHost?`<button class="chip" id="clTopicMine">我来出话题</button><label class="note" style="display:inline-flex;gap:4px;align-items:center">节奏 <select id="clCadence"><option${daily?"":" selected"}>每周</option><option${daily?" selected":""}>每天</option></select></label>`:""}<button class="chip" id="clSum">🤖 请 AI 主持人总结最近的分享</button><button class="chip" id="clExpr">💬 用${esc(c.lang||"")}怎么开口</button></div>
-        <div class="soc-form" id="clTopicForm" hidden><input id="clTopicIn" maxlength="140" placeholder="用${esc(c.lang||"")}写话题：在哪里、和谁、做什么"><button class="chip" id="clTopicSave">发布话题</button></div><span class="note" id="clAiNote"></span>` : ""}</section>
-    ${npcs.length ? `<section><h3>🧑‍🤝‍🧑 圈子里的 NPC</h3><p class="note">他们是虚构的成员，有自己的生活、工作和看法，只从自己的经历说话，也会互相不同意。</p>${npcs.map(n=>`<div class="soc-p"><span style="font-size:24px">${n.icon}</span><div><b>${esc(n.name)}</b> ${npcBadge}<small>${n.age} 岁 · ${esc(n.country)}${esc(n.city)} · ${esc(n.job)}</small><div class="note">${esc(n.life)}</div></div></div>`).join("")}
-      ${npcTalks.length ? `<h3>💬 NPC 们在聊</h3><div class="chips">${npcTalks.map(tid=>`<button class="chip${tid===npcCur?" hot":""}" data-npctopic="${esc(tid)}">${esc(npcTopicLabel(NPC_TALK[tid]))}</button>`).join("")}</div><div id="npcTalk">${npcTalkHtml(id, npcCur, c.lang)}</div>${joined?`<div class="chips"><button class="chip hot" id="npcJoinIn">✍️ 我也说说</button></div>`:""}` : ""}</section>` : ""}
-    ${joined ? `<section><h3>✍️ 分享一个发现</h3><div class="soc-form"><textarea id="cpText" rows="2" maxlength="400" placeholder="用${esc(c.lang||"")}写：今天看到的视频、去过的地方、和当地人说的一句话……"></textarea>
-      <input id="cpUrl" placeholder="链接（选填）"><button class="chip" id="cpSend">分享</button>${npcs.length?`<button class="chip" id="cpNpc">🧑‍🤝‍🧑 请 NPC 回应</button>`:""}</div><span class="note" id="cpNpcNote"></span></section>` : `<p class="note">加入以后才能分享和参与话题。</p>`}
-    <section><h3>圈子里的分享 · ${posts.length}</h3>${posts.length ? posts.map(p=>`<div style="border-bottom:1px dashed #ddd;padding:6px 0"><b>${postAuthor(p, id)}</b>${p.kind && p.kind!=="发现"?`<span class="soc-badge">${esc(p.kind)}</span>`:""}<div style="white-space:pre-wrap">${esc(p.text)}</div>${p.zh?`<div class="note">${esc(p.zh)}</div>`:""}${p.url?`<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url.slice(0,60))}</a>`:""}</div>`).join("") : `<p class="note">还没有人分享。</p>`}</section>
-    <section><h3>成员 · ${mem.length}</h3>${mem.map(m=>`<span class="soc-badge" style="margin:2px">${m.by===c.host?"🎙️ ":""}${esc(socName(m.by)||"一位伙伴")}${SOC.profiles[m.by]&&SOC.profiles[m.by].guideOf?" 🧭":""}</span>`).join("") || `<span class="note">还没有成员。</span>`}</section>`;
+    <div style="display:flex;align-items:center;gap:8px;padding-right:26px"><button class="chip" id="clBack" aria-label="回到伙伴">←</button>
+      <div style="flex:1;min-width:0"><b style="font-size:17px">${esc(c.name)}</b><div class="note">${mem.length} 人${npcs.length?` · ${npcs.length} 个 NPC`:""} · 用${esc(lang)}聊</div></div>
+      ${joined?`<button class="chip" id="clLeave">已加入</button>`:`<button class="chip hot" id="clJoin">加入</button>`}</div>
+    ${cur ? `<div style="background:#eef3fb;border-radius:12px;padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#1c5fa8"><span>📌 ${topics.length>1?"话题":"本周话题"}</span>${topics.length>1?`<span><button class="chip" id="tpPrev" aria-label="上一个话题" style="padding:0 8px">‹</button> ${ti+1}/${topics.length} <button class="chip" id="tpNext" aria-label="下一个话题" style="padding:0 8px">›</button></span>`:""}</div>
+      <div style="font-weight:600;margin-top:4px">${esc(cur.q)} <button class="chip" data-say="${esc(cur.q)}" data-tts="${tts}" style="padding:0 6px">🔊</button></div>${cur.zh && lang !== "中文" ? `<div class="note">${esc(cur.zh)}</div>` : ""}</div>` : `<p class="note">还没有话题。${joined?"直接在下面说一句吧。":""}</p>`}
+    <div id="clFeed">${items.length ? items.map(thread).join("") : `<p class="note">这里还没人说话，来说第一句吧。</p>`}
+      ${typing ? `<p class="note">${esc(typing)} 正在输入…</p>` : ""}
+      ${older.length ? `<details><summary class="note">更早的分享 · ${older.length}</summary>${older.map(p=>thread({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind})).join("")}</details>` : ""}</div>
+    <div style="position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;border-top:1px solid #eee8da;margin:0 -2px">
+      ${joined ? `${rp ? `<div class="note" style="margin-bottom:4px">回复 ${esc(rp.name)} · <span role="button" tabindex="0" id="rpX" style="cursor:pointer;text-decoration:underline">取消</span></div>` : ""}
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px">${quick.map(q=>`<button class="chip" data-qr="${esc(q[0])}" title="${esc(q[1])}" style="white-space:nowrap;font-size:12px">${esc(q[0])}</button>`).join("")}</div>
+        <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="cpText" rows="1" maxlength="400" placeholder="${rp?`回复 ${esc(rp.name)}…`:`用${esc(lang)}说点什么…`}" style="flex:1;resize:none">${esc(CLUBUI.draft[id]||"")}</textarea><button class="chip hot" id="cpSend" aria-label="发送">发送</button></div>
+        <span class="note" id="cpNote"></span>`
+      : `<button class="chip hot" id="clJoin2" style="width:100%">加入圈子，一起聊</button>`}</div>
+    <details><summary class="note">⋯ 关于这个圈子</summary>
+      ${c.desc?`<p>${esc(c.desc)}</p>`:""}
+      <p class="note">主持人：${esc(clubHostName(c))}${(!c.host || c.host==="ai") && joined ? ` · <button class="chip" id="clBeHost">我来当主持人</button>` : ""}</p>
+      ${joined ? `<div class="chips">${(canHost || !c.host || c.host==="ai")?`<button class="chip" id="clTopicBank">🎲 从话题库选一题</button>`:""}${canHost?`<button class="chip" id="clTopicMine">我来出话题</button><label class="note" style="display:inline-flex;gap:4px;align-items:center">节奏 <select id="clCadence"><option${daily?"":" selected"}>每周</option><option${daily?" selected":""}>每天</option></select></label>`:""}<button class="chip" id="clSum">🤖 请 AI 主持人总结</button><button class="chip" id="clExpr">💬 用${esc(lang)}怎么开口</button></div>
+        <div class="soc-form" id="clTopicForm" hidden><input id="clTopicIn" maxlength="140" placeholder="用${esc(lang)}写话题：在哪里、和谁、做什么"><button class="chip" id="clTopicSave">发布话题</button></div><span class="note" id="clAiNote"></span>` : ""}
+      ${npcs.length ? `<h3>圈子里的 NPC</h3><p class="note">虚构的成员，有自己的生活和看法。</p>${npcs.map(n=>`<div class="soc-p"><span style="font-size:22px">${n.icon}</span><div><b>${esc(n.name)}</b> ${npcBadge}<small>${n.age} 岁 · ${esc(n.country)}${esc(n.city)} · ${esc(n.job)}</small><div class="note">${esc(n.life)}</div></div></div>`).join("")}` : ""}
+      <h3>成员 · ${mem.length}</h3>${mem.map(m=>`<span class="soc-badge" style="margin:2px">${m.by===c.host?"🎙️ ":""}${esc(socName(m.by)||"一位伙伴")}</span>`).join("") || `<span class="note">还没有成员。</span>`}
+    </details>`;
   card.hidden = false;
   const $ = s => card.querySelector(s);
   $(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
   $("#clBack").onclick = openSoc;
   const memRef = SOC.db.doc("clubmembers/" + id + "__" + SOC.uid);
-  if ($("#clJoin")) $("#clJoin").onclick = async ()=>{ try { await memRef.set({club:id, by:SOC.uid, ts:Date.now()}); } catch(e){} };
-  if ($("#clLeave")) $("#clLeave").onclick = async ()=>{ try { await memRef.delete(); } catch(e){} };
+  const join = async ()=>{ try { await memRef.set({club:id, by:SOC.uid, ts:Date.now()}); } catch(e){} };
+  if ($("#clJoin")) $("#clJoin").onclick = join;
+  if ($("#clJoin2")) $("#clJoin2").onclick = join;
+  if ($("#clLeave")) $("#clLeave").onclick = async ()=>{ if (!confirm("退出这个圈子？")) return; try { await memRef.delete(); } catch(e){} };
+  const rerender = ()=>{ const st = card.scrollTop; openClub(id); card.scrollTop = st; };
+  if ($("#tpPrev")) $("#tpPrev").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti - 1 + topics.length) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); };
+  if ($("#tpNext")) $("#tpNext").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti + 1) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); };
+  card.querySelectorAll("[data-like]").forEach(b=>b.onclick = async ()=>{ const key = b.dataset.like, ref = SOC.db.doc("likes/" + key + "__" + SOC.uid);
+    try { if (liked(key)) await ref.delete(); else await ref.set({post:key, by:SOC.uid, ts:Date.now()}); } catch(e){ const n = $("#cpNote"); if (n) n.textContent = "没点上（可能要先加入伙伴圈）"; } });
+  card.querySelectorAll("[data-czh]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.czh; if (CLUBUI.zh.has(k)) CLUBUI.zh.delete(k); else CLUBUI.zh.add(k); rerender(); });
+  card.querySelectorAll("[data-reply]").forEach(b=>b.onclick = ()=>{ CLUBUI.reply[id] = {key:b.dataset.reply, name:b.dataset.rname, npc:b.dataset.rnpc}; rerender(); const t = $("#cpText"); if (t){ t.focus(); } });
+  if ($("#rpX")) $("#rpX").onclick = ()=>{ CLUBUI.reply[id] = null; rerender(); };
+  const ta = $("#cpText");
+  if (ta){ ta.oninput = ()=>{ CLUBUI.draft[id] = ta.value; const n = $("#cpNote"); if (n) n.textContent = ""; }; }
+  card.querySelectorAll("[data-qr]").forEach(b=>b.onclick = ()=>{ if (!ta) return; ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + " " : ta.value) + b.dataset.qr + (/\s$/.test(b.dataset.qr) ? "" : " "); CLUBUI.draft[id] = ta.value; ta.focus(); });
+  if ($("#cpSend")) $("#cpSend").onclick = async ()=>{
+    const t = scrub(ta.value.trim()).slice(0,400), note = x => { const n = $("#cpNote"); if (n) n.textContent = x; };
+    if (!t){ note("先写一句，或点上面的快捷回复"); return; }
+    const r = CLUBUI.reply[id], topic = cur ? cur.id : "";
+    const text = r && r.name ? "@" + r.name + " " + t : t;
+    $("#cpSend").disabled = true;
+    let ref = null;
+    try { ref = await SOC.db.collection("clubposts").add({club:id, by:SOC.uid, kind: r ? "回复" : "话题回应", topic, parent: r ? r.key : "", text, ts:Date.now()}); }
+    catch(e){ note("没发出去（可能只有查看权限）"); const b = $("#cpSend"); if (b) b.disabled = false; return; }
+    CLUBUI.draft[id] = ""; CLUBUI.reply[id] = null; ta.value = "";
+    rerender();
+    // NPC 接话：只在 Claude 里（网站上的 AI 先关着）
+    if (!prSample || !npcs.length) return;
+    const parent = r ? r.key : (ref && ref.id ? "cp:" + ref.id : "");
+    const target = r && r.npc ? clubNpc(id, r.npc) : null;
+    CLUBUI.typing[id] = target ? target.name : "NPC"; rerender();
+    const me = ((SOC.profiles[SOC.uid]||{}).name || "这位成员").slice(0,20);
+    const ctxItems = r ? [items.find(x=>x.key===r.key), ...repliesOf(r.key)].filter(Boolean) : items.slice(-6);
+    const ctx = ctxItems.slice(-8).map(x=>`${who(x.by).name === "我" ? me : who(x.by).name}：${x.text}`).join("\n");
+    const cards = npcs.map(n=>`- ${n.id}：${n.name}，${n.age} 岁，住在${n.country}${n.city}，${n.job}。生活：${n.life} 看法：${n.stance} 不懂：${n.unknown}。说话方式：${n.style}。常问：${n.asks}。底线：${n.limits}`).join("\n");
+    try {
+      const res = await prSample.json([{role:"user", content:`你在语言学习圈子「${c.name}」里扮演虚构的成员（NPC）。圈子用${lang}聊。${cur?`正在聊的话题：${cur.q}`:""}\n人物卡：\n${cards}\n最近的对话（从旧到新）：\n${ctx}\n${me} 刚刚说：${text}\n${target?`请由 ${target.id}（${target.name}）回复 ${me}。`:`请选 1 位最可能接话的人回复 ${me}。`}规则：只从自己的生活和经历出发，用第一人称；1–3 句，像聊天软件里的回复；可以不同意；不知道就说不知道；不讲大道理、不列清单、不提自己是 AI；不纠正语法，只回应内容；可以问一个问题让对话继续；用${lang}写，按人物卡里的外语水平和口头禅；人物的年龄、职业、家庭不能说错；涉及健康、用药或危险情况时按底线说，建议找医生或求助热线。附中文翻译。只返回 JSON：{"npc":"人物 id","text":"回复","zh":"中文翻译"}`}], {modelTier:"default", cache:false});
+      const x = Array.isArray(res) ? res[0] : res;
+      if (x && x.text && clubNpc(id, x.npc)) await SOC.db.collection("clubposts").add({club:id, by:"npc:" + x.npc, kind:"NPC 回应", topic, parent, text:String(x.text).slice(0,600), zh:String(x.zh||"").slice(0,400), ts:Date.now()});
+    } catch(e){}
+    finally { CLUBUI.typing[id] = null; if (SOC.view === "club:" + id) rerender(); }
+  };
+  if (ta) ta.onkeydown = e=>{ if (e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); $("#cpSend").click(); } };
   const saveClub = async patch => { const body = {...c, ...patch}; delete body.id; try { await SOC.db.doc("clubs/" + id).set(body); } catch(e){ const n = $("#clAiNote"); if (n) n.textContent = "没保存上（可能只有查看权限）"; } };
   if ($("#clBeHost")) $("#clBeHost").onclick = ()=>saveClub({host: SOC.uid});
   if ($("#clTopicMine")) $("#clTopicMine").onclick = ()=>{ $("#clTopicForm").hidden = false; $("#clTopicIn").focus(); };
   if ($("#clTopicSave")) $("#clTopicSave").onclick = async ()=>{ const t = scrub($("#clTopicIn").value.trim()).slice(0,140); if (!t) return;
+    CLUBUI.topic[id] = "weekly";
     await saveClub({weekly: {topic: t, zh: "", by: SOC.uid, ts: Date.now()}});
     if (!topicDup(t)) try { await SOC.db.collection("topics").add({text: t, zh: "", lang: c.lang, goal: c.goal || "", city: c.city || "", env: "", people: "", event: "", source: "主持人", status: "待审", by: SOC.uid, ts: Date.now()}); } catch(e){} };
   const aiNote = t => { const n = $("#clAiNote"); if (n) n.textContent = t; };
   if ($("#clTopicBank")) $("#clTopicBank").onclick = ()=>{
     const t = pickTopic(c);
     if (!t){ aiNote("话题库里没有适合这个圈子的新话题了，请地图主人审核更多。"); return; }
+    CLUBUI.topic[id] = npcTalks.includes(t.id) ? t.id : "weekly";
     saveClub({weekly: {topic: t.text, zh: t.zh || "", topicId: t.id, by: "ai", ts: Date.now()}, usedTopics: [...(c.usedTopics||[]), t.id].slice(-200)}); aiNote("");
   };
   if ($("#clCadence")) $("#clCadence").onchange = e=>saveClub({cadence: e.target.value});
   if ($("#clExpr")) $("#clExpr").onclick = ()=>openExpr(c.lang, "club:" + id);
   if ($("#clSum")) $("#clSum").onclick = async ()=>{
     if (!prSample){ aiNote("AI 主持人在这里用不了。"); return; }
-    const recent = posts.filter(p=>p.by!=="ai_host").slice(0,20).map(p=>`${socName(p.by)||"成员"}：${p.text}`).join("\n");
+    const recent = all.filter(p=>p.by!=="ai_host").sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,20).map(p=>`${who(p.by).name}：${p.text}`).join("\n");
     if (!recent){ aiNote("还没有分享可以总结。"); return; }
     aiNote("AI 主持人在读大家的分享…");
     try { const r = await prSample.json([{role:"user", content:`你是语言学习圈子「${c.name}」的主持人，圈子用${c.lang}聊。下面是最近的分享：\n${recent}\n请用${c.lang}写一段温暖的总结（不超过 80 个词）：点出大家的发现，提到 1-2 位成员的亮点，最后用一个问题邀请还没说话的人。再附一句中文翻译。返回 JSON：{"text":"总结","zh":"中文翻译"}`}], {modelTier:"quick", cache:false});
-      if (r && r.text) await SOC.db.collection("clubposts").add({club:id, by:"ai_host", kind:"主持人总结", text: String(r.text).slice(0,600) + (r.zh ? "\n（" + String(r.zh).slice(0,300) + "）" : ""), ts: Date.now()}); aiNote(""); }
+      if (r && r.text) await SOC.db.collection("clubposts").add({club:id, by:"ai_host", kind:"主持人总结", topic: cur ? cur.id : "", parent:"", text: String(r.text).slice(0,600), zh: String(r.zh||"").slice(0,300), ts: Date.now()}); aiNote(""); }
     catch(e){ aiNote("AI 主持人这次没总结出来，稍后再试。"); }
   };
-  card.querySelectorAll("[data-npctopic]").forEach(b=>b.onclick = ()=>{ card.querySelectorAll("[data-npctopic]").forEach(x=>x.classList.toggle("hot", x===b)); $("#npcTalk").innerHTML = npcTalkHtml(id, b.dataset.npctopic, c.lang); card.dataset.npcTopic = b.dataset.npctopic; });
-  if ($("#npcJoinIn")) $("#npcJoinIn").onclick = ()=>{ const t = NPC_TALK[card.dataset.npcTopic || npcCur]; const ta = $("#cpText"); if (!ta || !t) return; if (!ta.value.trim()) ta.value = "【" + npcTopicLabel(t) + "】 "; ta.focus(); ta.scrollIntoView({block:"center"}); };
-  if ($("#cpNpc")) $("#cpNpc").onclick = async ()=>{
-    const note = t => { const n = $("#cpNpcNote"); if (n) n.textContent = t; };
-    if (!prSample){ note("NPC 回应要在 Claude 里打开地图才能用（网站上的 AI 先关着）。"); return; }
-    const mine = posts.filter(p=>p.by===SOC.uid).sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
-    if (!mine){ note("先分享一句你的想法，NPC 才知道接什么话。"); return; }
-    const me = ((SOC.profiles[SOC.uid]||{}).name || "这位成员").slice(0,20);
-    const thread = posts.slice(0,8).reverse().map(p=>`${String(p.by).startsWith("npc:") ? (clubNpc(id, p.by.slice(4))||{}).name : p.by==="ai_host" ? "主持人" : (socName(p.by)||"成员")}：${p.text}`).join("\n");
-    const topic = NPC_TALK[card.dataset.npcTopic || npcCur] || {};
-    const cards = npcs.map(n=>`- ${n.id}：${n.name}，${n.age} 岁，住在${n.country}${n.city}，${n.job}。生活：${n.life} 看法：${n.stance} 不懂：${n.unknown}。说话方式：${n.style}。常问：${n.asks}。底线：${n.limits}`).join("\n");
-    note("NPC 们在看你的分享…"); $("#cpNpc").disabled = true;
-    try {
-      const r = await prSample.json([{role:"user", content:`你在语言学习圈子「${c.name}」里扮演几位虚构的成员（NPC）。圈子用${c.lang}聊。${topic.text?`正在聊的话题：${topic.text}`:""}\n人物卡：\n${cards}\n最近的对话（从旧到新）：\n${thread}\n${me} 刚刚说：${mine.text}\n请选 1–2 位最可能接话的人回复 ${me}。规则：只从自己的生活和经历出发，用第一人称；每人 2–4 句，像聊天；可以不同意别人；不知道就说不知道；不讲大道理、不列清单、不提自己是 AI；不纠正语法，只回应内容；尽量问一个问题让对话继续；用${c.lang}写，按人物卡里的外语水平和口头禅；人物的年龄、职业、家庭不能说错；涉及健康、用药或危险情况时按底线说，建议找医生或求助热线。每条附中文翻译。只返回 JSON 数组：[{"npc":"人物 id","text":"回复","zh":"中文翻译"}]`}], {modelTier:"default", cache:false});
-      const list = (Array.isArray(r) ? r : (r && r.replies) || []).filter(x=>x && clubNpc(id, x.npc) && x.text).slice(0,2);
-      if (!list.length){ note("NPC 们这次没接上话，稍后再试。"); return; }
-      for (const x of list) await SOC.db.collection("clubposts").add({club:id, by:"npc:" + x.npc, kind:"NPC 回应", text:String(x.text).slice(0,600), zh:String(x.zh||"").slice(0,400), ts:Date.now()});
-      note("");
-    } catch(e){ note("NPC 们这次没接上话，稍后再试。"); }
-    finally { const b = $("#cpNpc"); if (b) b.disabled = false; }
-  };
-  if ($("#cpSend")) $("#cpSend").onclick = async ()=>{ const t = scrub($("#cpText").value.trim()).slice(0,400), u = $("#cpUrl").value.trim(); if (!t) return;
-    const url = /^https?:\/\//.test(u) ? u.slice(0,300) : ""; $("#cpSend").disabled = true;
-    try { await SOC.db.collection("clubposts").add({club:id, by:SOC.uid, kind: wk ? "话题回应" : "发现", text:t, url, ts:Date.now()}); $("#cpText").value = ""; $("#cpUrl").value = ""; } catch(e){} finally { const b = $("#cpSend"); if (b) b.disabled = false; } };
 }
 // ===== 话题库：审核过的话题才发给圈子；每个圈子记住用过的，不重复 =====
 const normT = t => String(t||"").toLowerCase().replace(/[\s\p{P}\p{S}]/gu, "");
