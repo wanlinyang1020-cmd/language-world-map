@@ -3757,6 +3757,7 @@ function openCard(d){
     ${storyHtml(d.n)}
     ${storyOf(d.n) && vidList(d.n).length ? `<section data-step="v"><h3>④ 看视频：听当地人和博主怎么说</h3><p class="note">先听一遍，再找出你在 ① ② 里学过的词。</p>${linksHtml(d.n)}</section>` : linksHtml(d.n)}
     ${storyClubHtml(d.n)}
+    ${proLinkHtml(d.n)}
     ${placeEventsHtml(d.n)}
     <div class="c-stamp">${fresh ? "🎉 新印章！已盖进你的旅行护照。" : "✅ 这枚印章你已经收集过了。"} 共 ${stamps.size} / ${data.length}</div>
     <div class="c-near"><h3>附近还有</h3><div>${near.map(o=>`<button class="chip" data-id="${o.id}">${o.e} ${esc(o.n)}</button>`).join("")}</div></div>
@@ -3874,6 +3875,8 @@ function storyHtml(n){
 // ⑤ 去圈子聊：在视频后面。带着讨论题和几种看法，去对应的圈子
 // 经济词汇墙按层去不同的圈子：我的钱 → 第一笔钱，社会的钱 → 社会的钱，钱怎么流动 → 看懂经济
 const STORY_CLUB_LAYER = {"⚖️ 社会的钱":"社会的钱", "🌍 钱怎么流动":"看懂经济"};
+// 经济故事贴纸也按层去圈子：me → 第一笔钱，society → 社会的钱，economy → 看懂经济
+const storyClubName = s => (s.grp === "g5" && ({society:"社会的钱", economy:"看懂经济"})[s.layer]) || STORY_CLUB[s.grp];
 const STORY_CLUB = {g5:"第一笔钱", g7:"在国外生活", g3:"吃得好", g9:"身心健康", dev:"写代码的人", med:"白大褂", founder:"创业者"};
 function storyClubHtml(n){
   const s = storyOf(n); if (!s) return "";
@@ -3883,12 +3886,31 @@ function storyClubHtml(n){
   const sides = lang => ((s.discuss||{}).sides||[]).filter(x=>x[lang]);
   return `<section class="think" data-step="c"><h3>⑤ 去圈子聊：${esc(q)}</h3><p class="note">先挑一个你同意的看法读出来，再去圈子里用自己的话说说为什么。</p>
     ${(s.discuss||{}).sides?langs.map(lang=>`<ul data-sl="${esc(lang)}"${lang===cur?"":" hidden"}>${sides(lang).map(x=>`<li>${esc(x.zh)}<br>${esc(x[lang])} ${say(x[lang], lang)}</li>`).join("")}</ul>`).join(""):""}
-    <div class="chips"><button class="chip hot" data-goclub="${esc(n)}">👥 带着这个问题去「${esc(STORY_CLUB[s.grp]||"圈子")}」圈子</button></div></section>
+    <div class="chips"><button class="chip hot" data-goclub="${esc(n)}">👥 带着这个问题去「${esc(storyClubName(s)||"圈子")}」圈子</button></div></section>
     ${(s.sources||[]).length?`<section><h3>信息来源</h3>${s.sources.map(x=>`<p class="note">📎 <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a></p>`).join("")}<p class="note">最后核实：${esc(s.checked||"")}${s.status==="AI已填"?" · 初稿，待人工核对":""}</p></section>`:""}`;
 }
+// 地图上原有的、和职场有关的贴纸：连到对应的职场圈子（不是五步故事贴纸，只加一个讨论题）
+const PRO_LINK = {
+  "硅谷": {club:"写代码的人", q:"硅谷还是全世界程序员最想去的地方吗？", en:"Is Silicon Valley still the place every programmer wants to work?"},
+  "班加罗尔的程序员": {club:"写代码的人", q:"班加罗尔的程序员给全世界的公司写代码。你愿意远程给外国公司工作吗？", en:"Programmers in Bangalore write code for companies all over the world. Would you work remotely for a company in another country?"},
+  "都柏林科技": {club:"写代码的人", q:"很多大科技公司把欧洲总部放在都柏林。你会为了一份技术工作搬去另一个国家吗？", en:"Many big tech companies have their European headquarters in Dublin. Would you move to another country for a tech job?"},
+  "乔布斯": {club:"创业者", q:"乔布斯曾被自己创办的公司赶走，后来又回来了。失败对创业者意味着什么？", en:"Steve Jobs was pushed out of the company he started, then came back. What does failure mean for a founder?"},
+  "华强北电子": {club:"创业者", q:"在华强北，一个想法几天就能变成样品。硬件创业比软件创业难在哪里？", en:"In Huaqiangbei, an idea can become a prototype in days. What makes hardware startups harder than software ones?"},
+  "瑞金医院": {club:"白大褂", q:"大医院每天要看成千上万的病人。医生怎么在很短的时间里和病人沟通好？", en:"Big hospitals see thousands of patients every day. How can doctors communicate well in a very short time?"},
+  "无人机送血": {club:"白大褂", q:"卢旺达用无人机给偏远的医院送血。科技能解决缺医生的问题吗？", en:"Rwanda uses drones to deliver blood to remote hospitals. Can technology solve the shortage of doctors?"},
+};
+function proLinkHtml(n){
+  const L = PRO_LINK[n]; if (!L) return "";
+  return `<section class="think"><h3>💼 去职场圈子聊：${esc(L.q)}</h3><p>${esc(L.en)} <button class="chip" data-say="${esc(L.en)}" data-tts="en-US">🔊</button></p><div class="chips"><button class="chip hot" data-proclub="${esc(n)}">👥 带着这个问题去「${esc(L.club)}」圈子</button></div></section>`;
+}
+document.addEventListener("click", e=>{ const b = e.target.closest("button[data-proclub]"); if (!b) return;
+  const L = PRO_LINK[b.dataset.proclub]; if (!L) return;
+  const cl = typeof SOC !== "undefined" && (SOC.clubs||[]).find(c=>c.name && c.name.includes(L.club));
+  if (!cl){ if (typeof openSoc === "function") openSoc(); return; }
+  openClub(cl.id); const ta = card.querySelector("#cpText"); if (ta) ta.value = `【${b.dataset.proclub}】${L.en}\n`; });
 function goStoryClub(n){
   const s = storyOf(n); if (!s) return; loopMark(n, "c");
-  const name = STORY_CLUB[s.grp], cl = typeof SOC !== "undefined" && (SOC.clubs||[]).find(c=>name && c.name && c.name.includes(name));
+  const name = storyClubName(s), cl = typeof SOC !== "undefined" && (SOC.clubs||[]).find(c=>name && c.name && c.name.includes(name));
   if (!cl){ if (typeof openSoc === "function") openSoc(); return; }
   openClub(cl.id);
   const ta = card.querySelector("#cpText"), q = (s.discuss||{}).q || s.chat_q;
@@ -6053,12 +6075,14 @@ function openPro(){
     <div class="c-top"><div class="c-emo" style="border-color:#5b5bd6">💼</div><div><h2>职场英语</h2><span class="c-cat" style="background:#5b5bd6">工作里真正要说的英语</span></div></div>
     <p class="note">不是课本英语，而是站会、代码评审、问诊、交班时，真正要说出口的那几句。</p>
     ${sec("dev")}${sec("med")}
+    <section><h3>🗺️ 地图上相关的老贴纸</h3><div class="chips">${Object.entries(PRO_LINK).map(([n,L])=>data.find(s=>s.n===n) ? `<button class="chip" data-proold="${esc(n)}">${esc(data.find(s=>s.n===n).e)} ${esc(n)} <small>→ ${esc(L.club)}</small></button>` : "").join("")}</div></section>
     <section><h3>🚀 创业者</h3><div class="chips">${nMap("founder") ? `<button class="chip hot" data-pmap="founder">🗺️ 地图上 ${nMap("founder")} 张贴纸</button>` : ""}<button class="chip hot" data-pclub="founder">👥 创业者</button></div></section>`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard;
   card.querySelectorAll("[data-pscn]").forEach(b=>b.onclick = ()=>openScenes(b.dataset.pscn));
   card.querySelectorAll("[data-pwd]").forEach(b=>b.onclick = ()=>openWords(b.dataset.pwd));
   card.querySelectorAll("[data-pclub]").forEach(b=>b.onclick = ()=>proClub(b.dataset.pclub));
+  card.querySelectorAll("[data-proold]").forEach(b=>b.onclick = ()=>{ const d = data.find(s=>s.n===b.dataset.proold); if (d){ Object.keys(CAT).forEach(k=>activeCats.add(k)); openGroup = null; syncCats(); flyTo(d); } });
   card.querySelectorAll("[data-pmap]").forEach(b=>b.onclick = ()=>{ activeCats.clear(); activeCats.add(PRO_CAT[b.dataset.pmap]); openGroup = GROUPS.find(g=>g.pro); syncCats(); render(); closeCard(); });
 }
 function openScenes(t){
