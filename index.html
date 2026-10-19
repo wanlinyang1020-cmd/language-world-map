@@ -3893,6 +3893,45 @@ const normSay = t => String(t||"").toLowerCase().normalize("NFKC").replace(/[\s\
 function simSay(a, b){ a = normSay(a); b = normSay(b); if (!a || !b) return 0; const m = a.length, k = b.length; let prev = Array.from({length:k+1}, (_, j)=>j);
   for (let i = 1; i <= m; i++){ const cur = [i]; for (let j = 1; j <= k; j++) cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1] + (a[i-1]===b[j-1]?0:1)); prev = cur; }
   return 1 - prev[k] / Math.max(m, k); }
+// ===== 语音消息：录音（最长 30 秒）+ 同时听写成文字；录音存在 voices 集合（base64），点播放时才读 =====
+const CAN_REC = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+const VOICE_MAX = 30, VOICE_URL = {};
+let VOICE_AUDIO = null;
+async function recStart(o){
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e){ if (o.onError) o.onError("mic"); return null; }
+  const mime = ["audio/webm;codecs=opus","audio/mp4","audio/webm"].find(m=>MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || "";
+  let mr; try { mr = new MediaRecorder(stream, mime ? {mimeType:mime, audioBitsPerSecond:24000} : {}); } catch(e){ stream.getTracks().forEach(t=>t.stop()); if (o.onError) o.onError("rec"); return null; }
+  const chunks = [], t0 = Date.now(); let text = "", sr = null, stopped = false;
+  mr.ondataavailable = e=>{ if (e.data && e.data.size) chunks.push(e.data); };
+  if (SR && o.lang){ try { sr = new SR(); sr.lang = o.lang; sr.continuous = true; sr.interimResults = true;
+    sr.onresult = e=>{ let t = ""; for (const r of e.results) t += r[0].transcript; text = t.trim(); if (o.onText) o.onText(text); }; sr.onerror = ()=>{}; sr.start(); } catch(e){ sr = null; } }
+  const stop = ()=>{ if (stopped) return; stopped = true; clearInterval(tick); try { if (sr) sr.stop(); } catch(e){} try { mr.stop(); } catch(e){} };
+  const tick = setInterval(()=>{ const n = Math.floor((Date.now() - t0) / 1000); if (o.onTick) o.onTick(n); if (n >= VOICE_MAX) stop(); }, 250);
+  mr.onstop = ()=>{ stream.getTracks().forEach(t=>t.stop()); const blob = new Blob(chunks, {type: String(mr.mimeType || mime || "audio/webm").split(";")[0]}), dur = Math.max(1, Math.round((Date.now() - t0) / 1000));
+    setTimeout(()=>{ if (o.onDone) o.onDone({blob, dur, text, url: URL.createObjectURL(blob)}); }, 500); };
+  mr.start(250);
+  return {stop};
+}
+const blobB64 = b => new Promise((ok, no)=>{ const f = new FileReader(); f.onload = ()=>ok(String(f.result).split(",")[1] || ""); f.onerror = no; f.readAsDataURL(b); });
+async function saveVoice(v, club){
+  const data = await blobB64(v.blob); if (data.length > 230000) throw {code:"too_big"};
+  const ref = await SOC.db.collection("voices").add({club, by:SOC.uid, mime:v.blob.type || "audio/webm", dur:v.dur, data, ts:Date.now()});
+  VOICE_URL[ref.id] = v.url; return ref.id;
+}
+function playUrl(url, btn){ if (VOICE_AUDIO){ VOICE_AUDIO.pause(); if (VOICE_AUDIO._btn === btn){ VOICE_AUDIO = null; return; } } const a = new Audio(url); a._btn = btn; VOICE_AUDIO = a; a.onended = ()=>{ if (VOICE_AUDIO === a) VOICE_AUDIO = null; }; a.play().catch(()=>{ if (btn) btn.textContent = "播放不了"; }); }
+async function playVoice(id, btn){
+  try {
+    if (!VOICE_URL[id]){ const snap = await SOC.db.doc("voices/" + id).get(); const d = snap && snap.exists !== false && snap.data ? snap.data() : null; if (!d || !d.data) throw 0;
+      const bin = Uint8Array.from(atob(d.data), c=>c.charCodeAt(0)); VOICE_URL[id] = URL.createObjectURL(new Blob([bin], {type: d.mime || "audio/webm"})); }
+    playUrl(VOICE_URL[id], btn);
+  } catch(e){ if (btn) btn.textContent = "这条语音读不到"; }
+}
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-voice]"); if (b) playVoice(b.dataset.voice, b); const u = e.target.closest("[data-vurl]"); if (u) playUrl(u.dataset.vurl, u); });
+const voiceChip = (id, dur) => `<button class="chip" data-voice="${esc(id)}" aria-label="播放语音" style="margin-top:3px;background:#eef3fb;border-color:#9cc3ee">▶ 🔊 ${dur ? esc(dur) + "″" : "语音"}</button>`;
+// 跟读打分：原句的每个词，听写里有就标绿，没有就标红
+const sayWords = t => String(t||"").split(/\s+/).filter(Boolean);
+const normW = w => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
+function shadowMarks(target, heard){ const hw = new Set(sayWords(heard).map(normW)); return sayWords(target).map(w=>{ const n = normW(w); return !n || hw.has(n) ? `<span style="color:#2b6a1f">${esc(w)}</span>` : `<span style="color:#c0392b;text-decoration:underline">${esc(w)}</span>`; }).join(" "); }
 function micCheck(b){
   const out = b.nextElementSibling; if (!SR){ if (out) out.textContent = "这个浏览器不能听写"; return; }
   const r = new SR(); r.lang = b.dataset.tts; r.interimResults = false; r.maxAlternatives = 3;
@@ -5146,7 +5185,7 @@ function npcTalkHtml(id, tid, lang){
     return `<div style="border-left:3px solid #9cc3ee;padding:4px 8px;margin:6px 0"><b>${n.icon} ${esc(n.name)}</b> ${npcBadge} <small class="note">${esc(n.city)} · ${esc(n.job)}</small><div>${esc(x.text)} <button class="chip" data-say="${esc(x.text)}" data-tts="${STORY_TTS[lang]||""}">🔊</button></div><div class="note">${esc(x.zh)}</div></div>`; }).join("");
 }
 // 圈子页面：像群聊一样——置顶话题、大家的发言（NPC 和真人）、点赞、回复、底部输入框和快捷回复
-const CLUBUI = {topic:{}, draft:{}, reply:{}, zh:new Set(), typing:{}, story:{}, tab:{}, qa:{}, qform:{}, qfilter:{}, qtag:{}, join:{}, pick:{}};
+const CLUBUI = {topic:{}, draft:{}, reply:{}, zh:new Set(), typing:{}, story:{}, tab:{}, qa:{}, qform:{}, qfilter:{}, qtag:{}, join:{}, pick:{}, shadow:{}, shadowTop:{}, shadowRes:{}, rec:{}, voice:{}};
 // 问答：提问的开头、回答的快捷开头、问题的类别
 const ASK_START = {"英语":["Has anyone…? ","How do you say…? ","Is it normal that… ","What's the best way to… ","Any tips for… "], "日语":["誰か…したことありますか？","…は日本語で何と言いますか？","…のコツはありますか？"], "中文":["有没有人…？","…怎么说？","…有什么经验吗？"]};
 const ANS_QUICK = {"英语":[["For me, ","对我来说，"],["What helped me was ","对我有用的是"],["Same here! ","我也是！"],["Good question! ","好问题！"],["In my country, ","在我们国家，"],["I'm not sure, but ","我不太确定，不过"]], "日语":[["私の場合は、","我的话，"],["私も同じです！","我也一样！"],["いい質問ですね！","好问题！"]], "中文":[["我的经验是，",""],["我也是！",""],["好问题！",""]]};
@@ -5187,19 +5226,31 @@ function openClub(id){
   // 这个话题下的发言：NPC 预写的 + 真人发的（按时间），回复挂在第一层下面
   const items = [];
   if (cur) cur.posts.forEach((x,i)=>items.push({key:`npc:${cur.id}:${i}`, by:"npc:"+x.npc, text:x.text, zh:x.zh, ts:0}));
-  all.filter(p=>!p.parent && p.kind !== "提问" && (cur ? p.topic === cur.id : true)).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(p=>items.push({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind, ts:p.ts}));
+  all.filter(p=>!p.parent && p.kind !== "提问" && (cur ? p.topic === cur.id : true)).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(p=>items.push({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind, ts:p.ts, voice:p.voice, dur:p.dur, score:p.score}));
   const older = cur ? all.filter(p=>!p.parent && !p.topic).sort((a,b)=>(b.ts||0)-(a.ts||0)) : [];
-  const repliesOf = key => all.filter(p=>p.parent===key).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(p=>({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, ts:p.ts}));
+  const repliesOf = key => all.filter(p=>p.parent===key).sort((a,b)=>(a.ts||0)-(b.ts||0)).map(p=>({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, ts:p.ts, kind:p.kind, voice:p.voice, dur:p.dur, score:p.score}));
   const who = by => {
     if (String(by).startsWith("npc:")){ const n = clubNpc(id, by.slice(4)); return n ? {name:n.name, av:n.icon, npc:n} : {name:"NPC", av:"🙂"}; }
     if (by === "ai_host") return {name:"AI 主持人", av:"🤖"};
     const nm = by === SOC.uid ? "我" : (socName(by) || "一位伙伴"); return {name:nm, av:esc(nm.slice(0,1)), bg:avColor(by), idt:idtOf(id, by)};
   };
   const likeN = key => SOC.likes.filter(l=>l.post===key), liked = key => likeN(key).some(l=>l.by===SOC.uid);
+  const micBtn = () => !CAN_REC ? "" : CLUBUI.rec[id] && CLUBUI.rec[id].mode === "msg" ? `<button class="chip hot" id="cpMicStop" aria-label="停止录音">⏹ <span id="recSec">0″</span></button>` : `<button class="chip" id="cpMic" aria-label="录一条语音（最长 30 秒）" title="录语音，最长 30 秒">🎤</button>`;
+  const voicePending = () => { const v = CLUBUI.voice[id]; return CLUBUI.rec[id] && CLUBUI.rec[id].mode === "msg" ? `<div class="note" style="margin-top:4px">🔴 正在录音…说完点 ⏹（最长 ${VOICE_MAX} 秒）${SR ? "，说的话会自动变成文字" : ""}</div>` : v ? `<div class="chips" style="margin-top:4px"><button class="chip" data-vurl="${esc(v.url)}" style="background:#eef3fb;border-color:#9cc3ee">▶ 🔊 ${v.dur}″ 试听</button><button class="chip" id="vDel">✕ 删掉语音</button><span class="note">文字可以先改，再发送</span></div>` : ""; };
+  const shadowBox = it => { const r = CLUBUI.shadowRes[id] && CLUBUI.shadowRes[id].key === it.key ? CLUBUI.shadowRes[id] : null, rec = CLUBUI.rec[id] && CLUBUI.rec[id].mode === "shadow";
+    return `<div style="border:2px solid #9cc3ee;border-radius:10px;padding:8px 10px;margin-top:6px;font-size:13px">
+      <div class="note">先听一遍，再自己说一遍${CAN_REC ? "（会录下来，可以先听听自己）" : ""}</div>
+      <div style="margin:4px 0">${r && r.heard ? shadowMarks(it.text, r.heard) : esc(it.text)}</div>
+      ${r ? `<div>${r.score != null ? `<b style="color:${r.score>=80?"#2b6a1f":r.score>=50?"#8a5a00":"#c0392b"}">${r.score} 分</b> <span class="note">${r.score>=80?"很好！":r.score>=50?"差不多，红色的词再练练":"再来一次"}${r.heard?` · 听到：${esc(r.heard)}`:""}</span>` : `<span class="note">${SR ? "没听到文字（这里可能不能听写），没法打分；可以先听听自己的录音" : "这个浏览器不能听写，没法打分，但可以录下来"}</span>`}</div>` : ""}
+      <div class="chips" style="margin-top:6px"><button class="chip" data-say="${esc(it.text)}" data-tts="${tts}">🔊 听</button>
+        ${rec ? `<button class="chip hot" id="shStop">⏹ 停 <span id="recSec">0″</span></button>` : `<button class="chip hot" id="shGo">🎤 ${r ? "再来" : "开始跟读"}</button>`}
+        ${r && r.url ? `<button class="chip" data-vurl="${esc(r.url)}">▶ 听自己</button>${joined ? `<button class="chip hot" id="shPost">发到圈子</button>` : ""}` : ""}
+        <button class="chip" id="shX">收起</button></div><span class="note" id="shNote">${rec && SR ? "正在听…" : ""}</span></div>`; };
   const msg = (it, topKey, isRep) => { const w = who(it.by), zhOn = CLUBUI.zh.has(it.key);
     return `<div style="display:flex;gap:8px;${isRep?"margin:6px 0 0 34px;padding-left:8px;border-left:2px solid #e6e1d4":"padding:8px 0;border-bottom:1px solid #eee8da"}">
       <div style="width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${w.npc||w.name==="AI 主持人"?16:13}px;background:${w.bg||"#eef3fb"}">${w.av}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:13px"><b>${esc(w.name)}</b>${w.npc?` ${npcBadge} <small class="note">${esc(w.npc.city)}</small>`:""}${w.idt?` <small class="note">${esc(w.idt.icon)} ${esc(w.idt.who)}</small>`:""}${it.kind==="主持人总结"?` <span class="soc-badge">总结</span>`:""}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px"><b>${esc(w.name)}</b>${w.npc?` ${npcBadge} <small class="note">${esc(w.npc.city)}</small>`:""}${w.idt?` <small class="note">${esc(w.idt.icon)} ${esc(w.idt.who)}</small>`:""}${it.kind==="主持人总结"?` <span class="soc-badge">总结</span>`:""}${it.kind==="跟读"?` <span class="soc-badge">🎤 跟读${it.score!=null?` ${esc(it.score)} 分`:""}</span>`:""}</div>
+        ${it.voice ? voiceChip(it.voice, it.dur) : ""}
         <div style="white-space:pre-wrap;margin-top:2px">${esc(it.text)}</div>${it.url?`<a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url.slice(0,50))}</a>`:""}
         ${zhOn && it.zh ? `<div class="note" style="margin-top:2px">${esc(it.zh)}</div>` : ""}
         <div style="display:flex;gap:14px;margin-top:4px;font-size:12px;color:#7a7466">
@@ -5207,7 +5258,8 @@ function openClub(id){
           ${joined?`<span role="button" tabindex="0" data-reply="${esc(topKey)}" data-rname="${esc(w.name)}" data-rnpc="${w.npc?esc(w.npc.id):""}" style="cursor:pointer">💬 回复</span>`:""}
           ${it.zh?`<span role="button" tabindex="0" data-czh="${esc(it.key)}" style="cursor:pointer">${zhOn?"收起中文":"中文"}</span>`:""}
           <span role="button" tabindex="0" data-say="${esc(it.text)}" data-tts="${tts}" style="cursor:pointer">🔊</span>
-        </div></div></div>`; };
+          ${w.npc && (CAN_REC || SR) ? `<span role="button" tabindex="0" data-shadow="${esc(it.key)}" data-stop="${esc(topKey)}" style="cursor:pointer;color:${CLUBUI.shadow[id]===it.key?"#1c5fa8":"inherit"}">🎤 跟读</span>` : ""}
+        </div>${CLUBUI.shadow[id] === it.key ? shadowBox(it) : ""}</div></div>`; };
   const thread = it => msg(it, it.key) + repliesOf(it.key).map(r=>msg(r, it.key, true)).join("");
   const upItem = u => ({key:"upd:" + u.id, by:"npc:" + u.npc, text:u.text, zh:u.zh, ts:0});
   const findItem = key => items.find(x=>x.key===key) || qs.map(q=>[q, ...ansOfQ(q)]).flat().find(x=>x.key===key) || (key.startsWith("upd:") ? (u=>u && upItem(u))(ups.find(u=>"upd:"+u.id===key)) : null);
@@ -5252,7 +5304,7 @@ function openClub(id){
     const ok = "background:#eaf6e8;color:#2b6a1f;border-color:#bfe0b6";
     const composer = (ph) => joined ? `<div style="position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;border-top:1px solid #eee8da;margin:0 -2px">${rp ? `<div class="note" style="margin-bottom:4px">回复 ${esc(rp.name)} · <span role="button" tabindex="0" id="rpX" style="cursor:pointer;text-decoration:underline">取消</span></div>` : ""}
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px">${quick.map(q=>`<button class="chip" data-qr="${esc(q[0])}" title="${esc(q[1])}" style="white-space:nowrap;font-size:12px">${esc(q[0])}</button>`).join("")}</div>
-        <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="cpText" rows="1" maxlength="400" placeholder="${rp?`回复 ${esc(rp.name)}…`:ph}" style="flex:1;resize:none">${esc(CLUBUI.draft[id]||"")}</textarea><button class="chip hot" id="cpSend" aria-label="发送">发送</button></div><span class="note" id="cpNote"></span></div>`
+        <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="cpText" rows="1" maxlength="400" placeholder="${rp?`回复 ${esc(rp.name)}…`:ph}" style="flex:1;resize:none">${esc(CLUBUI.draft[id]||"")}</textarea>${micBtn()}<button class="chip hot" id="cpSend" aria-label="发送">发送</button></div>${voicePending()}<span class="note" id="cpNote"></span></div>`
       : `<button class="chip hot" id="clJoin2" style="width:100%">加入圈子，一起回答</button>`;
     if (curQ){
       const q = curQ, mine = q.by === SOC.uid, zhOn = CLUBUI.zh.has(q.key);
@@ -5306,11 +5358,11 @@ function openClub(id){
       <div style="font-weight:600;margin-top:4px">${esc(cur.q)} <button class="chip" data-say="${esc(cur.q)}" data-tts="${tts}" style="padding:0 6px">🔊</button></div>${cur.zh && lang !== "中文" ? `<div class="note">${esc(cur.zh)}</div>` : ""}</div>` : onCh ? `<p class="note">🏁 大家的挑战分享（最上面是 NPC 的示范）</p>` : `<p class="note">还没有话题。${joined?"直接在下面说一句吧。":""}</p>`}
     <div id="clFeed">${items.length ? items.map(thread).join("") : `<p class="note">这里还没人说话，来说第一句吧。</p>`}
       ${typing ? `<p class="note">${esc(typing)} 正在输入…</p>` : ""}
-      ${older.length ? `<details><summary class="note">更早的分享 · ${older.length}</summary>${older.map(p=>thread({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind})).join("")}</details>` : ""}</div>
+      ${older.length ? `<details><summary class="note">更早的分享 · ${older.length}</summary>${older.map(p=>thread({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind, voice:p.voice, dur:p.dur})).join("")}</details>` : ""}</div>
     <div style="position:sticky;bottom:-16px;background:var(--paper);padding:8px 0 4px;border-top:1px solid #eee8da;margin:0 -2px">
       ${joined ? `${rp ? `<div class="note" style="margin-bottom:4px">回复 ${esc(rp.name)} · <span role="button" tabindex="0" id="rpX" style="cursor:pointer;text-decoration:underline">取消</span></div>` : ""}
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px">${quick.map(q=>`<button class="chip" data-qr="${esc(q[0])}" title="${esc(q[1])}" style="white-space:nowrap;font-size:12px">${esc(q[0])}</button>`).join("")}</div>
-        <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="cpText" rows="1" maxlength="400" placeholder="${rp?`回复 ${esc(rp.name)}…`:`用${esc(lang)}说点什么…`}" style="flex:1;resize:none">${esc(CLUBUI.draft[id]||"")}</textarea><button class="chip hot" id="cpSend" aria-label="发送">发送</button></div>
+        <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="cpText" rows="1" maxlength="400" placeholder="${rp?`回复 ${esc(rp.name)}…`:`用${esc(lang)}说点什么…`}" style="flex:1;resize:none">${esc(CLUBUI.draft[id]||"")}</textarea>${micBtn()}<button class="chip hot" id="cpSend" aria-label="发送">发送</button></div>${voicePending()}
         <span class="note" id="cpNote"></span>`
       : `<button class="chip hot" id="clJoin2" style="width:100%">加入圈子，一起聊</button>`}</div>`}
     <details><summary class="note">⋯ 关于这个圈子</summary>
@@ -5360,6 +5412,36 @@ function openClub(id){
   card.querySelectorAll("[data-czh]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.czh; if (CLUBUI.zh.has(k)) CLUBUI.zh.delete(k); else CLUBUI.zh.add(k); rerender(); });
   card.querySelectorAll("[data-reply]").forEach(b=>b.onclick = ()=>{ CLUBUI.reply[id] = {key:b.dataset.reply, name:b.dataset.rname, npc:b.dataset.rnpc}; rerender(); const t = $("#cpText"); if (t){ t.focus(); } });
   if ($("#rpX")) $("#rpX").onclick = ()=>{ CLUBUI.reply[id] = null; rerender(); };
+  // 语音消息
+  const micErr = x => { const n = $("#cpNote") || $("#shNote"); if (n) n.textContent = x === "mic" ? "用不了麦克风：请在浏览器里允许麦克风，或在 heyvoyo.com 上试" : "这个浏览器不能录音"; };
+  if ($("#cpMic")) $("#cpMic").onclick = async ()=>{ const base = ta ? ta.value : ""; CLUBUI.rec[id] = {mode:"msg"}; rerender();
+    const h = await recStart({lang: tts, onText: t=>{ const x = card.querySelector("#cpText"); if (x){ x.value = (base ? base.replace(/\s*$/, " ") : "") + t; CLUBUI.draft[id] = x.value; } },
+      onTick: n=>{ const x = card.querySelector("#recSec"); if (x) x.textContent = n + "″"; },
+      onDone: v=>{ CLUBUI.rec[id] = null; CLUBUI.voice[id] = v; const x = card.querySelector("#cpText"); if (x) CLUBUI.draft[id] = x.value; if (SOC.view === "club:" + id) rerender(); },
+      onError: x=>{ CLUBUI.rec[id] = null; rerender(); micErr(x); }});
+    if (h && CLUBUI.rec[id]) CLUBUI.rec[id].h = h; };
+  if ($("#cpMicStop")) $("#cpMicStop").onclick = ()=>{ const r = CLUBUI.rec[id]; if (r && r.h) r.h.stop(); };
+  if ($("#vDel")) $("#vDel").onclick = ()=>{ CLUBUI.voice[id] = null; rerender(); };
+  // 跟读 NPC 的句子：打分、听自己、发到圈子
+  card.querySelectorAll("[data-shadow]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.shadow; CLUBUI.shadow[id] = CLUBUI.shadow[id] === k ? null : k; CLUBUI.shadowTop[id] = b.dataset.stop; CLUBUI.shadowRes[id] = null; rerender(); });
+  if ($("#shX")) $("#shX").onclick = ()=>{ CLUBUI.shadow[id] = null; CLUBUI.shadowRes[id] = null; rerender(); };
+  if ($("#shStop")) $("#shStop").onclick = ()=>{ const r = CLUBUI.rec[id]; if (r && r.h) r.h.stop(); };
+  const toLearn = it => { try { const l = loadLearn(), x = l.find(y=>y.text===it.text); if (x) x.reps = (x.reps||0) + 1; else l.push({text:it.text, read:"", cn:it.zh||"", code:tts, reps:1, ts:Date.now(), from:"圈子"}); saveLearn(l); } catch(e){} };
+  if ($("#shGo")) $("#shGo").onclick = async ()=>{
+    const key = CLUBUI.shadow[id], it = findItem(key); if (!it) return;
+    const done = (heard, v) => { CLUBUI.rec[id] = null; CLUBUI.shadowRes[id] = {key, heard: heard || "", score: SR && heard ? Math.round(simSay(heard, it.text) * 100) : null, ...(v ? {url:v.url, blob:v.blob, dur:v.dur} : {})}; toLearn(it); if (SOC.view === "club:" + id) rerender(); };
+    if (CAN_REC){ CLUBUI.rec[id] = {mode:"shadow"}; rerender();
+      const h = await recStart({lang: tts, onText: t=>{ const n = card.querySelector("#shNote"); if (n) n.textContent = "听到：" + t; }, onTick: n=>{ const x = card.querySelector("#recSec"); if (x) x.textContent = n + "″"; }, onDone: v=>done(v.text, v), onError: x=>{ CLUBUI.rec[id] = null; rerender(); micErr(x); }});
+      if (h && CLUBUI.rec[id]) CLUBUI.rec[id].h = h; return; }
+    const r = new SR(); r.lang = tts; r.interimResults = false; const n = $("#shNote"); if (n) n.textContent = "请说……";
+    r.onresult = e=>done(e.results[0][0].transcript); r.onerror = e=>{ if (n) n.textContent = e.error === "not-allowed" ? "用不了麦克风，可以在 heyvoyo.com 上试" : "没听清，再试一次"; };
+    try { r.start(); } catch(e){} };
+  if ($("#shPost")) $("#shPost").onclick = async e=>{ const res = CLUBUI.shadowRes[id], it = res && findItem(res.key), parent = CLUBUI.shadowTop[id] || res.key; if (!res || !it) return;
+    e.target.disabled = true; const n = $("#shNote");
+    try { const vid = await saveVoice(res, id);
+      await SOC.db.collection("clubposts").add({club:id, by:SOC.uid, kind:"跟读", topic: parent.startsWith("upd:") ? "" : curQ ? "qa" : (cur ? cur.id : ""), parent, text: it.text, score: res.score, voice: vid, dur: res.dur, ts: Date.now()});
+      CLUBUI.shadow[id] = null; CLUBUI.shadowRes[id] = null; rerender();
+    } catch(err){ if (n) n.textContent = err && err.code === "too_big" ? "录音太长了，请录短一点" : "没发出去（可能只有查看权限）"; e.target.disabled = false; } };
   // 问答的按钮
   card.querySelectorAll("[data-ctab]").forEach(b=>b.onclick = ()=>{ CLUBUI.tab[id] = b.dataset.ctab; CLUBUI.reply[id] = null; openClub(id); });
   card.querySelectorAll("[data-qf]").forEach(b=>b.onclick = ()=>{ CLUBUI.qfilter[id] = b.dataset.qf; rerender(); });
@@ -5397,14 +5479,16 @@ function openClub(id){
   card.querySelectorAll("[data-qr]").forEach(b=>b.onclick = ()=>{ if (!ta) return; ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + " " : ta.value) + b.dataset.qr + (/\s$/.test(b.dataset.qr) ? "" : " "); CLUBUI.draft[id] = ta.value; ta.focus(); });
   if ($("#cpSend")) $("#cpSend").onclick = async ()=>{
     const t = scrub(ta.value.trim()).slice(0,400), note = x => { const n = $("#cpNote"); if (n) n.textContent = x; };
-    if (!t){ note("先写一句，或点上面的快捷回复"); return; }
+    const vc = CLUBUI.voice[id];
+    if (!t && !vc){ note("先写一句、录一段语音，或点上面的快捷回复"); return; }
     const r = CLUBUI.reply[id], qk = curQ ? curQ.key : "", topic = qk ? "qa" : (cur ? cur.id : "");
-    const text = r && r.name ? "@" + r.name + " " + t : t;
+    const text = r && r.name ? "@" + r.name + " " + (t || "（语音）") : (t || "（语音）");
     $("#cpSend").disabled = true;
-    let ref = null;
-    try { ref = await SOC.db.collection("clubposts").add({club:id, by:SOC.uid, kind: r ? "回复" : (qk ? "回答" : (onCh ? "挑战" : "话题回应")), topic: r && r.key.startsWith("upd:") ? "" : topic, parent: r ? r.key : qk, text, ts:Date.now()}); }
+    let ref = null, vid = "";
+    if (vc){ try { vid = await saveVoice(vc, id); } catch(e){ note(e && e.code === "too_big" ? "语音太长了，请录短一点" : "语音没存上，可以只发文字"); const b = $("#cpSend"); if (b) b.disabled = false; return; } }
+    try { ref = await SOC.db.collection("clubposts").add({club:id, by:SOC.uid, kind: r ? "回复" : (qk ? "回答" : (onCh ? "挑战" : "话题回应")), topic: r && r.key.startsWith("upd:") ? "" : topic, parent: r ? r.key : qk, text, ...(vid ? {voice: vid, dur: vc.dur} : {}), ts:Date.now()}); }
     catch(e){ note("没发出去（可能只有查看权限）"); const b = $("#cpSend"); if (b) b.disabled = false; return; }
-    CLUBUI.draft[id] = ""; CLUBUI.reply[id] = null; ta.value = "";
+    CLUBUI.draft[id] = ""; CLUBUI.reply[id] = null; CLUBUI.voice[id] = null; ta.value = "";
     rerender();
     // NPC 接话：只在 Claude 里（网站上的 AI 先关着）
     if (!prSample || !npcs.length) return;
