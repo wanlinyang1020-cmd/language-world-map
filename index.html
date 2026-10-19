@@ -3860,7 +3860,7 @@ function storyHtml(n){
     ${(s.plans||[]).length?`<section><h3>🧭 可以怎么做</h3><div class="chips">${s.plans.map(planChip).join("")}</div></section>`:""}`;
 }
 // ⑤ 去圈子聊：在视频后面。带着讨论题和几种看法，去对应的圈子
-const STORY_CLUB = {g5:"第一笔钱", g7:"在国外生活", g3:"吃得好", g9:"吃得好"};
+const STORY_CLUB = {g5:"第一笔钱", g7:"在国外生活", g3:"吃得好", g9:"身心健康"};
 function storyClubHtml(n){
   const s = storyOf(n); if (!s) return "";
   const [langs, cur] = storyLangs(s);
