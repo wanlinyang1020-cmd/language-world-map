@@ -3535,6 +3535,15 @@ async function hvSignIn(email){
   if (r.error) throw r.error;
 }
 async function hvSignOut(){ await HV.sb.auth.signOut(); }
+// ---- 邮箱 + 密码：第一次用登录链接进来，之后在「👤 我」里设密码，以后直接用密码登录（不用等邮件）
+async function hvSignInPassword(email, password){
+  const r = await HV.sb.auth.signInWithPassword({email, password});
+  if (r.error) throw r.error;
+}
+async function hvSetPassword(password){
+  const r = await HV.sb.auth.updateUser({password});
+  if (r.error) throw r.error;
+}
 
 </script>
 <script>
@@ -5052,14 +5061,9 @@ function openSoc(){
   SOC.view = "list";
   if (selected) selected.el.classList.remove("sel"); selected = null;
   if (!SOC.ready && !window.claude && typeof HV !== "undefined" && HV.sb && !HV.session){
-    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">🤝</div><div><h2>登录 HeyVoyo</h2><span class="c-cat" style="background:#2f9e8f">找同行者 · 进圈子${HV_CONFIG && HV_CONFIG.ai ? " · AI 陪练" : ""}</span></div></div>
-      <p>输入邮箱，我们会发一封邮件给你，点里面的链接就能登录，不用设密码。第一次登录就是注册。</p>
-      <div class="soc-form"><label for="hvEmail">邮箱</label><input id="hvEmail" type="email" autocomplete="email" placeholder="you@example.com"><button class="chip hot" id="hvSend">发登录链接</button><span class="note" id="hvNote"></span></div>
-      <p class="note">登录以后可以填资料、找同行者、加入圈子、推荐视频、问过来人。地图和视频不登录也能看。</p>`;
+    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">🤝</div><div><h2>登录 HeyVoyo</h2><span class="c-cat" style="background:#2f9e8f">找同行者 · 进圈子</span></div></div>${loginHtml("", "")}`;
     card.hidden = false; card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
-    card.querySelector("#hvSend").onclick = async ()=>{ const em = card.querySelector("#hvEmail").value.trim(), n = card.querySelector("#hvNote");
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ n.textContent = "请输入正确的邮箱。"; return; }
-      n.textContent = "正在发送…"; try { await hvSignIn(em); n.textContent = "已发送！去邮箱点登录链接（看不到的话找找垃圾邮件）。"; } catch(e){ n.textContent = "没发出去：" + (e && e.message || "请稍后再试"); } };
+    bindLogin(card);
     return;
   }
   if (!SOC.ready){
@@ -5311,11 +5315,25 @@ function npcTalkHtml(id, tid, lang){
 const SITE_LOGIN = () => !window.claude && typeof HV !== "undefined" && HV.sb;
 function loginHtml(title, after){
   return `<div style="border:2px solid #9cc3ee;border-radius:12px;padding:10px 12px;margin:6px 0">
-    <b>${esc(title || "登录 HeyVoyo")}</b><div class="note" style="margin:4px 0 8px">输入邮箱，我们会发一封邮件，点里面的链接就登录。不用密码，第一次登录就是注册。</div>
-    <div class="soc-form"><input id="hvEmail" type="email" autocomplete="email" placeholder="you@example.com"><button class="chip hot" id="hvSend" data-after="${esc(after||"")}">发登录链接</button><span class="note" id="hvNote"></span></div>
+    <b>${esc(title || "登录 HeyVoyo")}</b>
+    <div class="soc-form" style="margin-top:6px"><label for="hvEmail">邮箱</label><input id="hvEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <label for="hvPw">密码（设过密码的话）</label><input id="hvPw" type="password" autocomplete="current-password" placeholder="没设过就留空">
+      <div class="chips"><button class="chip hot" id="hvPwGo" data-after="${esc(after||"")}">用密码登录</button><button class="chip" id="hvSend" data-after="${esc(after||"")}">发登录链接到邮箱</button></div>
+      <span class="note" id="hvNote"></span></div>
+    <p class="note">第一次来、或者忘了密码：点「发登录链接到邮箱」，邮件里点一下就登录（第一次登录就是注册）。登录后可以在「👤 我」里设一个密码，以后直接用密码登录。</p>
     <p class="note">地图、贴纸、视频和圈子里的内容，不登录也能看。${after ? "登录后会回到这里。" : ""}</p></div>`;
 }
 function bindLogin(root){
+  const pg = root.querySelector("#hvPwGo");
+  if (pg) pg.onclick = async ()=>{ const em = root.querySelector("#hvEmail").value.trim(), pw = root.querySelector("#hvPw").value, n = root.querySelector("#hvNote");
+    if (!SITE_LOGIN()){ n.textContent = "这里不能用邮箱登录。"; return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ n.textContent = "请输入正确的邮箱。"; return; }
+    if (!pw){ n.textContent = "请输入密码；没设过密码的话，点「发登录链接到邮箱」。"; return; }
+    try { if (pg.dataset.after) localStorage.setItem("hv.after", pg.dataset.after); } catch(e){}
+    n.textContent = "正在登录…"; pg.disabled = true;
+    try { await hvSignInPassword(em, pw); n.textContent = "登录成功！"; }
+    catch(e){ pg.disabled = false; n.textContent = /invalid/i.test(e && e.message || "") ? "邮箱或密码不对。还没设过密码？点「发登录链接到邮箱」，登录后在「👤 我」里设密码。" : "没登录上：" + (e && e.message || "请稍后再试"); } };
+  const pwIn = root.querySelector("#hvPw"); if (pwIn && pg) pwIn.onkeydown = e=>{ if (e.key === "Enter") pg.click(); };
   const b = root.querySelector("#hvSend"); if (!b) return;
   b.onclick = async ()=>{ const em = root.querySelector("#hvEmail").value.trim(), n = root.querySelector("#hvNote");
     if (!SITE_LOGIN()){ n.textContent = "这里不能用邮箱登录。"; return; }
@@ -5344,6 +5362,8 @@ function openMe(){
     ${row("meSoc","🤝","伙伴：资料、关注和私信","")}
     ${row("meLearn","⭐","我的跟读本",`${loadLearn().length} 句`)}
     ${row("mePrefs","✨","我的推荐偏好","语言、阶段、关心的事")}
+    ${SOC.site ? row("mePw","🔑","设置 / 修改密码","设了以后可以直接用邮箱 + 密码登录") : ""}
+    ${SOC.site ? `<div class="soc-form" id="pwForm" hidden><label for="pw1">新密码（至少 8 位）</label><input id="pw1" type="password" autocomplete="new-password"><label for="pw2">再输一次</label><input id="pw2" type="password" autocomplete="new-password"><button class="chip hot" id="pwSave">保存密码</button><span class="note" id="pwNote"></span></div>` : ""}
     ${SOC.site ? row("meOut","↩️","退出登录","") : ""}`;
   card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard;
   const go = (sel, fn) => { const x = card.querySelector(sel); if (x) x.onclick = fn; };
@@ -5353,6 +5373,10 @@ function openMe(){
   go("#meLearn", ()=>{ openSoc(); const h = [...card.querySelectorAll("h3")].find(x=>x.textContent.includes("跟读本")); if (h) h.scrollIntoView(); });
   go("#meOut", ()=>hvSignOut());
   go("#mePrefs", ()=>openPrefs(false));
+  go("#mePw", ()=>{ const f = card.querySelector("#pwForm"); f.hidden = !f.hidden; if (!f.hidden) card.querySelector("#pw1").focus(); });
+  go("#pwSave", async ()=>{ const a = card.querySelector("#pw1").value, b = card.querySelector("#pw2").value, n = card.querySelector("#pwNote");
+    if (a.length < 8){ n.textContent = "密码至少 8 位。"; return; } if (a !== b){ n.textContent = "两次输入的不一样。"; return; }
+    n.textContent = "正在保存…"; try { await hvSetPassword(a); n.textContent = "✓ 已保存。以后可以直接用邮箱 + 密码登录。"; card.querySelector("#pw1").value = card.querySelector("#pw2").value = ""; } catch(e){ n.textContent = "没保存上：" + (e && e.message || "请稍后再试"); } });
 }
 document.getElementById("meBtn").onclick = openMe;
 // 圈子列表：不登录也能逛（网站上没登录时用内置的圈子种子）
