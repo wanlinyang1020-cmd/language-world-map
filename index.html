@@ -431,6 +431,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
   <header id="head" class="panel">
     <h1>环球文化<span>贴纸</span>地图</h1>
     <button id="meBtn" class="chip hot" style="position:absolute;top:10px;right:10px;font-size:12.5px;padding:3px 10px">👤 我</button>
+    <button id="soundBtn" class="chip" style="position:absolute;top:10px;right:72px;font-size:12.5px;padding:3px 8px" aria-label="声音开关">🔊</button>
     <div class="sub"><span class="passport" title="点开贴纸即可收集印章">🛂 护照印章 <b id="stampN">0</b>/<b id="stampT">0</b></span><span id="stats"></span></div>
     <div class="search"><input id="q" type="search" placeholder="搜索：熊猫、刀削面、拿破仑、现在大家在聊…" autocomplete="off" aria-label="搜索贴纸"><div id="results" hidden></div></div>
   </header>
@@ -3782,6 +3783,8 @@ function openCard(d){
     <div class="c-near"><h3>附近还有</h3><div>${near.map(o=>`<button class="chip" data-id="${o.id}">${o.e} ${esc(o.n)}</button>`).join("")}</div></div>
     <div class="c-near"><div>${hasProfile(d.country)?`<button class="chip" id="seeProfile">🪪 ${esc(d.country)}名片</button>`:""}<button class="chip" id="seeCountry">📚 ${esc(d.country)}的全部 ${sameCountry} 枚贴纸</button></div></div>`;
   card.hidden = false;
+  if (fresh) fx("stamp");
+  { const w = card.querySelector('[data-sl]:not([hidden]) [data-step="w"] [data-say]'); if (w){ w.dataset.auto = "1"; autoSay(card, 450); } }
   card.querySelector(".x").onclick = closeCard;
   card.querySelectorAll(".c-near .chip[data-id]").forEach(b=>b.onclick=()=>flyTo(data[+b.dataset.id]));
   card.querySelector("#seeCountry").onclick = ()=>openDir("geo", d.country);
@@ -4011,7 +4014,38 @@ document.addEventListener("click", e=>{
     if (!l.find(x=>x.text===t)){ l.push({text:t, read:"", cn:lr.dataset.cn||"", code:lr.dataset.tts||"", reps:0, ts:Date.now(), from:"贴纸"}); saveLearn(l); } lr.textContent = "✓"; }
   const gc = e.target.closest("button[data-goclub]"); if (gc) goStoryClub(gc.dataset.goclub);
 });
-document.addEventListener("click", e=>{ const b = e.target.closest("button[data-say]"); if (!b) return; sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); });
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-say]"); if (!b || b.dataset.say === undefined) return;
+  const v = b.dataset.npc && npcVoice(b.dataset.npc, b.dataset.tts);
+  if (v) sayIt(b.dataset.say, v.code, v.rate, v.pitch); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); });
+// ===== 声音：开关、反馈音、自动朗读、NPC 各自的口音 =====
+const SOUND = {on: true, touched: false, ac: null};
+try { SOUND.on = localStorage.getItem("hv.sound") !== "off"; } catch(e){}
+document.addEventListener("pointerdown", ()=>{ SOUND.touched = true; }, {capture: true, once: true});
+function fx(kind){
+  if (!SOUND.on || !SOUND.touched) return;
+  try { if (!SOUND.ac) SOUND.ac = new (window.AudioContext || window.webkitAudioContext)(); const a = SOUND.ac; if (a.state === "suspended") a.resume();
+    const seq = {stamp:[[880,0,.18,.2,"triangle"],[1320,.09,.3,.16,"triangle"]], good:[[660,0,.12],[880,.1,.12],[1175,.2,.25]], like:[[520,0,.08,.22],[780,.04,.1,.15]], msg:[[1046,0,.09,.12],[1318,.1,.16,.12]]}[kind] || [];
+    const t0 = a.currentTime + .01;
+    seq.forEach(([f,st,d,v,type])=>{ const o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.value = f; g.gain.setValueAtTime(.0001, t0+st); g.gain.exponentialRampToValueAtTime(v || .18, t0+st+.015); g.gain.exponentialRampToValueAtTime(.0001, t0+st+d); o.connect(g); g.connect(a.destination); o.start(t0+st); o.stop(t0+st+d+.05); });
+  } catch(e){}
+}
+// 自动读：找卡片里标了 data-auto 的那个朗读按钮（要用户先点过页面，浏览器才允许出声）
+function autoSay(root, delay){
+  if (!SOUND.on || !SOUND.touched) return;
+  setTimeout(()=>{ const b = [...(root || card).querySelectorAll("[data-auto]")].find(x=>x.offsetParent); if (!b) return;
+    const v = b.dataset.npc && npcVoice(b.dataset.npc, b.dataset.tts);
+    if (v) sayIt(b.dataset.say, v.code, v.rate, v.pitch); else sayIt(b.dataset.say, b.dataset.tts, +(b.dataset.rate||.9)); }, delay || 350);
+}
+// NPC 的口音：按国家选英语的地区口音；年纪大的慢一点；每个人音高略有不同
+function npcVoice(npcId, tts){
+  if (typeof CLUB_NPCS === "undefined") return null;
+  let n = null; for (const k in CLUB_NPCS){ const x = (CLUB_NPCS[k]||[]).find(y=>y.id===npcId); if (x){ n = x; break; } } if (!n) return null;
+  let code = tts || "en-US";
+  if (/^en/.test(code)){ const c = n.country || ""; code = /英国/.test(c) ? "en-GB" : /澳大利亚/.test(c) ? "en-AU" : /印度/.test(c) && !/印度尼西亚/.test(c) ? "en-IN" : /南非/.test(c) ? "en-ZA" : /爱尔兰/.test(c) ? "en-IE" : /加拿大/.test(c) ? "en-CA" : /尼日利亚|加纳|肯尼亚/.test(c) ? "en-GB" : "en-US"; }
+  let h = 0; for (const ch of npcId) h = (h*31 + ch.charCodeAt(0)) % 997;
+  return {code, rate: n.age >= 60 ? .85 : /B1/.test(n.style||"") ? .9 : 1, pitch: .9 + (h % 30) / 100};
+}
+function soundBtnSync(){ const b = document.getElementById("soundBtn"); if (b){ b.textContent = SOUND.on ? "🔊" : "🔇"; b.title = SOUND.on ? "声音：开（点一下关掉）" : "声音：关（点一下打开）"; } }
 document.addEventListener("click", e=>{ const b = e.target.closest("button[data-slpick]"); if (!b) return; const box = b.closest("#card") || card;
   box.querySelectorAll("[data-slpick]").forEach(x=>x.classList.toggle("hot", x.dataset.slpick===b.dataset.slpick)); box.querySelectorAll("[data-sl]").forEach(x=>x.hidden = x.dataset.sl !== b.dataset.slpick); });
 function factHtml(n){
@@ -5309,7 +5343,7 @@ const npcTopicLabel = t => { const q = (String(t.zh||"").split("再回答：")[1
 function npcTalkHtml(id, tid, lang){
   const t = typeof NPC_TALK !== "undefined" && NPC_TALK[tid]; if (!t) return "";
   return `<p><b>${esc(t.text)}</b></p>${t.zh?`<p class="note">${esc(t.zh)}</p>`:""}` + t.posts.map(x=>{ const n = clubNpc(id, x.npc); if (!n) return "";
-    return `<div style="border-left:3px solid #9cc3ee;padding:4px 8px;margin:6px 0"><b>${n.icon} ${esc(n.name)}</b> ${npcBadge} <small class="note">${esc(n.city)} · ${esc(n.job)}</small><div>${esc(x.text)} <button class="chip" data-say="${esc(x.text)}" data-tts="${STORY_TTS[lang]||""}">🔊</button></div><div class="note">${esc(x.zh)}</div></div>`; }).join("");
+    return `<div style="border-left:3px solid #9cc3ee;padding:4px 8px;margin:6px 0"><b>${n.icon} ${esc(n.name)}</b> ${npcBadge} <small class="note">${esc(n.city)} · ${esc(n.job)}</small><div>${esc(x.text)} <button class="chip" data-say="${esc(x.text)}" data-tts="${STORY_TTS[lang]||""}" data-npc="${esc(n.id)}">🔊</button></div><div class="note">${esc(x.zh)}</div></div>`; }).join("");
 }
 // ===== 登录 / 注册（网站上用邮箱链接登录；claude.ai 里用 Claude 的账户）和「我」的菜单 =====
 const SITE_LOGIN = () => !window.claude && typeof HV !== "undefined" && HV.sb;
@@ -5379,6 +5413,8 @@ function openMe(){
     n.textContent = "正在保存…"; try { await hvSetPassword(a); n.textContent = "✓ 已保存。以后可以直接用邮箱 + 密码登录。"; card.querySelector("#pw1").value = card.querySelector("#pw2").value = ""; } catch(e){ n.textContent = "没保存上：" + (e && e.message || "请稍后再试"); } });
 }
 document.getElementById("meBtn").onclick = openMe;
+document.getElementById("soundBtn").onclick = ()=>{ SOUND.on = !SOUND.on; try { localStorage.setItem("hv.sound", SOUND.on ? "on" : "off"); } catch(e){} if (!SOUND.on && "speechSynthesis" in window) speechSynthesis.cancel(); soundBtnSync(); };
+soundBtnSync();
 // 圈子列表：不登录也能逛（网站上没登录时用内置的圈子种子）
 const CLUB_GROUPS = [["生活", ["body_mind","eat_well","first_money","social_money","economy_club","life_abroad","trends_now","see_world","people_values"]], ["职场", ["med_club","dev_club","founder_club"]], ["想一想", ["life_questions"]]];
 function openLearnBook(){
@@ -5467,7 +5503,7 @@ function openClub(id){
       <div class="note">先听一遍，再自己说一遍${CAN_REC ? "（会录下来，可以先听听自己）" : ""}</div>
       <div style="margin:4px 0">${r && r.heard ? shadowMarks(it.text, r.heard) : esc(it.text)}</div>
       ${r ? `<div>${r.score != null ? `<b style="color:${r.score>=80?"#2b6a1f":r.score>=50?"#8a5a00":"#c0392b"}">${r.score} 分</b> <span class="note">${r.score>=80?"很好！":r.score>=50?"差不多，红色的词再练练":"再来一次"}${r.heard?` · 听到：${esc(r.heard)}`:""}</span>` : `<span class="note">${SR ? "没听到文字（这里可能不能听写），没法打分；可以先听听自己的录音" : "这个浏览器不能听写，没法打分，但可以录下来"}</span>`}</div>` : ""}
-      <div class="chips" style="margin-top:6px"><button class="chip" data-say="${esc(it.text)}" data-tts="${tts}">🔊 听</button>
+      <div class="chips" style="margin-top:6px"><button class="chip" data-say="${esc(it.text)}" data-tts="${tts}"${String(it.by||"").startsWith("npc:")?` data-npc="${esc(String(it.by).slice(4))}"`:""}>🔊 听</button>
         ${rec ? `<button class="chip hot" id="shStop">⏹ 停 <span id="recSec">0″</span></button>` : `<button class="chip hot" id="shGo">🎤 ${r ? "再来" : "开始跟读"}</button>`}
         ${r && r.url ? `<button class="chip" data-vurl="${esc(r.url)}">▶ 听自己</button>${joined ? `<button class="chip hot" id="shPost">发到圈子</button>` : ""}` : ""}
         <button class="chip" id="shX">收起</button></div><span class="note" id="shNote">${rec && SR ? "正在听…" : ""}</span></div>`; };
@@ -5482,7 +5518,7 @@ function openClub(id){
           <span role="button" tabindex="0" data-like="${esc(it.key)}" style="cursor:pointer">${liked(it.key)?"❤️":"🤍"} ${likeN(it.key).length || ""}</span>
           ${joined?`<span role="button" tabindex="0" data-reply="${esc(topKey)}" data-rname="${esc(w.name)}" data-rnpc="${w.npc?esc(w.npc.id):""}" style="cursor:pointer">💬 回复</span>`:""}
           ${it.zh?`<span role="button" tabindex="0" data-czh="${esc(it.key)}" style="cursor:pointer">${zhOn?"收起中文":"中文"}</span>`:""}
-          <span role="button" tabindex="0" data-say="${esc(it.text)}" data-tts="${tts}" style="cursor:pointer">🔊</span>
+          <span role="button" tabindex="0" data-say="${esc(it.text)}" data-tts="${tts}"${w.npc?` data-npc="${esc(w.npc.id)}"`:""} style="cursor:pointer">🔊</span>
           ${w.npc && (CAN_REC || SR) ? `<span role="button" tabindex="0" data-shadow="${esc(it.key)}" data-stop="${esc(topKey)}" style="cursor:pointer;color:${CLUBUI.shadow[id]===it.key?"#1c5fa8":"inherit"}">🎤 跟读</span>` : ""}
         </div>${CLUBUI.shadow[id] === it.key ? shadowBox(it) : ""}</div></div>`; };
   const thread = it => msg(it, it.key) + repliesOf(it.key).map(r=>msg(r, it.key, true)).join("");
@@ -5582,12 +5618,12 @@ function openClub(id){
     <div style="display:flex;gap:6px;border-bottom:1px solid #eee8da;padding-bottom:6px;overflow-x:auto">${[["talk","💬 话题"],["qa",`❓ 问答 ${qs.length}`],["mem",`👥 成员 ${mem.length}`], ...(cvids.length || mapStk.length ? [["vid", mapStk.length ? `🎬 视频和贴纸` : `🎬 视频 ${cvids.length}`]] : [])].map(([k,t])=>`<button class="chip" data-ctab="${k}" ${tab===k?'aria-pressed="true"':""} style="flex:none;font-size:13px;padding:3px 9px;${tab===k?"background:#1c5fa8;color:#fff;border-color:#1c5fa8":""}">${t}</button>`).join("")}</div>
     ${tab === "qa" ? qaHtml() : tab === "mem" ? memHtml() : tab === "vid" && (cvids.length || mapStk.length) ? vidsHtml() : `${ch ? `<div style="background:#eaf6e8;border-radius:12px;padding:10px 12px">
       <div style="display:flex;justify-content:space-between;font-size:12px;color:#2b6a1f"><span>🏁 本周小挑战</span><span>${chLeft ? `还剩 ${chLeft} 天` : "已结束"} · ${chDone.length} 人完成${chDone.includes(SOC.uid)?" · ✓ 你完成了":""}</span></div>
-      <div style="font-weight:600;margin-top:4px">${esc(ch.title)} <button class="chip" data-say="${esc(ch.title)}" data-tts="${tts}" style="padding:0 6px">🔊</button></div><div class="note">${esc(ch.zh)}</div>
+      <div style="font-weight:600;margin-top:4px">${esc(ch.title)} <button class="chip" data-say="${esc(ch.title)}" data-tts="${tts}" data-auto="1" style="padding:0 6px">🔊</button></div><div class="note">${esc(ch.zh)}</div>
       ${onCh ? "" : `<div class="note" style="margin-top:4px">${(n=>n?`${n.icon} ${esc(n.name)} 也在做：`:"")(clubNpc(id, ch.example.npc))}${esc(ch.example.text)}</div>`}
       <div class="chips" style="margin-top:6px">${joined && !chDone.includes(SOC.uid) ? `<button class="chip hot" id="chDo">我完成了，说一句</button>` : ""}<button class="chip" id="chSee">${onCh ? "← 回到话题" : `看大家的 · ${chDone.length}`}</button></div></div>` : ""}
     ${cur && !onCh ? `<div style="background:#eef3fb;border-radius:12px;padding:10px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#1c5fa8"><span>📌 ${topics.length>1?"话题":"本周话题"}</span>${topics.length>1?`<span><button class="chip" id="tpPrev" aria-label="上一个话题" style="padding:0 8px">‹</button> ${ti+1}/${topics.length} <button class="chip" id="tpNext" aria-label="下一个话题" style="padding:0 8px">›</button></span>`:""}</div>
-      <div style="font-weight:600;margin-top:4px">${esc(cur.q)} <button class="chip" data-say="${esc(cur.q)}" data-tts="${tts}" style="padding:0 6px">🔊</button></div>${cur.zh && lang !== "中文" ? `<div class="note">${esc(cur.zh)}</div>` : ""}</div>` : onCh ? `<p class="note">🏁 大家的挑战分享（最上面是 NPC 的示范）</p>` : `<p class="note">还没有话题。${joined?"直接在下面说一句吧。":""}</p>`}
+      <div style="font-weight:600;margin-top:4px">${esc(cur.q)} <button class="chip" data-say="${esc(cur.q)}" data-tts="${tts}" data-auto="1" style="padding:0 6px">🔊</button></div>${cur.zh && lang !== "中文" ? `<div class="note">${esc(cur.zh)}</div>` : ""}</div>` : onCh ? `<p class="note">🏁 大家的挑战分享（最上面是 NPC 的示范）</p>` : `<p class="note">还没有话题。${joined?"直接在下面说一句吧。":""}</p>`}
     <div id="clFeed">${items.length ? items.map(thread).join("") : `<p class="note">这里还没人说话，来说第一句吧。</p>`}
       ${typing ? `<p class="note">${esc(typing)} 正在输入…</p>` : ""}
       ${older.length ? `<details><summary class="note">更早的分享 · ${older.length}</summary>${older.map(p=>thread({key:"cp:"+p.id, by:p.by, text:p.text, zh:p.zh, url:p.url, kind:p.kind, voice:p.voice, dur:p.dur})).join("")}</details>` : ""}</div>
@@ -5637,12 +5673,12 @@ function openClub(id){
   const rerender = ()=>{ const st = card.scrollTop; openClub(id); card.scrollTop = st; };
   card.querySelectorAll("[data-story]").forEach(b=>b.onclick = ()=>{ const nid = b.dataset.story; CLUBUI.story[id] = CLUBUI.story[id] === nid ? null : nid; const x = storyNpcs.find(s=>s.n.id===nid); if (x) markSeen(x.list.map(u=>u.id)); rerender(); });
   if ($("#stX")) $("#stX").onclick = ()=>{ CLUBUI.story[id] = null; rerender(); };
-  if ($("#chSee")) $("#chSee").onclick = ()=>{ CLUBUI.topic[id] = onCh ? (topics.find(t=>!t.challenge)||{}).id : "ch:" + ch.id; CLUBUI.reply[id] = null; openClub(id); };
+  if ($("#chSee")) $("#chSee").onclick = ()=>{ CLUBUI.topic[id] = onCh ? (topics.find(t=>!t.challenge)||{}).id : "ch:" + ch.id; CLUBUI.reply[id] = null; openClub(id); autoSay(card); };
   if ($("#chDo")) $("#chDo").onclick = ()=>{ CLUBUI.topic[id] = "ch:" + ch.id; CLUBUI.reply[id] = null; openClub(id); const t = card.querySelector("#cpText"); if (t){ t.focus(); t.scrollIntoView({block:"center"}); } };
-  if ($("#tpPrev")) $("#tpPrev").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti - 1 + topics.length) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); };
-  if ($("#tpNext")) $("#tpNext").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti + 1) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); };
+  if ($("#tpPrev")) $("#tpPrev").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti - 1 + topics.length) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); autoSay(card); };
+  if ($("#tpNext")) $("#tpNext").onclick = ()=>{ CLUBUI.topic[id] = topics[(ti + 1) % topics.length].id; CLUBUI.reply[id] = null; openClub(id); autoSay(card); };
   card.querySelectorAll("[data-like]").forEach(b=>b.onclick = async ()=>{ const key = b.dataset.like, ref = SOC.db.doc("likes/" + key + "__" + SOC.uid);
-    try { if (liked(key)) await ref.delete(); else await ref.set({post:key, by:SOC.uid, ts:Date.now()}); } catch(e){ const n = $("#cpNote"); if (n) n.textContent = "没点上（可能要先加入伙伴圈）"; } });
+    try { if (liked(key)) await ref.delete(); else { fx("like"); await ref.set({post:key, by:SOC.uid, ts:Date.now()}); } } catch(e){ const n = $("#cpNote"); if (n) n.textContent = "没点上（可能要先加入伙伴圈）"; } });
   card.querySelectorAll("[data-czh]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.czh; if (CLUBUI.zh.has(k)) CLUBUI.zh.delete(k); else CLUBUI.zh.add(k); rerender(); });
   card.querySelectorAll("[data-reply]").forEach(b=>b.onclick = ()=>{ CLUBUI.reply[id] = {key:b.dataset.reply, name:b.dataset.rname, npc:b.dataset.rnpc}; rerender(); const t = $("#cpText"); if (t){ t.focus(); } });
   if ($("#rpX")) $("#rpX").onclick = ()=>{ CLUBUI.reply[id] = null; rerender(); };
@@ -5664,7 +5700,7 @@ function openClub(id){
   const toLearn = it => { try { const l = loadLearn(), x = l.find(y=>y.text===it.text); if (x) x.reps = (x.reps||0) + 1; else l.push({text:it.text, read:"", cn:it.zh||"", code:tts, reps:1, ts:Date.now(), from:"圈子"}); saveLearn(l); } catch(e){} };
   if ($("#shGo")) $("#shGo").onclick = async ()=>{
     const key = CLUBUI.shadow[id], it = findItem(key); if (!it) return;
-    const done = (heard, v) => { CLUBUI.rec[id] = null; CLUBUI.shadowRes[id] = {key, heard: heard || "", score: SR && heard ? Math.round(simSay(heard, it.text) * 100) : null, ...(v ? {url:v.url, blob:v.blob, dur:v.dur} : {})}; toLearn(it); if (SOC.view === "club:" + id) rerender(); };
+    const done = (heard, v) => { CLUBUI.rec[id] = null; CLUBUI.shadowRes[id] = {key, heard: heard || "", score: SR && heard ? Math.round(simSay(heard, it.text) * 100) : null, ...(v ? {url:v.url, blob:v.blob, dur:v.dur} : {})}; if (CLUBUI.shadowRes[id].score >= 80) fx("good"); toLearn(it); if (SOC.view === "club:" + id) rerender(); };
     if (CAN_REC){ CLUBUI.rec[id] = {mode:"shadow"}; rerender();
       const h = await recStart({lang: tts, onText: t=>{ const n = card.querySelector("#shNote"); if (n) n.textContent = "听到：" + t; }, onTick: n=>{ const x = card.querySelector("#recSec"); if (x) x.textContent = n + "″"; }, onDone: v=>done(v.text, v), onError: x=>{ CLUBUI.rec[id] = null; rerender(); micErr(x); }});
       if (h && CLUBUI.rec[id]) CLUBUI.rec[id].h = h; return; }
@@ -5737,7 +5773,9 @@ function openClub(id){
     try {
       const res = await prSample.json([{role:"user", content:`你在语言学习圈子「${c.name}」里扮演虚构的成员（NPC）。圈子用${lang}聊。${curQ?`大家在回答一个问题：${curQ.text}`:cur?`正在聊的话题：${cur.q}`:""}\n人物卡：\n${cards}\n最近的对话（从旧到新）：\n${ctx}\n${me} 刚刚说：${text}\n${target?`请由 ${target.id}（${target.name}）回复 ${me}。`:`请选 1 位最可能接话的人回复 ${me}。`}规则：只从自己的生活和经历出发，用第一人称；1–3 句，像聊天软件里的回复；可以不同意；不知道就说不知道；不讲大道理、不列清单、不提自己是 AI；不纠正语法，只回应内容；可以问一个问题让对话继续；用${lang}写，按人物卡里的外语水平和口头禅；人物的年龄、职业、家庭不能说错；涉及健康、用药或危险情况时按底线说，建议找医生或求助热线。附中文翻译。只返回 JSON：{"npc":"人物 id","text":"回复","zh":"中文翻译"}`}], {modelTier:"default", cache:false});
       const x = Array.isArray(res) ? res[0] : res;
-      if (x && x.text && clubNpc(id, x.npc)) await SOC.db.collection("clubposts").add({club:id, by:"npc:" + x.npc, kind:"NPC 回应", topic: parent.startsWith("upd:") ? "" : topic, parent, text:String(x.text).slice(0,600), zh:String(x.zh||"").slice(0,400), ts:Date.now()});
+      if (x && x.text && clubNpc(id, x.npc)){ await SOC.db.collection("clubposts").add({club:id, by:"npc:" + x.npc, kind:"NPC 回应", topic: parent.startsWith("upd:") ? "" : topic, parent, text:String(x.text).slice(0,600), zh:String(x.zh||"").slice(0,400), ts:Date.now()});
+        // 新消息：叮一声，再用这位 NPC 自己的口音读出来
+        if (SOC.view === "club:" + id && SOUND.on){ fx("msg"); const v = npcVoice(x.npc, tts); setTimeout(()=>{ if (v) sayIt(String(x.text).slice(0,600), v.code, v.rate, v.pitch); else sayIt(String(x.text).slice(0,600), tts, .95); }, 450); } }
     } catch(e){}
     finally { CLUBUI.typing[id] = null; if (SOC.view === "club:" + id) rerender(); }
   };
@@ -5898,8 +5936,9 @@ const codeOf = name => { name = name || ""; const k = Object.keys(LANG_CODE).fin
 const LEARN_KEY = "learn.v1";
 const loadLearn = () => { try { return JSON.parse(localStorage.getItem(LEARN_KEY) || "[]"); } catch(e){ return []; } };
 const saveLearn = l => { try { localStorage.setItem(LEARN_KEY, JSON.stringify(l.slice(-300))); } catch(e){} };
-function sayIt(text, code, rate){ if (!("speechSynthesis" in window)) return false; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); if (code) u.lang = code; u.rate = rate || 1;
-  const v = code && speechSynthesis.getVoices().find(v=>v.lang.replace("_","-").toLowerCase().startsWith(code.slice(0,2).toLowerCase())); if (v) u.voice = v; speechSynthesis.speak(u); return true; }
+function sayIt(text, code, rate, pitch){ if (!("speechSynthesis" in window)) return false; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); if (code) u.lang = code; u.rate = rate || 1; if (pitch) u.pitch = pitch;
+  const vs = speechSynthesis.getVoices(), lc = (code||"").toLowerCase(), norm = v => v.lang.replace("_","-").toLowerCase();
+  const v = code && (vs.find(v=>norm(v) === lc) || vs.find(v=>norm(v).startsWith(lc.slice(0,2)))); if (v) u.voice = v; speechSynthesis.speak(u); return true; }
 let shadowItem = null;
 function openShadow(item){
   shadowItem = {...item, reps: 0}; const box = document.getElementById("chShadow"); box.hidden = false; renderShadow();
@@ -6259,6 +6298,7 @@ function openWord(grp, zh){
   card.querySelectorAll("[data-wgo]").forEach(b=>b.onclick = ()=>openWord(grp, b.dataset.wgo));
   card.querySelectorAll("[data-wstory]").forEach(b=>b.onclick = ()=>flyTo(data[+b.dataset.wstory]));
   card.querySelectorAll("[data-say],[data-mic]").forEach(b=>b.addEventListener("click", ()=>markWord(w.zh)));
+  { const a = card.querySelector('[data-step="w"] [data-say]'); if (a){ a.dataset.auto = "1"; autoSay(card); } }
   card.querySelector("#wClub").onclick = ()=>{ markWord(w.zh);
     const name = clubName, cl = typeof SOC !== "undefined" && (SOC.clubs||[]).find(c=>name && c.name && c.name.includes(name));
     if (!cl){ if (typeof openSoc === "function") openSoc(); return; }
