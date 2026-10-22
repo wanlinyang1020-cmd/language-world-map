@@ -271,6 +271,13 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .gm-msg{font-size:14.5px;min-height:22px}
 .gm-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .gm-btn{border:3px solid #1f2a37;border-radius:14px;background:#fff;padding:8px 18px;font:800 16px var(--f-body);cursor:pointer;box-shadow:3px 3px 0 #1f2a37}.gm-btn.hot{background:#2f9e44;color:#fff}.gm-btn:active{transform:translate(2px,2px);box-shadow:none}
+.gm-tide{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(rgba(25,90,160,.25),rgba(25,90,160,.45));border-top:3px solid rgba(255,255,255,.7);z-index:1;pointer-events:none}
+.gm-sea.hard .gm-plank{animation:gmfloat 3s ease-in-out infinite,gmdrift var(--T) linear forwards}
+.gm-sea.hard .gm-ring{animation:gmfloat 3s ease-in-out infinite,gmdrift var(--T) linear forwards}
+.gm-sea.hard .gm-nb{animation:gmbob 2.6s ease-in-out infinite,gmdrift var(--T) linear forwards}
+@keyframes gmdrift{to{margin-left:70px;margin-top:18px}}
+.gm-sea.hard .gm-flag{animation:gmwind 1.1s ease-in-out infinite;transform-origin:top center}.gm-sea.hard .gm-flag:nth-child(2n){animation-delay:-.5s}
+@keyframes gmwind{50%{transform:rotate(7deg) skewX(-6deg)}}
 .gm-confetti span{position:absolute;top:-30px;font-size:26px;animation:gmfall 2.2s ease-in forwards}@keyframes gmfall{to{top:85%;transform:rotate(200deg)}}
 @media (max-width:640px){.gm-dock{width:70px}.gm-layer{right:70px}.gm-posts{padding-left:0;inset:70px 8px 8px}.gm-boat{top:8px}.gm-flag{min-width:30px;font-size:11px}.gm-ring .r{width:58px;height:58px}}
 @media (prefers-reduced-motion:reduce){.gm-waves,.gm-boat,.gm-plank,.gm-ring,.gm-nb{animation:none}}
@@ -5674,6 +5681,9 @@ function bindClubs(){
 }
 // ===== 圈子里的 NPC：虚构的成员，有自己的生活和看法（数据：CLUB_NPCS、NPC_TALK）=====
 const clubNpcs = id => (typeof CLUB_NPCS !== "undefined" && CLUB_NPCS[id]) || [];
+// ===== 🌐 新功能的英文界面：中文界面原样；英文、葡语、西语界面先用英文（跟地图一样）。只翻界面上的字，数据里的名字和比较用的值不动 =====
+const ZE = UI === "zh" ? null : {"，圈子":", club","✓ 已加入 ·":"✓ Joined ·","位 NPC":" NPCs","位 NPC ·":" NPCs ·","座城市":" cities","，":", ","条新动态":" new updates","\">👥 圈子 ·":"\">👥 Club ·","。":". ","进入圈子 →":"Enter the club →","🎮 码头小游戏":"🎮 Dock games","① 你和这个圈子":"① You and this club","📍 我住在":"📍 I live in","选一下":"Pick one","离你最近的成员：":"Members closest to you: ","· 约":"· about","公里":"km","选了城市，你的小帆船就停在那里的海上。":"Pick a city and your sailboat will wait in the sea next to it.","✓ 已加入":"✓ Joined","＋ 加入这个圈子":"＋ Join this club","你的船停在这个圈子的码头。":"Your boat is docked at this club.","（记在这台设备上，登录后才能发言）":"(saved on this device; sign in to post)","② 有什么新动静":"② What's new","条新的":" new","条回复":" replies","这几天还很安静——进去发第一条吧。":"Quiet these days — go in and post the first one.","本周挑战":"This week's challenge","（到":"(until ","）":")","③ 地图上的这件事 ·":"③ On the map ·","黑色点线连到地图上的贴纸，点一下飞过去。":"Black dotted lines lead to stickers on the map. Tap one to fly there.","圈子里的人":"People in the club","地图上的虚线连到 TA 们住的城市。点名字看人物卡。":"Dashed lines lead to the cities they live in. Tap a name to see their card.","· 离你":"· from you","常问你：":"often asks you: ","也在「":"also in “","」":"”","👥 有人在圈子里聊这件事":"👥 People are talking about this in a club","在「":"In “","」圈子里，":"”, ","发了：":" posted: ","\">飞到海上的「":"\">Fly to “","」→":"” at sea →","母港 ·":"Home port ·","还没有母港 · 点我选一个":"No home port yet · tap to pick one","我的小帆船":"My sailboat","你 ·":"You ·","心情":"Mood","疑惑":"Question","介绍我":"About me","插旗":"Flags","今天的航线":"Today's voyage","船舱":"Hold","工具箱":"Toolbox","准备册":"Prep book","我的圈子":"My clubs","母港":"Home port","选母港":"Pick home port","出海中……":"Out at sea…","停在「":"Docked at “","在":"in ","港 ·":" port ·","还没有母港":"No home port yet","每个学语言的人都是一条小帆船。岸上是当地人和他们的事（贴纸、NPC），海上是圈子和学语言的人。":"Every language learner is a little sailboat. On land are the locals and their stories (stickers, NPCs); at sea are the clubs and the learners.","📍 我的母港":"📍 My home port","我住在":"I live in","船平时停在你城市旁边的海上。离你最近的圈子成员、互相关注的朋友，都按这里算。":"Your boat usually waits in the sea next to your city. Nearby club members and mutual friends are measured from here.","⛵ 船什么时候开":"⛵ When does the boat sail?","你在一张贴纸那里做了事（演一场对话、读懂这件事），船就开到离它最近的港口；进一个圈子，船就停到那个圈子的码头。只是逛逛，船不动。":"When you do something at a sticker (act out a dialogue, read the story), the boat sails to the nearest port. Enter a club and it docks there. Just browsing doesn't move it.","🍾 漂到船边的瓶子 = 今天该复习的话。帆的颜色跟着你在学的语言。":"🍾 Bottles floating by = lines to review today. The sail's colour follows the language you're learning.","船上还有":"On board:","🌦️ 帆旁边的天气是你的心情 · ❓ 桅杆上的旗是你的疑惑 · 🙋 「介绍我」是别人点你的船时看到的话":"🌦️ The weather by the sail is your mood · ❓ the flag on the mast is your question · 🙋 “About me” is what others see when they tap your boat","👤 我的主页":"👤 My page","⛵ 回母港":"⛵ Back to home port","\" aria-label=\"读一遍\">🔊":"\" aria-label=\"Read aloud\">🔊","<div class=\"sa-bar\" aria-label=\"进度":"<div class=\"sa-bar\" aria-label=\"Progress","船边的天气":"Weather by the boat","心情 · 默认只有你自己看得到":"Mood · only you can see it by default","你的心情，就是小帆船周围的天气。别人只看到天气，点开才看到你说的话。":"Your mood is the weather around your sailboat. Others see only the weather; they tap to read what you said.","现在：":"Now: ","☀️ 天晴了，收起来":"☀️ Skies cleared — take it down","今天船边是什么天气？":"What's the weather by your boat today?","这种时候，可以这样说":"At times like this, you can say","点一张，把句块按顺序拼起来，再换成你自己的话。":"Pick a card, put the chunks in order, then make it your own.","这种天气的卡片还在写。":"Cards for this weather are still being written.","· 心情卡":"· mood card","① 听一听，把句块按顺序点出来":"① Listen, then tap the chunks in order","点下面的句块……":"Tap the chunks below…","✓ 拼对了":"✓ Correct","顺序还不太对，点上面的句块放回去再试试。":"Not quite the right order. Tap a chunk above to put it back and try again.","（":"(","：":": ","② 换成你自己的话":"② Make it your own","挂成船边的天气":"Hang it as the weather","← 换一张":"← Another card","桅杆上的问号旗":"Question flag on the mast","疑惑 · 没想明白的事，也值得聊":"Questions · things you haven't figured out are worth talking about","挂一面旗：路过的船能看到。插到一个圈子的码头，圈子里的人和 NPC 会来回答。":"Hang a flag: passing boats can see it. Plant it at a club's dock and the people and NPCs there will answer.","❓ 现在挂着":"❓ Flying now","⬇️ 想明白了，取下来":"⬇️ Figured it out — take it down","换一面旗":"Change the flag","你在想什么？":"What's on your mind?","❓ 挂到桅杆上":"❓ Hang on the mast","也插到码头：":"Also plant at a dock: ","· 已加入":"· joined","⚓ 挂上，再发到这个圈子":"⚓ Hang it and post to this club","我的疑惑":"My question","别人点你的船时，第一眼看到的话":"The first thing others see when they tap your boat","别人点你的船时看到":"Seen when others tap your boat","想说哪一方面？":"Which part of you?","别人可能会这样问你":"Someone might ask you","可以这样开头":"You could start like this","你的回答":"Your answer","存起来":"Save","✓ 存好了，也进了我的生活地图":"✓ Saved, and added to my life map","🌦️ 我的心情 ·":"🌦️ My mood ·","🌦️ 我自己改的心情":"🌦️ My own mood line","🙋 我的回答 ·":"🙋 My answer ·","🙋 介绍我 ·":"🙋 About me ·","📷 我的拍立得 ·":"📷 My polaroid ·","词汇墙":"Word wall","🗺️ 收藏的句子":"🗺️ Saved sentences","✍️ 我自己的":"✍️ My own","🧰 本事":"🧰 Skills","🗺️ 世界给的":"🗺️ From the world","👥 NPC 说的":"👥 From NPCs","一路收进来的话 · 每句都盖着它来自哪里的章":"Lines collected along the way · each stamped with where it came from",">全部 ·":">All ·","挂一片心情天气、写一句「介绍我」、给拍立得标几个词，你自己的话就会收进来。":"Hang a mood, write an “About me”, or label a polaroid, and your own words will land here.","在贴纸里「选一个人来演」，那件事里的人说的话就会收进来。":"In a sticker, “pick someone to play”, and what people say in that story will land here.","打开船上的「🧰 工具箱」，把觉得有用的说法收进来。":"Open the boat's “🧰 Toolbox” and keep the phrases you find useful.","学会词汇墙上的词、收藏常用句，就会收进来。":"Learn words on the word wall or save sentences, and they'll land here.","🟣 用这些话开今天的航线":"🟣 Sail today's voyage with these","路线":"Route","第":"No. ","岛":" island","船舱里的话还不够":"Not enough in the hold yet","出海至少要 3 个词和 3 句话。先挂一片心情天气、写一句「介绍我」，或者在词汇墙上学几个词。":"A voyage needs at least 3 words and 3 sentences. Hang a mood, write an “About me”, or learn a few words on the word wall.","🧳 看船舱":"🧳 See the hold","一小轮最多 6 题 · 练到听得懂、说得出、接得住":"Up to 6 questions per round · until you can understand, say and reply","从母港出发，一座岛一座岛开过去。每座岛是一小轮练习；答得好，下一次隔 1、3、7、14、30 天再出海。这里不评价发音。":"Set off from your home port, one island at a time. Each island is a short round; do well and the next voyage comes after 1, 3, 7, 14, 30 days. Pronunciation isn't graded here.","练过":"Practised ","次":" times","做到第":"Reached Q","题":"","还没去":"Not yet","🎉 这次航行四座岛都到过了。":"🎉 You've reached all four islands on this voyage.","按记忆规律，下一次出海建议在":"For memory, the next voyage is best after ","以后；现在也可以接着练。":"; you can also keep going now.","⛵ 接着开":"⛵ Keep sailing","⛵ 开往第":"⛵ Sail to island ","🔄 用船舱里新的话，换一条航线":"🔄 New route with new lines from the hold","这次航行带上的话":"Lines on this voyage","去第":"To island ","岛 · 到了":" · reached","答对":"Correct: ","这一轮很稳，记忆往前走了一格。":"Solid round — your memory moved up a step.","有几题还不太熟，会留到下次巩固。":"A few aren't solid yet; they'll come back next time.","下一次出海建议：":"Next voyage: ","以后。":" from now.","🟣 回到航线":"🟣 Back to the voyage","这个词是什么意思？":"What does this word mean?","听一听，这句话是什么意思？":"Listen — what does this sentence mean?","点 🔊 听":"Tap 🔊 to listen","先点词，再点对应的意思":"Tap a word, then its meaning","听完整句，再把词块按顺序点出来":"Listen to the whole sentence, then tap the chunks in order","检查":"Check","你会怎么说？":"How would you say it?","给一点提示":"Give me a hint","用它说一句和你自己有关的话":"Use it in a sentence about yourself","说好了":"Done","跟读整句":"Shadow the whole sentence","🎤 我跟读了":"🎤 I said it","还不太顺，下次再来":"Not smooth yet — next time","这里不评价发音，跟着读出来就好。":"Pronunciation isn't graded here — just say it along.","岛 · 第":" island · Q","✓ 对了":"✓ Correct","先跳过":"Skip for now","✗ 还不太对":"✗ Not quite","这题稍后练":"This one comes back later","开头是「":"Starts with “","用":"Use ","说一句自己的话":" in a sentence of your own","🔒 只有我":"🔒 Only me","🤝 互相关注的人":"🤝 Mutual follows","🌍 所有人":"🌍 Everyone","谁能看到：<select id=\"":"Who can see: <select id=\"","伙伴":"Friend","我的主页":"My page","一位伙伴":"A friend","🙋 话":"🙋 Words","🌦️ 心情":"🌦️ Mood","❓ 疑惑":"❓ Question","📒 去过的场合":"📒 Places been","· 母港":"· home port","在学：":"Learning: ","· 母语：":"· Native: ","谁能看到我的东西":"Who can see my things","自己：全部 · 互相关注的人：":"Me: everything · Mutual follows: ","全部（永久可见）":"everything (always visible)","最近一个月":"the last month","· 其他人：只有你选了「🌍 所有人」的":"· Others: only what you set to “🌍 Everyone”","⏳ 改回只展示最近一个月":"⏳ Show only the last month again","♾️ 设成永久可见":"♾️ Make always visible","登录以后，这些才会同步给互相关注的朋友；现在只存在这台设备上。":"Once you sign in, these sync to mutual friends; for now they're only on this device.","已关注":"Following","＋ 关注":"＋ Follow","💬 聊天":"💬 Chat","互相关注以后，能看到 TA 最近一个月分享给朋友的话和照片。":"Once you follow each other, you can see what they shared with friends in the last month.","🚩 插的旗":"🚩 Flags","📷 照片":"📷 Photos","还没有分享的东西。挂一片心情、写一句介绍我、发一张拍立得，选「🤝 互相关注的人」就会出现在这里。":"Nothing shared yet. Hang a mood, write an About me or post a polaroid, choose “🤝 Mutual follows”, and it shows up here.","现在没有你能看到的内容。":"Nothing you can see right now.","⏳ TA 只展示最近一个月的内容。":"⏳ They only show the last month.","要先登录":"Sign in first","✓ 在船舱":"✓ In the hold","＋ 收进船舱":"＋ Keep in the hold","交流的本事 · 不是背句子，是知道这时候怎么接":"Conversation skills · not memorising lines, but knowing how to respond","船上有 8 样工具。和 NPC 演对话、开多岗位会议、在圈子里聊天时都用得上。觉得有用的话，收进船舱，会进今天的航线。":"There are 8 tools on board, useful for dialogues with NPCs, team meetings and club chats. Keep what helps in the hold and it joins today's voyage.","个场景 ·":" scenes ·","张口语卡":" speaking cards","条策略":" strategies","还有":"Also","拼音":"Pinyin","自然拼读":"Phonics","声母、韵母、四声":"Initials, finals, four tones","字母在词里怎么读":"How letters sound in words","课":" lessons","更多情境":"More situations","情绪、交朋友、冲突与边界、日常沟通…… ·":"Feelings, making friends, conflict and boundaries, everyday talk… ·","个场景":" scenes","船舱里已经收了":"The hold already has","句「本事」。":" skill lines.","工具箱 · 交流的本事":"Toolbox · conversation skills","← 工具箱":"← Toolbox","对方":"They say","看你想不想多聊，回法不一样：":"How you reply depends on whether you want to keep talking:","🃏 口语卡":"🃏 Speaking cards","🧭 交流策略":"🧭 Strategies","🛟 卡住了？":"🛟 Stuck?","没听懂、要想一想、说错了，都可以这样说":"Didn't catch it, need a moment, said it wrong — you can say","🧰 打开工具箱":"🧰 Open the toolbox","的船，NPC":"'s boat, NPC","的船":"'s boat","一位成员的船":"A member's boat","一位圈子成员":"A club member","」的码头":"” dock","这条船的主人是这个圈子的成员。互相关注以后，才能看到 TA 是谁、最近说了什么。":"This boat belongs to a club member. Follow each other to see who they are and what they've said lately.","进入圈子看看 →":"Visit the club →","去一个真实场合之前，把要说的话准备好":"Get your words ready before a real occasion","面试、见客户、研讨会、聚会、演讲……一章一章准备：对方会怎么开口、你可以怎么说、你自己的话。填上日子和城市，地图上会插一面目的地旗。":"Interviews, client meetings, seminars, parties, talks… prepare chapter by chapter: how they'll open, what you can say, your own words. Add a date and city and a destination flag goes on the map.","已准备":"Prepared ","章":" chapters","已经过去：怎么样了？":"It's over: how did it go?","你在学的语言还没有准备册。":"No prep books yet for the language you're learning.","准备册 ·":"Prep book ·","← 准备册":"← Prep books","这次是什么事？":"What's the occasion?","\" placeholder=\"例如：周二下午的产品经理面试\" style=\"width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit\">":"\" placeholder=\"e.g. product manager interview, Tuesday afternoon\" style=\"width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit\">","哪天 <input type=\"date\" id=\"pbDate\" value=\"":"Date <input type=\"date\" id=\"pbDate\" value=\"","在哪":"Where","选一个城市":"Pick a city","🚩 插旗":"🚩 Plant a flag","那天怎么样了？":"How did that day go?","可以这样说":"You can say","也可以说：":"Or: ","换成你自己的话":"In your own words","✓ 这一章准备好了":"✓ This chapter is ready","下一章 →":"Next chapter →","· 怎么样了":"· how it went","要去的场合":"Occasion ahead","去之前准备要说的话":"Prepare what to say before you go","例如：周二的产品经理面试":"e.g. Tuesday's product manager interview","常去的地方":"Regular spot","在那里常说的话":"What you often say there","例如：公司楼下那家咖啡店":"e.g. the café below the office","发生过的事":"Something that happened","在这里发生了什么":"What happened here","例如：第一次自己去银行开户":"e.g. opening a bank account on my own for the first time","遇到的问题":"Got stuck","在这里不知道怎么说":"Didn't know how to say it here","例如：在这家医院挂号不知道怎么说":"e.g. didn't know how to register at this hospital","面旗":" flags","点地图上的一个位置插旗":"Tap a spot on the map to plant a flag","放大可以插得更准":"Zoom in to place it more precisely","取消":"Cancel","在这里插一面旗":"Plant a flag here","附近":"Nearby","🏃 做了一件事（第一次去……）":"🏃 I did something (first time at…)","📷 贴一张拍立得在这里":"📷 Stick a polaroid here","📍 会贴在你刚才点的地方：":"📍 It'll go where you just tapped: ","是什么地方？":"What kind of place?","给它起个名字":"Give it a name","发生了什么？":"What happened?","你想问什么？":"What do you want to ask?","哪天":"When","用你在学的语言说一句（中文也行）":"Say it in the language you're learning (your own language is fine too)","备注":"Note","谁能看到：":"Who can see: ","🚩 插上":"🚩 Plant it","📒 去之前准备一下":"📒 Prepare before you go","一章一章准备：对方会怎么开口、你可以怎么说。":"Chapter by chapter: how they'll open and what you can say.","打开准备册":"Open the prep book","在这里常说的话":"What people often say here","这里的示例句是英语的。":"The example lines here are in English.","\">🏃 再看看现场会怎么说":"\">🏃 See what people say there","📷 配一张照片":"📷 Add a photo","📷 在这里贴一张拍立得":"📷 Stick a polaroid here","问一问":"Ask","发到码头：":"Post to a dock: ","⚓ 发到这个圈子":"⚓ Post to this club","拔掉这面旗":"Remove this flag","📍 会贴在这面旗旁边：":"📍 It'll go next to this flag: ","做了一件事":"Did something","真实的小事：去之前看看现场会怎么说，回来说说":"Real little things: see what people say there before you go, then tell us after","选一件你最近做了、或者打算去做的事。":"Pick something you did recently or plan to do.","← 换一件":"← Another one","到了现场":"At the scene","可以问的":"You can ask","会用到的词":"Useful words","回来说说":"Tell us after","比如：":"For example: ","插在刚才点的地方":"Plant where I tapped","插在我的母港城市":"Plant in my home port city","🚩 插好了。圈子里的人可能会接着问你：":"🚩 Planted. People in the club might ask you:","🚩 插好了。":"🚩 Planted.","🎉 主题月 ·":"🎉 Theme month ·","先看看":"First see what ","位客人怎么说":" guests said","\">🙋 我也来说说":"\">🙋 I'll share too","【":"[","】":"]","声母、韵母、四声，一组一组听":"Initials, finals, tones — listen group by group","字母在词里怎么读，一组一组听":"How letters sound in words — listen group by group","· 第":"· No. ","🎧 听一听，是哪一个？":"🎧 Listen — which one is it?","🔊 再听一遍":"🔊 Listen again","← 上一课":"← Previous lesson","下一课 →":"Next lesson →","✓ 对了：":"✓ Correct: ","再听一遍试试":"Listen again and try","生活里常遇到的交流时刻：对方先开口，你怎么接":"Everyday moments: they speak first — how do you respond?","更多情境 ·":"More situations ·","← 更多情境":"← More situations","对方：":"They: ","可以这样接":"You could reply","听力拼图":"Listening puzzle","听一条动态，把词块按顺序点出来":"Listen to a post and tap the chunks in order","听音辨音":"Sound match","ship 还是 sheep？":"ship or sheep?","听不同":"Spot the change","听两遍，找出哪个词变了":"Listen twice and find the word that changed","谁说的":"Who said it?","听一句，猜是哪位 NPC":"Listen and guess which NPC said it","⚓ 码头小游戏":"⚓ Dock games","都是圈子里真实的话 · 一局 1 分钟 · 打开声音":"All real lines from the club · 1 minute a round · sound on","\" data-gmm=\"easy\">🌤️ 轻松 · 不计时":"\" data-gmm=\"easy\">🌤️ Relaxed · no timer","\" data-gmm=\"hard\">🌊 挑战 · 潮水和风":"\" data-gmm=\"hard\">🌊 Challenge · tide and wind","🎉 全对，靠岸了！":"🎉 All correct — you've reached the shore!","👍 不错，船到码头了":"👍 Nice, the boat made it to the dock","🙂 再来一局？":"🙂 Another round?","⚡ 快手 ×":"⚡ Quick ×","再玩一局":"Play again","换个游戏":"Another game","在圈子里发了一条。听一听，把海上的木板按顺序铺成栈桥。":" posted in the club. Listen and lay the floating planks into a pier, in order.","🔊 听":"🔊 Listen","原句是：":"The original: ","海上漂着两个救生圈。听到的是哪一个？":"Two lifebuoys are floating. Which one did you hear?","是":"It's ","说了两遍，第二遍有一面旗上的词变了。是哪一面？":" said it twice; the second time, one flag's word changed. Which one?","🔊 第一遍":"🔊 First","🔊 第二遍":"🔊 Second","对了":"Correct","是这面":"It was this one","码头边停着几条小船。听一句，猜是哪条船上的人说的：听语气，也听口头禅。":"A few boats are moored at the dock. Listen and guess whose boat it came from — by tone and catchphrases.","”":"”","🌊 潮水来了，这题先放过":"🌊 The tide came in — skip this one","你是「":"You're a full member of “","」的正式成员":"”","：船停在码头，桅杆上有这个圈子的小旗。":": your boat is docked, with this club's pennant on the mast.","欢迎了你":" welcomed you","👋 还没打招呼":"👋 Haven't said hi yet","💬 你接过别人的话":"💬 You replied to someone","💬 还没接过别人的话":"💬 Haven't replied to anyone yet","🌍 做过这周的事":"🌍 Did this week's thing","🌍 这周的事还没做":"🌍 This week's thing isn't done yet","· 主持人":"· host","⛵ 随时都能说话。打个招呼、接别人一句话、做一件这周的事都做过，船就靠岸，成为正式成员。":"⛵ You can talk anytime. Say hi, reply to someone and do this week's thing, and your boat docks — you're a full member.","⛵ 登录以后就能在这里说话。":"⛵ Sign in to talk here.","☕ 咖啡店":"☕ Café","🏋️ 健身房":"🏋️ Gym","🏢 公司":"🏢 Office","🛒 超市":"🛒 Supermarket","🏥 医院":"🏥 Hospital","🏦 银行":"🏦 Bank","🏫 学校":"🏫 School","🍜 餐厅":"🍜 Restaurant"};
+const Z = s => ZE && s in ZE ? ZE[s] : s;
 // ===== 👥 圈子贴纸：每个圈子是一张「对话气泡」贴纸，停在海上（成员来自世界各地）；点开连线到每位 NPC 住的城市（数据：CLUB_PINS）=====
 // 圈子活起来：① 你也在线上（你住的城市 + 金线连到你加入的圈子）② 气泡上的红色数字 = 最近 3 天你还没看过的动态 ③ 贴纸和圈子互相指路
 const CPIN = typeof CLUB_PINS !== "undefined" ? CLUB_PINS : {clubs:{}, cities:{}, home:{}};
@@ -5684,7 +5694,8 @@ const clubPinCities = d => new Set(clubNpcs(d.id).map(n=>n.city)).size;
 const cpDay = ms => new Date(ms - new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const CP_TODAY = cpDay(Date.now()), CP_FROM = cpDay(Date.now() - 2*864e5);
 const CP_LIFE = typeof CLUB_LIFE !== "undefined" ? CLUB_LIFE : {updates:[], challenges:[]};
-const cpLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch(e){} return null; };
+var syncMark = null;   // 登录同步装好以后，存东西时顺便记一下（见下面「登录同步」）
+const cpLS = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); if (syncMark) syncMark(k); } catch(e){} return null; };
 const myCity = () => { const c = cpLS("hv.city"); return c && (CPIN.home || {})[c] ? c : null; };
 const cpFollow = () => new Set(cpLS("cpin.follow") || []);
 const cpJoined = id => (SOC.ready && inClub(id)) || cpFollow().has(id);
@@ -5704,7 +5715,7 @@ st.filter(d=>STK_CLUB[d.n]).select(".bob").append("circle").attr("class","cdot")
 var clubSel = null;
 const clubG = d3.select("#clubG"), clubArcG = clubG.append("g"), clubPinG = clubG.append("g"), clubFlyG = clubG.append("g");
 const clubEls = clubPinG.selectAll("g.cpb").data(clubPinData).join("g").attr("class","cpb").attr("role","button").attr("tabindex",0)
-  .attr("aria-label", d=>clubPinName(d) + "，圈子")
+  .attr("aria-label", d=>clubPinName(d) + Z("，圈子"))
   .on("click", (ev, d)=>{ ev.stopPropagation(); openClubPin(d); })
   .on("keydown", (ev, d)=>{ if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openClubPin(d); } });
 clubEls.each(function(d){
@@ -5725,9 +5736,9 @@ function cpStyle(force){
   if (!force && key === cpStyleKey) return; cpStyleKey = key;
   clubEls.each(function(d){ const j = cpJoined(d.id), f = cpFresh(d.id);
     this.querySelector(".cjr").classList.toggle("on", j);
-    this.querySelector(".csub").textContent = j ? `✓ 已加入 · ${clubNpcs(d.id).length} 位 NPC` : `${clubNpcs(d.id).length} 位 NPC · ${clubPinCities(d)} 座城市`;
+    this.querySelector(".csub").textContent = j ? `${Z("✓ 已加入 ·")} ${clubNpcs(d.id).length} ${Z("位 NPC")}` : `${clubNpcs(d.id).length} ${Z("位 NPC ·")} ${clubPinCities(d)} ${Z("座城市")}`;
     this.querySelector(".cbadge").innerHTML = f ? `<circle class="cping" r="9"/><circle class="cbg" r="10"/><text y="4" text-anchor="middle">${f}</text>` : "";
-    this.setAttribute("aria-label", clubPinName(d) + "，圈子" + (f ? `，${f} 条新动态` : "")); });
+    this.setAttribute("aria-label", clubPinName(d) + Z("，圈子") + (f ? `${Z("，")}${f} ${Z("条新动态")}` : "")); });
 }
 const cpCurve = (a, b, lift) => `M${a[0]},${a[1]} Q${(a[0]+b[0])/2},${Math.min(a[1], b[1]) - lift - Math.abs(a[0]-b[0])*.12} ${b[0]},${b[1]}`;
 function placeClubs(t, rel){
@@ -5776,23 +5787,23 @@ function openClubPin(d, keep){
   const stks = Object.keys(STK_CLUB).filter(n=>STK_CLUB[n].club === d.id).map(n=>data.find(x=>x.n === n)).filter(Boolean);
   const also = nid => Object.keys(typeof CLUB_NPCS !== "undefined" ? CLUB_NPCS : {}).filter(c=>c !== d.id && CPIN.clubs[c] && clubNpcs(c).some(x=>x.id === nid)).map(c=>clubPinName({id:c, name:CPIN.clubs[c].name}));
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
-    <div class="c-top"><div class="c-emo" style="border-color:${d.color}">${esc(d.icon)}</div><div><h2>${esc(nm)}</h2><span class="c-cat" style="background:${d.color}">👥 圈子 · ${ppl.length} 位 NPC · ${clubPinCities(d)} 座城市</span></div></div>
-    ${info.desc ? `<p class="note">${esc(String(info.desc).split(/[。]/)[0])}。</p>` : ""}
-    <div class="chips"><button class="chip hot" id="cpGo">进入圈子 →</button>${LEARN === "en" ? `<button class="chip" id="cpGames">🎮 码头小游戏</button>` : ""}</div>
+    <div class="c-top"><div class="c-emo" style="border-color:${d.color}">${esc(d.icon)}</div><div><h2>${esc(nm)}</h2><span class="c-cat" style="background:${d.color}${Z("\">👥 圈子 ·")} ${ppl.length} ${Z("位 NPC ·")} ${clubPinCities(d)} ${Z("座城市")}</span></div></div>
+    ${info.desc ? `<p class="note">${esc(String(info.desc).split(/[。]/)[0])}${Z("。")}</p>` : ""}
+    <div class="chips"><button class="chip hot" id="cpGo">${Z("进入圈子 →")}</button>${LEARN === "en" ? `<button class="chip" id="cpGames">${Z("🎮 码头小游戏")}</button>` : ""}</div>
     ${themeHtml(d)}
-    <section class="cp-you"><h3>① 你和这个圈子</h3>
-      <label class="note">📍 我住在 <select id="cpCity"><option value="">选一下</option>${Object.keys(CPIN.home || {}).map(c=>`<option${c === city ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
-      <p class="note" style="margin:4px 0">${near ? `离你最近的成员：${esc(near.n.icon)} ${esc(near.n.name)} · ${esc(near.n.city)} · 约 ${near.k.toLocaleString()} 公里` : "选了城市，你的小帆船就停在那里的海上。"}</p>
-      <div class="chips"><button class="chip${joined ? "" : " hot"}" id="cpJoin">${joined ? "✓ 已加入" : "＋ 加入这个圈子"}</button></div>
-      ${joined ? `<p class="note" style="margin:2px 0">${city ? "你的船停在这个圈子的码头。" : ""}${SOC.ready ? "" : "（记在这台设备上，登录后才能发言）"}</p>` : ""}</section>
-    <section><h3>② 有什么新动静${fresh ? ` <span class="cp-new">${fresh} 条新的</span>` : ""}</h3>
-      ${posts.length ? posts.map(u=>{ const o = npcAny(u.npc) || {}; return `<div style="display:flex;gap:8px;padding:6px 0;border-top:1px solid #eee8da"><span style="font-size:18px">${esc(o.icon || "🙂")}</span><div style="min-width:0"><b>${esc(o.name || "")}</b> <small class="note">${esc(u.date.slice(5).replace("-", "/"))}${(u.replies || []).length ? ` · ${u.replies.length} 条回复` : ""}</small><div>${esc(u.text)}</div><small class="note">${esc(u.zh || "")}</small></div></div>`; }).join("") : `<p class="note">这几天还很安静——进去发第一条吧。</p>`}
-      ${ch ? `<div style="border:1px solid #e4dcc2;border-radius:12px;padding:8px 10px;margin-top:6px;background:#fff">🎯 <b>本周挑战</b> <small class="note">（到 ${esc(ch.end.slice(5).replace("-", "/"))}）</small><br>${esc(ch.zh || "")}${ch.title ? `<br><small class="note">${esc(ch.title)}</small>` : ""}</div>` : ""}</section>
-    ${stks.length ? `<section><h3>③ 地图上的这件事 · ${stks.length}</h3><p class="note">黑色点线连到地图上的贴纸，点一下飞过去。</p><div class="chips">${stks.map(sd=>`<button class="chip" data-cpstk="${esc(sd.n)}">${esc(sd.e)} ${esc(mapN(sd.n))}</button>`).join("")}</div></section>` : ""}
-    <section><h3>圈子里的人</h3><p class="note">地图上的虚线连到 TA 们住的城市。点名字看人物卡。</p>
+    <section class="cp-you"><h3>${Z("① 你和这个圈子")}</h3>
+      <label class="note">${Z("📍 我住在")} <select id="cpCity"><option value="">${Z("选一下")}</option>${Object.keys(CPIN.home || {}).map(c=>`<option value="${esc(c)}"${c === city ? " selected" : ""}>${esc(mapL(c))}</option>`).join("")}</select></label>
+      <p class="note" style="margin:4px 0">${near ? `${Z("离你最近的成员：")}${esc(near.n.icon)} ${esc(near.n.name)} · ${esc(near.n.city)} ${Z("· 约")} ${near.k.toLocaleString()} ${Z("公里")}` : Z("选了城市，你的小帆船就停在那里的海上。")}</p>
+      <div class="chips"><button class="chip${joined ? "" : " hot"}" id="cpJoin">${joined ? Z("✓ 已加入") : Z("＋ 加入这个圈子")}</button></div>
+      ${joined ? `<p class="note" style="margin:2px 0">${city ? Z("你的船停在这个圈子的码头。") : ""}${SOC.ready ? "" : Z("（记在这台设备上，登录后才能发言）")}</p>` : ""}</section>
+    <section><h3>${Z("② 有什么新动静")}${fresh ? ` <span class="cp-new">${fresh} ${Z("条新的")}</span>` : ""}</h3>
+      ${posts.length ? posts.map(u=>{ const o = npcAny(u.npc) || {}; return `<div style="display:flex;gap:8px;padding:6px 0;border-top:1px solid #eee8da"><span style="font-size:18px">${esc(o.icon || "🙂")}</span><div style="min-width:0"><b>${esc(o.name || "")}</b> <small class="note">${esc(u.date.slice(5).replace("-", "/"))}${(u.replies || []).length ? ` · ${u.replies.length} ${Z("条回复")}` : ""}</small><div>${esc(u.text)}</div><small class="note">${esc(u.zh || "")}</small></div></div>`; }).join("") : `<p class="note">${Z("这几天还很安静——进去发第一条吧。")}</p>`}
+      ${ch ? `<div style="border:1px solid #e4dcc2;border-radius:12px;padding:8px 10px;margin-top:6px;background:#fff">🎯 <b>${Z("本周挑战")}</b> <small class="note">${Z("（到")} ${esc(ch.end.slice(5).replace("-", "/"))}${Z("）")}</small><br>${esc(ch.zh || "")}${ch.title ? `<br><small class="note">${esc(ch.title)}</small>` : ""}</div>` : ""}</section>
+    ${stks.length ? `<section><h3>${Z("③ 地图上的这件事 ·")} ${stks.length}</h3><p class="note">${Z("黑色点线连到地图上的贴纸，点一下飞过去。")}</p><div class="chips">${stks.map(sd=>`<button class="chip" data-cpstk="${esc(sd.n)}">${esc(sd.e)} ${esc(mapN(sd.n))}</button>`).join("")}</div></section>` : ""}
+    <section><h3>${Z("圈子里的人")}</h3><p class="note">${Z("地图上的虚线连到 TA 们住的城市。点名字看人物卡。")}</p>
     ${ppl.map(n=>`<div style="display:flex;gap:9px;padding:8px 0;border-top:1px solid #eee8da"><span style="width:36px;height:36px;flex:none;border-radius:50%;border:2px solid ${d.color};background:#fff;display:flex;align-items:center;justify-content:center;font-size:19px">${esc(n.icon)}</span>
-      <div style="min-width:0"><b role="button" tabindex="0" data-npcard="${esc(n.id)}" data-npback="cmap:${esc(d.id)}" style="cursor:pointer;text-decoration:underline dotted">${esc(n.name)}</b> <small class="note">· ${esc(n.city)}${city && CPIN.cities[n.city] ? ` · 离你 ${Math.round(d3.geoDistance(CPIN.home[city], CPIN.cities[n.city])*6371).toLocaleString()} 公里` : ""}</small><br><small class="note">${esc(n.job || "")}</small>
-      ${n.asks ? `<br><small style="font-style:italic">常问你：${esc(n.asks)}</small>` : ""}${also(n.id).map(a=>`<br><span class="tagx">也在「${esc(a)}」</span>`).join("")}</div></div>`).join("")}</section>`;
+      <div style="min-width:0"><b role="button" tabindex="0" data-npcard="${esc(n.id)}" data-npback="cmap:${esc(d.id)}" style="cursor:pointer;text-decoration:underline dotted">${esc(n.name)}</b> <small class="note">· ${esc(n.city)}${city && CPIN.cities[n.city] ? ` ${Z("· 离你")} ${Math.round(d3.geoDistance(CPIN.home[city], CPIN.cities[n.city])*6371).toLocaleString()} ${Z("公里")}` : ""}</small><br><small class="note">${esc(n.job || "")}</small>
+      ${n.asks ? `<br><small style="font-style:italic">${Z("常问你：")}${esc(n.asks)}</small>` : ""}${also(n.id).map(a=>`<br><span class="tagx">${Z("也在「")}${esc(a)}${Z("」")}</span>`).join("")}</div></div>`).join("")}</section>`;
   card.hidden = false; if (!keep) card.scrollTop = 0;
   cpMarkSeen(d.id); cpStyle(true);
   const $ = s => card.querySelector(s);
@@ -5811,10 +5822,10 @@ function openClubPin(d, keep){
 // 贴纸卡片里：有人在圈子里聊这件事
 function stkClubHtml(n){
   const v = STK_CLUB[n]; if (!v) return ""; const c = CPIN.clubs[v.club], o = npcAny(v.nid) || {}, cn = clubPinName({id:v.club, name:c.name});
-  return `<section><h3>👥 有人在圈子里聊这件事</h3><div style="border:2px solid ${c.color};border-radius:12px;padding:8px 10px;background:#fff">
-    <small class="note">在「${esc(cn)}」圈子里，${esc(o.icon || "")} ${esc(o.name || "")} 发了：</small>
+  return `<section><h3>${Z("👥 有人在圈子里聊这件事")}</h3><div style="border:2px solid ${c.color};border-radius:12px;padding:8px 10px;background:#fff">
+    <small class="note">${Z("在「")}${esc(cn)}${Z("」圈子里，")}${esc(o.icon || "")} ${esc(o.name || "")} ${Z("发了：")}</small>
     ${v.post ? `<p style="margin:4px 0">${esc(v.post.text)}</p><p class="note" style="margin:0">${esc(v.post.zh || "")}</p>` : ""}
-    <button class="chip hot" data-toclub="${esc(n)}" style="width:100%;justify-content:center;margin-top:8px;background:${c.color};border-color:${c.color}">飞到海上的「${esc(cn)}」→</button></div></section>`;
+    <button class="chip hot" data-toclub="${esc(n)}" style="width:100%;justify-content:center;margin-top:8px;background:${c.color};border-color:${c.color}${Z("\">飞到海上的「")}${esc(cn)}${Z("」→")}</button></div></section>`;
 }
 // 一条线从贴纸飞到海上的圈子，到了再打开圈子
 function cpFlyToClub(n){
@@ -5833,15 +5844,15 @@ document.addEventListener("click", e=>{ const b = e.target.closest("[data-toclub
 const SAIL = {en:"#1971c2", zh:"#e8322f", ja:"#e64980", fr:"#7048e8", es:"#f08c00", ko:"#0c8599", de:"#495057", pt:"#2f9e44"};
 const boatHome = () => { const c = myCity(); return c && (CPIN.ports || {})[c] ? CPIN.ports[c] : null; };
 let BOAT = (()=>{ const b = cpLS("boat.at"); return b && Array.isArray(b.ll) ? b : null; })(), boatMenu = false, boatTimer = null;
-const boatNow = () => BOAT || (boatHome() ? {ll: boatHome(), where: "母港 · " + myCity()} : {ll: [-35, 15], where: "还没有母港 · 点我选一个"});
+const boatNow = () => BOAT || (boatHome() ? {ll: boatHome(), where: "" + Z("母港 ·") + " " + mapL(myCity())} : {ll: [-35, 15], where: Z("还没有母港 · 点我选一个")});
 const clubBoatG = clubG.append("g").attr("class","boatg");
-const boatEl = clubBoatG.append("g").attr("class","cboat").attr("role","button").attr("tabindex",0).attr("aria-label","我的小帆船")
+const boatEl = clubBoatG.append("g").attr("class","cboat").attr("role","button").attr("tabindex",0).attr("aria-label",Z("我的小帆船"))
   .on("click", e=>{ e.stopPropagation(); boatMenu = !boatMenu; placeBoat(d3.zoomTransform(svg.node())); })
   .on("keydown", e=>{ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); boatMenu = !boatMenu; placeBoat(d3.zoomTransform(svg.node())); } });
 boatEl.html(`<circle class="cbring" cy="-6" r="20"/><g class="cbob"><ellipse cy="12" rx="20" ry="3" fill="#fff" opacity=".55"/>
   <line y1="4" y2="-34" stroke="#1f2a37" stroke-width="1.6"/><path class="csail" d="M1,-32 L1,0 L19,0Z" stroke="#1f2a37" stroke-width="1.5"/>
   <path d="M-1,-26 L-1,0 L-14,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.5"/><path d="M-17,2 L17,2 L11,11 L-11,11Z" fill="#b7703a" stroke="#1f2a37" stroke-width="1.5"/>
-  <text x="-6" y="9" text-anchor="middle" font-size="8">🙂</text></g><text class="cpl cbl" y="27" text-anchor="middle"></text>
+  <text x="-6" y="9" text-anchor="middle" font-size="8">🙂</text></g><text class="cpl cbl" y="27" text-anchor="middle"></text><g class="cpens"></g>
   <text class="cweather" x="-34" y="-22" font-size="17"></text><g class="cflag" transform="translate(0,-36)"><path d="M0,0 h14 l-3,4.5 l3,4.5 h-14z" fill="#7048e8" stroke="#1f2a37" stroke-width="1"/><text x="6" y="7.5" font-size="8" fill="#fff" text-anchor="middle">?</text></g>`);
 boatEl.select(".cweather").on("click", e=>{ e.stopPropagation(); boatMenu = false; openMood(); });
 boatEl.select(".cflag").on("click", e=>{ e.stopPropagation(); boatMenu = false; openDoubt(); });
@@ -5854,7 +5865,8 @@ function placeBoat(t, s, on){
   clubBoatG.style("display", on ? null : "none"); friendBoats(t, s, on);
   boatEl.attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*1.1})`);
   boatEl.select(".csail").attr("fill", SAIL[LEARN] || "#f2b705");
-  boatEl.select(".cbl").text("你 · " + b.where);
+  boatEl.select(".cbl").text("" + Z("你 ·") + " " + b.where);
+  boatEl.select(".cpens").html(clubPinData.filter(d=>harborFull(d.id)).slice(0, 5).map((d, i)=>`<path d="M-1,${-30 + i*6} l-9,2.5 l9,2.5z" fill="${d.color}" stroke="#1f2a37" stroke-width=".6"/>`).join(""));
   { const x = expGet(), w = x.mood && EXP.weather[x.mood.mood]; boatEl.select(".cweather").text(w ? w[0] : ""); boatEl.select(".cflag").style("display", x.doubt ? null : "none"); }
   // 该复习的话：漂到船边的漂流瓶
   const n = revN(); boatMenuG.selectAll("*").remove();
@@ -5862,8 +5874,8 @@ function placeBoat(t, s, on){
     .on("click", e=>{ e.stopPropagation(); boatMenu = false; openReview(); }));
   voyDraw(t, s);
   if (!boatMenu) return;
-  const items = [["🌦️", "心情", ()=>openMood()], ["❓", "疑惑", ()=>openDoubt()], ["🙋", "介绍我", ()=>openIntro()], ["🚩", "插旗", ()=>setFlagMode(true)],
-    ["🟣", "今天的航线", ()=>openVoyage()], ["🧳", "船舱", ()=>openHold()], ["🧰", "工具箱", ()=>openSkills()], ["📒", "准备册", ()=>openPrep()], ["⚓", "我的圈子", ()=>openClubs()], ["📍", boatHome() ? "母港" : "选母港", openBoatHome]];
+  const items = [["🌦️", Z("心情"), ()=>openMood()], ["❓", Z("疑惑"), ()=>openDoubt()], ["🙋", Z("介绍我"), ()=>openIntro()], ["🚩", Z("插旗"), ()=>setFlagMode(true)],
+    ["🟣", Z("今天的航线"), ()=>openVoyage()], ["🧳", Z("船舱"), ()=>openHold()], ["🧰", Z("工具箱"), ()=>openSkills()], ["📒", Z("准备册"), ()=>openPrep()], ["⚓", Z("我的圈子"), ()=>openClubs()], ["📍", boatHome() ? Z("母港") : Z("选母港"), openBoatHome]];
   items.forEach(([e, label, fn], i)=>{ const a = -Math.PI/2 + i*2*Math.PI/items.length, R = 88*s;
     const r = boatMenuG.append("g").attr("class","cradial").attr("transform", `translate(${x + Math.cos(a)*R},${y - 8*s + Math.sin(a)*R})`).attr("role","button")
       .on("click", ev=>{ ev.stopPropagation(); boatMenu = false; placeBoat(d3.zoomTransform(svg.node())); fn(); });
@@ -5875,30 +5887,30 @@ function boatSail(ll, where){
   const from = boatNow().ll; if (d3.geoDistance(from, ll) < 1e-4){ BOAT = {ll, where}; cpLS("boat.at", BOAT); placeBoat(d3.zoomTransform(svg.node())); return; }
   const it = d3.geoInterpolate(from, ll), dur = Math.min(2400, 600 + d3.geoDistance(from, ll)*1300);
   if (boatTimer) boatTimer.stop(); boatMenu = false;
-  boatTimer = d3.timer(el=>{ const u = Math.min(1, el/dur); BOAT = {ll: it(d3.easeCubicInOut(u)), where: "出海中……"}; placeBoat(d3.zoomTransform(svg.node()));
+  boatTimer = d3.timer(el=>{ const u = Math.min(1, el/dur); BOAT = {ll: it(d3.easeCubicInOut(u)), where: Z("出海中……")}; placeBoat(d3.zoomTransform(svg.node()));
     if (u >= 1){ boatTimer.stop(); boatTimer = null; BOAT = {ll, where}; cpLS("boat.at", BOAT); placeBoat(d3.zoomTransform(svg.node())); boatSync(); } });
 }
-const boatDock = id => { const c = CPIN.clubs[id]; if (c) boatSail([c.pos[0] - 7, c.pos[1] + 1], "停在「" + clubPinName({id, name:c.name}) + "」"); };
+const boatDock = id => { const c = CPIN.clubs[id]; if (c) boatSail([c.pos[0] - 7, c.pos[1] + 1], Z("停在「") + clubPinName({id, name:c.name}) + "」"); };
 // 在贴纸那里做事（演一场、读懂这件事）：船开到离它最近的港口
 function boatToSticker(n){ const d = data.find(x=>x.n === n); if (!d) return; holdVisit(n);
   const [city, ll] = Object.entries(CPIN.ports || {}).sort((a, b)=>d3.geoDistance([d.lon, d.lat], CPIN.home[a[0]]) - d3.geoDistance([d.lon, d.lat], CPIN.home[b[0]]))[0] || [];
-  if (ll) boatSail(ll, "在" + city + "港 · " + mapN(n)); }
+  if (ll) boatSail(ll, Z("在") + city + "" + Z("港 ·") + " " + mapN(n)); }
 function openBoatHome(){
   if (selected) selected.el.classList.remove("sel"); selected = null;
   const city = myCity();
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
-    <div class="c-top"><div class="c-emo" style="border-color:${SAIL[LEARN] || "#f2b705"}">⛵</div><div><h2>我的小帆船</h2><span class="c-cat" style="background:${SAIL[LEARN] || "#f2b705"}">${city ? "母港 · " + esc(city) : "还没有母港"}</span></div></div>
-    <p>每个学语言的人都是一条小帆船。岸上是当地人和他们的事（贴纸、NPC），海上是圈子和学语言的人。</p>
-    <section class="cp-you"><h3>📍 我的母港</h3><label class="note">我住在 <select id="bhCity"><option value="">选一下</option>${Object.keys(CPIN.home || {}).map(c=>`<option${c === city ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
-      <p class="note">船平时停在你城市旁边的海上。离你最近的圈子成员、互相关注的朋友，都按这里算。</p></section>
-    <section><h3>⛵ 船什么时候开</h3><p class="note">你在一张贴纸那里做了事（演一场对话、读懂这件事），船就开到离它最近的港口；进一个圈子，船就停到那个圈子的码头。只是逛逛，船不动。</p>
-    <p class="note">🍾 漂到船边的瓶子 = 今天该复习的话。帆的颜色跟着你在学的语言。</p></section>
-    <section><h3>船上还有</h3><p class="note">🌦️ 帆旁边的天气是你的心情 · ❓ 桅杆上的旗是你的疑惑 · 🙋 「介绍我」是别人点你的船时看到的话</p></section>
-    <div class="chips"><button class="chip hot" id="bhMe">👤 我的主页</button>${boatHome() ? `<button class="chip" id="bhGo">⛵ 回母港</button>` : ""}</div>`;
+    <div class="c-top"><div class="c-emo" style="border-color:${SAIL[LEARN] || "#f2b705"}">⛵</div><div><h2>${Z("我的小帆船")}</h2><span class="c-cat" style="background:${SAIL[LEARN] || "#f2b705"}">${city ? "" + Z("母港 ·") + " " + esc(mapL(city)) : Z("还没有母港")}</span></div></div>
+    <p>${Z("每个学语言的人都是一条小帆船。岸上是当地人和他们的事（贴纸、NPC），海上是圈子和学语言的人。")}</p>
+    <section class="cp-you"><h3>${Z("📍 我的母港")}</h3><label class="note">${Z("我住在")} <select id="bhCity"><option value="">${Z("选一下")}</option>${Object.keys(CPIN.home || {}).map(c=>`<option value="${esc(c)}"${c === city ? " selected" : ""}>${esc(mapL(c))}</option>`).join("")}</select></label>
+      <p class="note">${Z("船平时停在你城市旁边的海上。离你最近的圈子成员、互相关注的朋友，都按这里算。")}</p></section>
+    <section><h3>${Z("⛵ 船什么时候开")}</h3><p class="note">${Z("你在一张贴纸那里做了事（演一场对话、读懂这件事），船就开到离它最近的港口；进一个圈子，船就停到那个圈子的码头。只是逛逛，船不动。")}</p>
+    <p class="note">${Z("🍾 漂到船边的瓶子 = 今天该复习的话。帆的颜色跟着你在学的语言。")}</p></section>
+    <section><h3>${Z("船上还有")}</h3><p class="note">${Z("🌦️ 帆旁边的天气是你的心情 · ❓ 桅杆上的旗是你的疑惑 · 🙋 「介绍我」是别人点你的船时看到的话")}</p></section>
+    <div class="chips"><button class="chip hot" id="bhMe">${Z("👤 我的主页")}</button>${boatHome() ? `<button class="chip" id="bhGo">${Z("⛵ 回母港")}</button>` : ""}</div>`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard;
-  { const g = card.querySelector("#bhGo"); if (g) g.onclick = ()=>boatSail(boatHome(), "母港 · " + myCity()); card.querySelector("#bhMe").onclick = ()=>openUserPage(SOC.uid); }
-  card.querySelector("#bhCity").onchange = e=>{ cpLS("hv.city", e.target.value || null); const h = boatHome(); if (h) boatSail(h, "母港 · " + myCity()); else { BOAT = null; cpLS("boat.at", null); } openBoatHome(); render(); };
+  { const g = card.querySelector("#bhGo"); if (g) g.onclick = ()=>boatSail(boatHome(), "" + Z("母港 ·") + " " + mapL(myCity())); card.querySelector("#bhMe").onclick = ()=>openUserPage(SOC.uid); }
+  card.querySelector("#bhCity").onchange = e=>{ cpLS("hv.city", e.target.value || null); const h = boatHome(); if (h) boatSail(h, "" + Z("母港 ·") + " " + mapL(myCity())); else { BOAT = null; cpLS("boat.at", null); } openBoatHome(); render(); };
 }
 // ===== ✍️ 说自己：心情是船边的天气，疑惑是桅杆上的问号旗，「介绍我」是别人点你的船时看到的话（内容来自言己）=====
 const EXP = typeof EXPRESS !== "undefined" ? EXPRESS : {weather:{}, cards:[], self:[]};
@@ -5906,25 +5918,25 @@ const EXP_TTS = {en:"en-US", fr:"fr-FR", ja:"ja-JP", es:"es-ES", zh:"zh-CN"};
 const expGet = () => Object.assign({mood:null, doubt:null, intro:{}, log:[]}, cpLS("express.v1") || {});
 const expSet = x => { cpLS("express.v1", x); placeBoat(d3.zoomTransform(svg.node())); boatSync(); };
 const expCards = () => { const L = EXP.cards.filter(c=>c.lang === LEARN); return L.length ? L : EXP.cards.filter(c=>c.lang === "en"); };
-const expSay = (t, lang) => `<button class="chip" data-say="${esc(t)}" data-tts="${EXP_TTS[lang] || LEARN_TTS}" aria-label="读一遍">🔊</button>`;
+const expSay = (t, lang) => `<button class="chip" data-say="${esc(t)}" data-tts="${EXP_TTS[lang] || LEARN_TTS}${Z("\" aria-label=\"读一遍\">🔊")}</button>`;
 const expText = c => c.chunks.join(c.lang === "ja" ? "" : " ");
 const expTop = (icon, title, tag, color) => `<button class="x" aria-label="关闭">✕</button>
   <div class="c-top"><div class="c-emo" style="border-color:${color}">${icon}</div><div><h2>${title}</h2><span class="c-cat" style="background:${color}">${tag}</span></div></div>`;
 const expOpen = () => { if (selected) selected.el.classList.remove("sel"); selected = null; SOC.view = null; card.hidden = false; card.querySelector(".x").onclick = closeCard; };
 // 🎨 关卡舞台（贴纸卡通画风）：把卡片里现有的内容套进一块海面，题目和按钮变成白底黑描边的贴纸
 function stageA(){ if (card.firstElementChild && card.firstElementChild.classList.contains("stage-a")) return; const w = document.createElement("div"); w.className = "stage-a"; while (card.firstChild) w.appendChild(card.firstChild); card.appendChild(w); }
-const saBar = (n, N) => `<div class="sa-bar" aria-label="进度 ${n} / ${N}"><i style="width:${Math.round(n / Math.max(1, N) * 100)}%"></i></div>`;
+const saBar = (n, N) => `${Z("<div class=\"sa-bar\" aria-label=\"进度")} ${n} / ${N}"><i style="width:${Math.round(n / Math.max(1, N) * 100)}%"></i></div>`;
 const expLog = (kind, q, a, vis) => { const e = expGet(); e.log = [...(e.log || []), {kind, q, a, vis: vis || "me", ts: Date.now()}].slice(-100); cpLS("express.v1", e); lifeAdd({path: "self", q, a, w: [], ts: Date.now()}); boatSync(); };
 // 🌦️ 心情
 function openMood(mk){
   const e = expGet(), Wt = EXP.weather, cur = e.mood && Wt[e.mood.mood] ? e.mood : null; mk = mk || (cur && cur.mood) || "lost";
   const list = expCards().filter(c=>c.mood === mk);
-  card.innerHTML = expTop("🌦️", "船边的天气", "心情 · 默认只有你自己看得到", "#1c7ed6") + `
-    <p class="note">你的心情，就是小帆船周围的天气。别人只看到天气，点开才看到你说的话。</p>
-    ${cur ? `<div class="cp-you"><h3>现在：${Wt[cur.mood][0]} ${esc(Wt[cur.mood][2])}</h3><p style="margin:2px 0"><b>${esc(cur.text)}</b></p>${cur.zh ? `<p class="note" style="margin:0">${esc(cur.zh)}</p>` : ""}<div class="chips"><button class="chip" id="mdClear">☀️ 天晴了，收起来</button></div></div>` : ""}
-    <section><h3>今天船边是什么天气？</h3><div class="chips">${Object.entries(Wt).map(([k, w])=>`<button class="chip" data-mood="${k}"${k === mk ? ' aria-pressed="true" style="background:#eef3fb;border-color:#1c7ed6;color:#1c5fa8"' : ""}>${w[0]} ${esc(w[2])}</button>`).join("")}</div></section>
-    <section><h3>${Wt[mk][0]} 这种时候，可以这样说</h3><p class="note">点一张，把句块按顺序拼起来，再换成你自己的话。</p>
-    ${list.map(c=>`<button class="chip" data-mcard="${esc(c.id)}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:4px 0;white-space:normal"><span><b>${esc(c.title)}</b>${c.term ? ` <small class="note">· ${esc(c.term)}</small>` : ""}</span></button>`).join("") || `<p class="note">这种天气的卡片还在写。</p>`}</section>`;
+  card.innerHTML = expTop("🌦️", Z("船边的天气"), Z("心情 · 默认只有你自己看得到"), "#1c7ed6") + `
+    <p class="note">${Z("你的心情，就是小帆船周围的天气。别人只看到天气，点开才看到你说的话。")}</p>
+    ${cur ? `<div class="cp-you"><h3>${Z("现在：")}${Wt[cur.mood][0]} ${esc(Wt[cur.mood][2])}</h3><p style="margin:2px 0"><b>${esc(cur.text)}</b></p>${cur.zh ? `<p class="note" style="margin:0">${esc(cur.zh)}</p>` : ""}<div class="chips"><button class="chip" id="mdClear">${Z("☀️ 天晴了，收起来")}</button></div></div>` : ""}
+    <section><h3>${Z("今天船边是什么天气？")}</h3><div class="chips">${Object.entries(Wt).map(([k, w])=>`<button class="chip" data-mood="${k}"${k === mk ? ' aria-pressed="true" style="background:#eef3fb;border-color:#1c7ed6;color:#1c5fa8"' : ""}>${w[0]} ${esc(w[2])}</button>`).join("")}</div></section>
+    <section><h3>${Wt[mk][0]} ${Z("这种时候，可以这样说")}</h3><p class="note">${Z("点一张，把句块按顺序拼起来，再换成你自己的话。")}</p>
+    ${list.map(c=>`<button class="chip" data-mcard="${esc(c.id)}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:4px 0;white-space:normal"><span><b>${esc(c.title)}</b>${c.term ? ` <small class="note">· ${esc(c.term)}</small>` : ""}</span></button>`).join("") || `<p class="note">${Z("这种天气的卡片还在写。")}</p>`}</section>`;
   expOpen(); card.scrollTop = 0;
   card.querySelectorAll("[data-mood]").forEach(b=>b.onclick = ()=>openMood(b.dataset.mood));
   card.querySelectorAll("[data-mcard]").forEach(b=>b.onclick = ()=>openMoodCard(EXP.cards.find(c=>c.id === b.dataset.mcard)));
@@ -5935,14 +5947,14 @@ function openMoodCard(c, picked){
   if (!c) return; picked = picked || [];
   const order = c._order || (c._order = c.chunks.map((_, i)=>i).sort(()=>Math.random() - .5)), done = picked.length === c.chunks.length, ok = done && picked.every((v, i)=>v === i);
   const Wt = EXP.weather[c.mood] || ["", "", ""];
-  card.innerHTML = expTop(Wt[0] || "🌦️", esc(c.title), `${esc(Wt[2])} · 心情卡`, "#1c7ed6") + `
-    <section><h3>① 听一听，把句块按顺序点出来</h3>${expSay(expText(c), c.lang)}
-      <div class="chips" style="min-height:34px;border-bottom:2px dashed #e7dfc8;margin:6px 0">${picked.map((i, k)=>`<button class="chip" data-unpick="${k}" style="border-color:#2f9e8f;background:#eefaf7">${esc(c.chunks[i])}</button>`).join("") || `<span class="note">点下面的句块……</span>`}</div>
+  card.innerHTML = expTop(Wt[0] || "🌦️", esc(c.title), `${esc(Wt[2])} ${Z("· 心情卡")}`, "#1c7ed6") + `
+    <section><h3>${Z("① 听一听，把句块按顺序点出来")}</h3>${expSay(expText(c), c.lang)}
+      <div class="chips" style="min-height:34px;border-bottom:2px dashed #e7dfc8;margin:6px 0">${picked.map((i, k)=>`<button class="chip" data-unpick="${k}" style="border-color:#2f9e8f;background:#eefaf7">${esc(c.chunks[i])}</button>`).join("") || `<span class="note">${Z("点下面的句块……")}</span>`}</div>
       <div class="chips">${order.filter(i=>!picked.includes(i)).map(i=>`<button class="chip" data-pick="${i}" style="border-style:dashed">${esc(c.chunks[i])}</button>`).join("")}</div>
-      ${done ? (ok ? `<p style="color:#2f9e44"><b>✓ 拼对了</b></p>` : `<p style="color:#e8590c">顺序还不太对，点上面的句块放回去再试试。</p>`) : ""}</section>
-    ${ok ? `<section><p><b>${esc(expText(c))}</b> ${expSay(expText(c), c.lang)}</p><p class="note">${esc(c.zh)}</p>${c.term ? `<p class="note">🔑 <b>${esc(c.term)}</b>${c.reading ? `（${esc(c.reading)}）` : ""}${c.why ? `：${esc(c.why)}` : ""}</p>` : ""}</section>
-    <section><h3>② 换成你自己的话</h3><textarea id="mdText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit">${esc(expText(c))}</textarea>
-      ${visPick("mdVis", "mood")}<div class="chips"><button class="chip hot" id="mdSave">${Wt[0]} 挂成船边的天气</button><button class="chip" id="mdBack">← 换一张</button></div></section>` : `<div class="chips"><button class="chip" id="mdBack">← 换一张</button></div>`}`;
+      ${done ? (ok ? `<p style="color:#2f9e44"><b>${Z("✓ 拼对了")}</b></p>` : `<p style="color:#e8590c">${Z("顺序还不太对，点上面的句块放回去再试试。")}</p>`) : ""}</section>
+    ${ok ? `<section><p><b>${esc(expText(c))}</b> ${expSay(expText(c), c.lang)}</p><p class="note">${esc(c.zh)}</p>${c.term ? `<p class="note">🔑 <b>${esc(c.term)}</b>${c.reading ? `${Z("（")}${esc(c.reading)}${Z("）")}` : ""}${c.why ? `${Z("：")}${esc(c.why)}` : ""}</p>` : ""}</section>
+    <section><h3>${Z("② 换成你自己的话")}</h3><textarea id="mdText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit">${esc(expText(c))}</textarea>
+      ${visPick("mdVis", "mood")}<div class="chips"><button class="chip hot" id="mdSave">${Wt[0]} ${Z("挂成船边的天气")}</button><button class="chip" id="mdBack">${Z("← 换一张")}</button></div></section>` : `<div class="chips"><button class="chip" id="mdBack">${Z("← 换一张")}</button></div>`}`;
   expOpen();
   card.querySelectorAll("[data-pick]").forEach(b=>b.onclick = ()=>openMoodCard(c, [...picked, +b.dataset.pick]));
   card.querySelectorAll("[data-unpick]").forEach(b=>b.onclick = ()=>openMoodCard(c, picked.filter((_, k)=>k !== +b.dataset.unpick)));
@@ -5953,15 +5965,15 @@ function openMoodCard(c, picked){
 // ❓ 桅杆上的问号旗
 function openDoubt(){
   const e = expGet(), d = e.doubt, joined = Object.keys(CPIN.clubs).filter(id=>cpJoined(id)), opts = [...joined, ...Object.keys(CPIN.clubs).filter(id=>!joined.includes(id))];
-  card.innerHTML = expTop("❓", "桅杆上的问号旗", "疑惑 · 没想明白的事，也值得聊", "#7048e8") + `
-    <p class="note">挂一面旗：路过的船能看到。插到一个圈子的码头，圈子里的人和 NPC 会来回答。</p>
-    ${d ? `<div class="cp-you"><h3>❓ 现在挂着</h3><p style="margin:2px 0"><b>${esc(d.text)}</b></p><div class="chips"><button class="chip" id="dbDown">⬇️ 想明白了，取下来</button></div></div>` : ""}
-    <section><h3>${d ? "换一面旗" : "你在想什么？"}</h3><textarea id="dbText" rows="3" maxlength="300" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文都行，例如：Is it rude to ask a colleague's age here?"></textarea>
-      ${visPick("dbVis", "doubt")}<div class="chips"><button class="chip hot" id="dbHang">❓ 挂到桅杆上</button></div>
-      <label class="note">也插到码头：<select id="dbClub">${opts.map(id=>`<option value="${id}">${esc(CPIN.clubs[id].icon)} ${esc(clubPinName({id, name: CPIN.clubs[id].name}))}${cpJoined(id) ? " · 已加入" : ""}</option>`).join("")}</select></label>
-      <div class="chips"><button class="chip" id="dbClubGo">⚓ 挂上，再发到这个圈子</button></div></section>`;
+  card.innerHTML = expTop("❓", Z("桅杆上的问号旗"), Z("疑惑 · 没想明白的事，也值得聊"), "#7048e8") + `
+    <p class="note">${Z("挂一面旗：路过的船能看到。插到一个圈子的码头，圈子里的人和 NPC 会来回答。")}</p>
+    ${d ? `<div class="cp-you"><h3>${Z("❓ 现在挂着")}</h3><p style="margin:2px 0"><b>${esc(d.text)}</b></p><div class="chips"><button class="chip" id="dbDown">${Z("⬇️ 想明白了，取下来")}</button></div></div>` : ""}
+    <section><h3>${d ? Z("换一面旗") : Z("你在想什么？")}</h3><textarea id="dbText" rows="3" maxlength="300" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文都行，例如：Is it rude to ask a colleague's age here?"></textarea>
+      ${visPick("dbVis", "doubt")}<div class="chips"><button class="chip hot" id="dbHang">${Z("❓ 挂到桅杆上")}</button></div>
+      <label class="note">${Z("也插到码头：")}<select id="dbClub">${opts.map(id=>`<option value="${id}">${esc(CPIN.clubs[id].icon)} ${esc(clubPinName({id, name: CPIN.clubs[id].name}))}${cpJoined(id) ? " " + Z("· 已加入") + "" : ""}</option>`).join("")}</select></label>
+      <div class="chips"><button class="chip" id="dbClubGo">${Z("⚓ 挂上，再发到这个圈子")}</button></div></section>`;
   expOpen(); card.scrollTop = 0;
-  const hang = ()=>{ const t = card.querySelector("#dbText").value.trim(); if (!t) return null; const x = expGet(); x.doubt = {text: t, ts: Date.now()}; expSet(x); expLog("doubt", "我的疑惑", t, card.querySelector("#dbVis").value); return t; };
+  const hang = ()=>{ const t = card.querySelector("#dbText").value.trim(); if (!t) return null; const x = expGet(); x.doubt = {text: t, ts: Date.now()}; expSet(x); expLog("doubt", Z("我的疑惑"), t, card.querySelector("#dbVis").value); return t; };
   card.querySelector("#dbHang").onclick = ()=>{ if (hang()) openDoubt(); };
   card.querySelector("#dbClubGo").onclick = ()=>{ const t = hang(); if (!t) return; const id = card.querySelector("#dbClub").value; openClub(id); const ta = card.querySelector("#cpText"); if (ta) ta.value = t; };
   const dn = card.querySelector("#dbDown"); if (dn) dn.onclick = ()=>{ const x = expGet(); x.doubt = null; expSet(x); openDoubt(); };
@@ -5971,19 +5983,19 @@ let expSelf = [0, 0];
 function openIntro(ti, di){
   if (ti !== undefined) expSelf = [ti, di || 0]; const [a, b] = expSelf, T = EXP.self[a], D = T && T.directions[b]; if (!D) return;
   const e = expGet(), key = T.id + ":" + b, first = Object.values(e.intro || {})[0];
-  card.innerHTML = expTop("🙋", "介绍我", "别人点你的船时，第一眼看到的话", "#e8590c") + `
-    ${first ? `<div class="cp-you"><h3>别人点你的船时看到</h3><p style="margin:2px 0">${esc(first)}</p></div>` : ""}
-    <section><h3>想说哪一方面？</h3><div class="chips">${EXP.self.map((t, i)=>`<button class="chip" data-st="${i}"${i === a ? ' aria-pressed="true" style="background:#fff4e6;border-color:#e8590c"' : ""}>${esc(t.title)}</button>`).join("")}</div>
+  card.innerHTML = expTop("🙋", Z("介绍我"), Z("别人点你的船时，第一眼看到的话"), "#e8590c") + `
+    ${first ? `<div class="cp-you"><h3>${Z("别人点你的船时看到")}</h3><p style="margin:2px 0">${esc(first)}</p></div>` : ""}
+    <section><h3>${Z("想说哪一方面？")}</h3><div class="chips">${EXP.self.map((t, i)=>`<button class="chip" data-st="${i}"${i === a ? ' aria-pressed="true" style="background:#fff4e6;border-color:#e8590c"' : ""}>${esc(t.title)}</button>`).join("")}</div>
       <p class="note">${esc(T.description)}</p><div class="chips">${T.directions.map((d, i)=>`<button class="chip" data-sd="${i}"${i === b ? ' aria-pressed="true" style="background:#fff4e6;border-color:#e8590c"' : ""}>${esc(d.label)}</button>`).join("")}</div></section>
-    <section><h3>别人可能会这样问你</h3><p><b>${esc(D.opening)}</b> ${expSay(D.opening, "en")}</p>${D.scenario ? `<p class="note">${esc(D.scenario)}</p>` : ""}
-      <h3>可以这样开头</h3>${D.phrases.map(p=>`<div class="ex-line">${esc(p.text)} ${expSay(p.text, "en")}<br><small class="note">${esc(p.meaning)}</small></div>`).join("")}
+    <section><h3>${Z("别人可能会这样问你")}</h3><p><b>${esc(D.opening)}</b> ${expSay(D.opening, "en")}</p>${D.scenario ? `<p class="note">${esc(D.scenario)}</p>` : ""}
+      <h3>${Z("可以这样开头")}</h3>${D.phrases.map(p=>`<div class="ex-line">${esc(p.text)} ${expSay(p.text, "en")}<br><small class="note">${esc(p.meaning)}</small></div>`).join("")}
       ${D.hint ? `<p class="note">💡 ${esc(D.hint)}</p>` : ""}</section>
-    <section><h3>你的回答</h3><textarea id="inText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="换成你自己的情况……">${esc((e.intro || {})[key] || "")}</textarea>
-      ${visPick("inVis", "intro")}<div class="chips"><button class="chip hot" id="inSave">存起来</button><span class="note" id="inNote"></span></div></section>`;
+    <section><h3>${Z("你的回答")}</h3><textarea id="inText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="换成你自己的情况……">${esc((e.intro || {})[key] || "")}</textarea>
+      ${visPick("inVis", "intro")}<div class="chips"><button class="chip hot" id="inSave">${Z("存起来")}</button><span class="note" id="inNote"></span></div></section>`;
   expOpen();
   card.querySelectorAll("[data-st]").forEach(x=>x.onclick = ()=>openIntro(+x.dataset.st, 0));
   card.querySelectorAll("[data-sd]").forEach(x=>x.onclick = ()=>openIntro(a, +x.dataset.sd));
-  card.querySelector("#inSave").onclick = ()=>{ const t = card.querySelector("#inText").value.trim(); if (!t) return; const x = expGet(); x.intro = {...(x.intro || {}), [key]: t}; cpLS("express.v1", x); expLog("intro", D.opening, t, card.querySelector("#inVis").value); fx("good"); card.querySelector("#inNote").textContent = "✓ 存好了，也进了我的生活地图"; };
+  card.querySelector("#inSave").onclick = ()=>{ const t = card.querySelector("#inText").value.trim(); if (!t) return; const x = expGet(); x.intro = {...(x.intro || {}), [key]: t}; cpLS("express.v1", x); expLog("intro", D.opening, t, card.querySelector("#inVis").value); fx("good"); card.querySelector("#inNote").textContent = Z("✓ 存好了，也进了我的生活地图"); };
 }
 // ===== 🧭 出题引擎：原样借用言己（Inner Voice）的 src/round-engine.js —— 一小轮最多 6 题、四座小岛、按 1/3/7/14/30 天再练；不依赖界面和存储 =====
 const PracticeRounds=(()=>{
@@ -6038,27 +6050,27 @@ const holdVisit = n => { const v = cpLS("boat.visits") || []; cpLS("boat.visits"
 function holdItems(){
   const out = [], seen = new Set(), add = it => { const k = it.kind + ":" + it.text; if (!it.text || seen.has(k)) return; seen.add(k); out.push(it); };
   const e = expGet();
-  if (e.mood){ const c = EXP.cards.find(x=>x.id === e.mood.card); if (c) add({kind: "sentence", text: expText(c), mean: c.zh, src: "mine", from: "🌦️ 我的心情 · " + c.title, tts: EXP_TTS[c.lang]}); if (e.mood.text && (!c || e.mood.text !== expText(c))) add({kind: "sentence", text: e.mood.text, mean: "", src: "mine", from: "🌦️ 我自己改的心情"}); }
+  if (e.mood){ const c = EXP.cards.find(x=>x.id === e.mood.card); if (c) add({kind: "sentence", text: expText(c), mean: c.zh, src: "mine", from: "" + Z("🌦️ 我的心情 ·") + " " + c.title, tts: EXP_TTS[c.lang]}); if (e.mood.text && (!c || e.mood.text !== expText(c))) add({kind: "sentence", text: e.mood.text, mean: "", src: "mine", from: Z("🌦️ 我自己改的心情")}); }
   Object.entries(e.intro || {}).forEach(([k, a])=>{ const [tid, di] = k.split(":"), T = EXP.self.find(t=>t.id === tid), D = T && T.directions[+di]; if (!D) return;
-    add({kind: "sentence", text: a, mean: "", src: "mine", from: "🙋 我的回答 · " + D.label}); D.phrases.forEach(p=>add({kind: "sentence", text: p.text, mean: p.meaning, src: "mine", from: "🙋 介绍我 · " + D.label})); });
-  loadMine().forEach(m=>(m.labels || []).forEach(l=>add({kind: "word", text: l.w, mean: l.zh || "", src: "mine", from: "📷 我的拍立得 · " + String(m.place || "").split("·").pop().trim()})));
+    add({kind: "sentence", text: a, mean: "", src: "mine", from: "" + Z("🙋 我的回答 ·") + " " + D.label}); D.phrases.forEach(p=>add({kind: "sentence", text: p.text, mean: p.meaning, src: "mine", from: "" + Z("🙋 介绍我 ·") + " " + D.label})); });
+  loadMine().forEach(m=>(m.labels || []).forEach(l=>add({kind: "word", text: l.w, mean: l.zh || "", src: "mine", from: "" + Z("📷 我的拍立得 ·") + " " + String(m.place || "").split("·").pop().trim()})));
   const done = wordsDone();
-  for (const g of Object.keys(typeof MONEY_WORDS !== "undefined" ? MONEY_WORDS : {})) for (const w of wallWords(g)) if (done.has(w.zh)) add({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[g] || "词汇墙")});
+  for (const g of Object.keys(typeof MONEY_WORDS !== "undefined" ? MONEY_WORDS : {})) for (const w of wallWords(g)) if (done.has(w.zh)) add({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[g] || Z("词汇墙"))});
   const ph = pathSet("phr");
-  for (const g of Object.values(PATHS).flatMap(p=>p.phrases())) for (const x of g.items) if (ph.has(x.en)) add({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: "🗺️ 收藏的句子"});
-  skKeep().forEach(x=>add({kind: "sentence", text: x.text, mean: x.mean, src: "skill", from: "🧰 " + (x.from || "工具箱")}));
+  for (const g of Object.values(PATHS).flatMap(p=>p.phrases())) for (const x of g.items) if (ph.has(x.en)) add({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: Z("🗺️ 收藏的句子")});
+  skKeep().forEach(x=>add({kind: "sentence", text: x.text, mean: x.mean, src: "skill", from: "🧰 " + (x.from || Z("工具箱"))}));
   (cpLS("boat.visits") || []).forEach(n=>{ const sc = typeof STICKER_SCENES !== "undefined" && STICKER_SCENES[n]; if (!sc) return;
     sc.lines.filter(l=>l.en && l.en.length <= 90).slice(0, 4).forEach(l=>add({kind: "sentence", text: l.en, mean: l.zh, src: "npc", from: "👥 " + (sc.cast[l.role] || l.role) + " · " + mapN(n)})); });
   return out;
 }
-const HOLD_SRC = {mine: "✍️ 我自己的", skill: "🧰 本事", world: "🗺️ 世界给的", npc: "👥 NPC 说的"};
+const HOLD_SRC = {mine: Z("✍️ 我自己的"), skill: Z("🧰 本事"), world: Z("🗺️ 世界给的"), npc: Z("👥 NPC 说的")};
 function openHold(src){
   const all = holdItems(), list = src ? all.filter(x=>x.src === src) : all;
-  card.innerHTML = expTop("🧳", "船舱", "一路收进来的话 · 每句都盖着它来自哪里的章", "#b08900") + `
-    <div class="chips"><button class="chip" data-hs=""${!src ? ' aria-pressed="true"' : ""}>全部 · ${all.length}</button>${Object.entries(HOLD_SRC).map(([k, t])=>`<button class="chip" data-hs="${k}"${src === k ? ' aria-pressed="true"' : ""}>${t} · ${all.filter(x=>x.src === k).length}</button>`).join("")}</div>
+  card.innerHTML = expTop("🧳", Z("船舱"), Z("一路收进来的话 · 每句都盖着它来自哪里的章"), "#b08900") + `
+    <div class="chips"><button class="chip" data-hs=""${!src ? ' aria-pressed="true"' : ""}${Z(">全部 ·")} ${all.length}</button>${Object.entries(HOLD_SRC).map(([k, t])=>`<button class="chip" data-hs="${k}"${src === k ? ' aria-pressed="true"' : ""}>${t} · ${all.filter(x=>x.src === k).length}</button>`).join("")}</div>
     ${list.length ? list.map(x=>`<div class="ex-line" style="padding:6px 0;border-top:1px solid #eee8da">${x.kind === "word" ? "🔤" : "💬"} <b>${esc(x.text)}</b> ${expSay(x.text, "")}${x.mean ? `<br><small>${esc(x.mean)}</small>` : ""}<br><span class="tagx">${esc(x.from)}</span></div>`).join("")
-      : `<p class="note">${src === "mine" ? "挂一片心情天气、写一句「介绍我」、给拍立得标几个词，你自己的话就会收进来。" : src === "npc" ? "在贴纸里「选一个人来演」，那件事里的人说的话就会收进来。" : src === "skill" ? "打开船上的「🧰 工具箱」，把觉得有用的说法收进来。" : "学会词汇墙上的词、收藏常用句，就会收进来。"}</p>`}
-    <div class="chips"><button class="chip hot" id="hdGo">🟣 用这些话开今天的航线</button></div>`;
+      : `<p class="note">${src === "mine" ? Z("挂一片心情天气、写一句「介绍我」、给拍立得标几个词，你自己的话就会收进来。") : src === "npc" ? Z("在贴纸里「选一个人来演」，那件事里的人说的话就会收进来。") : src === "skill" ? Z("打开船上的「🧰 工具箱」，把觉得有用的说法收进来。") : Z("学会词汇墙上的词、收藏常用句，就会收进来。")}</p>`}
+    <div class="chips"><button class="chip hot" id="hdGo">${Z("🟣 用这些话开今天的航线")}</button></div>`;
   expOpen(); card.scrollTop = 0;
   card.querySelectorAll("[data-hs]").forEach(b=>b.onclick = ()=>openHold(b.dataset.hs || undefined));
   card.querySelector("#hdGo").onclick = ()=>openVoyage(true);
@@ -6072,7 +6084,7 @@ function voyContent(){
   // 船舱还空的时候，先用你路线上的词和句子起航
   const k = (()=>{ try { return localStorage.getItem("path:who") || "dev"; } catch(e){ return "dev"; } })(), P = PATHS[k] || PATHS.dev;
   if (words.length < 3) words = [...words, ...wallWords(P.wall).filter(w=>tgt(w) && glossOf(w)).slice(0, 6 - words.length).map(w=>({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[P.wall] || "")}))];
-  if (sents.length < 3) sents = [...sents, ...P.phrases().flatMap(g=>g.items).filter(x=>tgt(x) && glossOf(x)).slice(0, 6 - sents.length).map(x=>({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: "🗺️ " + (P.industry || P.who || "路线")}))];
+  if (sents.length < 3) sents = [...sents, ...P.phrases().flatMap(g=>g.items).filter(x=>tgt(x) && glossOf(x)).slice(0, 6 - sents.length).map(x=>({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: "🗺️ " + (P.industry || P.who || Z("路线"))}))];
   return {words: words.map(w=>({term: w.text, meaning: w.mean, from: w.from})), sentences: sents.map(s=>({text: s.text, translation: s.mean, from: s.from}))};
 }
 const voyIsles = () => { const h = boatHome() || [-35, 15]; return [[4, 4], [9, 0], [6, -5], [0, -6]].map(([dx, dy])=>[h[0] + dx, h[1] + dy]); };
@@ -6084,44 +6096,44 @@ function voyDraw(t, s){
   voyIsles().forEach((ll, i)=>{ const [x, y] = t.apply(projection(ll)), n = nodes[i], g = boatMenuG.append("g").attr("class","voy cisle").attr("transform", `translate(${x},${y}) scale(${s})`).on("click", e=>{ e.stopPropagation(); openVoyage(); });
     g.append("path").attr("d","M-18,4 Q-14,-12 0,-12 Q16,-12 18,4 Q0,12 -18,4Z").attr("fill", n.finished ? "#8fd18f" : n.unfinished ? "#f7d774" : "#d9e7c5").attr("stroke","#3d6b1f").attr("stroke-width",1.5);
     g.append("text").attr("y",-1).attr("text-anchor","middle").attr("font-size",12).text(n.finished ? "✅" : n.unfinished ? "⛵" : "🏝️");
-    g.append("text").attr("class","cpl").attr("y",24).attr("text-anchor","middle").text(`第 ${i + 1} 岛`); });
+    g.append("text").attr("class","cpl").attr("y",24).attr("text-anchor","middle").text(`${Z("第")} ${i + 1} ${Z("岛")}`); });
 }
 function openVoyage(fresh){
   let v = voyLoad(); const now = Date.now();
   if (fresh || !v || !v.content){ v = {id: "v" + now, content: voyContent(), rounds: {}}; voySave(v); }
-  if (v.content.words.length < 3 || v.content.sentences.length < 3){ card.innerHTML = expTop("🟣", "今天的航线", "船舱里的话还不够", "#7048e8") + `<p>出海至少要 3 个词和 3 句话。先挂一片心情天气、写一句「介绍我」，或者在词汇墙上学几个词。</p><div class="chips"><button class="chip hot" id="vyHold">🧳 看船舱</button></div>`; expOpen(); card.querySelector("#vyHold").onclick = ()=>openHold(); voySave(null); return; }
+  if (v.content.words.length < 3 || v.content.sentences.length < 3){ card.innerHTML = expTop("🟣", Z("今天的航线"), Z("船舱里的话还不够"), "#7048e8") + `<p>${Z("出海至少要 3 个词和 3 句话。先挂一片心情天气、写一句「介绍我」，或者在词汇墙上学几个词。")}</p><div class="chips"><button class="chip hot" id="vyHold">${Z("🧳 看船舱")}</button></div>`; expOpen(); card.querySelector("#vyHold").onclick = ()=>openHold(); voySave(null); return; }
   if (!voyOn) svg.transition().duration(800).ease(d3.easeCubicInOut).call(zoom.transform, cpFitBeside());   // 第一次打开：退到能看见母港和四座岛的大小
   voyOn = true; render();
   const nodes = PracticeRounds.islands(v.rounds, v.content), a = v.rounds.active, going = a && !a.finished, next = nodes.findIndex(n=>!n.finished), due = v.rounds.dueAt;
-  card.innerHTML = expTop("🟣", "今天的航线", "一小轮最多 6 题 · 练到听得懂、说得出、接得住", "#7048e8") + `
-    <p class="note">从母港出发，一座岛一座岛开过去。每座岛是一小轮练习；答得好，下一次隔 1、3、7、14、30 天再出海。这里不评价发音。</p>
-    ${nodes.map((n, i)=>`<div class="box" style="border:2px solid ${n.finished ? "#8fd18f" : i === next ? "#f2b705" : "#e7dfc8"};border-radius:12px;padding:6px 10px;margin:6px 0;background:${i === next ? "#fffbe6" : "#fff"}">${n.finished ? "✅" : i === next ? "⛵" : "🏝️"} <b>第 ${i + 1} 岛</b> <small class="note">${n.finished ? `练过 ${n.rounds} 次` : n.unfinished ? `做到第 ${n.done} / ${n.total} 题` : "还没去"}</small></div>`).join("")}
-    ${next < 0 ? `<p><b>🎉 这次航行四座岛都到过了。</b></p>` : ""}${due && due > now ? `<p class="note">按记忆规律，下一次出海建议在 ${new Date(due).toLocaleDateString()} 以后；现在也可以接着练。</p>` : ""}
-    <div class="chips">${next >= 0 ? `<button class="chip hot" id="vyGo">${going ? "⛵ 接着开" : `⛵ 开往第 ${next + 1} 岛`}</button>` : ""}<button class="chip" id="vyNew">🔄 用船舱里新的话，换一条航线</button><button class="chip" id="vyHold">🧳 看船舱</button></div>
-    <h3>这次航行带上的话</h3>${v.content.words.map(w=>`<span class="tagx">🔤 ${esc(w.term)} · ${esc(w.meaning)}</span>`).join(" ")}<br>${v.content.sentences.map(s=>`<div class="ex-line">💬 ${esc(s.text)}<br><small class="note">${esc(s.from || "")}</small></div>`).join("")}`;
+  card.innerHTML = expTop("🟣", Z("今天的航线"), Z("一小轮最多 6 题 · 练到听得懂、说得出、接得住"), "#7048e8") + `
+    <p class="note">${Z("从母港出发，一座岛一座岛开过去。每座岛是一小轮练习；答得好，下一次隔 1、3、7、14、30 天再出海。这里不评价发音。")}</p>
+    ${nodes.map((n, i)=>`<div class="box" style="border:2px solid ${n.finished ? "#8fd18f" : i === next ? "#f2b705" : "#e7dfc8"};border-radius:12px;padding:6px 10px;margin:6px 0;background:${i === next ? "#fffbe6" : "#fff"}">${n.finished ? "✅" : i === next ? "⛵" : "🏝️"} <b>${Z("第")} ${i + 1} ${Z("岛")}</b> <small class="note">${n.finished ? `${Z("练过")} ${n.rounds} ${Z("次")}` : n.unfinished ? `${Z("做到第")} ${n.done} / ${n.total} ${Z("题")}` : Z("还没去")}</small></div>`).join("")}
+    ${next < 0 ? `<p><b>${Z("🎉 这次航行四座岛都到过了。")}</b></p>` : ""}${due && due > now ? `<p class="note">${Z("按记忆规律，下一次出海建议在")} ${new Date(due).toLocaleDateString()} ${Z("以后；现在也可以接着练。")}</p>` : ""}
+    <div class="chips">${next >= 0 ? `<button class="chip hot" id="vyGo">${going ? Z("⛵ 接着开") : `${Z("⛵ 开往第")} ${next + 1} ${Z("岛")}`}</button>` : ""}<button class="chip" id="vyNew">${Z("🔄 用船舱里新的话，换一条航线")}</button><button class="chip" id="vyHold">${Z("🧳 看船舱")}</button></div>
+    <h3>${Z("这次航行带上的话")}</h3>${v.content.words.map(w=>`<span class="tagx">🔤 ${esc(w.term)} · ${esc(w.meaning)}</span>`).join(" ")}<br>${v.content.sentences.map(s=>`<div class="ex-line">💬 ${esc(s.text)}<br><small class="note">${esc(s.from || "")}</small></div>`).join("")}`;
   stageA(); expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
-  const go = card.querySelector("#vyGo"); if (go) go.onclick = ()=>{ const w = voyLoad(); if (!w.rounds.active || w.rounds.active.finished){ w.rounds.active = PracticeRounds.create(w.content, w.rounds, w.id + ":" + Date.now(), Date.now(), next); voySave(w); } boatSail(voyIsles()[next], `去第 ${next + 1} 岛`); voyTask(); };
+  const go = card.querySelector("#vyGo"); if (go) go.onclick = ()=>{ const w = voyLoad(); if (!w.rounds.active || w.rounds.active.finished){ w.rounds.active = PracticeRounds.create(w.content, w.rounds, w.id + ":" + Date.now(), Date.now(), next); voySave(w); } boatSail(voyIsles()[next], `${Z("去第")} ${next + 1} ${Z("岛")}`); voyTask(); };
   card.querySelector("#vyNew").onclick = ()=>openVoyage(true);
   card.querySelector("#vyHold").onclick = ()=>openHold();
 }
 // 一道题：按言己的题型画出来，答完交给引擎判
 function voyTask(fb){
   const v = voyLoad(), a = v && v.rounds.active; if (!a) return openVoyage();
-  if (a.finished){ const s = v.rounds.last || {}; fx("good"); const h = boatHome(); if (h) boatSail(h, "母港 · " + myCity());
-    card.innerHTML = expTop("🏝️", `第 ${(s.island || 0) + 1} 岛 · 到了`, `答对 ${s.correct} / ${s.total}`, "#2f9e44") + `<p>${s.strong ? "这一轮很稳，记忆往前走了一格。" : "有几题还不太熟，会留到下次巩固。"}</p>${s.dueAt ? `<p class="note">下一次出海建议：${new Date(s.dueAt).toLocaleDateString()} 以后。</p>` : ""}<div class="chips"><button class="chip hot" id="vyBack">🟣 回到航线</button></div>`;
+  if (a.finished){ const s = v.rounds.last || {}; fx("good"); const h = boatHome(); if (h) boatSail(h, "" + Z("母港 ·") + " " + mapL(myCity()));
+    card.innerHTML = expTop("🏝️", `${Z("第")} ${(s.island || 0) + 1} ${Z("岛 · 到了")}`, `${Z("答对")} ${s.correct} / ${s.total}`, "#2f9e44") + `<p>${s.strong ? Z("这一轮很稳，记忆往前走了一格。") : Z("有几题还不太熟，会留到下次巩固。")}</p>${s.dueAt ? `<p class="note">${Z("下一次出海建议：")}${new Date(s.dueAt).toLocaleDateString()} ${Z("以后。")}</p>` : ""}<div class="chips"><button class="chip hot" id="vyBack">${Z("🟣 回到航线")}</button></div>`;
     stageA(); expOpen(); card.querySelector("#vyBack").onclick = ()=>openVoyage(); return; }
   const t = a.tasks[a.index], C = v.content, Wd = C.words, Sn = C.sentences, sh = (arr, seed) => PracticeRounds.shuffled(arr, seed);
   const opts = (pool, right) => sh([...new Set([right, ...pool.filter(x=>x && x !== right)].slice(0, 4))], t.id);
   let body = "", tip = "";
-  if (t.type === "meaning"){ const w = Wd[t.index]; tip = "这个词是什么意思？"; body = `<p style="font-size:20px"><b>${esc(w.term)}</b> ${expSay(w.term, "")}</p>${opts(Wd.map(x=>x.meaning), w.meaning).map(o=>`<button class="chip" data-ans="${esc(o)}">${esc(o)}</button>`).join("")}`; }
-  if (t.type === "listen"){ const s = Sn[t.index]; tip = "听一听，这句话是什么意思？"; body = `<p>${expSay(s.text, "")} <small class="note">点 🔊 听</small></p>${opts(Sn.map(x=>x.translation), s.translation).map(o=>`<button class="chip" data-ans="${esc(o)}" style="white-space:normal;text-align:left">${esc(o)}</button>`).join("")}`; }
-  if (t.type === "match"){ tip = "先点词，再点对应的意思"; const L = t.indexes, R = sh(L, t.id + "r"); body = `<div style="display:flex;gap:10px"><div>${L.map(i=>`<button class="chip" data-ml="${i}" style="display:block;margin:4px 0">${esc(Wd[i].term)}</button>`).join("")}</div><div>${R.map(i=>`<button class="chip" data-mr="${i}" style="display:block;margin:4px 0">${esc(Wd[i].meaning)}</button>`).join("")}</div></div>`; }
-  if (t.type === "puzzle"){ const s = Sn[t.index], P = PracticeRounds.pieces(s.text); tip = "听完整句，再把词块按顺序点出来"; body = `<p>${expSay(s.text, "")} <small class="note">${esc(s.translation)}</small></p><div class="chips" id="pzOut" style="min-height:34px;border-bottom:2px dashed #e7dfc8"></div><div class="chips">${sh(P.map((_, i)=>i), t.id).map(i=>`<button class="chip" data-pz="${i}" style="border-style:dashed">${esc(P[i])}</button>`).join("")}</div><div class="chips"><button class="chip hot" id="pzOk">检查</button></div>`; }
-  if (t.type === "recall"){ const w = Wd[t.index]; tip = "你会怎么说？"; body = `<p style="font-size:20px"><b>${esc(w.meaning)}</b></p><input id="rcIn" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit" autocomplete="off"><div class="chips"><button class="chip hot" id="rcOk">检查</button><button class="chip" id="rcHint">给一点提示</button><span class="note" id="rcTip"></span></div>`; }
-  if (t.type === "use"){ const w = Wd[t.index]; tip = "用它说一句和你自己有关的话"; body = `<p style="font-size:18px"><b>${esc(w.term)}</b> · ${esc(w.meaning)}</p><textarea id="useIn" rows="3" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit"></textarea><div class="chips"><button class="chip hot" id="useOk">说好了</button></div>`; }
-  if (t.type === "shadow"){ const s = Sn[t.index]; tip = "跟读整句"; body = `<p style="font-size:17px"><b>${esc(s.text)}</b> ${expSay(s.text, "")}</p><p class="note">${esc(s.translation)}</p>${micB(s.text)}<div class="chips"><button class="chip hot" data-sh="75">🎤 我跟读了</button><button class="chip" data-sh="40">还不太顺，下次再来</button></div><p class="note">这里不评价发音，跟着读出来就好。</p>`; }
+  if (t.type === "meaning"){ const w = Wd[t.index]; tip = Z("这个词是什么意思？"); body = `<p style="font-size:20px"><b>${esc(w.term)}</b> ${expSay(w.term, "")}</p>${opts(Wd.map(x=>x.meaning), w.meaning).map(o=>`<button class="chip" data-ans="${esc(o)}">${esc(o)}</button>`).join("")}`; }
+  if (t.type === "listen"){ const s = Sn[t.index]; tip = Z("听一听，这句话是什么意思？"); body = `<p>${expSay(s.text, "")} <small class="note">${Z("点 🔊 听")}</small></p>${opts(Sn.map(x=>x.translation), s.translation).map(o=>`<button class="chip" data-ans="${esc(o)}" style="white-space:normal;text-align:left">${esc(o)}</button>`).join("")}`; }
+  if (t.type === "match"){ tip = Z("先点词，再点对应的意思"); const L = t.indexes, R = sh(L, t.id + "r"); body = `<div style="display:flex;gap:10px"><div>${L.map(i=>`<button class="chip" data-ml="${i}" style="display:block;margin:4px 0">${esc(Wd[i].term)}</button>`).join("")}</div><div>${R.map(i=>`<button class="chip" data-mr="${i}" style="display:block;margin:4px 0">${esc(Wd[i].meaning)}</button>`).join("")}</div></div>`; }
+  if (t.type === "puzzle"){ const s = Sn[t.index], P = PracticeRounds.pieces(s.text); tip = Z("听完整句，再把词块按顺序点出来"); body = `<p>${expSay(s.text, "")} <small class="note">${esc(s.translation)}</small></p><div class="chips" id="pzOut" style="min-height:34px;border-bottom:2px dashed #e7dfc8"></div><div class="chips">${sh(P.map((_, i)=>i), t.id).map(i=>`<button class="chip" data-pz="${i}" style="border-style:dashed">${esc(P[i])}</button>`).join("")}</div><div class="chips"><button class="chip hot" id="pzOk">${Z("检查")}</button></div>`; }
+  if (t.type === "recall"){ const w = Wd[t.index]; tip = Z("你会怎么说？"); body = `<p style="font-size:20px"><b>${esc(w.meaning)}</b></p><input id="rcIn" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit" autocomplete="off"><div class="chips"><button class="chip hot" id="rcOk">${Z("检查")}</button><button class="chip" id="rcHint">${Z("给一点提示")}</button><span class="note" id="rcTip"></span></div>`; }
+  if (t.type === "use"){ const w = Wd[t.index]; tip = Z("用它说一句和你自己有关的话"); body = `<p style="font-size:18px"><b>${esc(w.term)}</b> · ${esc(w.meaning)}</p><textarea id="useIn" rows="3" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit"></textarea><div class="chips"><button class="chip hot" id="useOk">${Z("说好了")}</button></div>`; }
+  if (t.type === "shadow"){ const s = Sn[t.index]; tip = Z("跟读整句"); body = `<p style="font-size:17px"><b>${esc(s.text)}</b> ${expSay(s.text, "")}</p><p class="note">${esc(s.translation)}</p>${micB(s.text)}<div class="chips"><button class="chip hot" data-sh="75">${Z("🎤 我跟读了")}</button><button class="chip" data-sh="40">${Z("还不太顺，下次再来")}</button></div><p class="note">${Z("这里不评价发音，跟着读出来就好。")}</p>`; }
   const isle = (a.island || 0) + 1;
-  card.innerHTML = expTop("⛵", `第 ${isle} 岛 · 第 ${Math.min(a.index + 1, a.tasks.length)} / ${a.tasks.length} 题`, tip, "#7048e8") + saBar(a.index, a.tasks.length) + (fb ? `<p style="color:${fb.correct ? "#2f9e44" : "#e8590c"}"><b>${fb.correct ? "✓ 对了" : fb.skipped ? "先跳过" : "✗ 还不太对"}</b>${fb.right ? `：${esc(fb.right)}` : ""}</p>` : "") + `<section>${body}</section><div class="chips"><button class="chip" id="vySkip">这题稍后练</button><button class="chip" id="vyStop">🟣 回到航线</button></div>`;
+  card.innerHTML = expTop("⛵", `${Z("第")} ${isle} ${Z("岛 · 第")} ${Math.min(a.index + 1, a.tasks.length)} / ${a.tasks.length} ${Z("题")}`, tip, "#7048e8") + saBar(a.index, a.tasks.length) + (fb ? `<p style="color:${fb.correct ? "#2f9e44" : "#e8590c"}"><b>${fb.correct ? Z("✓ 对了") : fb.skipped ? Z("先跳过") : Z("✗ 还不太对")}</b>${fb.right ? `${Z("：")}${esc(fb.right)}` : ""}</p>` : "") + `<section>${body}</section><div class="chips"><button class="chip" id="vySkip">${Z("这题稍后练")}</button><button class="chip" id="vyStop">${Z("🟣 回到航线")}</button></div>`;
   stageA(); expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
   const right = () => t.type === "meaning" ? Wd[t.index].meaning : t.type === "listen" ? Sn[t.index].translation : t.type === "recall" ? Wd[t.index].term : t.type === "puzzle" ? Sn[t.index].text : "";
   const submit = (input, ev) => { const w = voyLoad(); if (ev){ w.rounds.active.evidence = {...(w.rounds.active.evidence || {}), [t.id]: ev}; }
@@ -6133,18 +6145,18 @@ function voyTask(fb){
   card.querySelectorAll("[data-mr]").forEach(b=>b.onclick = ()=>{ if (pick === null) return; pairs.push([pick, +b.dataset.mr]); card.querySelector(`[data-ml="${pick}"]`).disabled = true; b.disabled = true; pick = null; if (pairs.length === t.indexes.length) submit({answer: pairs}); });
   const pz = []; card.querySelectorAll("[data-pz]").forEach(b=>b.onclick = ()=>{ pz.push(+b.dataset.pz); b.hidden = true; card.querySelector("#pzOut").innerHTML = pz.map(i=>`<span class="chip">${esc(PracticeRounds.pieces(Sn[t.index].text)[i])}</span>`).join(""); });
   const pzOk = card.querySelector("#pzOk"); if (pzOk) pzOk.onclick = ()=>submit({answer: pz});
-  let hinted = false; const rh = card.querySelector("#rcHint"); if (rh) rh.onclick = ()=>{ hinted = true; const w = Wd[t.index].term; card.querySelector("#rcTip").textContent = `开头是「${w.slice(0, Math.max(1, Math.ceil(w.length/3)))}」`; };
+  let hinted = false; const rh = card.querySelector("#rcHint"); if (rh) rh.onclick = ()=>{ hinted = true; const w = Wd[t.index].term; card.querySelector("#rcTip").textContent = `${Z("开头是「")}${w.slice(0, Math.max(1, Math.ceil(w.length/3)))}${Z("」")}`; };
   const rc = card.querySelector("#rcOk"); if (rc) rc.onclick = ()=>submit({answer: card.querySelector("#rcIn").value, hinted});
   const us = card.querySelector("#useOk"); if (us) us.onclick = ()=>{ const x = card.querySelector("#useIn").value.trim(), term = PracticeRounds.normal(Wd[t.index].term), ok = PracticeRounds.normal(x).includes(term) && PracticeRounds.pieces(x).length >= 3;
-    if (ok) lifeAdd({path: "self", q: `用 ${Wd[t.index].term} 说一句自己的话`, a: x, w: [Wd[t.index].term], ts: Date.now()}); submit({answer: x}, {understandable: ok}); };
+    if (ok) lifeAdd({path: "self", q: `${Z("用")} ${Wd[t.index].term} ${Z("说一句自己的话")}`, a: x, w: [Wd[t.index].term], ts: Date.now()}); submit({answer: x}, {understandable: ok}); };
   card.querySelectorAll("[data-sh]").forEach(b=>b.onclick = ()=>submit({}, {assessable: true, overall: +b.dataset.sh}));
   card.querySelector("#vySkip").onclick = ()=>submit({skip: true});
   card.querySelector("#vyStop").onclick = ()=>openVoyage();
 }
 // ===== 🤝 别人的船：登录后，你的船（母港、停在哪、帆的颜色、天气）和你选择分享的话同步到你的资料；互相关注的朋友的船出现在海上 =====
 // 谁能看到：自己看全部；互相关注的人默认只看最近一个月（打开「♾️ 永久可见」才看全部）；选了「🌍 所有人」的谁都能看；「🔒 只有我」不会上传。
-const VIS = {me: "🔒 只有我", mutual: "🤝 互相关注的人", all: "🌍 所有人"}, VIS_DEF = {mood: "me", doubt: "mutual", intro: "mutual"};
-const visPick = (id, kind) => `<label class="note">谁能看到：<select id="${id}">${Object.entries(VIS).map(([k, t])=>`<option value="${k}"${k === VIS_DEF[kind] ? " selected" : ""}>${t}</option>`).join("")}</select></label>`;
+const VIS = {me: Z("🔒 只有我"), mutual: Z("🤝 互相关注的人"), all: Z("🌍 所有人")}, VIS_DEF = {mood: "me", doubt: "mutual", intro: "mutual"};
+const visPick = (id, kind) => `<label class="note">${Z("谁能看到：<select id=\"")}${id}">${Object.entries(VIS).map(([k, t])=>`<option value="${k}"${k === VIS_DEF[kind] ? " selected" : ""}>${t}</option>`).join("")}</select></label>`;
 const canSync = () => SOC.ready && SOC.uid && SOC.db && SOC.canWrite !== false && isMember(SOC.uid);
 let boatSyncT = null;
 function boatSync(){ if (!canSync()) return; clearTimeout(boatSyncT); boatSyncT = setTimeout(async ()=>{
@@ -6167,27 +6179,27 @@ function friendBoats(t, s, on){
   Object.values(SOC.profiles).filter(p=>p.id !== SOC.uid && p.boat && Array.isArray(p.boat.ll) && mutual(SOC.uid, p.id) && !socBlocked().includes(p.id)).forEach(p=>{
     const [x, y] = t.apply(projection(p.boat.ll)), w = EXP.weather[p.boat.weather];
     const g = friendG.append("g").attr("class","cboat").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*.9})`).on("click", e=>{ e.stopPropagation(); openUserPage(p.id); });
-    g.html(`<g class="cbob"><ellipse cy="12" rx="20" ry="3" fill="#fff" opacity=".55"/><line y1="4" y2="-34" stroke="#1f2a37" stroke-width="1.6"/><path d="M1,-32 L1,0 L19,0Z" fill="${esc(p.boat.sail || "#868e96")}" stroke="#1f2a37" stroke-width="1.5"/><path d="M-1,-26 L-1,0 L-14,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.5"/><path d="M-17,2 L17,2 L11,11 L-11,11Z" fill="#8d6e63" stroke="#1f2a37" stroke-width="1.5"/></g>${w ? `<text x="-34" y="-22" font-size="16">${w[0]}</text>` : ""}<text class="cpl" y="27" text-anchor="middle">${esc((p.name || socName(p.id) || "伙伴") + " · " + (p.boat.where || ""))}</text>`); });
+    g.html(`<g class="cbob"><ellipse cy="12" rx="20" ry="3" fill="#fff" opacity=".55"/><line y1="4" y2="-34" stroke="#1f2a37" stroke-width="1.6"/><path d="M1,-32 L1,0 L19,0Z" fill="${esc(p.boat.sail || "#868e96")}" stroke="#1f2a37" stroke-width="1.5"/><path d="M-1,-26 L-1,0 L-14,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.5"/><path d="M-17,2 L17,2 L11,11 L-11,11Z" fill="#8d6e63" stroke="#1f2a37" stroke-width="1.5"/></g>${w ? `<text x="-34" y="-22" font-size="16">${w[0]}</text>` : ""}<text class="cpl" y="27" text-anchor="middle">${esc((p.name || socName(p.id) || Z("伙伴")) + " · " + (p.boat.where || ""))}</text>`); });
 }
 // TA 的主页：话、心情、疑惑、照片，按可见规则过滤
 function openUserPage(id){
   if (selected) selected.el.classList.remove("sel"); selected = null; SOC.view = null;
-  const p = SOC.profiles[id] || {}, mine = id === SOC.uid, nm = mine ? "我的主页" : (p.name || socName(id) || "一位伙伴"), b = p.boat || {}, mu = !mine && mutual(SOC.uid, id);
+  const p = SOC.profiles[id] || {}, mine = id === SOC.uid, nm = mine ? Z("我的主页") : (p.name || socName(id) || Z("一位伙伴")), b = p.boat || {}, mu = !mine && mutual(SOC.uid, id);
   const items = (mine ? (expGet().log || []).map(l=>({...l, vis: l.vis || "me"})) : (p.shared || [])).filter(l=>canSee(id, l.vis, l.ts)).slice().reverse();
   const photos = (SOC.ready ? SOC.posts : []).filter(x=>x.author === id && canSee(id, x.privacy, x.ts));
-  const K = {intro: "🙋 话", mood: "🌦️ 心情", doubt: "❓ 疑惑", prep: "📒 去过的场合"}, w = EXP.weather[b.weather];
+  const K = {intro: Z("🙋 话"), mood: Z("🌦️ 心情"), doubt: Z("❓ 疑惑"), prep: Z("📒 去过的场合")}, w = EXP.weather[b.weather];
   const hidden = !mine && mu && !b.forever && ((p.shared || []).some(l=>l.vis === "mutual" && Date.now() - l.ts >= MONTH) || SOC.posts.some(x=>x.author === id && x.privacy === "伙伴可见" && Date.now() - (x.ts || 0) >= MONTH));
-  card.innerHTML = expTop("⛵", esc(nm), `${esc(b.where || (b.city ? "母港 · " + b.city : "还没有母港"))}${b.city && b.where && !String(b.where).includes(b.city) ? " · 母港 " + esc(b.city) : ""}${w ? " · " + w[0] : ""}`, b.sail || "#868e96") + `
-    ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}${p.learning ? `<p class="note">在学：${esc(p.learning)}${p.native ? ` · 母语：${esc(p.native)}` : ""}</p>` : ""}
-    ${mine ? `<div class="cp-you"><h3>谁能看到我的东西</h3><p class="note">自己：全部 · 互相关注的人：${b.forever ? "全部（永久可见）" : "最近一个月"} · 其他人：只有你选了「🌍 所有人」的</p><div class="chips"><button class="chip" id="upForever">${b.forever ? "⏳ 改回只展示最近一个月" : "♾️ 设成永久可见"}</button></div>${canSync() ? "" : `<p class="note">登录以后，这些才会同步给互相关注的朋友；现在只存在这台设备上。</p>`}</div>`
-      : `<div class="chips">${SOC.ready && isMember(SOC.uid) ? `<button class="chip" id="upFollow">${follows(SOC.uid, id) ? "已关注" : "＋ 关注"}</button>` : ""}${mu ? `<button class="chip hot" id="upChat">💬 聊天</button>` : ""}</div>${!mu ? `<p class="note">互相关注以后，能看到 TA 最近一个月分享给朋友的话和照片。</p>` : ""}`}
+  card.innerHTML = expTop("⛵", esc(nm), `${esc(b.where || (b.city ? "" + Z("母港 ·") + " " + b.city : Z("还没有母港")))}${b.city && b.where && !String(b.where).includes(b.city) ? " " + Z("· 母港") + " " + esc(b.city) : ""}${w ? " · " + w[0] : ""}`, b.sail || "#868e96") + `
+    ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}${p.learning ? `<p class="note">${Z("在学：")}${esc(p.learning)}${p.native ? ` ${Z("· 母语：")}${esc(p.native)}` : ""}</p>` : ""}
+    ${mine ? `<div class="cp-you"><h3>${Z("谁能看到我的东西")}</h3><p class="note">${Z("自己：全部 · 互相关注的人：")}${b.forever ? Z("全部（永久可见）") : Z("最近一个月")} ${Z("· 其他人：只有你选了「🌍 所有人」的")}</p><div class="chips"><button class="chip" id="upForever">${b.forever ? Z("⏳ 改回只展示最近一个月") : Z("♾️ 设成永久可见")}</button></div>${canSync() ? "" : `<p class="note">${Z("登录以后，这些才会同步给互相关注的朋友；现在只存在这台设备上。")}</p>`}</div>`
+      : `<div class="chips">${SOC.ready && isMember(SOC.uid) ? `<button class="chip" id="upFollow">${follows(SOC.uid, id) ? Z("已关注") : Z("＋ 关注")}</button>` : ""}${mu ? `<button class="chip hot" id="upChat">${Z("💬 聊天")}</button>` : ""}</div>${!mu ? `<p class="note">${Z("互相关注以后，能看到 TA 最近一个月分享给朋友的话和照片。")}</p>` : ""}`}
     ${Object.entries(K).map(([k, t])=>{ const L = items.filter(l=>l.kind === k); return L.length ? `<section><h3>${t}</h3>${L.slice(0, 8).map(l=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${esc(l.a)}<br><small class="note">${esc(l.q || "")} · ${new Date(l.ts).toLocaleDateString()}${mine ? " · " + (VIS[l.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : ""; }).join("")}
-    ${(fl => fl.length ? `<section><h3>🚩 插的旗</h3>${fl.slice(0, 12).map(f=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${(FLAG_KIND[f.kind] || FLAG_KIND.story).icon} <b>${esc(f.title)}</b>${f.note ? `<br>${esc(f.note)}` : ""}<br><small class="note">${(FLAG_KIND[f.kind] || FLAG_KIND.story).name} · ${new Date(f.ts).toLocaleDateString()}${mine ? " · " + (VIS[f.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : "")((mine ? flagsGet().map(f=>({...f, vis: f.vis || "me"})) : (p.flags || [])).filter(f=>canSee(id, f.vis, f.ts)).slice().reverse())}
-    ${photos.length ? `<section><h3>📷 照片</h3><div class="chips">${photos.slice(0, 12).map(x=>`<button class="chip" data-upost="${esc(x.id)}" style="padding:2px"><img src="${x.photo}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:6px"></button>`).join("")}</div></section>` : ""}
-    ${!items.length && !photos.length ? `<p class="note">${mine ? "还没有分享的东西。挂一片心情、写一句介绍我、发一张拍立得，选「🤝 互相关注的人」就会出现在这里。" : "现在没有你能看到的内容。"}</p>` : ""}
-    ${hidden ? `<p class="note">⏳ TA 只展示最近一个月的内容。</p>` : ""}`;
+    ${(fl => fl.length ? `<section><h3>${Z("🚩 插的旗")}</h3>${fl.slice(0, 12).map(f=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${(FLAG_KIND[f.kind] || FLAG_KIND.story).icon} <b>${esc(f.title)}</b>${f.note ? `<br>${esc(f.note)}` : ""}<br><small class="note">${(FLAG_KIND[f.kind] || FLAG_KIND.story).name} · ${new Date(f.ts).toLocaleDateString()}${mine ? " · " + (VIS[f.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : "")((mine ? flagsGet().map(f=>({...f, vis: f.vis || "me"})) : (p.flags || [])).filter(f=>canSee(id, f.vis, f.ts)).slice().reverse())}
+    ${photos.length ? `<section><h3>${Z("📷 照片")}</h3><div class="chips">${photos.slice(0, 12).map(x=>`<button class="chip" data-upost="${esc(x.id)}" style="padding:2px"><img src="${x.photo}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:6px"></button>`).join("")}</div></section>` : ""}
+    ${!items.length && !photos.length ? `<p class="note">${mine ? Z("还没有分享的东西。挂一片心情、写一句介绍我、发一张拍立得，选「🤝 互相关注的人」就会出现在这里。") : Z("现在没有你能看到的内容。")}</p>` : ""}
+    ${hidden ? `<p class="note">${Z("⏳ TA 只展示最近一个月的内容。")}</p>` : ""}`;
   expOpen(); card.scrollTop = 0;
-  const fb = card.querySelector("#upForever"); if (fb) fb.onclick = async ()=>{ if (!canSync()){ fb.textContent = "要先登录"; return; } const me = {...(SOC.profiles[SOC.uid] || {})}; delete me.id; me.boat = {...(me.boat || {}), forever: !(me.boat && me.boat.forever)}; try { await SOC.db.doc("profiles/" + SOC.uid).set(me); SOC.profiles[SOC.uid] = {...me, id: SOC.uid}; } catch(e){} openUserPage(id); };
+  const fb = card.querySelector("#upForever"); if (fb) fb.onclick = async ()=>{ if (!canSync()){ fb.textContent = Z("要先登录"); return; } const me = {...(SOC.profiles[SOC.uid] || {})}; delete me.id; me.boat = {...(me.boat || {}), forever: !(me.boat && me.boat.forever)}; try { await SOC.db.doc("profiles/" + SOC.uid).set(me); SOC.profiles[SOC.uid] = {...me, id: SOC.uid}; } catch(e){} openUserPage(id); };
   const fo = card.querySelector("#upFollow"); if (fo) fo.onclick = async ()=>{ const ref = SOC.db.doc("follows/" + SOC.uid + "__" + id); try { if (follows(SOC.uid, id)) await ref.delete(); else await ref.set({from: SOC.uid, to: id, ts: Date.now()}); } catch(e){} setTimeout(()=>openUserPage(id), 400); };
   const ch = card.querySelector("#upChat"); if (ch) ch.onclick = ()=>openChat(id);
   card.querySelectorAll("[data-upost]").forEach(x=>x.onclick = ()=>{ const m = MINE.find(y=>y.docId === x.dataset.upost); if (m) openMine(m); });
@@ -6196,32 +6208,32 @@ function openUserPage(id){
 const SK = typeof SKILLS !== "undefined" ? SKILLS : {skills:[], chapters:[], oral:[], strategies:[]};
 const skKeep = () => cpLS("skill.keep") || [];
 function skAdd(text, mean, from){ const L = skKeep(); if (L.some(x=>x.text === text)) return false; cpLS("skill.keep", [...L, {text, mean, from}].slice(-120)); return true; }
-const skLine = (text, zh, extra, from) => `<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da"><b>${esc(text)}</b> ${expSay(text, "en")} <button class="chip" data-skeep="${esc(text)}" data-skmean="${esc(zh || "")}" data-skfrom="${esc(from || "")}">${skKeep().some(x=>x.text === text) ? "✓ 在船舱" : "＋ 收进船舱"}</button><br><small>${esc(zh || "")}</small>${extra ? `<br><small class="note">${extra}</small>` : ""}</div>`;
-function skBind(redo){ card.querySelectorAll("[data-skeep]").forEach(b=>b.onclick = ()=>{ skAdd(b.dataset.skeep, b.dataset.skmean, b.dataset.skfrom); b.textContent = "✓ 在船舱"; }); }
+const skLine = (text, zh, extra, from) => `<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da"><b>${esc(text)}</b> ${expSay(text, "en")} <button class="chip" data-skeep="${esc(text)}" data-skmean="${esc(zh || "")}" data-skfrom="${esc(from || "")}">${skKeep().some(x=>x.text === text) ? Z("✓ 在船舱") : Z("＋ 收进船舱")}</button><br><small>${esc(zh || "")}</small>${extra ? `<br><small class="note">${extra}</small>` : ""}</div>`;
+function skBind(redo){ card.querySelectorAll("[data-skeep]").forEach(b=>b.onclick = ()=>{ skAdd(b.dataset.skeep, b.dataset.skmean, b.dataset.skfrom); b.textContent = Z("✓ 在船舱"); }); }
 function openSkills(id){
   const s = SK.skills.find(x=>x.id === id);
   if (!s){
-    card.innerHTML = expTop("🧰", "工具箱", "交流的本事 · 不是背句子，是知道这时候怎么接", "#0c8599") + `
-      <p class="note">船上有 8 样工具。和 NPC 演对话、开多岗位会议、在圈子里聊天时都用得上。觉得有用的话，收进船舱，会进今天的航线。</p>
-      ${SK.skills.map(x=>`<button class="chip" data-sk="${x.id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">${x.icon}</span><span><b>${esc(x.title)}</b><br><small class="note">${SK.chapters.filter(c=>c.strategyId === x.id).length} 个场景 · ${SK.oral.filter(o=>o.skill === x.id).length} 张口语卡${SK.strategies.some(t=>t.skill === x.id) ? ` · ${SK.strategies.filter(t=>t.skill === x.id).length} 条策略` : ""}</small></span></button>`).join("")}
-      <h3>还有</h3>${prKind() ? `<button class="chip" id="skPron" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">🔤</span><span><b>${prKind() === "pinyin" ? "拼音" : "自然拼读"}</b><br><small class="note">${prKind() === "pinyin" ? "声母、韵母、四声" : "字母在词里怎么读"} · ${(PR[prKind()] || {lessons: []}).lessons.length} 课</small></span></button>` : ""}<button class="chip" id="skMore" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">🎬</span><span><b>更多情境</b><br><small class="note">情绪、交朋友、冲突与边界、日常沟通…… · ${(typeof MORE_SCENES !== "undefined" ? MORE_SCENES : []).reduce((n, g)=>n + g.chapters.length, 0)} 个场景</small></span></button>
-      <p class="note">船舱里已经收了 ${skKeep().length} 句「本事」。</p>`;
+    card.innerHTML = expTop("🧰", Z("工具箱"), Z("交流的本事 · 不是背句子，是知道这时候怎么接"), "#0c8599") + `
+      <p class="note">${Z("船上有 8 样工具。和 NPC 演对话、开多岗位会议、在圈子里聊天时都用得上。觉得有用的话，收进船舱，会进今天的航线。")}</p>
+      ${SK.skills.map(x=>`<button class="chip" data-sk="${x.id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">${x.icon}</span><span><b>${esc(x.title)}</b><br><small class="note">${SK.chapters.filter(c=>c.strategyId === x.id).length} ${Z("个场景 ·")} ${SK.oral.filter(o=>o.skill === x.id).length} ${Z("张口语卡")}${SK.strategies.some(t=>t.skill === x.id) ? ` · ${SK.strategies.filter(t=>t.skill === x.id).length} ${Z("条策略")}` : ""}</small></span></button>`).join("")}
+      <h3>${Z("还有")}</h3>${prKind() ? `<button class="chip" id="skPron" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">🔤</span><span><b>${prKind() === "pinyin" ? Z("拼音") : Z("自然拼读")}</b><br><small class="note">${prKind() === "pinyin" ? Z("声母、韵母、四声") : Z("字母在词里怎么读")} · ${(PR[prKind()] || {lessons: []}).lessons.length} ${Z("课")}</small></span></button>` : ""}<button class="chip" id="skMore" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">🎬</span><span><b>${Z("更多情境")}</b><br><small class="note">${Z("情绪、交朋友、冲突与边界、日常沟通…… ·")} ${(typeof MORE_SCENES !== "undefined" ? MORE_SCENES : []).reduce((n, g)=>n + g.chapters.length, 0)} ${Z("个场景")}</small></span></button>${mcCan() ? `<button class="chip" id="skChar" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left"><span style="font-size:20px">🎭</span><span><b>自己创建人物</b><br><small class="note">说出你想和谁聊，AI 变出这个人 · 只给你自己用</small></span></button>` : ""}
+      <p class="note">${Z("船舱里已经收了")} ${skKeep().length} ${Z("句「本事」。")}</p>`;
     expOpen(); card.scrollTop = 0; card.querySelectorAll("[data-sk]").forEach(b=>b.onclick = ()=>openSkills(b.dataset.sk));
-    { const p = card.querySelector("#skPron"); if (p) p.onclick = ()=>openPron(); card.querySelector("#skMore").onclick = ()=>openMoreScenes(); } return;
+    { const p = card.querySelector("#skPron"); if (p) p.onclick = ()=>openPron(); card.querySelector("#skMore").onclick = ()=>openMoreScenes(); const ch = card.querySelector("#skChar"); if (ch) ch.onclick = ()=>openMyChars(); } return;
   }
   const ch = SK.chapters.filter(c=>c.strategyId === id), or = SK.oral.filter(o=>o.skill === id), stg = SK.strategies.filter(t=>t.skill === id);
-  card.innerHTML = expTop(s.icon, esc(s.title), "工具箱 · 交流的本事", "#0c8599") + `<div class="chips"><button class="chip" id="skBack">← 工具箱</button></div>
-    ${ch.map(c=>`<section><h3>🎬 ${esc(c.title)}</h3><p class="note">${esc(c.scenario || "")}</p><p>${esc(c.role || "对方")}：<b>${esc(c.opening)}</b> ${expSay(c.opening, "en")}</p>
-      <p class="note">看你想不想多聊，回法不一样：</p>${c.phrases.map(p=>skLine(p.text, p.meaning, p.intent ? "💭 " + esc(p.intent) : "", s.icon + " " + s.title)).join("")}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}</section>`).join("")}
-    ${or.length ? `<section><h3>🃏 口语卡</h3>${or.map(o=>skLine(o.text, o.zh, `${esc(o.when)}${o.tone ? " · " + esc(o.tone) : ""}`, s.icon + " " + s.title)).join("")}</section>` : ""}
-    ${stg.length ? `<section><h3>🧭 交流策略</h3>${stg.map(t=>`<div class="box" style="border:1px solid #e7dfc8;border-radius:10px;padding:6px 10px;margin:6px 0;background:#fff"><b>${esc(t.title)}</b><br><small class="note">${esc(t.situation)}</small>${t.examples.map(e=>skLine(e.text, e.zh, "", s.icon + " " + s.title)).join("")}${t.boundary ? `<small class="note">⚠️ ${esc(t.boundary)}</small>` : ""}</div>`).join("")}</section>` : ""}`;
+  card.innerHTML = expTop(s.icon, esc(s.title), Z("工具箱 · 交流的本事"), "#0c8599") + `<div class="chips"><button class="chip" id="skBack">${Z("← 工具箱")}</button></div>
+    ${ch.map(c=>`<section><h3>🎬 ${esc(c.title)}</h3><p class="note">${esc(c.scenario || "")}</p><p>${esc(c.role || Z("对方"))}${Z("：")}<b>${esc(c.opening)}</b> ${expSay(c.opening, "en")}</p>
+      <p class="note">${Z("看你想不想多聊，回法不一样：")}</p>${c.phrases.map(p=>skLine(p.text, p.meaning, p.intent ? "💭 " + esc(p.intent) : "", s.icon + " " + s.title)).join("")}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}</section>`).join("")}
+    ${or.length ? `<section><h3>${Z("🃏 口语卡")}</h3>${or.map(o=>skLine(o.text, o.zh, `${esc(o.when)}${o.tone ? " · " + esc(o.tone) : ""}`, s.icon + " " + s.title)).join("")}</section>` : ""}
+    ${stg.length ? `<section><h3>${Z("🧭 交流策略")}</h3>${stg.map(t=>`<div class="box" style="border:1px solid #e7dfc8;border-radius:10px;padding:6px 10px;margin:6px 0;background:#fff"><b>${esc(t.title)}</b><br><small class="note">${esc(t.situation)}</small>${t.examples.map(e=>skLine(e.text, e.zh, "", s.icon + " " + s.title)).join("")}${t.boundary ? `<small class="note">⚠️ ${esc(t.boundary)}</small>` : ""}</div>`).join("")}</section>` : ""}`;
   expOpen(); card.scrollTop = 0; card.querySelector("#skBack").onclick = ()=>openSkills(); skBind();
 }
 // 🛟 救生圈：演对话、开会时卡住了——没听懂、要想一想、说错了
 function buoyHtml(){
   const L = [...SK.oral.filter(o=>o.skill === "repair").map(o=>[o.text, o.zh]), ...SK.strategies.filter(t=>t.skill === "repair").flatMap(t=>t.examples.map(e=>[e.text, e.zh]))].filter((x, i, A)=>A.findIndex(y=>y[0] === x[0]) === i).slice(0, 8);
-  return L.length ? `<details class="buoy" style="border:2px solid #f08c00;border-radius:12px;padding:6px 10px;margin:8px 0;background:#fff9f0"><summary style="cursor:pointer"><b>🛟 卡住了？</b> <small class="note">没听懂、要想一想、说错了，都可以这样说</small></summary>
-    ${L.map(([t, z])=>`<div class="ex-line">${esc(t)} ${expSay(t, "en")}<br><small class="note">${esc(z)}</small></div>`).join("")}<div class="chips"><button class="chip" data-opensk="repair">🧰 打开工具箱</button></div></details>` : "";
+  return L.length ? `<details class="buoy" style="border:2px solid #f08c00;border-radius:12px;padding:6px 10px;margin:8px 0;background:#fff9f0"><summary style="cursor:pointer"><b>${Z("🛟 卡住了？")}</b> <small class="note">${Z("没听懂、要想一想、说错了，都可以这样说")}</small></summary>
+    ${L.map(([t, z])=>`<div class="ex-line">${esc(t)} ${expSay(t, "en")}<br><small class="note">${esc(z)}</small></div>`).join("")}<div class="chips"><button class="chip" data-opensk="repair">${Z("🧰 打开工具箱")}</button></div></details>` : "";
 }
 document.addEventListener("click", e=>{ const b = e.target.closest("[data-opensk]"); if (!b) return; e.stopPropagation(); openSkills(b.dataset.opensk); });
 // ===== ⚓ 码头上的船：每个圈子码头停几条船，让海上不冷清，也不乱 =====
@@ -6248,7 +6260,7 @@ function dockBoats(t, s, on, rel){
     clubNpcs(d.id).slice().sort((a, b)=>dockHash(a.id) - dockHash(b.id)).forEach(npc=>list.push({kind: "npc", id: npc.id, sail: "#fff", stripe: d.color, face: npc.icon, label: npc.name}));
     list.slice(0, n).forEach((b, i)=>{ const [ox, oy] = DOCK_SPOTS[i], x = d.xy[0] - 78*s + ox*s, y = d.xy[1] + 16*s + oy*s;
       const g = dockG.append("g").attr("class","cdock").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*.8})`).attr("role","button")
-        .attr("aria-label", b.kind === "npc" ? `${b.label}的船，NPC` : b.label ? `${b.label}的船` : "一位成员的船")
+        .attr("aria-label", b.kind === "npc" ? `${b.label}${Z("的船，NPC")}` : b.label ? `${b.label}${Z("的船")}` : Z("一位成员的船"))
         .on("click", e=>{ e.stopPropagation(); dockOpen(b, d); });
       miniBoat(g, b.kind === "npc" ? d.color : b.sail, b.face);
       if (b.label && (rel >= 3 || d === clubSel)) g.append("text").attr("class","cpl").attr("y", 20).attr("text-anchor","middle").attr("font-size", 10).text(b.label); });
@@ -6258,7 +6270,7 @@ function dockBoats(t, s, on, rel){
 function dockOpen(b, d){
   if (b.kind === "npc") return openNpcCard(b.id, ()=>openClubPin(d));
   if (b.label) return openUserPage(b.id);
-  card.innerHTML = expTop("⛵", "一位圈子成员", `停在「${esc(clubPinName(d))}」的码头`, "#868e96") + `<p>这条船的主人是这个圈子的成员。互相关注以后，才能看到 TA 是谁、最近说了什么。</p><div class="chips"><button class="chip hot" id="dkGo">进入圈子看看 →</button></div>`;
+  card.innerHTML = expTop("⛵", Z("一位圈子成员"), `${Z("停在「")}${esc(clubPinName(d))}${Z("」的码头")}`, "#868e96") + `<p>${Z("这条船的主人是这个圈子的成员。互相关注以后，才能看到 TA 是谁、最近说了什么。")}</p><div class="chips"><button class="chip hot" id="dkGo">${Z("进入圈子看看 →")}</button></div>`;
   expOpen(); card.querySelector("#dkGo").onclick = ()=>openClub(d.id);
 }
 // ===== 📒 准备册：去一个真实场合之前，一章一章把要说的话准备好（内容来自言己）。填了日子和城市，地图上就插一面目的地旗 =====
@@ -6278,27 +6290,27 @@ function prepFlags(t, s, on){
 }
 function openPrep(){
   const all = prepGet(), L = prepBooks().sort((a, b)=>((all[b.id] || {}).ts || 0) - ((all[a.id] || {}).ts || 0)), today = CP_TODAY;
-  card.innerHTML = expTop("📒", "准备册", "去一个真实场合之前，把要说的话准备好", "#e8590c") + `
-    <p class="note">面试、见客户、研讨会、聚会、演讲……一章一章准备：对方会怎么开口、你可以怎么说、你自己的话。填上日子和城市，地图上会插一面目的地旗。</p>
+  card.innerHTML = expTop("📒", Z("准备册"), Z("去一个真实场合之前，把要说的话准备好"), "#e8590c") + `
+    <p class="note">${Z("面试、见客户、研讨会、聚会、演讲……一章一章准备：对方会怎么开口、你可以怎么说、你自己的话。填上日子和城市，地图上会插一面目的地旗。")}</p>
     ${L.map(b=>{ const v = all[b.id] || {}, n = (v.done || []).length, past = v.date && v.date < today;
-      return `<button class="chip" data-prep="${b.id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left;white-space:normal"><span style="font-size:20px">${b.icon}</span><span><b>${esc(b.title)}</b> <small class="note">· ${esc(b.category)}</small><br><small class="note">${n ? `已准备 ${n} / ${b.chapters.length} 章` : esc(b.desc)}${v.date ? ` · ${past ? "已经过去：怎么样了？" : "🚩 " + esc(v.date.slice(5).replace("-", "/")) + (v.city ? " · " + esc(v.city) : "")}` : ""}</small></span></button>`; }).join("") || `<p class="note">你在学的语言还没有准备册。</p>`}`;
+      return `<button class="chip" data-prep="${b.id}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left;white-space:normal"><span style="font-size:20px">${b.icon}</span><span><b>${esc(b.title)}</b> <small class="note">· ${esc(b.category)}</small><br><small class="note">${n ? `${Z("已准备")} ${n} / ${b.chapters.length} ${Z("章")}` : esc(b.desc)}${v.date ? ` · ${past ? Z("已经过去：怎么样了？") : "🚩 " + esc(v.date.slice(5).replace("-", "/")) + (v.city ? " · " + esc(v.city) : "")}` : ""}</small></span></button>`; }).join("") || `<p class="note">${Z("你在学的语言还没有准备册。")}</p>`}`;
   expOpen(); card.scrollTop = 0; card.querySelectorAll("[data-prep]").forEach(b=>b.onclick = ()=>openPrepBook(b.dataset.prep));
 }
 function openPrepBook(id, ci){
   const b = PB.find(x=>x.id === id); if (!b) return; const v = prepGet()[id] || {}; ci = ci === undefined ? Math.max(0, b.chapters.findIndex((_, i)=>!(v.done || []).includes(i))) : ci;
   const c = b.chapters[ci], past = v.date && v.date < CP_TODAY, from = "📒 " + b.title;
-  card.innerHTML = expTop(b.icon, esc(b.title), `准备册 · ${(v.done || []).length} / ${b.chapters.length} 章`, "#e8590c") + `<div class="chips"><button class="chip" id="pbBack">← 准备册</button></div>
-    <section class="cp-you"><h3>这次是什么事？</h3>
-      <input id="pbWhat" maxlength="30" value="${esc(v.what || "")}" placeholder="例如：周二下午的产品经理面试" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit">
-      <div class="chips"><label class="note">哪天 <input type="date" id="pbDate" value="${esc(v.date || "")}"></label><label class="note">在哪 <select id="pbCity"><option value="">选一个城市</option>${Object.keys(CPIN.home || {}).map(x=>`<option${x === (v.city || myCity()) ? " selected" : ""}>${esc(x)}</option>`).join("")}</select></label><button class="chip" id="pbSet">🚩 插旗</button></div>
-      ${past ? `<h3>那天怎么样了？</h3><textarea id="pbHow" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文都行">${esc(v.how || "")}</textarea>${visPick("pbVis", "intro")}<div class="chips"><button class="chip hot" id="pbHowSave">存起来</button></div>` : ""}</section>
+  card.innerHTML = expTop(b.icon, esc(b.title), `${Z("准备册 ·")} ${(v.done || []).length} / ${b.chapters.length} ${Z("章")}`, "#e8590c") + `<div class="chips"><button class="chip" id="pbBack">${Z("← 准备册")}</button></div>
+    <section class="cp-you"><h3>${Z("这次是什么事？")}</h3>
+      <input id="pbWhat" maxlength="30" value="${esc(v.what || "")}${Z("\" placeholder=\"例如：周二下午的产品经理面试\" style=\"width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit\">")}
+      <div class="chips"><label class="note">${Z("哪天 <input type=\"date\" id=\"pbDate\" value=\"")}${esc(v.date || "")}"></label><label class="note">${Z("在哪")} <select id="pbCity"><option value="">${Z("选一个城市")}</option>${Object.keys(CPIN.home || {}).map(x=>`<option value="${esc(x)}"${x === (v.city || myCity()) ? " selected" : ""}>${esc(mapL(x))}</option>`).join("")}</select></label><button class="chip" id="pbSet">${Z("🚩 插旗")}</button></div>
+      ${past ? `<h3>${Z("那天怎么样了？")}</h3><textarea id="pbHow" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文都行">${esc(v.how || "")}</textarea>${visPick("pbVis", "intro")}<div class="chips"><button class="chip hot" id="pbHowSave">${Z("存起来")}</button></div>` : ""}</section>
     <div class="chips">${b.chapters.map((x, i)=>`<button class="chip" data-pbc="${i}"${i === ci ? ' aria-pressed="true" style="background:#fff4e6;border-color:#e8590c"' : ""}>${(v.done || []).includes(i) ? "✓ " : ""}${i + 1}. ${esc(x.title)}</button>`).join("")}</div>
     <section><h3>${ci + 1}. ${esc(c.title)}</h3>${c.scenario ? `<p class="note">${esc(c.scenario)}</p>` : ""}
-      <p>${esc(c.role || "对方")}：<b>${esc(c.opening)}</b> ${expSay(c.opening, b.lang)}</p>
+      <p>${esc(c.role || Z("对方"))}${Z("：")}<b>${esc(c.opening)}</b> ${expSay(c.opening, b.lang)}</p>
       ${c.intent ? `<p class="note">🎯 ${esc(c.intent)}</p>` : ""}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}
-      <h3>可以这样说</h3>${c.phrases.map(p=>skLine(p.text, p.meaning, [p.use, p.alternative ? "也可以说：" + p.alternative : ""].filter(Boolean).map(esc).join(" · "), from)).join("")}
-      <h3>${c.question ? esc(c.question) : "换成你自己的话"}</h3><textarea id="pbAns" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="先用中文写也可以">${esc((v.answers || {})[ci] || "")}</textarea>
-      <div class="chips"><button class="chip hot" id="pbSave">✓ 这一章准备好了</button>${ci + 1 < b.chapters.length ? `<button class="chip" id="pbNext">下一章 →</button>` : ""}</div></section>`;
+      <h3>${Z("可以这样说")}</h3>${c.phrases.map(p=>skLine(p.text, p.meaning, [p.use, p.alternative ? Z("也可以说：") + p.alternative : ""].filter(Boolean).map(esc).join(" · "), from)).join("")}
+      <h3>${c.question ? esc(c.question) : Z("换成你自己的话")}</h3><textarea id="pbAns" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="先用中文写也可以">${esc((v.answers || {})[ci] || "")}</textarea>
+      <div class="chips"><button class="chip hot" id="pbSave">${Z("✓ 这一章准备好了")}</button>${ci + 1 < b.chapters.length ? `<button class="chip" id="pbNext">${Z("下一章 →")}</button>` : ""}</div></section>`;
   expOpen(); skBind();
   card.querySelector("#pbBack").onclick = openPrep;
   card.querySelectorAll("[data-pbc]").forEach(x=>x.onclick = ()=>openPrepBook(id, +x.dataset.pbc));
@@ -6306,15 +6318,15 @@ function openPrepBook(id, ci){
   card.querySelector("#pbSave").onclick = ()=>{ const a = card.querySelector("#pbAns").value.trim(), w = prepGet()[id] || {}; prepPut(id, {answers: {...(w.answers || {}), [ci]: a}, done: [...new Set([...(w.done || []), ci])]}); fx("good");
     if (a) lifeAdd({path: "self", q: `${b.title} · ${c.title}`, a, w: [], ts: Date.now()}); openPrepBook(id, ci + 1 < b.chapters.length ? ci + 1 : ci); };
   const nx = card.querySelector("#pbNext"); if (nx) nx.onclick = ()=>openPrepBook(id, ci + 1);
-  const hs = card.querySelector("#pbHowSave"); if (hs) hs.onclick = ()=>{ const a = card.querySelector("#pbHow").value.trim(); if (!a) return; prepPut(id, {how: a}); expLog("prep", (v.what || b.title) + " · 怎么样了", a, card.querySelector("#pbVis").value); fx("good"); openPrepBook(id, ci); };
+  const hs = card.querySelector("#pbHowSave"); if (hs) hs.onclick = ()=>{ const a = card.querySelector("#pbHow").value.trim(); if (!a) return; prepPut(id, {how: a}); expLog("prep", (v.what || b.title) + " " + Z("· 怎么样了") + "", a, card.querySelector("#pbVis").value); fx("good"); openPrepBook(id, ci); };
 }
 // ===== 🚩 插旗：在地图上点一下，插一面自己的旗。四种旗：📒 要去的场合、📍 常去的地方、📸 发生过的事、❓ 遇到的问题 =====
 // 缩小时同一片地方的旗合成一个圈（写着几面），放大以后一面一面插在准确的位置。存在这台设备上；选了可见范围的会按规则同步到主页。
 const FLAG_KIND = {
-  event: {icon: "📒", name: "要去的场合", color: "#e8590c", vis: "mutual", tip: "去之前准备要说的话", ph: "例如：周二的产品经理面试"},
-  place: {icon: "📍", name: "常去的地方", color: "#2f9e44", vis: "mutual", tip: "在那里常说的话", ph: "例如：公司楼下那家咖啡店"},
-  story: {icon: "📸", name: "发生过的事", color: "#1971c2", vis: "mutual", tip: "在这里发生了什么", ph: "例如：第一次自己去银行开户"},
-  ask: {icon: "❓", name: "遇到的问题", color: "#7048e8", vis: "all", tip: "在这里不知道怎么说", ph: "例如：在这家医院挂号不知道怎么说"}
+  event: {icon: "📒", name: Z("要去的场合"), color: "#e8590c", vis: "mutual", tip: Z("去之前准备要说的话"), ph: Z("例如：周二的产品经理面试")},
+  place: {icon: "📍", name: Z("常去的地方"), color: "#2f9e44", vis: "mutual", tip: Z("在那里常说的话"), ph: Z("例如：公司楼下那家咖啡店")},
+  story: {icon: "📸", name: Z("发生过的事"), color: "#1971c2", vis: "mutual", tip: Z("在这里发生了什么"), ph: Z("例如：第一次自己去银行开户")},
+  ask: {icon: "❓", name: Z("遇到的问题"), color: "#7048e8", vis: "all", tip: Z("在这里不知道怎么说"), ph: Z("例如：在这家医院挂号不知道怎么说")}
 };
 // 常去的地方：在那里常说的话（英语示例）
 const FLAG_PLACES = {
@@ -6336,7 +6348,7 @@ function drawFlags(t, s, on, rel){
   if (rel < 4){   // 缩小时：同一片地方合成一个圈
     const G = {}; L.forEach(f=>{ const k = Math.round(f.ll[0]*2)/2 + "," + Math.round(f.ll[1]*2)/2; (G[k] = G[k] || []).push(f); });
     Object.values(G).forEach(arr=>{ const ll = [d3.mean(arr, f=>f.ll[0]), d3.mean(arr, f=>f.ll[1])], [x, y] = t.apply(projection(ll));
-      const g = flagG.append("g").attr("class","cflagd").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`).attr("role","button").attr("aria-label", `${arr.length} 面旗`)
+      const g = flagG.append("g").attr("class","cflagd").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`).attr("role","button").attr("aria-label", `${arr.length} ${Z("面旗")}`)
         .on("click", e=>{ e.stopPropagation(); svg.transition().duration(900).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(ll), kOf(8))); });
       if (arr.length === 1){ flagShape(g, arr[0], false); return; }
       g.append("circle").attr("r", 15).attr("fill","#fff").attr("stroke","#e8590c").attr("stroke-width", 3);
@@ -6353,31 +6365,31 @@ function flagShape(g, f, label){ const K = FLAG_KIND[f.kind] || FLAG_KIND.story;
 // 插旗模式：下一次点地图，就在那里插
 const flagTip = document.createElement("div"); flagTip.className = "panel"; flagTip.hidden = true;
 flagTip.style.cssText = "position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:30;padding:8px 14px;font-size:14px;display:flex;gap:8px;align-items:center";
-flagTip.innerHTML = `🚩 <b>点地图上的一个位置插旗</b> <span class="note">放大可以插得更准</span> <button class="chip" id="flagCancel">取消</button>`;
+flagTip.innerHTML = `🚩 <b>${Z("点地图上的一个位置插旗")}</b> <span class="note">${Z("放大可以插得更准")}</span> <button class="chip" id="flagCancel">${Z("取消")}</button>`;
 document.body.appendChild(flagTip); flagTip.querySelector("#flagCancel").onclick = ()=>setFlagMode(false);
 function setFlagMode(on){ flagMode = on; flagTip.hidden = !on; svg.style("cursor", on ? "crosshair" : null); if (on){ closeCard(); } }
 svg.node().addEventListener("click", e=>{ if (!flagMode) return; e.stopPropagation(); e.preventDefault();
   const r = svg.node().getBoundingClientRect(), t = d3.zoomTransform(svg.node()), ll = projection.invert(t.invert([e.clientX - r.left, e.clientY - r.top])); setFlagMode(false); if (ll) pickFlag(ll); }, true);
 function pickFlag(ll){
   const near = (()=>{ let best = null, bd = 1e9; data.forEach(x=>{ const d = d3.geoDistance(ll, [x.lon, x.lat]); if (d < bd){ bd = d; best = x; } }); return best; })();
-  card.innerHTML = expTop("🚩", "在这里插一面旗", near ? `${esc(near.r.split(" · ").pop())}附近` : "", "#e8590c") + `
+  card.innerHTML = expTop("🚩", Z("在这里插一面旗"), near ? `${esc(near.r.split(" · ").pop())}${Z("附近")}` : "", "#e8590c") + `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${Object.entries(FLAG_KIND).map(([k, v])=>`<button class="chip" data-fk="${k}" style="display:block;border-radius:14px;border-color:${v.color};text-align:left;padding:8px 10px;white-space:normal">${v.icon} <b>${v.name}</b><br><small class="note">${v.tip}</small></button>`).join("")}</div>
-    <div class="chips"><button class="chip" id="fkAct">🏃 做了一件事（第一次去……）</button><button class="chip" id="fkPhoto">📷 贴一张拍立得在这里</button></div>`;
+    <div class="chips"><button class="chip" id="fkAct">${Z("🏃 做了一件事（第一次去……）")}</button><button class="chip" id="fkPhoto">${Z("📷 贴一张拍立得在这里")}</button></div>`;
   expOpen();
   card.querySelectorAll("[data-fk]").forEach(b=>b.onclick = ()=>newFlag(b.dataset.fk, ll));
   card.querySelector("#fkAct").onclick = ()=>openActivities(ll);
-  card.querySelector("#fkPhoto").onclick = ()=>{ closeCard(); openMineNew(); mn.lon = ll[0]; mn.lat = ll[1]; if (near){ const area = near.r.split(" · ").slice(-1)[0]; mn.place = `${area} · ${near.n}附近`; mn.country = near.country; } document.getElementById("mnWhere").textContent = "📍 会贴在你刚才点的地方：" + mn.place; };
+  card.querySelector("#fkPhoto").onclick = ()=>{ closeCard(); openMineNew(); mn.lon = ll[0]; mn.lat = ll[1]; if (near){ const area = near.r.split(" · ").slice(-1)[0]; mn.place = `${area} · ${near.n}${Z("附近")}`; mn.country = near.country; } document.getElementById("mnWhere").textContent = Z("📍 会贴在你刚才点的地方：") + mn.place; };
 }
 function newFlag(kind, ll){
   const K = FLAG_KIND[kind];
   card.innerHTML = expTop(K.icon, K.name, K.tip, K.color) + `
-    ${kind === "place" ? `<h3>是什么地方？</h3><div class="chips">${Object.keys(FLAG_PLACES).map(p=>`<button class="chip" data-fp="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : ""}
-    <h3>${{event: "这次是什么事？", place: "给它起个名字", story: "发生了什么？", ask: "你想问什么？"}[kind]}</h3>
+    ${kind === "place" ? `<h3>${Z("是什么地方？")}</h3><div class="chips">${Object.keys(FLAG_PLACES).map(p=>`<button class="chip" data-fp="${esc(p)}">${esc(Z(p))}</button>`).join("")}</div>` : ""}
+    <h3>${{event: Z("这次是什么事？"), place: Z("给它起个名字"), story: Z("发生了什么？"), ask: Z("你想问什么？")}[kind]}</h3>
     <input id="flT" maxlength="40" placeholder="${esc(K.ph)}" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit">
-    ${kind === "event" ? `<h3>哪天</h3><input type="date" id="flD">` : ""}
-    <h3>${kind === "story" ? "用你在学的语言说一句（中文也行）" : "备注"}</h3><textarea id="flN" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit"></textarea>
-    <label class="note">谁能看到：<select id="flV">${Object.entries(VIS).map(([k, v])=>`<option value="${k}"${k === K.vis ? " selected" : ""}>${v}</option>`).join("")}</select></label>
-    <div class="chips"><button class="chip hot" id="flGo">🚩 插上</button></div>`;
+    ${kind === "event" ? `<h3>${Z("哪天")}</h3><input type="date" id="flD">` : ""}
+    <h3>${kind === "story" ? Z("用你在学的语言说一句（中文也行）") : Z("备注")}</h3><textarea id="flN" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit"></textarea>
+    <label class="note">${Z("谁能看到：")}<select id="flV">${Object.entries(VIS).map(([k, v])=>`<option value="${k}"${k === K.vis ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+    <div class="chips"><button class="chip hot" id="flGo">${Z("🚩 插上")}</button></div>`;
   expOpen(); let place = "";
   card.querySelectorAll("[data-fp]").forEach(b=>b.onclick = ()=>{ place = b.dataset.fp; card.querySelectorAll("[data-fp]").forEach(x=>x.classList.toggle("hot", x === b)); const ti = card.querySelector("#flT"); if (!ti.value) ti.value = place; });
   card.querySelector("#flGo").onclick = ()=>{ const t = card.querySelector("#flT").value.trim(); if (!t) return;
@@ -6389,40 +6401,40 @@ function openFlag(id){
   const joined = Object.keys(CPIN.clubs).filter(c=>cpJoined(c)), opts = [...joined, ...Object.keys(CPIN.clubs).filter(c=>!joined.includes(c))];
   card.innerHTML = expTop(K.icon, esc(f.title), `${K.name} · ${new Date(f.ts).toLocaleDateString()}${f.date ? " · 📅 " + esc(f.date) : ""} · ${VIS[f.vis] || VIS.me}`, K.color) + `
     ${f.note ? `<p>${esc(f.note)}</p>` : ""}
-    ${f.kind === "event" ? `<section><h3>📒 去之前准备一下</h3><p class="note">一章一章准备：对方会怎么开口、你可以怎么说。</p><div class="chips"><button class="chip hot" id="flPrep">打开准备册</button></div></section>` : ""}
-    ${P ? `<section><h3>在这里常说的话</h3>${LEARN === "en" ? P.map(([t, z])=>skLine(t, z, "", from)).join("") : `<p class="note">这里的示例句是英语的。</p>`}</section>` : ""}
-    ${f.act ? `<div class="chips"><button class="chip" data-actgo="${esc(f.act)}">🏃 再看看现场会怎么说</button></div>` : ""}
-    ${f.kind === "story" ? `<section><h3>📷 配一张照片</h3><div class="chips"><button class="chip" id="flPhoto">📷 在这里贴一张拍立得</button></div></section>` : ""}
-    ${f.kind === "ask" ? `<section><h3>问一问</h3><label class="note">发到码头：<select id="flClub">${opts.map(c=>`<option value="${c}">${esc(CPIN.clubs[c].icon)} ${esc(clubPinName({id: c, name: CPIN.clubs[c].name}))}</option>`).join("")}</select></label><div class="chips"><button class="chip hot" id="flAsk">⚓ 发到这个圈子</button></div></section>` : ""}
-    <div class="chips"><button class="chip" id="flDel">拔掉这面旗</button></div>`;
+    ${f.kind === "event" ? `<section><h3>${Z("📒 去之前准备一下")}</h3><p class="note">${Z("一章一章准备：对方会怎么开口、你可以怎么说。")}</p><div class="chips"><button class="chip hot" id="flPrep">${Z("打开准备册")}</button></div></section>` : ""}
+    ${P ? `<section><h3>${Z("在这里常说的话")}</h3>${LEARN === "en" ? P.map(([t, z])=>skLine(t, z, "", from)).join("") : `<p class="note">${Z("这里的示例句是英语的。")}</p>`}</section>` : ""}
+    ${f.act ? `<div class="chips"><button class="chip" data-actgo="${esc(f.act)}${Z("\">🏃 再看看现场会怎么说")}</button></div>` : ""}
+    ${f.kind === "story" ? `<section><h3>${Z("📷 配一张照片")}</h3><div class="chips"><button class="chip" id="flPhoto">${Z("📷 在这里贴一张拍立得")}</button></div></section>` : ""}
+    ${f.kind === "ask" ? `<section><h3>${Z("问一问")}</h3><label class="note">${Z("发到码头：")}<select id="flClub">${opts.map(c=>`<option value="${c}">${esc(CPIN.clubs[c].icon)} ${esc(clubPinName({id: c, name: CPIN.clubs[c].name}))}</option>`).join("")}</select></label><div class="chips"><button class="chip hot" id="flAsk">${Z("⚓ 发到这个圈子")}</button></div></section>` : ""}
+    <div class="chips"><button class="chip" id="flDel">${Z("拔掉这面旗")}</button></div>`;
   expOpen(); skBind();
   const pr = card.querySelector("#flPrep"); if (pr) pr.onclick = ()=>openPrep();
-  const ph = card.querySelector("#flPhoto"); if (ph) ph.onclick = ()=>{ closeCard(); openMineNew(); mn.lon = f.ll[0]; mn.lat = f.ll[1]; mn.place = f.title; document.getElementById("mnWhere").textContent = "📍 会贴在这面旗旁边：" + f.title; };
+  const ph = card.querySelector("#flPhoto"); if (ph) ph.onclick = ()=>{ closeCard(); openMineNew(); mn.lon = f.ll[0]; mn.lat = f.ll[1]; mn.place = f.title; document.getElementById("mnWhere").textContent = Z("📍 会贴在这面旗旁边：") + f.title; };
   const ak = card.querySelector("#flAsk"); if (ak) ak.onclick = ()=>{ const c = card.querySelector("#flClub").value; openClub(c); const ta = card.querySelector("#cpText"); if (ta) ta.value = f.title + (f.note ? "\n" + f.note : ""); };
   card.querySelector("#flDel").onclick = ()=>{ flagsSet(flagsGet().filter(x=>x.id !== id)); closeCard(); };
 }
 // ===== 🏃 我的一次经历：10 件真实小事（第一次去健身房、参加一次活动……），去之前看现场会怎么说，回来说说，插一面旗（内容来自言己）=====
 const ACT = typeof ACTIVITIES !== "undefined" ? ACTIVITIES : {groups: [], activities: []};
 function openActivities(ll){
-  card.innerHTML = expTop("🏃", "做了一件事", "真实的小事：去之前看看现场会怎么说，回来说说", "#2f9e44") + `
-    <p class="note">选一件你最近做了、或者打算去做的事。</p>
+  card.innerHTML = expTop("🏃", Z("做了一件事"), Z("真实的小事：去之前看看现场会怎么说，回来说说"), "#2f9e44") + `
+    <p class="note">${Z("选一件你最近做了、或者打算去做的事。")}</p>
     ${ACT.groups.map(([g, zh])=>{ const L = ACT.activities.filter(a=>a.group === g); return L.length ? `<h3>${esc(zh)}</h3>${L.map(a=>`<button class="chip" data-act="${a.id}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(a.title)}</b><br><small class="note">${esc(a.intro)}</small></span></button>`).join("")}` : ""; }).join("")}`;
   expOpen(); card.scrollTop = 0; card.querySelectorAll("[data-act]").forEach(b=>b.onclick = ()=>openActivity(b.dataset.act, ll, 0));
 }
 function openActivity(id, ll, mi){
   const a = ACT.activities.find(x=>x.id === id); if (!a) return; const m = a.moments[mi] || a.moments[0], from = "🏃 " + a.title;
-  card.innerHTML = expTop("🏃", esc(a.title), esc(a.en), "#2f9e44") + `<div class="chips"><button class="chip" id="acBack">← 换一件</button></div>
+  card.innerHTML = expTop("🏃", esc(a.title), esc(a.en), "#2f9e44") + `<div class="chips"><button class="chip" id="acBack">${Z("← 换一件")}</button></div>
     <p>${esc(a.intro)}</p>${a.notes.map(n=>`<p class="note">· ${esc(n)}</p>`).join("")}
-    <h3>到了现场</h3><div class="chips">${a.moments.map((x, i)=>`<button class="chip" data-mo="${i}"${i === mi ? ' aria-pressed="true" style="background:#ebfbee;border-color:#2f9e44"' : ""}>${esc(x.title)}</button>`).join("")}</div>
+    <h3>${Z("到了现场")}</h3><div class="chips">${a.moments.map((x, i)=>`<button class="chip" data-mo="${i}"${i === mi ? ' aria-pressed="true" style="background:#ebfbee;border-color:#2f9e44"' : ""}>${esc(x.title)}</button>`).join("")}</div>
     <p class="note">${esc(m.scenario)}</p>
     ${m.lines.map(l=>`<div class="ex-line" style="${l.who === "你" ? "background:#eaf6e8;border-radius:8px;padding:3px 8px" : ""}"><small class="note">${esc(l.who)}</small><br>${esc(l.text)} ${expSay(l.text, "en")}<br><small class="note">${esc(l.zh)}</small></div>`).join("")}
     ${m.hint ? `<p class="note">💡 ${esc(m.hint)}</p>` : ""}
-    ${a.questions.length ? `<h3>可以问的</h3>${a.questions.map(q=>skLine(q.text, q.zh, "", from)).join("")}` : ""}
-    ${a.words.length ? `<h3>会用到的词</h3>${a.words.map(w=>skLine(w.text, w.zh, "", from)).join("")}` : ""}
-    <section class="cp-you"><h3>回来说说</h3><div class="chips">${a.prompts.map(p=>`<span class="tagx">${esc(p)}</span>`).join(" ")}</div>
-      ${a.example ? `<p class="note">比如：${esc(a.example.text)} ${expSay(a.example.text, "en")}<br>${esc(a.example.zh)}</p>` : ""}
+    ${a.questions.length ? `<h3>${Z("可以问的")}</h3>${a.questions.map(q=>skLine(q.text, q.zh, "", from)).join("")}` : ""}
+    ${a.words.length ? `<h3>${Z("会用到的词")}</h3>${a.words.map(w=>skLine(w.text, w.zh, "", from)).join("")}` : ""}
+    <section class="cp-you"><h3>${Z("回来说说")}</h3><div class="chips">${a.prompts.map(p=>`<span class="tagx">${esc(p)}</span>`).join(" ")}</div>
+      ${a.example ? `<p class="note">${Z("比如：")}${esc(a.example.text)} ${expSay(a.example.text, "en")}<br>${esc(a.example.zh)}</p>` : ""}
       <textarea id="acText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文说说那天"></textarea>
-      ${visPick("acVis", "intro")}<div class="chips"><button class="chip hot" id="acGo">🚩 ${ll ? "插在刚才点的地方" : "插在我的母港城市"}</button></div><div id="acReply"></div></section>`;
+      ${visPick("acVis", "intro")}<div class="chips"><button class="chip hot" id="acGo">🚩 ${ll ? Z("插在刚才点的地方") : Z("插在我的母港城市")}</button></div><div id="acReply"></div></section>`;
   expOpen(); skBind();
   card.querySelector("#acBack").onclick = ()=>openActivities(ll);
   card.querySelectorAll("[data-mo]").forEach(b=>b.onclick = ()=>openActivity(id, ll, +b.dataset.mo));
@@ -6430,56 +6442,56 @@ function openActivity(id, ll, mi){
     const at = ll || (myCity() && CPIN.home[myCity()]) || [0, 20], vis = card.querySelector("#acVis").value;
     const f = {id: "f" + Date.now(), kind: "story", act: id, ll: at.map(v=>Math.round(v*10000)/10000), title: a.title, note: t, place: "", date: "", vis, ts: Date.now()};
     flagsSet([...flagsGet(), f]); lifeAdd({path: "self", q: a.title, a: t, w: [], ts: Date.now()}); fx("good");
-    card.querySelector("#acReply").innerHTML = a.reply ? `<div class="box" style="border:2px solid #2f9e44;border-radius:12px;padding:8px 10px;margin-top:8px;background:#fff">🚩 插好了。圈子里的人可能会接着问你：<br><b>${esc(a.reply.text)}</b> ${expSay(a.reply.text, "en")}<br><small class="note">${esc(a.reply.zh)}</small></div>` : "🚩 插好了。";
+    card.querySelector("#acReply").innerHTML = a.reply ? `<div class="box" style="border:2px solid #2f9e44;border-radius:12px;padding:8px 10px;margin-top:8px;background:#fff">${Z("🚩 插好了。圈子里的人可能会接着问你：")}<br><b>${esc(a.reply.text)}</b> ${expSay(a.reply.text, "en")}<br><small class="note">${esc(a.reply.zh)}</small></div>` : Z("🚩 插好了。");
     card.querySelector("#acGo").disabled = true; };
 }
 // ===== 🎉 主题月：5 个圈子各有一个主题，几位客人先分享（内容来自言己的节日）=====
 const THEME_OF = id => (typeof THEMES !== "undefined" ? THEMES : []).find(t=>t.club === id);
 function themeHtml(d){
   const T = THEME_OF(d.id); if (!T) return "";
-  return `<section style="border:2px solid ${d.color};border-radius:12px;padding:6px 10px;margin:8px 0;background:#fff"><h3>🎉 主题月 · ${esc(T.name)}</h3><p style="margin:2px 0"><b>${esc(T.prompt.en)}</b> ${expSay(T.prompt.en, "en")}</p><p class="note" style="margin:0">${esc(T.prompt.zh)}</p>
-    <details><summary class="note" style="cursor:pointer">先看看 ${T.posts.length} 位客人怎么说</summary>${T.posts.map(p=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da"><b>${esc(p.who)}</b> · ${esc(p.title)}<br>${esc(p.text)} ${expSay(p.text, "en")}<br><small class="note">${esc(p.titleZh)}：${esc(p.zh)}</small></div>`).join("")}</details>
-    <div class="chips"><button class="chip hot" data-theme="${d.id}">🙋 我也来说说</button></div></section>`;
+  return `<section style="border:2px solid ${d.color};border-radius:12px;padding:6px 10px;margin:8px 0;background:#fff"><h3>${Z("🎉 主题月 ·")} ${esc(T.name)}</h3><p style="margin:2px 0"><b>${esc(T.prompt.en)}</b> ${expSay(T.prompt.en, "en")}</p><p class="note" style="margin:0">${esc(T.prompt.zh)}</p>
+    <details><summary class="note" style="cursor:pointer">${Z("先看看")} ${T.posts.length} ${Z("位客人怎么说")}</summary>${T.posts.map(p=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da"><b>${esc(p.who)}</b> · ${esc(p.title)}<br>${esc(p.text)} ${expSay(p.text, "en")}<br><small class="note">${esc(p.titleZh)}${Z("：")}${esc(p.zh)}</small></div>`).join("")}</details>
+    <div class="chips"><button class="chip hot" data-theme="${d.id}${Z("\">🙋 我也来说说")}</button></div></section>`;
 }
 document.addEventListener("click", e=>{ const g = e.target.closest("[data-actgo]"); if (g){ e.stopPropagation(); openActivity(g.dataset.actgo, null, 0); } });
-document.addEventListener("click", e=>{ const b = e.target.closest("[data-theme]"); if (!b) return; e.stopPropagation(); const T = THEME_OF(b.dataset.theme); openClub(b.dataset.theme); const ta = card.querySelector("#cpText"); if (ta && T) ta.value = `【${T.name}】`; });
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-theme]"); if (!b) return; e.stopPropagation(); const T = THEME_OF(b.dataset.theme); openClub(b.dataset.theme); const ta = card.querySelector("#cpText"); if (ta && T) ta.value = `${Z("【")}${T.name}${Z("】")}`; });
 // ===== 🔤 发音（工具箱里）：学中文的人练拼音，学英语的人练自然拼读；🎬 更多情境：7 组生活里的交流场景（内容来自言己）=====
 const PR = typeof PRON !== "undefined" ? PRON : {};
 const prKind = () => LEARN === "zh" ? "pinyin" : LEARN === "en" ? "phonics" : "";
 function openPron(g, li){
   const k = prKind(), P = PR[k]; if (!P) return openSkills();
-  const lang = k === "pinyin" ? "zh" : "en", title = k === "pinyin" ? "拼音" : "自然拼读";
+  const lang = k === "pinyin" ? "zh" : "en", title = k === "pinyin" ? Z("拼音") : Z("自然拼读");
   if (g === undefined){
-    card.innerHTML = expTop("🔤", title, k === "pinyin" ? "声母、韵母、四声，一组一组听" : "字母在词里怎么读，一组一组听", "#0c8599") + `<div class="chips"><button class="chip" id="prBack">← 工具箱</button></div>
-      ${P.groups.map(([id, no, zh, en])=>`<button class="chip" data-prg="${id}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(no)} · ${esc(zh)}</b><br><small class="note">${esc(en)} · ${P.lessons.filter(l=>l.group === id).length} 课</small></span></button>`).join("")}`;
+    card.innerHTML = expTop("🔤", title, k === "pinyin" ? Z("声母、韵母、四声，一组一组听") : Z("字母在词里怎么读，一组一组听"), "#0c8599") + `<div class="chips"><button class="chip" id="prBack">${Z("← 工具箱")}</button></div>
+      ${P.groups.map(([id, no, zh, en])=>`<button class="chip" data-prg="${id}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(no)} · ${esc(zh)}</b><br><small class="note">${esc(en)} · ${P.lessons.filter(l=>l.group === id).length} ${Z("课")}</small></span></button>`).join("")}`;
     expOpen(); card.scrollTop = 0; card.querySelector("#prBack").onclick = ()=>openSkills(); card.querySelectorAll("[data-prg]").forEach(b=>b.onclick = ()=>openPron(b.dataset.prg, 0)); return;
   }
   const L = P.lessons.filter(l=>l.group === g), l = L[li] || L[0], gz = (P.groups.find(x=>x[0] === g) || [])[2] || "";
   const pick = l.words.length > 1 ? l.words[Math.floor(Math.random()*l.words.length)] : null;
-  card.innerHTML = expTop("🔤", esc(gz), `${title} · 第 ${li + 1} / ${L.length} 课`, "#0c8599") + `<div class="chips"><button class="chip" id="prUp">← ${title}</button></div>
+  card.innerHTML = expTop("🔤", esc(gz), `${title} ${Z("· 第")} ${li + 1} / ${L.length} ${Z("课")}`, "#0c8599") + `<div class="chips"><button class="chip" id="prUp">← ${title}</button></div>
     <h3 style="font-size:20px">${esc(l.pattern)}${l.sound ? ` <small class="note">/${esc(l.sound)}/</small>` : ""}</h3><p class="note">${esc(l.note || "")}</p>
     ${l.words.map(w=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da"><b style="font-size:18px">${esc(w.text)}</b>${w.pinyin ? ` <span>${esc(w.pinyin)}</span>` : ""} ${expSay(w.text, lang)}<br><small class="note">${esc(w.meaning || "")}</small></div>`).join("")}
-    ${pick ? `<section class="cp-you"><h3>🎧 听一听，是哪一个？</h3><div class="chips">${expSay(pick.text, lang).replace("🔊", "🔊 再听一遍")}</div><div class="chips">${l.words.map(w=>`<button class="chip" data-prq="${esc(w.text)}">${esc(w.pinyin || w.text)}</button>`).join("")}</div><p class="note" id="prRes"></p></section>` : ""}
-    <div class="chips">${li > 0 ? `<button class="chip" id="prPrev">← 上一课</button>` : ""}${li + 1 < L.length ? `<button class="chip hot" id="prNext">下一课 →</button>` : ""}</div>`;
+    ${pick ? `<section class="cp-you"><h3>${Z("🎧 听一听，是哪一个？")}</h3><div class="chips">${expSay(pick.text, lang).replace("🔊", Z("🔊 再听一遍"))}</div><div class="chips">${l.words.map(w=>`<button class="chip" data-prq="${esc(w.text)}">${esc(w.pinyin || w.text)}</button>`).join("")}</div><p class="note" id="prRes"></p></section>` : ""}
+    <div class="chips">${li > 0 ? `<button class="chip" id="prPrev">${Z("← 上一课")}</button>` : ""}${li + 1 < L.length ? `<button class="chip hot" id="prNext">${Z("下一课 →")}</button>` : ""}</div>`;
   expOpen(); card.scrollTop = 0;
   card.querySelector("#prUp").onclick = ()=>openPron();
   const pv = card.querySelector("#prPrev"); if (pv) pv.onclick = ()=>openPron(g, li - 1);
   const nx = card.querySelector("#prNext"); if (nx) nx.onclick = ()=>openPron(g, li + 1);
   if (pick){ setTimeout(()=>{ try { sayIt(pick.text, EXP_TTS[lang], .85); } catch(e){} }, 300);
-    card.querySelectorAll("[data-prq]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.prq === pick.text; card.querySelector("#prRes").innerHTML = ok ? `<b style="color:#2f9e44">✓ 对了：${esc(pick.pinyin || pick.text)}</b>` : `再听一遍试试`; if (ok){ fx("good"); b.style.background = "#ebfbee"; } }); }
+    card.querySelectorAll("[data-prq]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.prq === pick.text; card.querySelector("#prRes").innerHTML = ok ? `<b style="color:#2f9e44">${Z("✓ 对了：")}${esc(pick.pinyin || pick.text)}</b>` : `${Z("再听一遍试试")}`; if (ok){ fx("good"); b.style.background = "#ebfbee"; } }); }
 }
 function openMoreScenes(gi, ci){
   const G = typeof MORE_SCENES !== "undefined" ? MORE_SCENES : [];
   if (gi === undefined){
-    card.innerHTML = expTop("🎬", "更多情境", "生活里常遇到的交流时刻：对方先开口，你怎么接", "#0c8599") + `<div class="chips"><button class="chip" id="msBack">← 工具箱</button></div>
-      ${G.map((g, i)=>`<button class="chip" data-msg="${i}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(g.title)}</b><br><small class="note">${esc(g.description || "")} · ${g.chapters.length} 个场景</small></span></button>`).join("")}`;
+    card.innerHTML = expTop("🎬", Z("更多情境"), Z("生活里常遇到的交流时刻：对方先开口，你怎么接"), "#0c8599") + `<div class="chips"><button class="chip" id="msBack">${Z("← 工具箱")}</button></div>
+      ${G.map((g, i)=>`<button class="chip" data-msg="${i}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(g.title)}</b><br><small class="note">${esc(g.description || "")} · ${g.chapters.length} ${Z("个场景")}</small></span></button>`).join("")}`;
     expOpen(); card.scrollTop = 0; card.querySelector("#msBack").onclick = ()=>openSkills(); card.querySelectorAll("[data-msg]").forEach(b=>b.onclick = ()=>openMoreScenes(+b.dataset.msg, 0)); return;
   }
   const g = G[gi], c = g.chapters[ci] || g.chapters[0], from = "🎬 " + g.title;
-  card.innerHTML = expTop("🎬", esc(g.title), `更多情境 · ${ci + 1} / ${g.chapters.length}`, "#0c8599") + `<div class="chips"><button class="chip" id="msUp">← 更多情境</button></div>
+  card.innerHTML = expTop("🎬", esc(g.title), `${Z("更多情境 ·")} ${ci + 1} / ${g.chapters.length}`, "#0c8599") + `<div class="chips"><button class="chip" id="msUp">${Z("← 更多情境")}</button></div>
     <div class="chips">${g.chapters.map((x, i)=>`<button class="chip" data-msc="${i}"${i === ci ? ' aria-pressed="true" style="background:#e3fafc;border-color:#0c8599"' : ""}>${esc(x.title)}</button>`).join("")}</div>
-    <p class="note">${esc(c.scenario || "")}</p><p>对方：<b>${esc(c.opening)}</b> ${expSay(c.opening, "en")}</p>
-    <h3>可以这样接</h3>${c.phrases.map(p=>skLine(p.text, p.meaning, "", from)).join("")}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}`;
+    <p class="note">${esc(c.scenario || "")}</p><p>${Z("对方：")}<b>${esc(c.opening)}</b> ${expSay(c.opening, "en")}</p>
+    <h3>${Z("可以这样接")}</h3>${c.phrases.map(p=>skLine(p.text, p.meaning, "", from)).join("")}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}`;
   expOpen(); skBind(); card.querySelector("#msUp").onclick = ()=>openMoreScenes(); card.querySelectorAll("[data-msc]").forEach(b=>b.onclick = ()=>openMoreScenes(gi, +b.dataset.msc));
 }
 // ===== 🎮 码头小游戏：每个圈子码头上 4 个听的游戏，题目从这个圈子 NPC 的真实动态里自动出 =====
@@ -6503,7 +6515,7 @@ function gmData(id){
   const who = sh(Object.keys(byWho)).slice(0, 4).map(k=>sh(byWho[k]).find(l=>l.s.split(" ").length >= 4) || byWho[k][0]).filter(Boolean);
   return {npcs, puzzle, diff, who};
 }
-const GM_LIST = [{id: "puzzle", e: "🧩", t: "听力拼图", d: "听一条动态，把词块按顺序点出来"}, {id: "pairs", e: "👂", t: "听音辨音", d: "ship 还是 sheep？"}, {id: "diff", e: "🔍", t: "听不同", d: "听两遍，找出哪个词变了"}, {id: "who", e: "🎯", t: "谁说的", d: "听一句，猜是哪位 NPC"}];
+const GM_LIST = [{id: "puzzle", e: "🧩", t: Z("听力拼图"), d: Z("听一条动态，把词块按顺序点出来")}, {id: "pairs", e: "👂", t: Z("听音辨音"), d: Z("ship 还是 sheep？")}, {id: "diff", e: "🔍", t: Z("听不同"), d: Z("听两遍，找出哪个词变了")}, {id: "who", e: "🎯", t: Z("谁说的"), d: Z("听一句，猜是哪位 NPC")}];
 let GM = null;
 // 码头场景：在地图上打开一块海面，木码头在右，你的小帆船在左；四个游戏都发生在这片海上
 const gmOv = document.createElement("div"); gmOv.id = "gmOv"; gmOv.hidden = true;
@@ -6516,6 +6528,9 @@ gmOv.addEventListener("click", e=>{ if (e.target === gmOv) gmOv.querySelector(".
 document.addEventListener("keydown", e=>{ if (e.key === "Escape" && !gmOv.hidden) gmOv.querySelector(".gm-x").click(); });
 const gmBoatSvg = sail => `<svg viewBox="-24 -40 48 56" width="64" height="74"><ellipse cy="12" rx="22" ry="3.5" fill="#fff" opacity=".6"/><line y1="4" y2="-36" stroke="#1f2a37" stroke-width="2"/><path d="M1,-34 L1,0 L21,0Z" fill="${sail}" stroke="#1f2a37" stroke-width="1.8"/><path d="M-1,-28 L-1,0 L-16,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.8"/><path d="M-19,2 L19,2 L12,12 L-12,12Z" fill="#b7703a" stroke="#1f2a37" stroke-width="1.8"/><text x="-6" y="10" text-anchor="middle" font-size="9">🙂</text></svg>`;
 const gmNpcBoat = (n, hue) => `<svg viewBox="-20 -34 40 48" width="52" height="62"><line y1="3" y2="-30" stroke="#1f2a37" stroke-width="1.8"/><path d="M1,-28 L1,0 L17,0Z" fill="hsl(${hue} 70% 62%)" stroke="#1f2a37" stroke-width="1.6"/><path d="M-1,-23 L-1,0 L-13,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.6"/><path d="M-16,2 L16,2 L10,10 L-10,10Z" fill="#8d6e63" stroke="#1f2a37" stroke-width="1.6"/><text x="-4" y="9" text-anchor="middle" font-size="8">${esc(n.icon)}</text></svg>`;
+// 🌤️ 轻松：没有时间，慢慢听；🌊 挑战：潮水慢慢涨、木板和救生圈往外漂、起风，快的话多一个 ⚡
+const gmMode = () => { try { return localStorage.getItem("gm.mode") || "easy"; } catch(e){ return "easy"; } };
+const GM_T = {puzzle: 25, pairs: 7, diff: 20, who: 15};
 function gmScene(sign, sub){
   gmOv.hidden = false; const d = GM.d;
   gmOv.querySelector("#gmSign").innerHTML = `<b>${sign}</b><small>${sub || ""}</small>`;
@@ -6527,7 +6542,9 @@ const gmBoatTo = (x, y) => { const b = gmOv.querySelector("#gmBoat"); b.style.le
 function openGames(id){
   const d = clubPinData.find(x=>x.id === id); if (!d) return; GM = {id, d, data: gmData(id)};
   const ok = {puzzle: GM.data.puzzle.length >= 2, pairs: true, diff: GM.data.diff.length >= 2, who: GM.data.who.length >= 2 && clubNpcs(id).length >= 3};
-  gmScene("⚓ 码头小游戏", "都是圈子里真实的话 · 一局 1 分钟 · 打开声音");
+  gmScene(Z("⚓ 码头小游戏"), Z("都是圈子里真实的话 · 一局 1 分钟 · 打开声音"));
+  gmOv.querySelector("#gmFoot").innerHTML = `<div class="gm-btns"><button class="gm-btn ${gmMode() === "easy" ? "hot" : ""}${Z("\" data-gmm=\"easy\">🌤️ 轻松 · 不计时")}</button><button class="gm-btn ${gmMode() === "hard" ? "hot" : ""}${Z("\" data-gmm=\"hard\">🌊 挑战 · 潮水和风")}</button></div>`;
+  gmOv.querySelectorAll("[data-gmm]").forEach(b=>b.onclick = ()=>{ try { localStorage.setItem("gm.mode", b.dataset.gmm); } catch(e){} openGames(id); });
   gmOv.querySelector("#gmLayer").innerHTML = `<div class="gm-posts">${GM_LIST.filter(g=>ok[g.id]).map((g, i)=>`<button class="gm-post" data-gm="${g.id}" style="--r:${[-3, 2, -2, 3][i]}deg"><span>${g.e}</span><b>${g.t}</b><small>${g.d}</small></button>`).join("")}</div>`;
   gmOv.querySelectorAll("[data-gm]").forEach(b=>b.onclick = ()=>gmPlay(b.dataset.gm, 0, []));
 }
@@ -6536,48 +6553,149 @@ function gmFinish(g, res){
   gmScene(`${g.e} ${g.t}`, `${n} / ${res.length}`); gmBoatTo("calc(100% - 190px)");
   gmOv.querySelector("#gmProg").innerHTML = res.map(x=>`<i class="${x ? "ok" : "no"}"></i>`).join("");
   gmOv.querySelector("#gmLayer").innerHTML = n === res.length ? `<div class="gm-confetti">${"🎏🎉⚓🎏🎉".split("").filter(c=>c.trim()).map((c, i)=>`<span style="left:${15 + i*16}%;animation-delay:${i*.15}s">${c}</span>`).join("")}</div>` : "";
-  gmOv.querySelector("#gmFoot").innerHTML = `<div class="gm-msg"><b>${n === res.length ? "🎉 全对，靠岸了！" : n ? "👍 不错，船到码头了" : "🙂 再来一局？"}</b></div><div class="gm-btns"><button class="gm-btn hot" id="gmAgain">再玩一局</button><button class="gm-btn" id="gmHome">换个游戏</button></div>`;
+  gmOv.querySelector("#gmFoot").innerHTML = `<div class="gm-msg"><b>${n === res.length ? Z("🎉 全对，靠岸了！") : n ? Z("👍 不错，船到码头了") : Z("🙂 再来一局？")}</b>${gmMode() === "hard" && GM.fast ? `　${Z("⚡ 快手 ×")} ${GM.fast}` : ""}</div><div class="gm-btns"><button class="gm-btn hot" id="gmAgain">${Z("再玩一局")}</button><button class="gm-btn" id="gmHome">${Z("换个游戏")}</button></div>`;
   gmOv.querySelector("#gmAgain").onclick = ()=>{ GM.data = gmData(GM.id); gmPlay(g.id, 0, []); }; gmOv.querySelector("#gmHome").onclick = ()=>openGames(GM.id);
 }
 function gmPlay(gid, k, res){
   const g = GM_LIST.find(x=>x.id === gid), D = GM.data, npcOf = id => clubNpcs(GM.id).find(n=>n.id === id) || {name: id, icon: "🙂", city: ""};
   const N = {puzzle: D.puzzle.length, pairs: 5, diff: D.diff.length, who: D.who.length}[gid]; if (k >= N) return gmFinish(g, res);
-  gmScene(`${g.e} ${g.t}`, `第 ${k + 1} / ${N} 题`);
+  gmScene(`${g.e} ${g.t}`, `${Z("第")} ${k + 1} / ${N} ${Z("题")}`);
   gmOv.querySelector("#gmProg").innerHTML = Array.from({length: N}, (_, i)=>`<i class="${i < res.length ? (res[i] ? "ok" : "no") : i === k ? "on" : ""}"></i>`).join("");
   gmBoatTo("2%");
-  const L = gmOv.querySelector("#gmLayer"), F = gmOv.querySelector("#gmFoot"), next = (ok, ms) => setTimeout(()=>gmPlay(gid, k + 1, [...res, ok]), ms);
+  if (k === 0) GM.fast = 0;
+  const L = gmOv.querySelector("#gmLayer"), F = gmOv.querySelector("#gmFoot"), hard = gmMode() === "hard", TT = GM_T[gid], t0 = Date.now(), R = {done: false, t: null};
+  const next = (ok, ms) => { if (R.done) return; R.done = true; clearTimeout(R.t); if (ok && hard && Date.now() - t0 < TT*500) GM.fast++; setTimeout(()=>{ if (!gmOv.hidden) gmPlay(gid, k + 1, [...res, ok]); }, ms); };   // 关掉了就不再往下走
+  const sea = gmOv.querySelector("#gmSea"); sea.classList.toggle("hard", hard); sea.style.setProperty("--T", TT + "s"); sea.querySelectorAll(".gm-tide").forEach(x=>x.remove());
   const say = (txt, who) => gmSay(txt, who), msg = h => { F.querySelector(".gm-msg").innerHTML = h; };
   const good = t => `<b style="color:#2f9e44">✓ ${esc(t)}</b>`, bad = t => `<b style="color:#e8590c">${esc(t)}</b>`;
   if (gid === "puzzle"){ const P = D.puzzle[k], w = P.s.split(" "), n = npcOf(P.who), pick = [];
     const slots = w.map((_, i)=>i).map(i=>[Math.random(), i]).sort((a, b)=>a[0] - b[0]).map(x=>x[1]);   // 木板按格子摆开（4 列），再加一点随机，不会叠在一起
     L.innerHTML = `${w.map((x, i)=>{ const sl = slots[i], col = sl % 4, row = Math.floor(sl / 4); return `<button class="gm-plank" data-gz="${i}" style="left:${16 + col*20 + Math.random()*5}%;top:${8 + row*21 + Math.random()*5}%;--r:${(Math.random()*12 - 6).toFixed(1)}deg;animation-delay:${(-Math.random()*3).toFixed(2)}s">${esc(x)}</button>`; }).join("")}<div class="gm-bridge" id="gmBridge"></div>`;
-    F.innerHTML = `<div class="gm-msg">${esc(n.icon)} ${esc(n.name)} 在圈子里发了一条。听一听，把海上的木板按顺序铺成栈桥。</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">🔊 听</button></div>`;
+    F.innerHTML = `<div class="gm-msg">${esc(n.icon)} ${esc(n.name)} ${Z("在圈子里发了一条。听一听，把海上的木板按顺序铺成栈桥。")}</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">${Z("🔊 听")}</button></div>`;
     F.querySelector("#gmSay").onclick = ()=>say(P.s, P.who); setTimeout(()=>say(P.s, P.who), 300);
     L.querySelectorAll("[data-gz]").forEach(b=>b.onclick = ()=>{ pick.push(+b.dataset.gz); b.remove(); L.querySelector("#gmBridge").innerHTML = pick.map(i=>`<span>${esc(w[i])}</span>`).join("");
-      if (pick.length === w.length){ const ok = pick.map(i=>w[i]).join(" ") === P.s; if (ok) gmBoatTo("calc(100% - 190px)"); msg(ok ? good(P.s) : bad("原句是：" + P.s)); next(ok, 2000); } });
+      if (pick.length === w.length){ const ok = pick.map(i=>w[i]).join(" ") === P.s; if (ok) gmBoatTo("calc(100% - 190px)"); msg(ok ? good(P.s) : bad(Z("原句是：") + P.s)); next(ok, 2000); } });
   }
   if (gid === "pairs"){ const P = GM_PAIRS[Math.floor(Math.random()*GM_PAIRS.length)], ans = P[Math.random() < .5 ? 0 : 1], two = Math.random() < .5 ? P : [P[1], P[0]];
     L.innerHTML = two.map((x, i)=>`<button class="gm-ring" data-gp="${x}" style="left:${i ? 72 : 40}%;top:22%"><span class="r"></span><b>${x}</b></button>`).join("");
-    F.innerHTML = `<div class="gm-msg">海上漂着两个救生圈。听到的是哪一个？</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">🔊 再听一遍</button></div>`;
+    F.innerHTML = `<div class="gm-msg">${Z("海上漂着两个救生圈。听到的是哪一个？")}</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">${Z("🔊 再听一遍")}</button></div>`;
     F.querySelector("#gmSay").onclick = ()=>say(ans); setTimeout(()=>say(ans), 300);
-    L.querySelectorAll("[data-gp]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.gp === ans; b.classList.add(ok ? "ok" : "no"); gmBoatTo(b.style.left); msg(ok ? good(ans) : bad("是 " + ans)); next(ok, ok ? 1100 : 2200); });
+    L.querySelectorAll("[data-gp]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.gp === ans; b.classList.add(ok ? "ok" : "no"); gmBoatTo(b.style.left); msg(ok ? good(ans) : bad("" + Z("是") + " " + ans)); next(ok, ok ? 1100 : 2200); });
   }
   if (gid === "diff"){ const P = D.diff[k], w = P.a.split(" "), n = npcOf(P.who);
     L.innerHTML = `<div class="gm-rope"><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0,2 Q50,18 100,2" fill="none" stroke="#1f2a37" stroke-width=".6"/></svg><div class="gm-flags">${w.map((x, i)=>`<button class="gm-flag" data-gd="${i}" style="--h:${(i*47) % 360};--y:${Math.round(Math.sin(i/(w.length - 1 || 1)*Math.PI)*22)}px">${esc(x.replace(/[.,!?:]$/, ""))}</button>`).join("")}</div></div>`;
-    F.innerHTML = `<div class="gm-msg">${esc(n.icon)} ${esc(n.name)} 说了两遍，第二遍有一面旗上的词变了。是哪一面？</div><div class="gm-btns"><button class="gm-btn hot" id="gA">🔊 第一遍</button><button class="gm-btn hot" id="gB">🔊 第二遍</button></div>`;
+    F.innerHTML = `<div class="gm-msg">${esc(n.icon)} ${esc(n.name)} ${Z("说了两遍，第二遍有一面旗上的词变了。是哪一面？")}</div><div class="gm-btns"><button class="gm-btn hot" id="gA">${Z("🔊 第一遍")}</button><button class="gm-btn hot" id="gB">${Z("🔊 第二遍")}</button></div>`;
     F.querySelector("#gA").onclick = ()=>say(P.a, P.who); F.querySelector("#gB").onclick = ()=>say(P.b, P.who); setTimeout(()=>say(P.a, P.who), 300);
     L.querySelectorAll("[data-gd]").forEach(b=>b.onclick = ()=>{ const ok = +b.dataset.gd === P.i, t = L.querySelector(`[data-gd="${P.i}"]`), y = P.b.split(" ")[P.i].replace(/[.,!?:]$/, "");
-      t.classList.add("flip"); t.textContent = y; if (!ok) b.classList.add("no"); msg((ok ? good("对了") : bad("是这面")) + `：${esc(w[P.i].replace(/[.,!?:]$/, ""))} → <b>${esc(y)}</b>`); next(ok, 2200); });
+      t.classList.add("flip"); t.textContent = y; if (!ok) b.classList.add("no"); msg((ok ? good(Z("对了")) : bad(Z("是这面"))) + `${Z("：")}${esc(w[P.i].replace(/[.,!?:]$/, ""))} → <b>${esc(y)}</b>`); next(ok, 2200); });
   }
   if (gid === "who"){ const P = D.who[k], me = npcOf(P.who), others = clubNpcs(GM.id).filter(x=>x.id !== P.who).map(x=>[Math.random(), x]).sort((a, b)=>a[0] - b[0]).slice(0, 2).map(x=>x[1]);
     const opts = [me, ...others].map(x=>[Math.random(), x]).sort((a, b)=>a[0] - b[0]).map(x=>x[1]);
     L.innerHTML = opts.map((o, i)=>`<button class="gm-nb" data-gw="${o.id}" style="left:${36 + i*22}%">${gmNpcBoat(o, gmVoice(o.id).pitch*300 % 360)}<span>${esc(o.name)}<small>${esc(o.city || "")}</small></span></button>`).join("");
-    F.innerHTML = `<div class="gm-msg">码头边停着几条小船。听一句，猜是哪条船上的人说的：听语气，也听口头禅。</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">🔊 听</button></div>`;
+    F.innerHTML = `<div class="gm-msg">${Z("码头边停着几条小船。听一句，猜是哪条船上的人说的：听语气，也听口头禅。")}</div><div class="gm-btns"><button class="gm-btn hot" id="gmSay">${Z("🔊 听")}</button></div>`;
     F.querySelector("#gmSay").onclick = ()=>say(P.s, P.who); setTimeout(()=>say(P.s, P.who), 300);
     L.querySelectorAll("[data-gw]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.gw === P.who; b.classList.add(ok ? "ok" : "no"); L.querySelector(`[data-gw="${P.who}"]`).classList.add("ok");
-      msg((ok ? good("是 " + me.name) : bad("是 " + me.name)) + `<br><small>“${esc(P.s)}”　${esc(me.style || "")}</small>`); next(ok, 2800); });
+      msg((ok ? good("" + Z("是") + " " + me.name) : bad("" + Z("是") + " " + me.name)) + `<br><small>“${esc(P.s)}${Z("”")}　${esc(me.style || "")}</small>`); next(ok, 2800); });
+  }
+  if (hard){   // 潮水从下面慢慢涨上来；涨满了，这题就先放过
+    const tide = document.createElement("div"); tide.className = "gm-tide"; sea.appendChild(tide); requestAnimationFrame(()=>requestAnimationFrame(()=>{ tide.style.transition = `height ${TT}s linear`; tide.style.height = "62%"; }));
+    R.t = setTimeout(()=>{ if (R.done || gmOv.hidden) return; msg(bad(Z("🌊 潮水来了，这题先放过"))); next(false, 1500); }, TT*1000);
   }
 }
+// ===== ⚓ 入港三件事：在圈子里真做三件事——打个招呼、接别人一句话、做一件这周的事；三件都做过，就是正式成员 =====
+// 不用另外存：从你在这个圈子发过的话就能看出来（「回复」「回答」算接话，「挑战」算做了这周的事）。随时都能说话。
+const HARBOR_HOST = {growth_club: "freya"};
+const harborHost = id => { const L = clubNpcs(id); return L.find(n=>n.id === HARBOR_HOST[id]) || L[0]; };
+function harborState(id){ const mine = SOC.ready ? SOC.clubposts.filter(p=>p.club === id && p.by === SOC.uid) : [];
+  return {hello: mine.length > 0, reply: mine.some(p=>p.kind === "回复" || p.kind === "回答"), ch: mine.some(p=>p.kind === "挑战")}; }
+const harborFull = id => { const s = harborState(id); return s.hello && s.reply && s.ch; };
+function harborHtml(id){
+  if (!CPIN.clubs[id]) return ""; const h = harborHost(id), s = harborState(id), nm = clubPinName({id, name: CPIN.clubs[id].name}), color = CPIN.clubs[id].color;
+  if (!h) return "";
+  if (s.hello && s.reply && s.ch) return `<div style="border:3px solid #2f9e44;background:#ebfbee;border-radius:14px;padding:6px 10px;font-size:13.5px">⚓ <b>${Z("你是「")}${esc(nm)}${Z("」的正式成员")}</b>${Z("：船停在码头，桅杆上有这个圈子的小旗。")}</div>`;
+  const hi = s.hello ? [`Welcome aboard! 😄 I'm ${h.name}, I host this club. So glad you're here — reply to anyone, anytime.`, `欢迎上船！😄 我是 ${h.name}，这个圈子的主持人。很高兴你来了，想回谁就回谁。`]
+    : [`Hi! I'm ${h.name}, I host this club. Say hi whenever you like 👋`, `嗨！我是 ${h.name}，这个圈子的主持人，住在${h.city}。想打招呼就打一声 👋`];
+  const T = [[s.hello, s.hello ? `👋 ${h.name} ${Z("欢迎了你")}` : Z("👋 还没打招呼")], [s.reply, s.reply ? Z("💬 你接过别人的话") : Z("💬 还没接过别人的话")], [s.ch, s.ch ? Z("🌍 做过这周的事") : Z("🌍 这周的事还没做")]];
+  return `<div style="border:3px solid ${color};background:#fff;border-radius:14px;padding:8px 10px;display:grid;gap:6px">
+    <div style="display:flex;gap:8px;align-items:flex-start"><span style="font-size:22px">${esc(h.icon)}</span><div style="min-width:0"><b>${esc(h.name)}</b> <small class="note">${Z("· 主持人")}</small><br>${esc(hi[0])} ${expSay(hi[0], "en")}<br><small class="note">${esc(hi[1])}</small></div></div>
+    <div class="chips">${T.map(([ok, t])=>`<span class="tagx" style="${ok ? "background:#ebfbee;border-color:#2f9e44;color:#2b8a3e;font-weight:600" : ""}">${t}</span>`).join("")}</div>
+    <small class="note">${SOC.ready ? Z("⛵ 随时都能说话。打个招呼、接别人一句话、做一件这周的事都做过，船就靠岸，成为正式成员。") : Z("⛵ 登录以后就能在这里说话。")}</small></div>`;
+}
+// ===== 🎭 自己创建人物（来自言己）：说出你想和谁聊，AI 生成这个人，然后和 TA 练对话。要用 AI，先只给主人自己用 =====
+const MC_KEY = "mychars.v1", mcGet = () => cpLS(MC_KEY) || [], mcSet = L => cpLS(MC_KEY, L.slice(-20));
+const mcCan = () => !!(SOC.owner && prSample);
+function openMyChars(){
+  const L = mcGet();
+  card.innerHTML = expTop("🎭", "我的人物", "说出你想和谁聊，AI 帮你变出这个人 · 只给你自己用", "#7048e8") + `<div class="chips"><button class="chip" id="mcBack">${Z("← 工具箱")}</button></div>
+    <section class="cp-you"><h3>你想和谁聊？</h3><textarea id="mcWho" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="例如：一位美国的移民律师，我想练第一次咨询；或者：我新公司的英国同事，我想练怎么请他帮忙"></textarea>
+      <div class="chips"><button class="chip hot" id="mcGo">✨ 变出这个人</button><span class="note" id="mcNote"></span></div></section>
+    ${L.length ? `<h3>我创建过的人</h3>${L.slice().reverse().map(c=>`<button class="chip" data-mc="${esc(c.id)}" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left;white-space:normal"><span style="font-size:22px">${esc(c.icon || "🙂")}</span><span><b>${esc(c.name)}</b> <small class="note">· ${esc(c.role || "")}${c.city ? " · " + esc(c.city) : ""}</small><br><small class="note">${esc(c.scenario || "")}</small></span></button>`).join("")}` : ""}`;
+  expOpen(); card.scrollTop = 0; card.querySelector("#mcBack").onclick = ()=>openSkills();
+  card.querySelectorAll("[data-mc]").forEach(b=>b.onclick = ()=>openMyChat(b.dataset.mc));
+  card.querySelector("#mcGo").onclick = async ()=>{ const who = card.querySelector("#mcWho").value.trim(), note = card.querySelector("#mcNote"); if (!who) return; if (!mcCan()){ note.textContent = "要在 claude.ai 里用主人账号打开才能用 AI。"; return; }
+    note.textContent = "正在变出这个人……";
+    try { const lang = LEARN_LANGS[LEARN].name.zh || "英语";
+      const r = await prSample.json([{role: "user", content: `用户在学${lang}，想和这样一个人练对话：「${who}」。请设计这个人物（虚构，但要像真实生活里的人），只输出 JSON：
+{"name":"名字（符合 TA 的国家）","icon":"一个 emoji","role":"中文：TA 是做什么的","city":"中文：在哪个城市","style":"中文：说话的样子（语速、口头禅、正式程度）","scenario":"中文：你们在什么场合见面、要聊什么（一两句）","opening":"TA 用${lang}说的第一句话，自然、简短"}
+不要给法律、医疗或投资的具体建议；人物只讲沟通和经历。`}], {modelTier: "quick", cache: false});
+      const c = {id: "c" + Date.now(), name: String(r.name || "?"), icon: String(r.icon || "🙂"), role: String(r.role || ""), city: String(r.city || ""), style: String(r.style || ""), scenario: String(r.scenario || ""), opening: String(r.opening || ""), ask: who, chat: [{from: "them", text: String(r.opening || "")}], ts: Date.now()};
+      mcSet([...mcGet(), c]); openMyChat(c.id);
+    } catch(e){ note.textContent = e && e.code === "not_granted" ? "没有允许 AI。" : "这次没变出来，再试一次。"; } };
+}
+function openMyChat(id){
+  const c = mcGet().find(x=>x.id === id); if (!c) return openMyChars();
+  card.innerHTML = expTop(esc(c.icon), esc(c.name), `${esc(c.role)}${c.city ? " · " + esc(c.city) : ""} · 你创建的人物`, "#7048e8") + `<div class="chips"><button class="chip" id="mcList">← 我的人物</button></div>
+    <p class="note">${esc(c.scenario)}<br>说话的样子：${esc(c.style)}</p>
+    <section id="mcLog">${c.chat.map(m=>`<div class="ex-line" style="${m.from === "me" ? "background:#eaf6e8;border-radius:8px;padding:4px 8px" : ""}"><small class="note">${m.from === "me" ? "你" : esc(c.name)}</small><br>${esc(m.text)} ${m.from === "them" ? expSay(m.text, "") : ""}${m.zh ? `<br><small class="note">${esc(m.zh)}</small>` : ""}${m.tip ? `<br><small style="color:#7048e8">💡 ${esc(m.tip)}</small>` : ""}</div>`).join("")}</section>
+    <div style="display:flex;gap:6px;align-items:flex-end"><textarea id="mcText" rows="2" style="flex:1;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言回 TA；不会说可以先写中文"></textarea><button class="chip hot" id="mcSend">发送</button></div><span class="note" id="mcNote"></span>
+    <div class="chips"><button class="chip" id="mcDel">删掉这个人物</button></div>`;
+  expOpen(); const log = card.querySelector("#mcLog"); card.scrollTop = card.scrollHeight;
+  card.querySelector("#mcList").onclick = openMyChars;
+  card.querySelector("#mcDel").onclick = ()=>{ mcSet(mcGet().filter(x=>x.id !== id)); openMyChars(); };
+  card.querySelector("#mcSend").onclick = async ()=>{ const t = card.querySelector("#mcText").value.trim(), note = card.querySelector("#mcNote"); if (!t) return; if (!mcCan()){ note.textContent = "要在 claude.ai 里用主人账号打开才能用 AI。"; return; }
+    const L = mcGet(), me = L.find(x=>x.id === id); me.chat.push({from: "me", text: t}); mcSet(L); note.textContent = esc(c.name) + " 正在想……";
+    try { const lang = LEARN_LANGS[LEARN].name.zh || "英语";
+      const msgs = [{role: "user", content: `你扮演：${c.name}${Z("，")}${c.role}，在${c.city}。说话的样子：${c.style}。场合：${c.scenario}。用户在学${lang}，用${lang}自然地回应，每次 1-3 句，像真人聊天，可以反问。不给法律、医疗或投资的具体建议。
+对话到目前为止：
+${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m.text).join("\n")}
+只输出 JSON：{"reply":"你的回应（${lang}）","zh":"回应的中文意思","tip":"如果用户刚才那句有不自然或错的地方，用中文给一句简短提示和更自然的说法；没有就留空"}`}];
+      const r = await prSample.json(msgs, {modelTier: "quick", cache: false});
+      const L2 = mcGet(), me2 = L2.find(x=>x.id === id); me2.chat.push({from: "them", text: String(r.reply || ""), zh: String(r.zh || ""), tip: String(r.tip || "")}); mcSet(L2); openMyChat(id);
+    } catch(e){ note.textContent = "这次没回上，再试一次。"; } };
+}
+// ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
+// 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
+const SYNC_KEYS = ["express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1"];
+const syncTs = () => cpLS("sync.ts") || {};
+let syncT = null, syncPulled = false;
+const syncDoc = () => SOC.db.collection("data/users/" + SOC.uid).doc("sync");
+syncMark = k => { if (!SYNC_KEYS.includes(k)) return; try { const t = syncTs(); t[k] = Date.now(); localStorage.setItem("sync.ts", JSON.stringify(t)); } catch(e){} syncPush(); };
+function syncPush(){ if (!syncPulled || !(SOC.ready && SOC.uid && SOC.db)) return; clearTimeout(syncT); syncT = setTimeout(async ()=>{
+  const v = {}, t = syncTs(); SYNC_KEYS.forEach(k=>{ const x = cpLS(k); if (x != null && JSON.stringify(x).length < 200000) v[k] = x; });
+  try { await syncDoc().set({v, t, ts: Date.now()}); } catch(e){} }, 3000); }
+function syncMerge(a, b){   // 这台设备从没同步过：a 本机，b 云端
+  const key = x => x && typeof x === "object" ? (x.id || x.text || x.ts || JSON.stringify(x)) : JSON.stringify(x);
+  const uni = (A, B) => { const seen = new Set(), out = []; [...B, ...A].forEach(x=>{ const k = key(x); if (!seen.has(k)){ seen.add(k); out.push(x); } }); return out.sort((p, q)=>((p && p.ts) || 0) - ((q && q.ts) || 0)); };
+  if (Array.isArray(a) && Array.isArray(b)) return uni(a, b);
+  if (a && b && typeof a === "object" && typeof b === "object"){ const o = {...a, ...b}; for (const k in a) if (Array.isArray(a[k]) && Array.isArray(b[k])) o[k] = uni(a[k], b[k]); return o; }
+  return b;
+}
+async function syncPull(){
+  let d = null; try { const s = await syncDoc().get(); d = s.exists ? s.data() : null; } catch(e){ return; }
+  const lt = syncTs(), rv = (d && d.v) || {}, rt = (d && d.t) || {}; let changed = false;
+  SYNC_KEYS.forEach(k=>{ if (!(k in rv)) return; const local = cpLS(k);
+    let next = null;
+    if (local == null) next = rv[k];
+    else if (!lt[k]) next = syncMerge(local, rv[k]);
+    else if ((rt[k] || 0) > lt[k]) next = rv[k];
+    if (next == null) return;
+    try { localStorage.setItem(k, JSON.stringify(next)); lt[k] = Math.max(rt[k] || 0, lt[k] || 0, Date.now()); } catch(e){} changed = true; });
+  try { localStorage.setItem("sync.ts", JSON.stringify(lt)); } catch(e){}
+  syncPulled = true;
+  if (changed){ const b = cpLS("boat.at"); BOAT = b && Array.isArray(b.ll) ? b : null; render(); }
+  syncPush();
+}
+{ const tick = setInterval(()=>{ if (SOC.ready && SOC.uid && SOC.db){ clearInterval(tick); syncPull(); } }, 1500); }
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
 const npcBadge = `<span class="soc-badge" style="background:#eef6ff;color:#1c5fa8">NPC</span>`;
@@ -6979,6 +7097,7 @@ function openClub(id){
     <div style="display:flex;align-items:center;gap:8px;padding-right:26px"><button class="chip" id="clBack" aria-label="回到圈子列表">←</button>
       <div style="flex:1;min-width:0"><b style="font-size:17px">${esc(c.name)}</b><div class="note">${mem.length} 人${npcs.length?` · ${npcs.length} 个 NPC`:""} · 用${esc(lang)}聊</div></div>
       ${joined?`<button class="chip" id="clLeave">已加入</button>`:`<button class="chip hot" id="clJoin">加入</button>`}</div>
+    ${typeof harborHtml === "function" && typeof clubPinReady !== "undefined" && clubPinReady ? harborHtml(id) : ""}
     ${storyNpcs.length ? `<div><div class="note" style="margin-bottom:4px">今天的动态</div><div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px">${storyNpcs.map(x=>{ const fresh = !seen.has(x.list[0].id); return `<button data-story="${esc(x.n.id)}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;width:54px;flex:none"><span style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;background:#fff;border:2.5px solid ${fresh?"#e8322f":"#d8d2bf"}${CLUBUI.story[id]===x.n.id?";box-shadow:0 0 0 2px #1c5fa8":""}">${x.n.icon}</span><small style="font-size:11px">${esc(x.n.name)}</small></button>`; }).join("")}</div>
       ${openStory ? `<div style="border:2px solid #e4dcc2;border-radius:12px;padding:8px 10px;margin-top:6px"><div style="display:flex;justify-content:space-between;align-items:center"><b role="button" tabindex="0" data-npcard="${esc(openStory.n.id)}" data-npback="club" style="cursor:pointer">${openStory.n.icon} ${esc(openStory.n.name)} ${npcBadge} ›</b><button class="chip" id="stX" aria-label="关闭动态" style="padding:0 8px">✕</button></div><small class="note">${esc(openStory.n.country)}${esc(openStory.n.city)} · ${esc(openStory.n.job)}</small>${rememberHtml(openStory.n.id)}${openStory.list.slice(0,3).map(u=>`<div class="note" style="margin-top:6px">${esc(u.date.slice(5).replace("-","月"))}日</div>` + thread(upItem(u))).join("")}</div>` : ""}</div>` : ""}
     ${!SOC.ready ? (CLUBUI.login === id ? loginHtml("登录后就能发言、提问、跟读", id) : `<div style="background:#eef3fb;border-radius:10px;padding:6px 10px;font-size:13px">你在逛圈子。想发言、提问、跟读？ <button class="chip hot" id="clLoginGo" style="font-size:12px">登录 / 注册</button></div>`) :
