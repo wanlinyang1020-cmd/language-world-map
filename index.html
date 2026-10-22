@@ -211,7 +211,8 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .cping{fill:none;stroke:#e8322f;stroke-width:2;animation:cping 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes cping{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.4);opacity:0}}
 .cmine{fill:none;stroke:#f2b705;stroke-width:2.5;opacity:.8;pointer-events:none}.cmine.hi{stroke-width:4;opacity:1}
 .cboat{cursor:pointer}.cbring{fill:none;stroke:#f2b705;stroke-width:2;animation:cping 2.6s ease-out infinite;transform-box:fill-box;transform-origin:center}.cbob{animation:cbob 2.8s ease-in-out infinite}@keyframes cbob{50%{transform:translateY(-2px) rotate(-2deg)}}
-.cbottle{cursor:pointer;animation:cbot 2.6s ease-in-out infinite}@keyframes cbot{50%{transform:translateY(-4px)}}.cweather,.cflag{cursor:pointer}.cradial{cursor:pointer}.cradial circle{fill:#fff;stroke:#1f2a37;stroke-width:2}.cradial:hover circle{fill:#fff3bf}
+.cbottle{cursor:pointer;animation:cbot 2.6s ease-in-out infinite}@keyframes cbot{50%{transform:translateY(-4px)}}.cvoy{fill:none;stroke:#7048e8;stroke-width:3;stroke-dasharray:7 6;animation:dash 1.4s linear infinite;pointer-events:none}@keyframes dash{to{stroke-dashoffset:-26}}.cisle{cursor:pointer}
+.cweather,.cflag{cursor:pointer}.cradial{cursor:pointer}.cradial circle{fill:#fff;stroke:#1f2a37;stroke-width:2}.cradial:hover circle{fill:#fff3bf}
 .cme{pointer-events:none}.cmedot{fill:#f2b705;stroke:#fff;stroke-width:3}.cmering{fill:none;stroke:#f2b705;stroke-width:2;animation:cping 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
 .cstk{fill:none;stroke:#1f2a37;stroke-width:1.5;stroke-dasharray:2 4;opacity:.6;pointer-events:none}.cfly{fill:none;stroke-width:3.5;stroke-linecap:round;pointer-events:none}
 .st .cdot{stroke:#fff;stroke-width:1.5}.cp-you{border:2px solid #f2b705;background:#fffbe6;border-radius:12px;padding:2px 10px 8px;margin:8px 0}.cp-you h3{margin-top:8px}
@@ -5774,7 +5775,7 @@ boatEl.html(`<circle class="cbring" cy="-6" r="20"/><g class="cbob"><ellipse cy=
 boatEl.select(".cweather").on("click", e=>{ e.stopPropagation(); boatMenu = false; openMood(); });
 boatEl.select(".cflag").on("click", e=>{ e.stopPropagation(); boatMenu = false; openDoubt(); });
 const boatMenuG = clubBoatG.append("g");
-const revN = () => { try { return revDueN(); } catch(e){ return 0; } };
+let revMemo = [0, 0]; const revN = () => { if (Date.now() - revMemo[0] < 3000) return revMemo[1]; try { revMemo = [Date.now(), revDueN()]; } catch(e){ revMemo = [Date.now(), 0]; } return revMemo[1]; };
 function placeBoat(t, s, on){
   if (on === undefined) on = !cmpDim && !mineOnly && !liveOnly;
   s = s || (W < 700 ? .8 : 1);
@@ -5788,9 +5789,10 @@ function placeBoat(t, s, on){
   const n = revN(); boatMenuG.selectAll("*").remove();
   [[30,14],[-34,10],[24,-30]].slice(0, Math.min(3, n)).forEach((o, i)=>boatMenuG.append("text").attr("class","cbottle").attr("x", x + o[0]*s).attr("y", y + o[1]*s).attr("font-size", 15*s).style("animation-delay", i*.6 + "s").text("🍾")
     .on("click", e=>{ e.stopPropagation(); boatMenu = false; openReview(); }));
+  voyDraw(t, s);
   if (!boatMenu) return;
   const items = [["🌦️", "心情", ()=>openMood()], ["❓", "疑惑", ()=>openDoubt()], ["🙋", "介绍我", ()=>openIntro()], ["📷", "贴一张", ()=>document.getElementById("mineBtn").click()],
-    ["🧭", "我的路线", ()=>openPath()], ["🍾", n ? `复习 · ${n}` : "复习", ()=>openReview()], ["⚓", "我的圈子", ()=>openClubs()], ["📍", boatHome() ? "母港" : "选母港", openBoatHome]];
+    ["🟣", "今天的航线", ()=>openVoyage()], ["🧳", "船舱", ()=>openHold()], ["⚓", "我的圈子", ()=>openClubs()], ["📍", boatHome() ? "母港" : "选母港", openBoatHome]];
   items.forEach(([e, label, fn], i)=>{ const a = -Math.PI/2 + i*2*Math.PI/items.length, R = 76*s;
     const r = boatMenuG.append("g").attr("class","cradial").attr("transform", `translate(${x + Math.cos(a)*R},${y - 8*s + Math.sin(a)*R})`).attr("role","button")
       .on("click", ev=>{ ev.stopPropagation(); boatMenu = false; placeBoat(d3.zoomTransform(svg.node())); fn(); });
@@ -5807,7 +5809,7 @@ function boatSail(ll, where){
 }
 const boatDock = id => { const c = CPIN.clubs[id]; if (c) boatSail([c.pos[0] - 7, c.pos[1] + 1], "停在「" + clubPinName({id, name:c.name}) + "」"); };
 // 在贴纸那里做事（演一场、读懂这件事）：船开到离它最近的港口
-function boatToSticker(n){ const d = data.find(x=>x.n === n); if (!d) return;
+function boatToSticker(n){ const d = data.find(x=>x.n === n); if (!d) return; holdVisit(n);
   const [city, ll] = Object.entries(CPIN.ports || {}).sort((a, b)=>d3.geoDistance([d.lon, d.lat], CPIN.home[a[0]]) - d3.geoDistance([d.lon, d.lat], CPIN.home[b[0]]))[0] || [];
   if (ll) boatSail(ll, "在" + city + "港 · " + mapN(n)); }
 function openBoatHome(){
@@ -5908,6 +5910,161 @@ function openIntro(ti, di){
   card.querySelectorAll("[data-st]").forEach(x=>x.onclick = ()=>openIntro(+x.dataset.st, 0));
   card.querySelectorAll("[data-sd]").forEach(x=>x.onclick = ()=>openIntro(a, +x.dataset.sd));
   card.querySelector("#inSave").onclick = ()=>{ const t = card.querySelector("#inText").value.trim(); if (!t) return; const x = expGet(); x.intro = {...(x.intro || {}), [key]: t}; cpLS("express.v1", x); expLog("intro", D.opening, t); fx("good"); card.querySelector("#inNote").textContent = "✓ 存好了，也进了我的生活地图"; };
+}
+// ===== 🧭 出题引擎：原样借用言己（Inner Voice）的 src/round-engine.js —— 一小轮最多 6 题、四座小岛、按 1/3/7/14/30 天再练；不依赖界面和存储 =====
+const PracticeRounds=(()=>{
+ const pieces=text=>/\p{Script=Han}/u.test(text)?Array.from(new Intl.Segmenter('zh',{granularity:'word'}).segment(text),x=>x.segment).filter(x=>x.trim()):text.split(/\s+/);
+ const DAY=86400000,intervals=[1,3,7,14,30];
+ const normal=x=>String(x||'').normalize('NFKC').toLocaleLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[’‘]/g,"'").replace(/[^\p{L}\p{N}']/gu,' ').replace(/\s+/g,' ').trim();
+ function shuffled(values,seed){let n=2166136261;for(const c of String(seed))n=Math.imul(n^c.charCodeAt(0),16777619)>>>0;const a=[...values];for(let i=a.length-1;i>0;i--){n=(Math.imul(n,1664525)+1013904223)>>>0;const j=n%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+ function islands(previous={},content){const total=content?.version===2?Math.min(6,content.targets.reduce((n,t)=>n+(t.roles?.length||1),0)):6;const nodes=Array.from({length:4},()=>({total,done:0,rounds:0}));for(const [index,h] of (previous.history||[]).entries()){const i=Number.isInteger(h.island)?h.island:Math.min(index,3);nodes[i]={total:h.total,done:h.total,rounds:nodes[i].rounds+1,finished:true}}for(const run of Object.values(previous.islandRuns||{})){if(run&&!run.finished)nodes[run.island]={...nodes[run.island],total:run.tasks.length,done:run.index,unfinished:true}}const a=previous.active;if(a&&!a.finished){const i=Number.isInteger(a.island)?a.island:Math.min((previous.history||[]).length,3);nodes[i]={...nodes[i],total:a.tasks.length,done:a.index,unfinished:true}}return nodes}
+ function purposeTasks(content,previous,id){
+  const tasks=content.targets.flatMap((target,targetIndex)=>(target.roles||['say']).map(type=>({type,targetIndex,key:'t'+targetIndex})));
+  // Rotate through every selected target/use; don't pad a small selection with unrelated questions.
+  const offset=((previous?.history||[]).reduce((n,h)=>n+(h.primaryCount||h.total||0),0))%tasks.length;
+  return [...tasks.slice(offset),...tasks.slice(0,offset)].slice(0,6).map((t,i)=>({...t,id:id+':'+i}));
+ }
+ function create(content,previous,id,now,island){if(content.version===2)return {id,island:Number.isInteger(island)?island:Math.min(previous?.history?.length||0,3),started:now,index:0,tasks:purposeTasks(content,previous,id),results:[],scheduled:!previous?.dueAt||previous.dueAt<=now};const count=previous?.history?.length||0,w=count%content.words.length,s=count%content.sentences.length;
+  const tasks=[{type:count>1?'use':count>0?'recall':'meaning',index:w,key:'w'+w},{type:'listen',index:s,key:'s'+s},{type:'match',indexes:[0,1,2].map(i=>(w+i)%content.words.length),key:'pairs'},{type:'puzzle',index:(s+1)%3,key:'s'+((s+1)%3)},{type:'recall',index:(w+1)%content.words.length,key:'w'+((w+1)%content.words.length)},{type:'shadow',index:(s+2)%3,key:'s'+((s+2)%3)}].map((t,i)=>({...t,id:id+':'+i}));
+  return {id,island:Number.isInteger(island)?island:Math.min(count,3),started:now,index:0,tasks,results:[],scheduled:!previous?.dueAt||previous.dueAt<=now};
+ }
+ function judge(content,task,input,evidence){if(input.skip)return {correct:false,skipped:true};let correct=false;
+  if(Number.isInteger(task.targetIndex)){const target=content.targets?.[task.targetIndex];if(!target)throw Error('INVALID_TARGET');correct=task.type==='understand'?input.answer===target.translation:!!evidence?.understandable;return {correct,skipped:false}}
+  if(task.type==='meaning')correct=input.answer===content.words[task.index].meaning;
+  if(task.type==='listen')correct=input.answer===content.sentences[task.index].translation;
+  if(task.type==='recall')correct=normal(input.answer)===normal(content.words[task.index].term)&&!input.hinted;
+  if(task.type==='puzzle'){const words=pieces(content.sentences[task.index].text);correct=Array.isArray(input.answer)&&input.answer.length===words.length&&new Set(input.answer).size===words.length&&input.answer.every(i=>Number.isInteger(i)&&i>=0&&i<words.length)&&input.answer.map(i=>words[i]).join(' ')===words.join(' ')}
+  if(task.type==='match')correct=Array.isArray(input.answer)&&input.answer.length===task.indexes.length&&task.indexes.every(i=>input.answer.some(p=>Array.isArray(p)&&p[0]===i&&p[1]===i))&&!input.hinted;
+  if(task.type==='shadow')correct=!!evidence?.assessable&&evidence.overall>=65;
+  if(task.type==='use')correct=!!evidence?.understandable;
+  return {correct,skipped:false};
+ }
+ function advance(content,progress,roundId,taskId,input,now){const rounds=structuredClone(progress.rounds||{}),active=rounds.active;
+  if(!active||active.id!==roundId)throw Error('ROUND_CHANGED');
+  active.island=active.island??Math.min((rounds.history||[]).length,3);const prior=active.results.find(x=>x.taskId===taskId);if(prior)return {rounds,feedback:prior};
+  const task=active.tasks[active.index];if(!task||task.id!==taskId)throw Error('ROUND_CHANGED');
+  input={...input,hinted:input.hinted===true||active.hints?.[taskId]===true};
+  const result={taskId,key:task.key,type:task.type,at:now,hinted:input.hinted===true,...(Number.isInteger(task.targetIndex)?{targetIndex:task.targetIndex,...(typeof input.answer==='string'?{answer:input.answer}:{})}:{}),...judge(content,task,input,active.evidence?.[taskId]),...(['use','say','ask','respond'].includes(task.type)?{coach:active.evidence?.[taskId]}:{})};active.results.push(result);
+  if(Number.isInteger(task.targetIndex))rounds.practiceEvents=[...(rounds.practiceEvents||[]),{...result,roundId}];
+  // At least two intervening questions; at most one extra question per round.
+  if(!Number.isInteger(task.targetIndex)&&!result.correct&&!result.skipped&&!task.retry&&active.tasks.length<7&&active.index+3<active.tasks.length){const retry={...task,id:active.id+':retry',retry:true};if(task.type==='meaning'||task.type==='use')retry.type='recall';else if(task.type==='recall')retry.type='meaning';active.tasks.splice(active.index+3,0,retry)}
+  active.index++;rounds.active=active;
+  if(active.index>=active.tasks.length){const correct=active.results.filter(x=>x.correct).length,skipped=active.results.filter(x=>x.skipped).length;const expressive=active.results.some(x=>['recall','shadow','use','say','ask','respond'].includes(x.type)&&x.correct&&!x.hinted);const strong=active.results.filter(x=>x.correct&&!x.hinted).length/active.results.length>=.8&&(expressive||active.tasks.every(t=>t.type==='understand'));
+   const stage=Math.max(0,Math.min(4,rounds.stage||0));if(active.scheduled){rounds.stage=strong?Math.min(4,stage+1):stage;rounds.dueAt=now+(strong?intervals[stage]:1)*DAY}
+   const summary={id:active.id,island:Number.isInteger(active.island)?active.island:Math.min((rounds.history||[]).length,3),at:now,primaryCount:active.tasks.filter(t=>!t.retry).length,correct,total:active.results.length,skipped,strong,scheduled:active.scheduled,dueAt:rounds.dueAt,needsReview:[...new Set(active.results.filter(x=>!x.correct).map(x=>x.key))]};rounds.history=[...(rounds.history||[]),summary];rounds.last=summary;active.finished=true;
+  }
+  active.island=Number.isInteger(active.island)?active.island:Math.min((rounds.history||[]).length,3);rounds.islandRuns={...(rounds.islandRuns||{}),[active.island]:active};return {rounds,feedback:result};
+ }
+ function todayCount(lessons,now=Date.now()){const d=new Date(now).toLocaleDateString('en-CA');return lessons.reduce((sum,l)=>sum+(l.progress.rounds?.history||[]).filter(h=>new Date(h.at).toLocaleDateString('en-CA')===d).length,0)}
+ return {pieces,create,advance,judge,shuffled,normal,todayCount,islands};
+})();
+
+// ===== 🧳 船舱：一路收进来的话。三个来源：✍️ 我自己的（心情卡、介绍我、拍立得标的词）、🗺️ 世界给的（学会的词、收藏的句子）、👥 NPC 说的（你演过的那件事里的台词）=====
+const holdVisit = n => { const v = cpLS("boat.visits") || []; cpLS("boat.visits", [n, ...v.filter(x=>x !== n)].slice(0, 20)); };
+function holdItems(){
+  const out = [], seen = new Set(), add = it => { const k = it.kind + ":" + it.text; if (!it.text || seen.has(k)) return; seen.add(k); out.push(it); };
+  const e = expGet();
+  if (e.mood){ const c = EXP.cards.find(x=>x.id === e.mood.card); if (c) add({kind: "sentence", text: expText(c), mean: c.zh, src: "mine", from: "🌦️ 我的心情 · " + c.title, tts: EXP_TTS[c.lang]}); if (e.mood.text && (!c || e.mood.text !== expText(c))) add({kind: "sentence", text: e.mood.text, mean: "", src: "mine", from: "🌦️ 我自己改的心情"}); }
+  Object.entries(e.intro || {}).forEach(([k, a])=>{ const [tid, di] = k.split(":"), T = EXP.self.find(t=>t.id === tid), D = T && T.directions[+di]; if (!D) return;
+    add({kind: "sentence", text: a, mean: "", src: "mine", from: "🙋 我的回答 · " + D.label}); D.phrases.forEach(p=>add({kind: "sentence", text: p.text, mean: p.meaning, src: "mine", from: "🙋 介绍我 · " + D.label})); });
+  loadMine().forEach(m=>(m.labels || []).forEach(l=>add({kind: "word", text: l.w, mean: l.zh || "", src: "mine", from: "📷 我的拍立得 · " + String(m.place || "").split("·").pop().trim()})));
+  const done = wordsDone();
+  for (const g of Object.keys(typeof MONEY_WORDS !== "undefined" ? MONEY_WORDS : {})) for (const w of wallWords(g)) if (done.has(w.zh)) add({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[g] || "词汇墙")});
+  const ph = pathSet("phr");
+  for (const g of Object.values(PATHS).flatMap(p=>p.phrases())) for (const x of g.items) if (ph.has(x.en)) add({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: "🗺️ 收藏的句子"});
+  (cpLS("boat.visits") || []).forEach(n=>{ const sc = typeof STICKER_SCENES !== "undefined" && STICKER_SCENES[n]; if (!sc) return;
+    sc.lines.filter(l=>l.en && l.en.length <= 90).slice(0, 4).forEach(l=>add({kind: "sentence", text: l.en, mean: l.zh, src: "npc", from: "👥 " + (sc.cast[l.role] || l.role) + " · " + mapN(n)})); });
+  return out;
+}
+const HOLD_SRC = {mine: "✍️ 我自己的", world: "🗺️ 世界给的", npc: "👥 NPC 说的"};
+function openHold(src){
+  const all = holdItems(), list = src ? all.filter(x=>x.src === src) : all;
+  card.innerHTML = expTop("🧳", "船舱", "一路收进来的话 · 每句都盖着它来自哪里的章", "#b08900") + `
+    <div class="chips"><button class="chip" data-hs=""${!src ? ' aria-pressed="true"' : ""}>全部 · ${all.length}</button>${Object.entries(HOLD_SRC).map(([k, t])=>`<button class="chip" data-hs="${k}"${src === k ? ' aria-pressed="true"' : ""}>${t} · ${all.filter(x=>x.src === k).length}</button>`).join("")}</div>
+    ${list.length ? list.map(x=>`<div class="ex-line" style="padding:6px 0;border-top:1px solid #eee8da">${x.kind === "word" ? "🔤" : "💬"} <b>${esc(x.text)}</b> ${expSay(x.text, "")}${x.mean ? `<br><small>${esc(x.mean)}</small>` : ""}<br><span class="tagx">${esc(x.from)}</span></div>`).join("")
+      : `<p class="note">${src === "mine" ? "挂一片心情天气、写一句「介绍我」、给拍立得标几个词，你自己的话就会收进来。" : src === "npc" ? "在贴纸里「选一个人来演」，那件事里的人说的话就会收进来。" : "学会词汇墙上的词、收藏常用句，就会收进来。"}</p>`}
+    <div class="chips"><button class="chip hot" id="hdGo">🟣 用这些话开今天的航线</button></div>`;
+  expOpen(); card.scrollTop = 0;
+  card.querySelectorAll("[data-hs]").forEach(b=>b.onclick = ()=>openHold(b.dataset.hs || undefined));
+  card.querySelector("#hdGo").onclick = ()=>openVoyage(true);
+}
+// ===== 🟣 今天的航线：用言己的引擎出题。一份内容 = 一次航行 = 四座小岛（四小轮），船从母港出发，一座岛一座岛开过去 =====
+const VOY_KEY = "voyage.v1";
+const voyLoad = () => cpLS(VOY_KEY), voySave = v => cpLS(VOY_KEY, v);
+function voyContent(){
+  const H = holdItems(), pri = {mine: 0, npc: 1, world: 2}, by = k => H.filter(x=>x.kind === k && x.mean).sort((a, b)=>pri[a.src] - pri[b.src]);
+  let words = by("word").slice(0, 6), sents = by("sentence").filter(x=>PracticeRounds.pieces(x.text).length <= 14).slice(0, 6);
+  // 船舱还空的时候，先用你路线上的词和句子起航
+  const k = (()=>{ try { return localStorage.getItem("path:who") || "dev"; } catch(e){ return "dev"; } })(), P = PATHS[k] || PATHS.dev;
+  if (words.length < 3) words = [...words, ...wallWords(P.wall).filter(w=>tgt(w) && glossOf(w)).slice(0, 6 - words.length).map(w=>({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[P.wall] || "")}))];
+  if (sents.length < 3) sents = [...sents, ...P.phrases().flatMap(g=>g.items).filter(x=>tgt(x) && glossOf(x)).slice(0, 6 - sents.length).map(x=>({kind: "sentence", text: tgt(x), mean: glossOf(x), src: "world", from: "🗺️ " + (P.industry || P.who || "路线")}))];
+  return {words: words.map(w=>({term: w.text, meaning: w.mean, from: w.from})), sentences: sents.map(s=>({text: s.text, translation: s.mean, from: s.from}))};
+}
+const voyIsles = () => { const h = boatHome() || [-35, 15]; return [[4, 4], [9, 0], [6, -5], [0, -6]].map(([dx, dy])=>[h[0] + dx, h[1] + dy]); };
+let voyOn = false;
+function voyDraw(t, s){
+  boatMenuG.selectAll(".voy").remove(); const v = voyLoad(); if (!voyOn || !v) return;
+  const nodes = PracticeRounds.islands(v.rounds || {}, v.content), home = boatHome() || [-35, 15], pts = [home, ...voyIsles(), home].map(ll=>t.apply(projection(ll)));
+  boatMenuG.insert("path", ":first-child").attr("class","voy cvoy").attr("d", d3.line().curve(d3.curveCatmullRom)(pts));
+  voyIsles().forEach((ll, i)=>{ const [x, y] = t.apply(projection(ll)), n = nodes[i], g = boatMenuG.append("g").attr("class","voy cisle").attr("transform", `translate(${x},${y}) scale(${s})`).on("click", e=>{ e.stopPropagation(); openVoyage(); });
+    g.append("path").attr("d","M-18,4 Q-14,-12 0,-12 Q16,-12 18,4 Q0,12 -18,4Z").attr("fill", n.finished ? "#8fd18f" : n.unfinished ? "#f7d774" : "#d9e7c5").attr("stroke","#3d6b1f").attr("stroke-width",1.5);
+    g.append("text").attr("y",-1).attr("text-anchor","middle").attr("font-size",12).text(n.finished ? "✅" : n.unfinished ? "⛵" : "🏝️");
+    g.append("text").attr("class","cpl").attr("y",24).attr("text-anchor","middle").text(`第 ${i + 1} 岛`); });
+}
+function openVoyage(fresh){
+  let v = voyLoad(); const now = Date.now();
+  if (fresh || !v || !v.content){ v = {id: "v" + now, content: voyContent(), rounds: {}}; voySave(v); }
+  if (v.content.words.length < 3 || v.content.sentences.length < 3){ card.innerHTML = expTop("🟣", "今天的航线", "船舱里的话还不够", "#7048e8") + `<p>出海至少要 3 个词和 3 句话。先挂一片心情天气、写一句「介绍我」，或者在词汇墙上学几个词。</p><div class="chips"><button class="chip hot" id="vyHold">🧳 看船舱</button></div>`; expOpen(); card.querySelector("#vyHold").onclick = ()=>openHold(); voySave(null); return; }
+  if (!voyOn) svg.transition().duration(800).ease(d3.easeCubicInOut).call(zoom.transform, cpFitBeside());   // 第一次打开：退到能看见母港和四座岛的大小
+  voyOn = true; render();
+  const nodes = PracticeRounds.islands(v.rounds, v.content), a = v.rounds.active, going = a && !a.finished, next = nodes.findIndex(n=>!n.finished), due = v.rounds.dueAt;
+  card.innerHTML = expTop("🟣", "今天的航线", "一小轮最多 6 题 · 练到听得懂、说得出、接得住", "#7048e8") + `
+    <p class="note">从母港出发，一座岛一座岛开过去。每座岛是一小轮练习；答得好，下一次隔 1、3、7、14、30 天再出海。这里不评价发音。</p>
+    ${nodes.map((n, i)=>`<div class="box" style="border:2px solid ${n.finished ? "#8fd18f" : i === next ? "#f2b705" : "#e7dfc8"};border-radius:12px;padding:6px 10px;margin:6px 0;background:${i === next ? "#fffbe6" : "#fff"}">${n.finished ? "✅" : i === next ? "⛵" : "🏝️"} <b>第 ${i + 1} 岛</b> <small class="note">${n.finished ? `练过 ${n.rounds} 次` : n.unfinished ? `做到第 ${n.done} / ${n.total} 题` : "还没去"}</small></div>`).join("")}
+    ${next < 0 ? `<p><b>🎉 这次航行四座岛都到过了。</b></p>` : ""}${due && due > now ? `<p class="note">按记忆规律，下一次出海建议在 ${new Date(due).toLocaleDateString()} 以后；现在也可以接着练。</p>` : ""}
+    <div class="chips">${next >= 0 ? `<button class="chip hot" id="vyGo">${going ? "⛵ 接着开" : `⛵ 开往第 ${next + 1} 岛`}</button>` : ""}<button class="chip" id="vyNew">🔄 用船舱里新的话，换一条航线</button><button class="chip" id="vyHold">🧳 看船舱</button></div>
+    <h3>这次航行带上的话</h3>${v.content.words.map(w=>`<span class="tagx">🔤 ${esc(w.term)} · ${esc(w.meaning)}</span>`).join(" ")}<br>${v.content.sentences.map(s=>`<div class="ex-line">💬 ${esc(s.text)}<br><small class="note">${esc(s.from || "")}</small></div>`).join("")}`;
+  expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
+  const go = card.querySelector("#vyGo"); if (go) go.onclick = ()=>{ const w = voyLoad(); if (!w.rounds.active || w.rounds.active.finished){ w.rounds.active = PracticeRounds.create(w.content, w.rounds, w.id + ":" + Date.now(), Date.now(), next); voySave(w); } boatSail(voyIsles()[next], `去第 ${next + 1} 岛`); voyTask(); };
+  card.querySelector("#vyNew").onclick = ()=>openVoyage(true);
+  card.querySelector("#vyHold").onclick = ()=>openHold();
+}
+// 一道题：按言己的题型画出来，答完交给引擎判
+function voyTask(fb){
+  const v = voyLoad(), a = v && v.rounds.active; if (!a) return openVoyage();
+  if (a.finished){ const s = v.rounds.last || {}; fx("good"); const h = boatHome(); if (h) boatSail(h, "母港 · " + myCity());
+    card.innerHTML = expTop("🏝️", `第 ${(s.island || 0) + 1} 岛 · 到了`, `答对 ${s.correct} / ${s.total}`, "#2f9e44") + `<p>${s.strong ? "这一轮很稳，记忆往前走了一格。" : "有几题还不太熟，会留到下次巩固。"}</p>${s.dueAt ? `<p class="note">下一次出海建议：${new Date(s.dueAt).toLocaleDateString()} 以后。</p>` : ""}<div class="chips"><button class="chip hot" id="vyBack">🟣 回到航线</button></div>`;
+    expOpen(); card.querySelector("#vyBack").onclick = ()=>openVoyage(); return; }
+  const t = a.tasks[a.index], C = v.content, Wd = C.words, Sn = C.sentences, sh = (arr, seed) => PracticeRounds.shuffled(arr, seed);
+  const opts = (pool, right) => sh([...new Set([right, ...pool.filter(x=>x && x !== right)].slice(0, 4))], t.id);
+  let body = "", tip = "";
+  if (t.type === "meaning"){ const w = Wd[t.index]; tip = "这个词是什么意思？"; body = `<p style="font-size:20px"><b>${esc(w.term)}</b> ${expSay(w.term, "")}</p>${opts(Wd.map(x=>x.meaning), w.meaning).map(o=>`<button class="chip" data-ans="${esc(o)}">${esc(o)}</button>`).join("")}`; }
+  if (t.type === "listen"){ const s = Sn[t.index]; tip = "听一听，这句话是什么意思？"; body = `<p>${expSay(s.text, "")} <small class="note">点 🔊 听</small></p>${opts(Sn.map(x=>x.translation), s.translation).map(o=>`<button class="chip" data-ans="${esc(o)}" style="white-space:normal;text-align:left">${esc(o)}</button>`).join("")}`; }
+  if (t.type === "match"){ tip = "先点词，再点对应的意思"; const L = t.indexes, R = sh(L, t.id + "r"); body = `<div style="display:flex;gap:10px"><div>${L.map(i=>`<button class="chip" data-ml="${i}" style="display:block;margin:4px 0">${esc(Wd[i].term)}</button>`).join("")}</div><div>${R.map(i=>`<button class="chip" data-mr="${i}" style="display:block;margin:4px 0">${esc(Wd[i].meaning)}</button>`).join("")}</div></div>`; }
+  if (t.type === "puzzle"){ const s = Sn[t.index], P = PracticeRounds.pieces(s.text); tip = "听完整句，再把词块按顺序点出来"; body = `<p>${expSay(s.text, "")} <small class="note">${esc(s.translation)}</small></p><div class="chips" id="pzOut" style="min-height:34px;border-bottom:2px dashed #e7dfc8"></div><div class="chips">${sh(P.map((_, i)=>i), t.id).map(i=>`<button class="chip" data-pz="${i}" style="border-style:dashed">${esc(P[i])}</button>`).join("")}</div><div class="chips"><button class="chip hot" id="pzOk">检查</button></div>`; }
+  if (t.type === "recall"){ const w = Wd[t.index]; tip = "你会怎么说？"; body = `<p style="font-size:20px"><b>${esc(w.meaning)}</b></p><input id="rcIn" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit" autocomplete="off"><div class="chips"><button class="chip hot" id="rcOk">检查</button><button class="chip" id="rcHint">给一点提示</button><span class="note" id="rcTip"></span></div>`; }
+  if (t.type === "use"){ const w = Wd[t.index]; tip = "用它说一句和你自己有关的话"; body = `<p style="font-size:18px"><b>${esc(w.term)}</b> · ${esc(w.meaning)}</p><textarea id="useIn" rows="3" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit"></textarea><div class="chips"><button class="chip hot" id="useOk">说好了</button></div>`; }
+  if (t.type === "shadow"){ const s = Sn[t.index]; tip = "跟读整句"; body = `<p style="font-size:17px"><b>${esc(s.text)}</b> ${expSay(s.text, "")}</p><p class="note">${esc(s.translation)}</p>${micB(s.text)}<div class="chips"><button class="chip hot" data-sh="75">🎤 我跟读了</button><button class="chip" data-sh="40">还不太顺，下次再来</button></div><p class="note">这里不评价发音，跟着读出来就好。</p>`; }
+  const isle = (a.island || 0) + 1;
+  card.innerHTML = expTop("⛵", `第 ${isle} 岛 · 第 ${Math.min(a.index + 1, a.tasks.length)} / ${a.tasks.length} 题`, tip, "#7048e8") + (fb ? `<p style="color:${fb.correct ? "#2f9e44" : "#e8590c"}"><b>${fb.correct ? "✓ 对了" : fb.skipped ? "先跳过" : "✗ 还不太对"}</b>${fb.right ? `：${esc(fb.right)}` : ""}</p>` : "") + `<section>${body}</section><div class="chips"><button class="chip" id="vySkip">这题稍后练</button><button class="chip" id="vyStop">🟣 回到航线</button></div>`;
+  expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
+  const right = () => t.type === "meaning" ? Wd[t.index].meaning : t.type === "listen" ? Sn[t.index].translation : t.type === "recall" ? Wd[t.index].term : t.type === "puzzle" ? Sn[t.index].text : "";
+  const submit = (input, ev) => { const w = voyLoad(); if (ev){ w.rounds.active.evidence = {...(w.rounds.active.evidence || {}), [t.id]: ev}; }
+    try { const r = PracticeRounds.advance(w.content, {rounds: w.rounds}, w.rounds.active.id, t.id, input, Date.now()); w.rounds = r.rounds; voySave(w); if (r.feedback.correct) fx("good"); voyTask({...r.feedback, right: r.feedback.correct ? "" : right()}); voyDraw(d3.zoomTransform(svg.node()), W < 700 ? .8 : 1); }
+    catch(e){ openVoyage(); } };
+  card.querySelectorAll("[data-ans]").forEach(b=>b.onclick = ()=>submit({answer: b.dataset.ans}));
+  const pairs = []; let pick = null;
+  card.querySelectorAll("[data-ml]").forEach(b=>b.onclick = ()=>{ pick = +b.dataset.ml; card.querySelectorAll("[data-ml]").forEach(x=>x.style.background = x === b ? "#fff3bf" : ""); });
+  card.querySelectorAll("[data-mr]").forEach(b=>b.onclick = ()=>{ if (pick === null) return; pairs.push([pick, +b.dataset.mr]); card.querySelector(`[data-ml="${pick}"]`).disabled = true; b.disabled = true; pick = null; if (pairs.length === t.indexes.length) submit({answer: pairs}); });
+  const pz = []; card.querySelectorAll("[data-pz]").forEach(b=>b.onclick = ()=>{ pz.push(+b.dataset.pz); b.hidden = true; card.querySelector("#pzOut").innerHTML = pz.map(i=>`<span class="chip">${esc(PracticeRounds.pieces(Sn[t.index].text)[i])}</span>`).join(""); });
+  const pzOk = card.querySelector("#pzOk"); if (pzOk) pzOk.onclick = ()=>submit({answer: pz});
+  let hinted = false; const rh = card.querySelector("#rcHint"); if (rh) rh.onclick = ()=>{ hinted = true; const w = Wd[t.index].term; card.querySelector("#rcTip").textContent = `开头是「${w.slice(0, Math.max(1, Math.ceil(w.length/3)))}」`; };
+  const rc = card.querySelector("#rcOk"); if (rc) rc.onclick = ()=>submit({answer: card.querySelector("#rcIn").value, hinted});
+  const us = card.querySelector("#useOk"); if (us) us.onclick = ()=>{ const x = card.querySelector("#useIn").value.trim(), term = PracticeRounds.normal(Wd[t.index].term), ok = PracticeRounds.normal(x).includes(term) && PracticeRounds.pieces(x).length >= 3;
+    if (ok) lifeAdd({path: "self", q: `用 ${Wd[t.index].term} 说一句自己的话`, a: x, w: [Wd[t.index].term], ts: Date.now()}); submit({answer: x}, {understandable: ok}); };
+  card.querySelectorAll("[data-sh]").forEach(b=>b.onclick = ()=>submit({}, {assessable: true, overall: +b.dataset.sh}));
+  card.querySelector("#vySkip").onclick = ()=>submit({skip: true});
+  card.querySelector("#vyStop").onclick = ()=>openVoyage();
 }
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
@@ -6075,6 +6232,8 @@ function revPool(){
   const ph = pathSet("phr"), G = [...Object.values(PATHS).flatMap(p=>p.phrases()), ...(typeof DEV_PHRASES !== "undefined" ? DEV_PHRASES : []), ...(typeof TECH_ROLES !== "undefined" ? Object.values(TECH_ROLES).flatMap(r=>r.groups) : [])];
   for (const g of G) for (const x of g.items) if (ph.has(x.en)) add("p:" + x.en, {ask: glossOf(x), ans: tgt(x), py: pyOf(x), tts: LEARN_TTS});
   if (UI === "zh") for (const x of loadLearn()) add("l:" + x.text, {ask: x.cn || "", ans: x.text, py: "", tts: x.code || LEARN_TTS});
+  // 船舱里你自己的话和 NPC 的话，也会坐漂流瓶回来
+  if (typeof clubPinReady !== "undefined" && clubPinReady) for (const x of holdItems()) if (x.mean && x.src !== "world") add("h:" + x.text, {ask: x.mean, ans: x.text, py: "", tts: x.tts || LEARN_TTS});
   return out;
 }
 // 第一次打开：以前学过的都算今天到期；以后新学的，第二天才来
