@@ -3605,7 +3605,7 @@ function npcFace(sp, size){
   }[s.beard] || "";
   const glasses = s.gl ? `<g fill="${s.gl === 2 ? "rgba(255,255,255,.15)" : "none"}" stroke="${s.glc || "#1f2a37"}" stroke-width="${s.gl === 2 ? 2.4 : 1.8}"><rect x="40" y="${eyeY - 7}" width="16" height="13" rx="${s.gl === 3 ? 6.5 : 4}"/><rect x="64" y="${eyeY - 7}" width="16" height="13" rx="${s.gl === 3 ? 6.5 : 4}"/><path d="M56 ${eyeY - 2} Q60 ${eyeY - 5} 64 ${eyeY - 2} M40 ${eyeY - 3} L34 ${eyeY - 5} M80 ${eyeY - 3} L86 ${eyeY - 5}"/></g>` : "";
   // 五官：每人不一样。没写的按名字算一个固定的组合（同一个人每次都一样）
-  const hsh = String(s.id || JSON.stringify(sp)).split("").reduce((a, c)=>(a * 31 + c.charCodeAt(0)) >>> 0, 7), pick = (arr, k) => arr[(hsh >> k) % arr.length];
+  const hsh = String(s.id || JSON.stringify(sp)).split("").reduce((a, c)=>(a * 31 + c.charCodeAt(0)) >>> 0, 7), pick = (arr, k) => arr[(hsh >>> k) % arr.length];
   const eyeT = s.eye || pick(s.g === "f" ? ["almond", "round", "big", "hooded", "downturn"] : ["almond", "round", "hooded", "downturn", "deep"], 1);
   const gap = s.gap != null ? s.gap : pick([0, 1, -1, 2], 3), ex1 = 48 - gap, ex2 = 72 + gap;
   const browT = s.brow || pick(s.g === "f" ? ["arch", "soft", "straight", "thin"] : ["straight", "thick", "angled", "soft"], 5);
