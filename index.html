@@ -4039,7 +4039,7 @@ function videoHtml(place){
 function photoHtml(n){
   const p = (typeof STICKER_PHOTOS !== "undefined") && STICKER_PHOTOS[n]; if (!p) return "";
   const src = (typeof CAN_EMBED !== "undefined" && CAN_EMBED && p.r2) ? p.r2 : p.src;
-  return `<figure class="ph"><img src="${esc(src)}" alt="${esc(n)}的照片" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>📷 ${esc(p.artist)} · ${esc(p.license)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">维基共享资源</a></figcaption></figure>`;
+  return `<figure class="ph"><img src="${esc(src)}" alt="${esc(n)}的照片" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>📷 ${p.cap ? `<b>${esc(p.cap)}</b> · ` : ""}${esc(p.artist)} · ${esc(p.license)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">维基共享资源</a></figcaption></figure>`;
 }
 // ---- 经济 · 问题贴纸：标题是一个问题，下面是故事、原来如此、关键数字、学几个词、问问当地人、聊一聊（数据来自 content-skeleton/money.json）
 const STORY_TTS = {"英语":"en-US","西班牙语":"es-ES","法语":"fr-FR","日语":"ja-JP","德语":"de-DE","挪威语":"nb-NO","荷兰语":"nl-NL","瑞典语":"sv-SE","丹麦语":"da-DK","土耳其语":"tr-TR","斯瓦希里语":"sw-KE","马来语":"ms-MY","阿拉伯语":"ar-AE","孟加拉语":"bn-BD","意大利语":"it-IT","芬兰语":"fi-FI","希腊语":"el-GR","越南语":"vi-VN","韩语":"ko-KR","印地语":"hi-IN","印尼语":"id-ID","葡萄牙语":"pt-BR"};
