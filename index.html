@@ -5716,7 +5716,7 @@ function openClubPin(d, keep){
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
     <div class="c-top"><div class="c-emo" style="border-color:${d.color}">${esc(d.icon)}</div><div><h2>${esc(nm)}</h2><span class="c-cat" style="background:${d.color}">👥 圈子 · ${ppl.length} 位 NPC · ${clubPinCities(d)} 座城市</span></div></div>
     ${info.desc ? `<p class="note">${esc(String(info.desc).split(/[。]/)[0])}。</p>` : ""}
-    <div class="chips"><button class="chip hot" id="cpGo">进入圈子 →</button></div>
+    <div class="chips"><button class="chip hot" id="cpGo">进入圈子 →</button>${LEARN === "en" ? `<button class="chip" id="cpGames">🎮 码头小游戏</button>` : ""}</div>
     ${themeHtml(d)}
     <section class="cp-you"><h3>① 你和这个圈子</h3>
       <label class="note">📍 我住在 <select id="cpCity"><option value="">选一下</option>${Object.keys(CPIN.home || {}).map(c=>`<option${c === city ? " selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
@@ -5736,6 +5736,7 @@ function openClubPin(d, keep){
   const $ = s => card.querySelector(s);
   $(".x").onclick = ()=>{ clubSel = null; closeCard(); };
   $("#cpGo").onclick = ()=>{ clubSel = null; openClub(d.id); card.scrollTop = 0; render(); };
+  { const gm = $("#cpGames"); if (gm) gm.onclick = ()=>openGames(d.id); }
   $("#cpCity").onchange = e=>{ cpLS("hv.city", e.target.value || null); BOAT = null; cpLS("boat.at", null); openClubPin(d, true); };
   $("#cpJoin").onclick = ()=>{
     if (SOC.ready){ if (inClub(d.id)) return; clubSel = null; CLUBUI.join[d.id] = true; CLUBUI.pick[d.id] = null; openClub(d.id); card.scrollTop = 0; render(); return; }
@@ -6415,6 +6416,72 @@ function openMoreScenes(gi, ci){
     <p class="note">${esc(c.scenario || "")}</p><p>对方：<b>${esc(c.opening)}</b> ${expSay(c.opening, "en")}</p>
     <h3>可以这样接</h3>${c.phrases.map(p=>skLine(p.text, p.meaning, "", from)).join("")}${c.hint ? `<p class="note">💡 ${esc(c.hint)}</p>` : ""}`;
   expOpen(); skBind(); card.querySelector("#msUp").onclick = ()=>openMoreScenes(); card.querySelectorAll("[data-msc]").forEach(b=>b.onclick = ()=>openMoreScenes(gi, +b.dataset.msc));
+}
+// ===== 🎮 码头小游戏：每个圈子码头上 4 个听的游戏，题目从这个圈子 NPC 的真实动态里自动出 =====
+// 🧩 听力拼图 · 👂 听音辨音 · 🔍 听不同 · 🎯 谁说的。一局 1 分钟，不是必须玩。
+const GM_PAIRS = [["ship","sheep"],["live","leave"],["full","fool"],["bad","bed"],["walk","work"],["light","right"],["three","tree"],["cup","cop"],["think","sink"],["vest","west"],["hat","hut"],["pull","pool"]];
+// 「听不同」：把句子里的一个词换成一个听起来差不多、意思不同的词
+const GM_SWAP = {today:"yesterday", yesterday:"today", morning:"evening", evening:"morning", first:"last", last:"first", two:"three", three:"two", four:"five", five:"four", small:"big", big:"small", monday:"friday", friday:"monday", sunday:"saturday", saturday:"sunday", coffee:"tea", tea:"coffee", cold:"warm", warm:"cold", early:"late", late:"early", happy:"tired", tired:"happy", week:"month", month:"week", city:"town", school:"office", office:"school", love:"like", like:"love", always:"never", never:"always", new:"old", old:"new", buy:"sell", sold:"bought", bought:"sold", quiet:"busy", busy:"quiet", dinner:"lunch", lunch:"dinner", rain:"snow", snow:"rain", sun:"rain", whole:"half", half:"whole", hours:"minutes", minutes:"hours"};
+const gmVoice = id => { let h = 0; for (const c of String(id)) h = (h*31 + c.charCodeAt(0)) >>> 0; return {pitch: .8 + (h % 50)/100, rate: .85 + (h % 25)/100}; };
+function gmSay(t, who){ try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t), v = who ? gmVoice(who) : {pitch: 1, rate: .92}; u.lang = "en-US"; u.pitch = v.pitch; u.rate = v.rate; const vo = pickVoice("en-US"); if (vo) u.voice = vo; speechSynthesis.speak(u); } catch(e){} }
+const gmClean = s => String(s).replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu, "").replace(/\s+/g, " ").trim();
+const gmSentences = t => gmClean(t).split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(x=>/^[A-Za-z0-9"'(][^一-鿿]*$/.test(x));
+function gmData(id){
+  const npcs = clubNpcs(id), ids = new Set(npcs.map(n=>n.id)), posts = CP_LIFE.updates.filter(u=>u.club === id && ids.has(u.npc) && u.date <= CP_TODAY).sort((a, b)=>a.date < b.date ? 1 : -1);
+  const lines = []; posts.forEach(u=>gmSentences(u.text).forEach(s=>lines.push({who: u.npc, s})));
+  const sh = a => a.map(x=>[Math.random(), x]).sort((p, q)=>p[0] - q[0]).map(x=>x[1]);
+  const puzzle = sh(lines.filter(l=>{ const n = l.s.split(" ").length; return n >= 5 && n <= 11; })).slice(0, 3);
+  const diff = sh(lines.map(l=>{ const w = l.s.split(" "), i = w.findIndex(x=>GM_SWAP[x.toLowerCase().replace(/[^a-z]/g, "")]); if (i < 0 || w.length > 14) return null;
+    const core = w[i].toLowerCase().replace(/[^a-z]/g, ""), rep = GM_SWAP[core], keep = w[i].replace(/[A-Za-z]+/, m=>m[0] === m[0].toUpperCase() ? rep[0].toUpperCase() + rep.slice(1) : rep);
+    return {who: l.who, a: l.s, b: [...w.slice(0, i), keep, ...w.slice(i + 1)].join(" "), i}; }).filter(Boolean)).slice(0, 4);
+  const byWho = {}; lines.forEach(l=>{ (byWho[l.who] = byWho[l.who] || []).push(l); });
+  const who = sh(Object.keys(byWho)).slice(0, 4).map(k=>sh(byWho[k]).find(l=>l.s.split(" ").length >= 4) || byWho[k][0]).filter(Boolean);
+  return {npcs, puzzle, diff, who};
+}
+const GM_LIST = [{id: "puzzle", e: "🧩", t: "听力拼图", d: "听一条动态，把词块按顺序点出来"}, {id: "pairs", e: "👂", t: "听音辨音", d: "ship 还是 sheep？"}, {id: "diff", e: "🔍", t: "听不同", d: "听两遍，找出哪个词变了"}, {id: "who", e: "🎯", t: "谁说的", d: "听一句，猜是哪位 NPC"}];
+let GM = null;
+function openGames(id){
+  const d = clubPinData.find(x=>x.id === id); if (!d) return; GM = {id, d, data: gmData(id)};
+  const ok = {puzzle: GM.data.puzzle.length >= 2, pairs: true, diff: GM.data.diff.length >= 2, who: GM.data.who.length >= 2 && GM.data.npcs.length >= 3};
+  card.innerHTML = expTop("🎮", "码头小游戏", `${esc(clubPinName(d))} · 都是圈子里真实的话`, d.color) + `<div class="chips"><button class="chip" id="gmBack">← ${esc(clubPinName(d))}</button></div>
+    <p class="note">一局 1 分钟，不是必须玩。打开声音再开始。</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${GM_LIST.filter(g=>ok[g.id]).map(g=>`<button class="chip" data-gm="${g.id}" style="display:block;border-radius:14px;text-align:left;padding:10px;white-space:normal"><span style="font-size:24px">${g.e}</span><br><b>${g.t}</b><br><small class="note">${g.d}</small></button>`).join("")}</div>`;
+  expOpen(); card.scrollTop = 0; card.querySelector("#gmBack").onclick = ()=>openClubPin(d, true);
+  card.querySelectorAll("[data-gm]").forEach(b=>b.onclick = ()=>gmPlay(b.dataset.gm, 0, []));
+}
+function gmFinish(g, res){
+  const n = res.filter(Boolean).length; fx(n === res.length ? "good" : "");
+  card.innerHTML = expTop("🎮", `${g.e} ${g.t}`, `${n} / ${res.length}`, GM.d.color) + `<p style="text-align:center;font-size:20px"><b>${n === res.length ? "🎉 全对！" : n ? "👍 不错" : "🙂 再来一局？"}</b></p>
+    <div class="chips" style="justify-content:center"><button class="chip hot" id="gmAgain">再玩一局</button><button class="chip" id="gmHome">换个游戏</button></div>`;
+  expOpen(); card.querySelector("#gmAgain").onclick = ()=>{ GM.data = gmData(GM.id); gmPlay(g.id, 0, []); }; card.querySelector("#gmHome").onclick = ()=>openGames(GM.id);
+}
+function gmPlay(gid, k, res){
+  const g = GM_LIST.find(x=>x.id === gid), D = GM.data, npc = id => clubNpcs(GM.id).find(n=>n.id === id) || {name: id, icon: "🙂"};
+  const N = {puzzle: D.puzzle.length, pairs: 5, diff: D.diff.length, who: D.who.length}[gid]; if (k >= N) return gmFinish(g, res);
+  const prog = `<div style="display:flex;gap:4px;justify-content:center;margin:6px 0">${Array.from({length: N}, (_, i)=>`<i style="width:24px;height:6px;border-radius:9px;background:${i < res.length ? (res[i] ? "#2f9e44" : "#e8590c") : i === k ? GM.d.color : "#e7dfc8"}"></i>`).join("")}</div>`;
+  const next = (ok, ms) => setTimeout(()=>gmPlay(gid, k + 1, [...res, ok]), ms);
+  const big = s => `<button class="chip hot" data-gsay="1" style="font-size:16px;padding:8px 18px">🔊 ${s}</button>`;
+  let body = "", say = null;
+  if (gid === "puzzle"){ const L = D.puzzle[k], w = L.s.split(" "), n = npc(L.who); say = ()=>gmSay(L.s, L.who);
+    body = `<p class="note" style="text-align:center">${esc(n.icon)} ${esc(n.name)} 在圈子里发了一条。听一听，把词块按顺序点出来。</p><div class="chips" style="justify-content:center">${big("听")}</div><div class="chips" id="gzOut" style="justify-content:center;min-height:40px;border-bottom:2px dashed #e7dfc8"></div><div class="chips" style="justify-content:center">${w.map((x, i)=>[Math.random(), i]).sort((a, b)=>a[0] - b[0]).map(([, i])=>`<button class="chip" data-gz="${i}" style="border-style:dashed">${esc(w[i])}</button>`).join("")}</div><p id="gFb" style="text-align:center"></p>`; }
+  if (gid === "pairs"){ const P = GM_PAIRS[Math.floor(Math.random()*GM_PAIRS.length)], ans = P[Math.random() < .5 ? 0 : 1]; say = ()=>gmSay(ans);
+    body = `<p class="note" style="text-align:center">听到的是哪一个？</p><div class="chips" style="justify-content:center">${big("再听一遍")}</div><div class="chips" style="justify-content:center">${(Math.random() < .5 ? P : [P[1], P[0]]).map(x=>`<button class="chip" data-gp="${x}" data-gans="${ans}" style="font-size:18px;padding:8px 20px">${x}</button>`).join("")}</div><p id="gFb" style="text-align:center"></p>`; }
+  if (gid === "diff"){ const L = D.diff[k], w = L.a.split(" "), n = npc(L.who); say = ()=>gmSay(L.a, L.who);
+    body = `<p class="note" style="text-align:center">${esc(n.icon)} ${esc(n.name)} 说了两遍，第二遍有一个词变了。是哪个？</p><div class="chips" style="justify-content:center"><button class="chip hot" id="gA">🔊 第一遍</button><button class="chip hot" id="gB">🔊 第二遍</button></div><div class="chips" style="justify-content:center">${w.map((x, i)=>`<button class="chip" data-gd="${i}">${esc(x.replace(/[.,!?]$/, ""))}</button>`).join("")}</div><p id="gFb" style="text-align:center"></p>`; }
+  if (gid === "who"){ const L = D.who[k], others = clubNpcs(GM.id).filter(x=>x.id !== L.who).map(x=>[Math.random(), x]).sort((a, b)=>a[0] - b[0]).slice(0, 2).map(x=>x[1]), opts = [clubNpcs(GM.id).find(x=>x.id === L.who), ...others].map(x=>[Math.random(), x]).sort((a, b)=>a[0] - b[0]).map(x=>x[1]); say = ()=>gmSay(L.s, L.who);
+    body = `<p class="note" style="text-align:center">听这句话，猜是谁说的：听语气，也听口头禅。</p><div class="chips" style="justify-content:center">${big("听")}</div><div class="chips" style="justify-content:center">${opts.map(o=>`<button class="chip" data-gw="${o.id}" style="display:flex;flex-direction:column;align-items:center;padding:8px 14px"><span style="font-size:24px">${esc(o.icon)}</span>${esc(o.name)}<small class="note">${esc(o.city)}</small></button>`).join("")}</div><p id="gFb" style="text-align:center"></p>`; }
+  card.innerHTML = expTop("🎮", `${g.e} ${g.t}`, esc(clubPinName(GM.d)), GM.d.color) + `<div class="chips"><button class="chip" id="gmHome">← 码头小游戏</button></div>${prog}${body}`;
+  expOpen(); card.querySelector("#gmHome").onclick = ()=>openGames(GM.id);
+  const sb = card.querySelector("[data-gsay]"); if (sb) sb.onclick = say; setTimeout(say, 300);
+  const fb = h => card.querySelector("#gFb").innerHTML = h, good = t => `<b style="color:#2f9e44">✓ ${esc(t)}</b>`, bad = t => `<b style="color:#e8590c">${esc(t)}</b>`;
+  if (gid === "puzzle"){ const L = D.puzzle[k], w = L.s.split(" "), pick = [];
+    card.querySelectorAll("[data-gz]").forEach(b=>b.onclick = ()=>{ pick.push(+b.dataset.gz); b.hidden = true; card.querySelector("#gzOut").innerHTML = pick.map(i=>`<span class="chip">${esc(w[i])}</span>`).join("");
+      if (pick.length === w.length){ const ok = pick.map(i=>w[i]).join(" ") === L.s; fb(ok ? good(L.s) : bad("原句是：" + L.s)); next(ok, 1800); } }); }
+  if (gid === "pairs") card.querySelectorAll("[data-gp]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.gp === b.dataset.gans; fb(ok ? good(b.dataset.gans) : bad("是 " + b.dataset.gans)); next(ok, ok ? 900 : 2000); });
+  if (gid === "diff"){ const L = D.diff[k]; card.querySelector("#gA").onclick = ()=>gmSay(L.a, L.who); card.querySelector("#gB").onclick = ()=>gmSay(L.b, L.who);
+    card.querySelectorAll("[data-gd]").forEach(b=>b.onclick = ()=>{ const ok = +b.dataset.gd === L.i, x = L.a.split(" ")[L.i].replace(/[.,!?]$/, ""), y = L.b.split(" ")[L.i].replace(/[.,!?]$/, ""); fb((ok ? good("对了") : bad("是这个词")) + `：${esc(x)} → <b>${esc(y)}</b>`); next(ok, 2000); }); }
+  if (gid === "who"){ const L = D.who[k], n = clubNpcs(GM.id).find(x=>x.id === L.who) || {};
+    card.querySelectorAll("[data-gw]").forEach(b=>b.onclick = ()=>{ const ok = b.dataset.gw === L.who; fb((ok ? good("是 " + n.name) : bad("是 " + n.name)) + `<br><small class="note">“${esc(L.s)}”　${esc(n.style || "")}</small>`); next(ok, 2600); }); }
 }
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
