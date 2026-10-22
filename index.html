@@ -212,7 +212,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .cmine{fill:none;stroke:#f2b705;stroke-width:2.5;opacity:.8;pointer-events:none}.cmine.hi{stroke-width:4;opacity:1}
 .cboat{cursor:pointer}.cbring{fill:none;stroke:#f2b705;stroke-width:2;animation:cping 2.6s ease-out infinite;transform-box:fill-box;transform-origin:center}.cbob{animation:cbob 2.8s ease-in-out infinite}@keyframes cbob{50%{transform:translateY(-2px) rotate(-2deg)}}
 .cbottle{cursor:pointer;animation:cbot 2.6s ease-in-out infinite}@keyframes cbot{50%{transform:translateY(-4px)}}.cvoy{fill:none;stroke:#7048e8;stroke-width:3;stroke-dasharray:7 6;animation:dash 1.4s linear infinite;pointer-events:none}@keyframes dash{to{stroke-dashoffset:-26}}.cisle{cursor:pointer}
-.cweather,.cflag{cursor:pointer}.cradial{cursor:pointer}.cradial circle{fill:#fff;stroke:#1f2a37;stroke-width:2}.cradial:hover circle{fill:#fff3bf}
+.cdock{cursor:pointer}.cweather,.cflag{cursor:pointer}.cradial{cursor:pointer}.cradial circle{fill:#fff;stroke:#1f2a37;stroke-width:2}.cradial:hover circle{fill:#fff3bf}
 .cme{pointer-events:none}.cmedot{fill:#f2b705;stroke:#fff;stroke-width:3}.cmering{fill:none;stroke:#f2b705;stroke-width:2;animation:cping 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
 .cstk{fill:none;stroke:#1f2a37;stroke-width:1.5;stroke-dasharray:2 4;opacity:.6;pointer-events:none}.cfly{fill:none;stroke-width:3.5;stroke-linecap:round;pointer-events:none}
 .st .cdot{stroke:#fff;stroke-width:1.5}.cp-you{border:2px solid #f2b705;background:#fffbe6;border-radius:12px;padding:2px 10px 8px;margin:8px 0}.cp-you h3{margin-top:8px}
@@ -5676,7 +5676,7 @@ function placeClubs(t, rel){
   });
   document.getElementById("app").classList.toggle("club-on", !!(clubSel && on));
   st.classed("cp-rel", d=>!!(clubSel && STK_CLUB[d.n] && STK_CLUB[d.n].club === clubSel.id));
-  clubArcG.selectAll("*").remove(); placeBoat(t, s, on); if (!on) return;
+  clubArcG.selectAll("*").remove(); dockBoats(t, s, on, rel); placeBoat(t, s, on); if (!on) return;
   if (!clubSel) return;
   const [cx, cy] = clubSel.xy, seen = {};
   // ③ 黑色点线：这个圈子在聊的、地图上的贴纸
@@ -6147,6 +6147,43 @@ function buoyHtml(){
     ${L.map(([t, z])=>`<div class="ex-line">${esc(t)} ${expSay(t, "en")}<br><small class="note">${esc(z)}</small></div>`).join("")}<div class="chips"><button class="chip" data-opensk="repair">🧰 打开工具箱</button></div></details>` : "";
 }
 document.addEventListener("click", e=>{ const b = e.target.closest("[data-opensk]"); if (!b) return; e.stopPropagation(); openSkills(b.dataset.opensk); });
+// ===== ⚓ 码头上的船：每个圈子码头停几条船，让海上不冷清，也不乱 =====
+// 每个码头最多停几条：看世界时 2 条，放大一点 3 条，再放大 5 条，点开的圈子 8 条；整张图一共最多 20 条（有新动静的圈子先停）。
+// 谁先停：互相关注的朋友 → 最近两周在圈子里说过话的成员（不互关就不显示名字）→ 其他成员 → 圈子里的 NPC 补位（每天换几位）。
+const dockG = clubG.insert("g", ".boatg");
+const DOCK_SPOTS = [[0, 0], [-28, 12], [-12, 28], [-42, 28], [-26, 44], [-56, 10], [-6, 52], [-46, 54]];
+const dockHash = s => { let h = 0; for (const c of s + CP_TODAY) h = (h*31 + c.charCodeAt(0)) >>> 0; return h; };
+function miniBoat(g, sail, face){ g.html(`<g class="cbob"><line y1="3" y2="-24" stroke="#1f2a37" stroke-width="1.3"/><path d="M1,-22 L1,0 L13,0Z" fill="${esc(sail)}" stroke="#1f2a37" stroke-width="1.2"/><path d="M-1,-18 L-1,0 L-10,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.2"/><path d="M-12,2 L12,2 L8,8 L-8,8Z" fill="#a1887f" stroke="#1f2a37" stroke-width="1.2"/><text x="-3" y="7" text-anchor="middle" font-size="6">${esc(face)}</text></g>`); }
+function dockBoats(t, s, on, rel){
+  dockG.selectAll("*").remove(); if (!on) return;
+  const per = rel < 1.6 ? 2 : rel < 3 ? 3 : 5, now = Date.now(); let left = 20;
+  const vis = clubPinData.filter(d=>d.xy && d.xy[0] > -90 && d.xy[0] < W + 90 && d.xy[1] > -60 && d.xy[1] < H + 70).sort((a, b)=>(b === clubSel) - (a === clubSel) || cpFresh(b.id) - cpFresh(a.id));
+  for (const d of vis){
+    const n = Math.min(d === clubSel ? 8 : per, left); if (n <= 0) break;
+    const list = [], seen = new Set([SOC.uid]);
+    if (SOC.ready){
+      const mem = clubMembers(d.id).map(m=>m.by).filter(id=>!seen.has(id));
+      const talked = id => SOC.clubposts.some(p=>p.club === d.id && p.by === id && now - (p.ts || 0) < 14*864e5);
+      mem.sort((a, b)=>(mutual(SOC.uid, b) - mutual(SOC.uid, a)) || (talked(b) - talked(a)));
+      mem.forEach(id=>{ if (!seen.has(id)){ seen.add(id); const p = SOC.profiles[id] || {}, mu = mutual(SOC.uid, id);
+        list.push({kind: "user", id, sail: mu && p.boat ? p.boat.sail : "#adb5bd", face: mu ? "🙂" : "", label: mu ? (p.name || socName(id) || "") : ""}); } });
+    }
+    clubNpcs(d.id).slice().sort((a, b)=>dockHash(a.id) - dockHash(b.id)).forEach(npc=>list.push({kind: "npc", id: npc.id, sail: "#fff", stripe: d.color, face: npc.icon, label: npc.name}));
+    list.slice(0, n).forEach((b, i)=>{ const [ox, oy] = DOCK_SPOTS[i], x = d.xy[0] - 78*s + ox*s, y = d.xy[1] + 16*s + oy*s;
+      const g = dockG.append("g").attr("class","cdock").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*.8})`).attr("role","button")
+        .attr("aria-label", b.kind === "npc" ? `${b.label}的船，NPC` : b.label ? `${b.label}的船` : "一位成员的船")
+        .on("click", e=>{ e.stopPropagation(); dockOpen(b, d); });
+      miniBoat(g, b.kind === "npc" ? d.color : b.sail, b.face);
+      if (b.label && (rel >= 3 || d === clubSel)) g.append("text").attr("class","cpl").attr("y", 20).attr("text-anchor","middle").attr("font-size", 10).text(b.label); });
+    left -= Math.min(n, list.length);
+  }
+}
+function dockOpen(b, d){
+  if (b.kind === "npc") return openNpcCard(b.id, ()=>openClubPin(d));
+  if (b.label) return openUserPage(b.id);
+  card.innerHTML = expTop("⛵", "一位圈子成员", `停在「${esc(clubPinName(d))}」的码头`, "#868e96") + `<p>这条船的主人是这个圈子的成员。互相关注以后，才能看到 TA 是谁、最近说了什么。</p><div class="chips"><button class="chip hot" id="dkGo">进入圈子看看 →</button></div>`;
+  expOpen(); card.querySelector("#dkGo").onclick = ()=>openClub(d.id);
+}
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
 const npcBadge = `<span class="soc-badge" style="background:#eef6ff;color:#1c5fa8">NPC</span>`;
