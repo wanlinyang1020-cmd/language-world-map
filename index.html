@@ -5275,7 +5275,7 @@ const scrub = t => t.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[已隐藏]").replace(
 function socVisiblePosts(){
   if (!SOC.ready) return [];
   const bl = socBlocked();
-  return SOC.posts.filter(p=>!bl.includes(p.author) && (isMember(p.author) || p.author===SOC.uid) && (p.author===SOC.uid || p.privacy==="所有人" || (p.privacy==="伙伴可见" && follows(SOC.uid, p.author))))
+  return SOC.posts.filter(p=>!bl.includes(p.author) && (isMember(p.author) || p.author===SOC.uid) && (p.author===SOC.uid || p.privacy==="所有人" || (p.privacy==="伙伴可见" && (typeof canSee === "function" ? canSee(p.author, p.privacy, p.ts) : mutual(SOC.uid, p.author)))))
     .map(p=>({...p, id:"s_"+p.id, docId:p.id, shared:true}));
 }
 async function socNames(){
@@ -5780,7 +5780,7 @@ function placeBoat(t, s, on){
   if (on === undefined) on = !cmpDim && !mineOnly && !liveOnly;
   s = s || (W < 700 ? .8 : 1);
   const b = boatNow(), [x, y] = t.apply(projection(b.ll));
-  clubBoatG.style("display", on ? null : "none");
+  clubBoatG.style("display", on ? null : "none"); friendBoats(t, s, on);
   boatEl.attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*1.1})`);
   boatEl.select(".csail").attr("fill", SAIL[LEARN] || "#f2b705");
   boatEl.select(".cbl").text("你 · " + b.where);
@@ -5805,7 +5805,7 @@ function boatSail(ll, where){
   const it = d3.geoInterpolate(from, ll), dur = Math.min(2400, 600 + d3.geoDistance(from, ll)*1300);
   if (boatTimer) boatTimer.stop(); boatMenu = false;
   boatTimer = d3.timer(el=>{ const u = Math.min(1, el/dur); BOAT = {ll: it(d3.easeCubicInOut(u)), where: "出海中……"}; placeBoat(d3.zoomTransform(svg.node()));
-    if (u >= 1){ boatTimer.stop(); boatTimer = null; BOAT = {ll, where}; cpLS("boat.at", BOAT); placeBoat(d3.zoomTransform(svg.node())); } });
+    if (u >= 1){ boatTimer.stop(); boatTimer = null; BOAT = {ll, where}; cpLS("boat.at", BOAT); placeBoat(d3.zoomTransform(svg.node())); boatSync(); } });
 }
 const boatDock = id => { const c = CPIN.clubs[id]; if (c) boatSail([c.pos[0] - 7, c.pos[1] + 1], "停在「" + clubPinName({id, name:c.name}) + "」"); };
 // 在贴纸那里做事（演一场、读懂这件事）：船开到离它最近的港口
@@ -5823,24 +5823,24 @@ function openBoatHome(){
     <section><h3>⛵ 船什么时候开</h3><p class="note">你在一张贴纸那里做了事（演一场对话、读懂这件事），船就开到离它最近的港口；进一个圈子，船就停到那个圈子的码头。只是逛逛，船不动。</p>
     <p class="note">🍾 漂到船边的瓶子 = 今天该复习的话。帆的颜色跟着你在学的语言。</p></section>
     <section><h3>船上还有</h3><p class="note">🌦️ 帆旁边的天气是你的心情 · ❓ 桅杆上的旗是你的疑惑 · 🙋 「介绍我」是别人点你的船时看到的话</p></section>
-    <div class="chips">${boatHome() ? `<button class="chip" id="bhGo">⛵ 回母港</button>` : ""}</div>`;
+    <div class="chips"><button class="chip hot" id="bhMe">👤 我的主页</button>${boatHome() ? `<button class="chip" id="bhGo">⛵ 回母港</button>` : ""}</div>`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard;
-  { const g = card.querySelector("#bhGo"); if (g) g.onclick = ()=>boatSail(boatHome(), "母港 · " + myCity()); }
+  { const g = card.querySelector("#bhGo"); if (g) g.onclick = ()=>boatSail(boatHome(), "母港 · " + myCity()); card.querySelector("#bhMe").onclick = ()=>openUserPage(SOC.uid); }
   card.querySelector("#bhCity").onchange = e=>{ cpLS("hv.city", e.target.value || null); const h = boatHome(); if (h) boatSail(h, "母港 · " + myCity()); else { BOAT = null; cpLS("boat.at", null); } openBoatHome(); render(); };
 }
 // ===== ✍️ 说自己：心情是船边的天气，疑惑是桅杆上的问号旗，「介绍我」是别人点你的船时看到的话（内容来自言己）=====
 const EXP = typeof EXPRESS !== "undefined" ? EXPRESS : {weather:{}, cards:[], self:[]};
 const EXP_TTS = {en:"en-US", fr:"fr-FR", ja:"ja-JP", es:"es-ES", zh:"zh-CN"};
 const expGet = () => Object.assign({mood:null, doubt:null, intro:{}, log:[]}, cpLS("express.v1") || {});
-const expSet = x => { cpLS("express.v1", x); placeBoat(d3.zoomTransform(svg.node())); };
+const expSet = x => { cpLS("express.v1", x); placeBoat(d3.zoomTransform(svg.node())); boatSync(); };
 const expCards = () => { const L = EXP.cards.filter(c=>c.lang === LEARN); return L.length ? L : EXP.cards.filter(c=>c.lang === "en"); };
 const expSay = (t, lang) => `<button class="chip" data-say="${esc(t)}" data-tts="${EXP_TTS[lang] || LEARN_TTS}" aria-label="读一遍">🔊</button>`;
 const expText = c => c.chunks.join(c.lang === "ja" ? "" : " ");
 const expTop = (icon, title, tag, color) => `<button class="x" aria-label="关闭">✕</button>
   <div class="c-top"><div class="c-emo" style="border-color:${color}">${icon}</div><div><h2>${title}</h2><span class="c-cat" style="background:${color}">${tag}</span></div></div>`;
 const expOpen = () => { if (selected) selected.el.classList.remove("sel"); selected = null; SOC.view = null; card.hidden = false; card.querySelector(".x").onclick = closeCard; };
-const expLog = (kind, q, a) => { const e = expGet(); e.log = [...(e.log || []), {kind, q, a, ts: Date.now()}].slice(-100); cpLS("express.v1", e); lifeAdd({path: "self", q, a, w: [], ts: Date.now()}); };
+const expLog = (kind, q, a, vis) => { const e = expGet(); e.log = [...(e.log || []), {kind, q, a, vis: vis || "me", ts: Date.now()}].slice(-100); cpLS("express.v1", e); lifeAdd({path: "self", q, a, w: [], ts: Date.now()}); boatSync(); };
 // 🌦️ 心情
 function openMood(mk){
   const e = expGet(), Wt = EXP.weather, cur = e.mood && Wt[e.mood.mood] ? e.mood : null; mk = mk || (cur && cur.mood) || "lost";
@@ -5868,13 +5868,13 @@ function openMoodCard(c, picked){
       ${done ? (ok ? `<p style="color:#2f9e44"><b>✓ 拼对了</b></p>` : `<p style="color:#e8590c">顺序还不太对，点上面的句块放回去再试试。</p>`) : ""}</section>
     ${ok ? `<section><p><b>${esc(expText(c))}</b> ${expSay(expText(c), c.lang)}</p><p class="note">${esc(c.zh)}</p>${c.term ? `<p class="note">🔑 <b>${esc(c.term)}</b>${c.reading ? `（${esc(c.reading)}）` : ""}${c.why ? `：${esc(c.why)}` : ""}</p>` : ""}</section>
     <section><h3>② 换成你自己的话</h3><textarea id="mdText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit">${esc(expText(c))}</textarea>
-      <div class="chips"><button class="chip hot" id="mdSave">${Wt[0]} 挂成船边的天气</button><button class="chip" id="mdBack">← 换一张</button></div></section>` : `<div class="chips"><button class="chip" id="mdBack">← 换一张</button></div>`}`;
+      ${visPick("mdVis", "mood")}<div class="chips"><button class="chip hot" id="mdSave">${Wt[0]} 挂成船边的天气</button><button class="chip" id="mdBack">← 换一张</button></div></section>` : `<div class="chips"><button class="chip" id="mdBack">← 换一张</button></div>`}`;
   expOpen();
   card.querySelectorAll("[data-pick]").forEach(b=>b.onclick = ()=>openMoodCard(c, [...picked, +b.dataset.pick]));
   card.querySelectorAll("[data-unpick]").forEach(b=>b.onclick = ()=>openMoodCard(c, picked.filter((_, k)=>k !== +b.dataset.unpick)));
   card.querySelector("#mdBack").onclick = ()=>openMood(c.mood);
   const sv = card.querySelector("#mdSave"); if (sv) sv.onclick = ()=>{ const t = card.querySelector("#mdText").value.trim() || expText(c), x = expGet();
-    x.mood = {mood: c.mood, card: c.id, text: t, zh: t === expText(c) ? c.zh : "", ts: Date.now()}; expSet(x); expLog("mood", c.title, t); fx("good"); openMood(); };
+    x.mood = {mood: c.mood, card: c.id, text: t, zh: t === expText(c) ? c.zh : "", ts: Date.now()}; expSet(x); expLog("mood", c.title, t, card.querySelector("#mdVis").value); fx("good"); openMood(); };
 }
 // ❓ 桅杆上的问号旗
 function openDoubt(){
@@ -5883,11 +5883,11 @@ function openDoubt(){
     <p class="note">挂一面旗：路过的船能看到。插到一个圈子的码头，圈子里的人和 NPC 会来回答。</p>
     ${d ? `<div class="cp-you"><h3>❓ 现在挂着</h3><p style="margin:2px 0"><b>${esc(d.text)}</b></p><div class="chips"><button class="chip" id="dbDown">⬇️ 想明白了，取下来</button></div></div>` : ""}
     <section><h3>${d ? "换一面旗" : "你在想什么？"}</h3><textarea id="dbText" rows="3" maxlength="300" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="用你在学的语言或中文都行，例如：Is it rude to ask a colleague's age here?"></textarea>
-      <div class="chips"><button class="chip hot" id="dbHang">❓ 挂到桅杆上</button></div>
+      ${visPick("dbVis", "doubt")}<div class="chips"><button class="chip hot" id="dbHang">❓ 挂到桅杆上</button></div>
       <label class="note">也插到码头：<select id="dbClub">${opts.map(id=>`<option value="${id}">${esc(CPIN.clubs[id].icon)} ${esc(clubPinName({id, name: CPIN.clubs[id].name}))}${cpJoined(id) ? " · 已加入" : ""}</option>`).join("")}</select></label>
       <div class="chips"><button class="chip" id="dbClubGo">⚓ 挂上，再发到这个圈子</button></div></section>`;
   expOpen(); card.scrollTop = 0;
-  const hang = ()=>{ const t = card.querySelector("#dbText").value.trim(); if (!t) return null; const x = expGet(); x.doubt = {text: t, ts: Date.now()}; expSet(x); expLog("doubt", "我的疑惑", t); return t; };
+  const hang = ()=>{ const t = card.querySelector("#dbText").value.trim(); if (!t) return null; const x = expGet(); x.doubt = {text: t, ts: Date.now()}; expSet(x); expLog("doubt", "我的疑惑", t, card.querySelector("#dbVis").value); return t; };
   card.querySelector("#dbHang").onclick = ()=>{ if (hang()) openDoubt(); };
   card.querySelector("#dbClubGo").onclick = ()=>{ const t = hang(); if (!t) return; const id = card.querySelector("#dbClub").value; openClub(id); const ta = card.querySelector("#cpText"); if (ta) ta.value = t; };
   const dn = card.querySelector("#dbDown"); if (dn) dn.onclick = ()=>{ const x = expGet(); x.doubt = null; expSet(x); openDoubt(); };
@@ -5905,11 +5905,11 @@ function openIntro(ti, di){
       <h3>可以这样开头</h3>${D.phrases.map(p=>`<div class="ex-line">${esc(p.text)} ${expSay(p.text, "en")}<br><small class="note">${esc(p.meaning)}</small></div>`).join("")}
       ${D.hint ? `<p class="note">💡 ${esc(D.hint)}</p>` : ""}</section>
     <section><h3>你的回答</h3><textarea id="inText" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit" placeholder="换成你自己的情况……">${esc((e.intro || {})[key] || "")}</textarea>
-      <div class="chips"><button class="chip hot" id="inSave">存起来</button><span class="note" id="inNote"></span></div></section>`;
+      ${visPick("inVis", "intro")}<div class="chips"><button class="chip hot" id="inSave">存起来</button><span class="note" id="inNote"></span></div></section>`;
   expOpen();
   card.querySelectorAll("[data-st]").forEach(x=>x.onclick = ()=>openIntro(+x.dataset.st, 0));
   card.querySelectorAll("[data-sd]").forEach(x=>x.onclick = ()=>openIntro(a, +x.dataset.sd));
-  card.querySelector("#inSave").onclick = ()=>{ const t = card.querySelector("#inText").value.trim(); if (!t) return; const x = expGet(); x.intro = {...(x.intro || {}), [key]: t}; cpLS("express.v1", x); expLog("intro", D.opening, t); fx("good"); card.querySelector("#inNote").textContent = "✓ 存好了，也进了我的生活地图"; };
+  card.querySelector("#inSave").onclick = ()=>{ const t = card.querySelector("#inText").value.trim(); if (!t) return; const x = expGet(); x.intro = {...(x.intro || {}), [key]: t}; cpLS("express.v1", x); expLog("intro", D.opening, t, card.querySelector("#inVis").value); fx("good"); card.querySelector("#inNote").textContent = "✓ 存好了，也进了我的生活地图"; };
 }
 // ===== 🧭 出题引擎：原样借用言己（Inner Voice）的 src/round-engine.js —— 一小轮最多 6 题、四座小岛、按 1/3/7/14/30 天再练；不依赖界面和存储 =====
 const PracticeRounds=(()=>{
@@ -6065,6 +6065,55 @@ function voyTask(fb){
   card.querySelectorAll("[data-sh]").forEach(b=>b.onclick = ()=>submit({}, {assessable: true, overall: +b.dataset.sh}));
   card.querySelector("#vySkip").onclick = ()=>submit({skip: true});
   card.querySelector("#vyStop").onclick = ()=>openVoyage();
+}
+// ===== 🤝 别人的船：登录后，你的船（母港、停在哪、帆的颜色、天气）和你选择分享的话同步到你的资料；互相关注的朋友的船出现在海上 =====
+// 谁能看到：自己看全部；互相关注的人默认只看最近一个月（打开「♾️ 永久可见」才看全部）；选了「🌍 所有人」的谁都能看；「🔒 只有我」不会上传。
+const VIS = {me: "🔒 只有我", mutual: "🤝 互相关注的人", all: "🌍 所有人"}, VIS_DEF = {mood: "me", doubt: "mutual", intro: "mutual"};
+const visPick = (id, kind) => `<label class="note">谁能看到：<select id="${id}">${Object.entries(VIS).map(([k, t])=>`<option value="${k}"${k === VIS_DEF[kind] ? " selected" : ""}>${t}</option>`).join("")}</select></label>`;
+const canSync = () => SOC.ready && SOC.uid && SOC.db && SOC.canWrite !== false && isMember(SOC.uid);
+let boatSyncT = null;
+function boatSync(){ if (!canSync()) return; clearTimeout(boatSyncT); boatSyncT = setTimeout(async ()=>{
+  const me = {...(SOC.profiles[SOC.uid] || {})}; delete me.id; const b = boatNow(), x = expGet();
+  const boat = {city: myCity() || "", ll: b.ll.map(v=>Math.round(v*10)/10), where: b.where, sail: SAIL[LEARN] || "#f2b705", forever: !!(me.boat && me.boat.forever), weather: x.mood ? x.mood.mood : "", ts: Date.now()};
+  const shared = (x.log || []).filter(l=>l.vis && l.vis !== "me").slice(-60).map(l=>({kind: l.kind, q: l.q, a: scrub(String(l.a)).slice(0, 400), vis: l.vis, ts: l.ts}));
+  try { await SOC.db.doc("profiles/" + SOC.uid).set({...me, boat, shared}); } catch(e){} }, 2500); }
+// 一条分享出去的东西，现在这个人能不能看到
+const MONTH = 30*864e5;
+function canSee(author, vis, ts){
+  if (author === SOC.uid) return true; if (vis === "all" || vis === "所有人") return true;
+  if (vis === "mutual" || vis === "伙伴可见"){ if (!mutual(SOC.uid, author)) return false; const p = SOC.profiles[author] || {}; return !!(p.boat && p.boat.forever) || Date.now() - (ts || 0) < MONTH; }
+  return false;
+}
+// 海上：互相关注的朋友的船
+const friendG = clubG.insert("g", ".boatg");
+function friendBoats(t, s, on){
+  friendG.selectAll("*").remove(); if (!on || !SOC.ready) return;
+  Object.values(SOC.profiles).filter(p=>p.id !== SOC.uid && p.boat && Array.isArray(p.boat.ll) && mutual(SOC.uid, p.id) && !socBlocked().includes(p.id)).forEach(p=>{
+    const [x, y] = t.apply(projection(p.boat.ll)), w = EXP.weather[p.boat.weather];
+    const g = friendG.append("g").attr("class","cboat").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*.9})`).on("click", e=>{ e.stopPropagation(); openUserPage(p.id); });
+    g.html(`<g class="cbob"><ellipse cy="12" rx="20" ry="3" fill="#fff" opacity=".55"/><line y1="4" y2="-34" stroke="#1f2a37" stroke-width="1.6"/><path d="M1,-32 L1,0 L19,0Z" fill="${esc(p.boat.sail || "#868e96")}" stroke="#1f2a37" stroke-width="1.5"/><path d="M-1,-26 L-1,0 L-14,0Z" fill="#fff" stroke="#1f2a37" stroke-width="1.5"/><path d="M-17,2 L17,2 L11,11 L-11,11Z" fill="#8d6e63" stroke="#1f2a37" stroke-width="1.5"/></g>${w ? `<text x="-34" y="-22" font-size="16">${w[0]}</text>` : ""}<text class="cpl" y="27" text-anchor="middle">${esc((p.name || socName(p.id) || "伙伴") + " · " + (p.boat.where || ""))}</text>`); });
+}
+// TA 的主页：话、心情、疑惑、照片，按可见规则过滤
+function openUserPage(id){
+  if (selected) selected.el.classList.remove("sel"); selected = null; SOC.view = null;
+  const p = SOC.profiles[id] || {}, mine = id === SOC.uid, nm = mine ? "我的主页" : (p.name || socName(id) || "一位伙伴"), b = p.boat || {}, mu = !mine && mutual(SOC.uid, id);
+  const items = (mine ? (expGet().log || []).map(l=>({...l, vis: l.vis || "me"})) : (p.shared || [])).filter(l=>canSee(id, l.vis, l.ts)).slice().reverse();
+  const photos = (SOC.ready ? SOC.posts : []).filter(x=>x.author === id && canSee(id, x.privacy, x.ts));
+  const K = {intro: "🙋 话", mood: "🌦️ 心情", doubt: "❓ 疑惑"}, w = EXP.weather[b.weather];
+  const hidden = !mine && mu && !b.forever && ((p.shared || []).some(l=>l.vis === "mutual" && Date.now() - l.ts >= MONTH) || SOC.posts.some(x=>x.author === id && x.privacy === "伙伴可见" && Date.now() - (x.ts || 0) >= MONTH));
+  card.innerHTML = expTop("⛵", esc(nm), `${esc(b.where || (b.city ? "母港 · " + b.city : "还没有母港"))}${b.city && b.where && !String(b.where).includes(b.city) ? " · 母港 " + esc(b.city) : ""}${w ? " · " + w[0] : ""}`, b.sail || "#868e96") + `
+    ${p.bio ? `<p>${esc(p.bio)}</p>` : ""}${p.learning ? `<p class="note">在学：${esc(p.learning)}${p.native ? ` · 母语：${esc(p.native)}` : ""}</p>` : ""}
+    ${mine ? `<div class="cp-you"><h3>谁能看到我的东西</h3><p class="note">自己：全部 · 互相关注的人：${b.forever ? "全部（永久可见）" : "最近一个月"} · 其他人：只有你选了「🌍 所有人」的</p><div class="chips"><button class="chip" id="upForever">${b.forever ? "⏳ 改回只展示最近一个月" : "♾️ 设成永久可见"}</button></div>${canSync() ? "" : `<p class="note">登录以后，这些才会同步给互相关注的朋友；现在只存在这台设备上。</p>`}</div>`
+      : `<div class="chips">${SOC.ready && isMember(SOC.uid) ? `<button class="chip" id="upFollow">${follows(SOC.uid, id) ? "已关注" : "＋ 关注"}</button>` : ""}${mu ? `<button class="chip hot" id="upChat">💬 聊天</button>` : ""}</div>${!mu ? `<p class="note">互相关注以后，能看到 TA 最近一个月分享给朋友的话和照片。</p>` : ""}`}
+    ${Object.entries(K).map(([k, t])=>{ const L = items.filter(l=>l.kind === k); return L.length ? `<section><h3>${t}</h3>${L.slice(0, 8).map(l=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${esc(l.a)}<br><small class="note">${esc(l.q || "")} · ${new Date(l.ts).toLocaleDateString()}${mine ? " · " + (VIS[l.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : ""; }).join("")}
+    ${photos.length ? `<section><h3>📷 照片</h3><div class="chips">${photos.slice(0, 12).map(x=>`<button class="chip" data-upost="${esc(x.id)}" style="padding:2px"><img src="${x.photo}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:6px"></button>`).join("")}</div></section>` : ""}
+    ${!items.length && !photos.length ? `<p class="note">${mine ? "还没有分享的东西。挂一片心情、写一句介绍我、发一张拍立得，选「🤝 互相关注的人」就会出现在这里。" : "现在没有你能看到的内容。"}</p>` : ""}
+    ${hidden ? `<p class="note">⏳ TA 只展示最近一个月的内容。</p>` : ""}`;
+  expOpen(); card.scrollTop = 0;
+  const fb = card.querySelector("#upForever"); if (fb) fb.onclick = async ()=>{ if (!canSync()){ fb.textContent = "要先登录"; return; } const me = {...(SOC.profiles[SOC.uid] || {})}; delete me.id; me.boat = {...(me.boat || {}), forever: !(me.boat && me.boat.forever)}; try { await SOC.db.doc("profiles/" + SOC.uid).set(me); SOC.profiles[SOC.uid] = {...me, id: SOC.uid}; } catch(e){} openUserPage(id); };
+  const fo = card.querySelector("#upFollow"); if (fo) fo.onclick = async ()=>{ const ref = SOC.db.doc("follows/" + SOC.uid + "__" + id); try { if (follows(SOC.uid, id)) await ref.delete(); else await ref.set({from: SOC.uid, to: id, ts: Date.now()}); } catch(e){} setTimeout(()=>openUserPage(id), 400); };
+  const ch = card.querySelector("#upChat"); if (ch) ch.onclick = ()=>openChat(id);
+  card.querySelectorAll("[data-upost]").forEach(x=>x.onclick = ()=>{ const m = MINE.find(y=>y.docId === x.dataset.upost); if (m) openMine(m); });
 }
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
