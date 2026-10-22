@@ -5677,7 +5677,7 @@ function placeClubs(t, rel){
   });
   document.getElementById("app").classList.toggle("club-on", !!(clubSel && on));
   st.classed("cp-rel", d=>!!(clubSel && STK_CLUB[d.n] && STK_CLUB[d.n].club === clubSel.id));
-  clubArcG.selectAll("*").remove(); dockBoats(t, s, on, rel); prepFlags(t, s, on); placeBoat(t, s, on); if (!on) return;
+  clubArcG.selectAll("*").remove(); dockBoats(t, s, on, rel); prepFlags(t, s, on); drawFlags(t, s, on, rel); placeBoat(t, s, on); if (!on) return;
   if (!clubSel) return;
   const [cx, cy] = clubSel.xy, seen = {};
   // ③ 黑色点线：这个圈子在聊的、地图上的贴纸
@@ -5793,7 +5793,7 @@ function placeBoat(t, s, on){
     .on("click", e=>{ e.stopPropagation(); boatMenu = false; openReview(); }));
   voyDraw(t, s);
   if (!boatMenu) return;
-  const items = [["🌦️", "心情", ()=>openMood()], ["❓", "疑惑", ()=>openDoubt()], ["🙋", "介绍我", ()=>openIntro()], ["📷", "贴一张", ()=>document.getElementById("mineBtn").click()],
+  const items = [["🌦️", "心情", ()=>openMood()], ["❓", "疑惑", ()=>openDoubt()], ["🙋", "介绍我", ()=>openIntro()], ["🚩", "插旗", ()=>setFlagMode(true)],
     ["🟣", "今天的航线", ()=>openVoyage()], ["🧳", "船舱", ()=>openHold()], ["🧰", "工具箱", ()=>openSkills()], ["📒", "准备册", ()=>openPrep()], ["⚓", "我的圈子", ()=>openClubs()], ["📍", boatHome() ? "母港" : "选母港", openBoatHome]];
   items.forEach(([e, label, fn], i)=>{ const a = -Math.PI/2 + i*2*Math.PI/items.length, R = 88*s;
     const r = boatMenuG.append("g").attr("class","cradial").attr("transform", `translate(${x + Math.cos(a)*R},${y - 8*s + Math.sin(a)*R})`).attr("role","button")
@@ -6079,7 +6079,8 @@ function boatSync(){ if (!canSync()) return; clearTimeout(boatSyncT); boatSyncT 
   const me = {...(SOC.profiles[SOC.uid] || {})}; delete me.id; const b = boatNow(), x = expGet();
   const boat = {city: myCity() || "", ll: b.ll.map(v=>Math.round(v*10)/10), where: b.where, sail: SAIL[LEARN] || "#f2b705", forever: !!(me.boat && me.boat.forever), weather: x.mood ? x.mood.mood : "", ts: Date.now()};
   const shared = (x.log || []).filter(l=>l.vis && l.vis !== "me").slice(-60).map(l=>({kind: l.kind, q: l.q, a: scrub(String(l.a)).slice(0, 400), vis: l.vis, ts: l.ts}));
-  try { await SOC.db.doc("profiles/" + SOC.uid).set({...me, boat, shared}); } catch(e){} }, 2500); }
+  const flags = (cpLS("flags.v1") || []).filter(f=>f.vis && f.vis !== "me").slice(-60).map(f=>({kind: f.kind, ll: f.ll, title: scrub(String(f.title)).slice(0, 40), note: scrub(String(f.note || "")).slice(0, 200), date: f.date || "", vis: f.vis, ts: f.ts}));
+  try { await SOC.db.doc("profiles/" + SOC.uid).set({...me, boat, shared, flags}); } catch(e){} }, 2500); }
 // 一条分享出去的东西，现在这个人能不能看到
 const MONTH = 30*864e5;
 function canSee(author, vis, ts){
@@ -6109,6 +6110,7 @@ function openUserPage(id){
     ${mine ? `<div class="cp-you"><h3>谁能看到我的东西</h3><p class="note">自己：全部 · 互相关注的人：${b.forever ? "全部（永久可见）" : "最近一个月"} · 其他人：只有你选了「🌍 所有人」的</p><div class="chips"><button class="chip" id="upForever">${b.forever ? "⏳ 改回只展示最近一个月" : "♾️ 设成永久可见"}</button></div>${canSync() ? "" : `<p class="note">登录以后，这些才会同步给互相关注的朋友；现在只存在这台设备上。</p>`}</div>`
       : `<div class="chips">${SOC.ready && isMember(SOC.uid) ? `<button class="chip" id="upFollow">${follows(SOC.uid, id) ? "已关注" : "＋ 关注"}</button>` : ""}${mu ? `<button class="chip hot" id="upChat">💬 聊天</button>` : ""}</div>${!mu ? `<p class="note">互相关注以后，能看到 TA 最近一个月分享给朋友的话和照片。</p>` : ""}`}
     ${Object.entries(K).map(([k, t])=>{ const L = items.filter(l=>l.kind === k); return L.length ? `<section><h3>${t}</h3>${L.slice(0, 8).map(l=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${esc(l.a)}<br><small class="note">${esc(l.q || "")} · ${new Date(l.ts).toLocaleDateString()}${mine ? " · " + (VIS[l.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : ""; }).join("")}
+    ${(fl => fl.length ? `<section><h3>🚩 插的旗</h3>${fl.slice(0, 12).map(f=>`<div class="ex-line" style="padding:5px 0;border-top:1px solid #eee8da">${(FLAG_KIND[f.kind] || FLAG_KIND.story).icon} <b>${esc(f.title)}</b>${f.note ? `<br>${esc(f.note)}` : ""}<br><small class="note">${(FLAG_KIND[f.kind] || FLAG_KIND.story).name} · ${new Date(f.ts).toLocaleDateString()}${mine ? " · " + (VIS[f.vis] || VIS.me) : ""}</small></div>`).join("")}</section>` : "")((mine ? flagsGet().map(f=>({...f, vis: f.vis || "me"})) : (p.flags || [])).filter(f=>canSee(id, f.vis, f.ts)).slice().reverse())}
     ${photos.length ? `<section><h3>📷 照片</h3><div class="chips">${photos.slice(0, 12).map(x=>`<button class="chip" data-upost="${esc(x.id)}" style="padding:2px"><img src="${x.photo}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:6px"></button>`).join("")}</div></section>` : ""}
     ${!items.length && !photos.length ? `<p class="note">${mine ? "还没有分享的东西。挂一片心情、写一句介绍我、发一张拍立得，选「🤝 互相关注的人」就会出现在这里。" : "现在没有你能看到的内容。"}</p>` : ""}
     ${hidden ? `<p class="note">⏳ TA 只展示最近一个月的内容。</p>` : ""}`;
@@ -6231,6 +6233,97 @@ function openPrepBook(id, ci){
     if (a) lifeAdd({path: "self", q: `${b.title} · ${c.title}`, a, w: [], ts: Date.now()}); openPrepBook(id, ci + 1 < b.chapters.length ? ci + 1 : ci); };
   const nx = card.querySelector("#pbNext"); if (nx) nx.onclick = ()=>openPrepBook(id, ci + 1);
   const hs = card.querySelector("#pbHowSave"); if (hs) hs.onclick = ()=>{ const a = card.querySelector("#pbHow").value.trim(); if (!a) return; prepPut(id, {how: a}); expLog("prep", (v.what || b.title) + " · 怎么样了", a, card.querySelector("#pbVis").value); fx("good"); openPrepBook(id, ci); };
+}
+// ===== 🚩 插旗：在地图上点一下，插一面自己的旗。四种旗：📒 要去的场合、📍 常去的地方、📸 发生过的事、❓ 遇到的问题 =====
+// 缩小时同一片地方的旗合成一个圈（写着几面），放大以后一面一面插在准确的位置。存在这台设备上；选了可见范围的会按规则同步到主页。
+const FLAG_KIND = {
+  event: {icon: "📒", name: "要去的场合", color: "#e8590c", vis: "mutual", tip: "去之前准备要说的话", ph: "例如：周二的产品经理面试"},
+  place: {icon: "📍", name: "常去的地方", color: "#2f9e44", vis: "mutual", tip: "在那里常说的话", ph: "例如：公司楼下那家咖啡店"},
+  story: {icon: "📸", name: "发生过的事", color: "#1971c2", vis: "mutual", tip: "在这里发生了什么", ph: "例如：第一次自己去银行开户"},
+  ask: {icon: "❓", name: "遇到的问题", color: "#7048e8", vis: "all", tip: "在这里不知道怎么说", ph: "例如：在这家医院挂号不知道怎么说"}
+};
+// 常去的地方：在那里常说的话（英语示例）
+const FLAG_PLACES = {
+  "☕ 咖啡店": [["Can I get a flat white to go?", "一杯馥芮白，带走。"], ["Could I have oat milk instead?", "可以换成燕麦奶吗？"], ["Is this seat taken?", "这里有人坐吗？"]],
+  "🏋️ 健身房": [["Do you offer a day pass?", "有单次票吗？"], ["Could you show me how this machine works?", "能教我这台器械怎么用吗？"], ["Are you using this bench?", "这个凳子你在用吗？"]],
+  "🏢 公司": [["Do you have a minute to talk?", "你有空聊一下吗？"], ["Can we push the meeting to three?", "会议能推到三点吗？"], ["I'll send you the update by end of day.", "我今天下班前把进展发给你。"]],
+  "🛒 超市": [["Where can I find the rice?", "米在哪里？"], ["Do you have a bag?", "有袋子吗？"], ["Can I pay by card?", "可以刷卡吗？"]],
+  "🏥 医院": [["I'd like to make an appointment.", "我想预约。"], ["I've had a fever since yesterday.", "我从昨天开始发烧。"], ["Do I need to bring anything?", "我需要带什么吗？"]],
+  "🏦 银行": [["I'd like to open an account.", "我想开个账户。"], ["What documents do I need?", "我需要哪些证件？"], ["Is there a monthly fee?", "每个月有手续费吗？"]],
+  "🏫 学校": [["Could I speak to the teacher for a minute?", "我能和老师说几句话吗？"], ["What time is pick-up today?", "今天几点接孩子？"], ["Is there anything we need to bring?", "需要带什么东西吗？"]],
+  "🍜 餐厅": [["A table for two, please.", "两位。"], ["What do you recommend?", "你推荐什么？"], ["Could we get the bill, please?", "请帮我们结账。"]]
+};
+const flagsGet = () => cpLS("flags.v1") || [], flagsSet = L => { cpLS("flags.v1", L); boatSync(); render(); };
+let flagMode = false, flagFilt = "";
+const flagG = clubG.insert("g", ".boatg");
+function drawFlags(t, s, on, rel){
+  flagG.selectAll("*").remove(); if (!on) return;
+  const L = flagsGet().filter(f=>!flagFilt || f.kind === flagFilt);
+  if (rel < 4){   // 缩小时：同一片地方合成一个圈
+    const G = {}; L.forEach(f=>{ const k = Math.round(f.ll[0]*2)/2 + "," + Math.round(f.ll[1]*2)/2; (G[k] = G[k] || []).push(f); });
+    Object.values(G).forEach(arr=>{ const ll = [d3.mean(arr, f=>f.ll[0]), d3.mean(arr, f=>f.ll[1])], [x, y] = t.apply(projection(ll));
+      const g = flagG.append("g").attr("class","cflagd").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`).attr("role","button").attr("aria-label", `${arr.length} 面旗`)
+        .on("click", e=>{ e.stopPropagation(); svg.transition().duration(900).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(ll), kOf(8))); });
+      if (arr.length === 1){ flagShape(g, arr[0], false); return; }
+      g.append("circle").attr("r", 15).attr("fill","#fff").attr("stroke","#e8590c").attr("stroke-width", 3);
+      g.append("text").attr("y", 4.5).attr("text-anchor","middle").attr("font-size", 11).attr("font-weight", 800).text("🚩" + arr.length); });
+    return; }
+  L.forEach(f=>{ const [x, y] = t.apply(projection(f.ll)); const g = flagG.append("g").attr("class","cflagd").attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`).attr("role","button").attr("aria-label", f.title)
+    .on("click", e=>{ e.stopPropagation(); openFlag(f.id); }); flagShape(g, f, rel >= 8); });
+}
+function flagShape(g, f, label){ const K = FLAG_KIND[f.kind] || FLAG_KIND.story;
+  g.append("line").attr("y1", 0).attr("y2", -28).attr("stroke","#1f2a37").attr("stroke-width", 1.6);
+  g.append("path").attr("d","M0,-28 h19 l-5,6 l5,6 h-19z").attr("fill", K.color).attr("stroke","#1f2a37").attr("stroke-width", 1);
+  g.append("text").attr("x", 8).attr("y", -18).attr("text-anchor","middle").attr("font-size", 9).text(K.icon);
+  if (label) g.append("text").attr("class","cpl").attr("y", 13).attr("text-anchor","middle").text(String(f.title).slice(0, 14)); }
+// 插旗模式：下一次点地图，就在那里插
+const flagTip = document.createElement("div"); flagTip.className = "panel"; flagTip.hidden = true;
+flagTip.style.cssText = "position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:30;padding:8px 14px;font-size:14px;display:flex;gap:8px;align-items:center";
+flagTip.innerHTML = `🚩 <b>点地图上的一个位置插旗</b> <span class="note">放大可以插得更准</span> <button class="chip" id="flagCancel">取消</button>`;
+document.body.appendChild(flagTip); flagTip.querySelector("#flagCancel").onclick = ()=>setFlagMode(false);
+function setFlagMode(on){ flagMode = on; flagTip.hidden = !on; svg.style("cursor", on ? "crosshair" : null); if (on){ closeCard(); } }
+svg.node().addEventListener("click", e=>{ if (!flagMode) return; e.stopPropagation(); e.preventDefault();
+  const r = svg.node().getBoundingClientRect(), t = d3.zoomTransform(svg.node()), ll = projection.invert(t.invert([e.clientX - r.left, e.clientY - r.top])); setFlagMode(false); if (ll) pickFlag(ll); }, true);
+function pickFlag(ll){
+  const near = (()=>{ let best = null, bd = 1e9; data.forEach(x=>{ const d = d3.geoDistance(ll, [x.lon, x.lat]); if (d < bd){ bd = d; best = x; } }); return best; })();
+  card.innerHTML = expTop("🚩", "在这里插一面旗", near ? `${esc(near.r.split(" · ").pop())}附近` : "", "#e8590c") + `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${Object.entries(FLAG_KIND).map(([k, v])=>`<button class="chip" data-fk="${k}" style="display:block;border-radius:14px;border-color:${v.color};text-align:left;padding:8px 10px;white-space:normal">${v.icon} <b>${v.name}</b><br><small class="note">${v.tip}</small></button>`).join("")}</div>
+    <div class="chips"><button class="chip" id="fkPhoto">📷 贴一张拍立得在这里</button></div>`;
+  expOpen();
+  card.querySelectorAll("[data-fk]").forEach(b=>b.onclick = ()=>newFlag(b.dataset.fk, ll));
+  card.querySelector("#fkPhoto").onclick = ()=>{ closeCard(); openMineNew(); mn.lon = ll[0]; mn.lat = ll[1]; if (near){ const area = near.r.split(" · ").slice(-1)[0]; mn.place = `${area} · ${near.n}附近`; mn.country = near.country; } document.getElementById("mnWhere").textContent = "📍 会贴在你刚才点的地方：" + mn.place; };
+}
+function newFlag(kind, ll){
+  const K = FLAG_KIND[kind];
+  card.innerHTML = expTop(K.icon, K.name, K.tip, K.color) + `
+    ${kind === "place" ? `<h3>是什么地方？</h3><div class="chips">${Object.keys(FLAG_PLACES).map(p=>`<button class="chip" data-fp="${esc(p)}">${esc(p)}</button>`).join("")}</div>` : ""}
+    <h3>${{event: "这次是什么事？", place: "给它起个名字", story: "发生了什么？", ask: "你想问什么？"}[kind]}</h3>
+    <input id="flT" maxlength="40" placeholder="${esc(K.ph)}" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit">
+    ${kind === "event" ? `<h3>哪天</h3><input type="date" id="flD">` : ""}
+    <h3>${kind === "story" ? "用你在学的语言说一句（中文也行）" : "备注"}</h3><textarea id="flN" rows="3" style="width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #e7dfc8;padding:6px;font:inherit"></textarea>
+    <label class="note">谁能看到：<select id="flV">${Object.entries(VIS).map(([k, v])=>`<option value="${k}"${k === K.vis ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+    <div class="chips"><button class="chip hot" id="flGo">🚩 插上</button></div>`;
+  expOpen(); let place = "";
+  card.querySelectorAll("[data-fp]").forEach(b=>b.onclick = ()=>{ place = b.dataset.fp; card.querySelectorAll("[data-fp]").forEach(x=>x.classList.toggle("hot", x === b)); const ti = card.querySelector("#flT"); if (!ti.value) ti.value = place; });
+  card.querySelector("#flGo").onclick = ()=>{ const t = card.querySelector("#flT").value.trim(); if (!t) return;
+    const f = {id: "f" + Date.now(), kind, ll: ll.map(v=>Math.round(v*10000)/10000), title: t, note: card.querySelector("#flN").value.trim(), place, date: (card.querySelector("#flD") || {}).value || "", vis: card.querySelector("#flV").value, ts: Date.now()};
+    flagsSet([...flagsGet(), f]); if (kind === "story" && f.note) lifeAdd({path: "self", q: t, a: f.note, w: [], ts: Date.now()}); fx("good"); openFlag(f.id); };
+}
+function openFlag(id){
+  const f = flagsGet().find(x=>x.id === id); if (!f) return; const K = FLAG_KIND[f.kind] || FLAG_KIND.story, P = f.place && FLAG_PLACES[f.place], from = "🚩 " + f.title;
+  const joined = Object.keys(CPIN.clubs).filter(c=>cpJoined(c)), opts = [...joined, ...Object.keys(CPIN.clubs).filter(c=>!joined.includes(c))];
+  card.innerHTML = expTop(K.icon, esc(f.title), `${K.name} · ${new Date(f.ts).toLocaleDateString()}${f.date ? " · 📅 " + esc(f.date) : ""} · ${VIS[f.vis] || VIS.me}`, K.color) + `
+    ${f.note ? `<p>${esc(f.note)}</p>` : ""}
+    ${f.kind === "event" ? `<section><h3>📒 去之前准备一下</h3><p class="note">一章一章准备：对方会怎么开口、你可以怎么说。</p><div class="chips"><button class="chip hot" id="flPrep">打开准备册</button></div></section>` : ""}
+    ${P ? `<section><h3>在这里常说的话</h3>${LEARN === "en" ? P.map(([t, z])=>skLine(t, z, "", from)).join("") : `<p class="note">这里的示例句是英语的。</p>`}</section>` : ""}
+    ${f.kind === "story" ? `<section><h3>📷 配一张照片</h3><div class="chips"><button class="chip" id="flPhoto">📷 在这里贴一张拍立得</button></div></section>` : ""}
+    ${f.kind === "ask" ? `<section><h3>问一问</h3><label class="note">发到码头：<select id="flClub">${opts.map(c=>`<option value="${c}">${esc(CPIN.clubs[c].icon)} ${esc(clubPinName({id: c, name: CPIN.clubs[c].name}))}</option>`).join("")}</select></label><div class="chips"><button class="chip hot" id="flAsk">⚓ 发到这个圈子</button></div></section>` : ""}
+    <div class="chips"><button class="chip" id="flDel">拔掉这面旗</button></div>`;
+  expOpen(); skBind();
+  const pr = card.querySelector("#flPrep"); if (pr) pr.onclick = ()=>openPrep();
+  const ph = card.querySelector("#flPhoto"); if (ph) ph.onclick = ()=>{ closeCard(); openMineNew(); mn.lon = f.ll[0]; mn.lat = f.ll[1]; mn.place = f.title; document.getElementById("mnWhere").textContent = "📍 会贴在这面旗旁边：" + f.title; };
+  const ak = card.querySelector("#flAsk"); if (ak) ak.onclick = ()=>{ const c = card.querySelector("#flClub").value; openClub(c); const ta = card.querySelector("#cpText"); if (ta) ta.value = f.title + (f.note ? "\n" + f.note : ""); };
+  card.querySelector("#flDel").onclick = ()=>{ flagsSet(flagsGet().filter(x=>x.id !== id)); closeCard(); };
 }
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
