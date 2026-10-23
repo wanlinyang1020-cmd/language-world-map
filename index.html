@@ -290,7 +290,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .cbub{fill:#fff;stroke-width:3;filter:drop-shadow(1.5px 2px 0 rgba(20,48,92,.35))}.cnm{font-weight:800;fill:#1f2a37}.csub{font-size:10.5px;fill:#6b7280}
 .cav{fill:#fff;stroke-width:2}.cmore{font-size:10px;font-weight:700;fill:#fff}
 .carc{fill:none;stroke-width:2.2;stroke-dasharray:5 5;animation:carc 1.2s linear infinite;pointer-events:none}@keyframes carc{to{stroke-dashoffset:-20}}
-.cnpin{cursor:pointer}.cnpin circle{fill:#fff;stroke-width:2.5}.cpl{font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px;fill:#1f2a37}
+.cnpin{cursor:pointer}.cnpin > circle{fill:#fff;stroke-width:2.5}   /* 只管外圈，别把头像里面的圆也涂白 */.cpl{font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3px;fill:#1f2a37}
 @keyframes npcBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
 @media (prefers-reduced-motion:reduce){.npc .bob,.cpb .bob,.carc,.cping,.cmering,.cbring,.cbob,.cbottle{animation:none}}
 .c-emo.figbox{display:grid;place-items:end center;overflow:hidden;padding-bottom:4px}
