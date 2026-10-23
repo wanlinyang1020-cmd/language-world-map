@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HeyVoyo · Learn Chinese on a map of the world</title>
+<meta name="description" content="HeyVoyo is an interactive world map for language learners. Explore places, brands and everyday shops, and learn the words and conversations you really need there.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root{--sea:#5cc8f0;--land:#b9e36a;--ink:#1c2a3a;--muted:#55606e;--paper:#fffdf5;--bg:#f6f4ec;--accent:#e8453c;--accent-ink:#fff;--card:#fff;--f-display:"ZCOOL KuaiLe","Noto Sans SC",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e8edf3;--muted:#a3adb8;--paper:#1d2530;--bg:#141a22;--card:#222b37}}
+:root[data-theme="dark"]{--ink:#e8edf3;--muted:#a3adb8;--paper:#1d2530;--bg:#141a22;--card:#222b37}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Noto Sans SC","PingFang SC",Segoe UI,sans-serif}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.logo{font-family:var(--f-display);font-size:26px;text-decoration:none}.logo span{color:var(--accent)}
+.lang{display:flex;gap:6px}.lang button{font:inherit;font-size:13px;border:2px solid var(--ink);background:var(--card);color:var(--ink);border-radius:999px;padding:3px 12px;cursor:pointer}.lang button.on{background:var(--ink);color:var(--bg)}
+.hero{background:var(--sea);border-bottom:3px solid #1c2a3a;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:28px;align-items:center;padding-top:40px;padding-bottom:44px}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,5vw,54px);line-height:1.15;margin:0 0 14px;color:#1c2a3a}
+.hero p{font-size:18px;margin:0 0 22px;color:#16324f;max-width:30em}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 17px/1 inherit;font-family:inherit;text-decoration:none;border:3px solid #1c2a3a;border-radius:999px;padding:13px 22px;background:#fff;color:#1c2a3a;box-shadow:3px 4px 0 #1c2a3a;cursor:pointer;transition:transform .1s}
+.btn:hover{transform:translate(-1px,-1px)}.btn.hot{background:var(--accent);color:#fff}
+.shot{border:3px solid #1c2a3a;border-radius:18px;overflow:hidden;box-shadow:6px 8px 0 #1c2a3a;background:#fff;display:block}
+.shot img{display:block;width:100%;height:auto}
+.hero .note{font-size:13px;color:#16324f;margin-top:14px}
+section.feat{padding:56px 0 8px}
+section.feat h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);margin:0 0 6px}
+section.feat .lead{color:var(--muted);margin:0 0 26px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:28px;align-items:center;margin:0 0 44px}
+.row.flip{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}.row.flip .txt{order:2}
+.row h3{font-size:22px;margin:0 0 8px}.row p{margin:0 0 10px;color:var(--muted)}
+.row .ex{display:inline-block;background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:6px 12px;font-size:15px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:8px 0 56px}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:16px 18px;box-shadow:3px 4px 0 var(--ink)}
+.card b{display:block;font-size:17px;margin-bottom:4px}.card span{color:var(--muted);font-size:15px}
+.final{text-align:center;padding:10px 0 60px}.final h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);margin:0 0 16px}
+footer{border-top:2px solid var(--ink);padding:20px 0 34px;font-size:14px;color:var(--muted)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
+footer nav{display:flex;flex-wrap:wrap;gap:6px 16px}
+@media (max-width:760px){.hero .wrap,.row,.row.flip{grid-template-columns:minmax(0,1fr)}.row.flip .txt{order:0}.cards{grid-template-columns:minmax(0,1fr)}.hero .wrap{padding-top:22px}.btn{font-size:16px;padding:12px 18px}}
+[data-l]{display:none}html[lang="en"] [data-l="en"],html[lang="zh"] [data-l="zh"]{display:revert}
+</style>
+</head>
+<body>
+<div class="wrap"><header class="top"><a class="logo" href="/?home">Hey<span>Voyo</span></a>
+  <div class="lang"><button data-set="en">English</button><button data-set="zh">中文</button></div></header></div>
+
+<section class="hero"><div class="wrap">
+  <div>
+    <h1><span data-l="en">Learn Chinese on a map of the world</span><span data-l="zh">在世界地图上学语言</span></h1>
+    <p><span data-l="en">Sail between places, brands and everyday shops. At each one, learn the words, sentences and short conversations you'd really use there.</span><span data-l="zh">驾着小船逛地方、品牌和日常场所，学在那里真正用得上的词、句子和对话。</span></p>
+    <div class="cta">
+      <a class="btn hot" href="/map/" data-go="zh"><span data-l="en">🇨🇳 Learn Chinese</span><span data-l="zh">🇨🇳 学中文</span></a>
+      <a class="btn" href="/map/" data-go="en"><span data-l="en">🇬🇧 Learn English</span><span data-l="zh">🇬🇧 学英语</span></a>
+    </div>
+    <div class="note"><span data-l="en">Free · no sign-up needed to start</span><span data-l="zh">免费，不注册也能用</span></div>
+  </div>
+  <a class="shot" href="/map/" data-go=""><img src="img/home/hero.jpg" alt="The HeyVoyo world map with stickers, clubs and islands" width="1400" height="880"></a>
+</div></section>
+
+<section class="feat"><div class="wrap">
+  <h2><span data-l="en">What you can do</span><span data-l="zh">能做什么</span></h2>
+  <p class="lead"><span data-l="en">Real places, real things people talk about now — not textbook sentences.</span><span data-l="zh">真实的地方，大家现在真的在聊的东西，不是课本句子。</span></p>
+
+  <div class="row">
+    <div class="txt">
+      <h3><span data-l="en">✈️ Practise the places you'll actually go</span><span data-l="zh">✈️ 练你真的会去的地方</span></h3>
+      <p><span data-l="en">Airports, metro stations, hospitals, banks, cafés, bubble tea shops… Every country has them, and each one comes with free basic conversations: checking in a bag, asking for the right line, seeing a doctor.</span><span data-l="zh">机场、地铁站、医院、银行、咖啡馆、奶茶店……每个国家都有，每种场所都配好了免费的基础对话：托运行李、问坐几号线、看医生。</span></p>
+      <span class="ex">“请问去外滩坐几号线？” — Which line goes to the Bund?</span>
+    </div>
+    <a class="shot" href="/map/" data-go=""><img src="img/home/place.jpg" alt="An airport card with a check-in conversation" loading="lazy" width="1400" height="880"></a>
+  </div>
+
+  <div class="row flip">
+    <div class="txt">
+      <h3><span data-l="en">👟 Walk into the brands you know</span><span data-l="zh">👟 走进你熟悉的品牌</span></h3>
+      <p><span data-l="en">adidas, Apple, Starbucks, Pop Mart, BYD and 30+ more, each placed in its home city. See what they sell and learn the shopping words: shoe size, noise cancelling, blind box, range.</span><span data-l="zh">阿迪达斯、苹果、星巴克、泡泡玛特、比亚迪等 30 多个品牌，放在它们的故乡城市。看看店里卖什么，学逛店用得上的词：鞋码、降噪、盲盒、续航。</span></p>
+      <span class="ex">“这双运动鞋有 42 码吗？” — Do you have these in a 42?</span>
+    </div>
+    <a class="shot" href="/map/" data-go=""><img src="img/home/brand.jpg" alt="The adidas card with products and shopping words" loading="lazy" width="1400" height="880"></a>
+  </div>
+
+  <div class="cards">
+    <div class="card"><b><span data-l="en">🏝️ Islands for big topics</span><span data-l="zh">🏝️ 大话题的岛</span></b><span><span data-l="en">Money, nutrition, life questions — each island has its own words and listening games.</span><span data-l="zh">钱、营养、人生课题，每个岛有自己的词和听力小游戏。</span></span></div>
+    <div class="card"><b><span data-l="en">👥 Clubs</span><span data-l="zh">👥 圈子</span></b><span><span data-l="en">Chat with other learners and friendly characters about trends, health, work and the world.</span><span data-l="zh">和其他学习者、地图上的人物一起聊流行、健康、工作和世界。</span></span></div>
+    <div class="card"><b><span data-l="en">📰 What's happening now</span><span data-l="zh">📰 正在发生</span></b><span><span data-l="en">Current events with the words and questions to discuss them.</span><span data-l="zh">当下的新闻事件，配好词汇和讨论题。</span></span></div>
+  </div>
+</div></section>
+
+<section class="final"><div class="wrap">
+  <h2><span data-l="en">Ready to set sail?</span><span data-l="zh">准备出发了吗？</span></h2>
+  <div class="cta" style="justify-content:center">
+    <a class="btn hot" href="/map/" data-go="zh"><span data-l="en">🇨🇳 Learn Chinese</span><span data-l="zh">🇨🇳 学中文</span></a>
+    <a class="btn" href="/map/" data-go="en"><span data-l="en">🇬🇧 Learn English</span><span data-l="zh">🇬🇧 学英语</span></a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>© 2026 HeyVoyo · <a href="mailto:selenayang@126.com">selenayang@126.com</a></span>
+  <nav><a href="/about.html"><span data-l="en">About</span><span data-l="zh">关于</span></a><a href="/privacy.html"><span data-l="en">Privacy</span><span data-l="zh">隐私</span></a><a href="/disclosure.html"><span data-l="en">Affiliate disclosure</span><span data-l="zh">联盟声明</span></a></nav>
+</div></footer>
+
+<script>
+// 来过地图的人再打开 heyvoyo.com 直接进地图；从站内点回首页（/?home 或从地图点过来）就留在首页
+try { if (localStorage.getItem("hv.visited") && !/[?&]home/.test(location.search) && !document.referrer.startsWith(location.origin)) location.replace("/map/"); } catch(e){}
+// 首页语言：先看用户选过的，再看浏览器语言；点「学中文 / 学英语」时把地图的界面语言和学习语言一起设好
+const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch(e){} } };
+let lang = store.get("hv.home") || (/^zh/i.test(navigator.language) ? "zh" : "en");
+const show = l => { lang = l; document.documentElement.lang = l; document.querySelectorAll(".lang button").forEach(b=>b.classList.toggle("on", b.dataset.set === l)); };
+document.querySelectorAll(".lang button").forEach(b=>b.onclick = ()=>{ store.set("hv.home", b.dataset.set); show(b.dataset.set); });
+show(lang);
+document.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click", ()=>{
+  const learn = a.dataset.go;
+  if (learn === "zh"){ store.set("hv.ui", lang === "zh" ? "en" : lang); store.set("hv.learn", "zh"); }
+  else if (learn === "en"){ store.set("hv.ui", "zh"); store.set("hv.learn", "en"); }
+  store.set("hv.visited", "1");
+}));
+</script>
+</body>
+</html>
