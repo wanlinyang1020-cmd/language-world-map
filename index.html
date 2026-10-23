@@ -515,6 +515,8 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .s-stk .e.ph{width:48px;height:48px;min-height:48px;flex:none;position:relative;overflow:visible}.s-stk.big .e.ph{min-height:58px}.s-stk.big .e.ph{width:58px;height:58px}.s-stk .e.ph img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}.s-stk .e.ph i{position:absolute;right:-6px;bottom:-4px;font-style:normal;font-size:15px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--ink);display:grid;place-items:center;line-height:1}
 .s-npc{display:flex;flex-direction:column;align-items:center;cursor:pointer}.s-npc svg{overflow:visible}.s-npc .tag{margin-top:-2px;background:#e8322f;color:#fff;border-radius:999px;padding:1px 9px;font-family:var(--f-display);font-size:12px;border:2px solid #fff;white-space:nowrap}
 .s-hide{visibility:hidden;pointer-events:none}
+.s-stk .n,.s-npc .tag{position:absolute;top:100%;left:50%;transform:translateX(-50%)}.s-npc .tag{margin-top:-4px}.s-nolab .n,.s-nolab .tag{visibility:hidden}.s-nolab:hover .n,.s-nolab:hover .tag{visibility:visible;z-index:3}
+#street.s-small .s-stk .e,#street.s-small .s-stk .e.ph,#street.s-small .s-stk.big .e.ph{width:32px;height:32px;min-height:32px;font-size:17px;border-width:2px;box-shadow:1px 2px 0 var(--ink)}#street.s-small .s-stk .e.ph i{display:none}#street.s-small .s-npc svg{width:30px;height:45px}#street.s-small .s-stk .n{font-size:11.5px}#street.s-small .more{top:-10px;margin-left:6px;min-width:20px;height:18px;font-size:10.5px;line-height:14px;padding:0 4px}
 </style>
 
 <div id="app">
@@ -7126,16 +7128,34 @@ function streetSync(){
     else { el.className = "s-stk" + (k.t === 1 ? " big" : ""); const ph = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[k.n];   // 有照片就用真实照片当头像，角上留一个小 emoji；没照片才用 emoji
       el.innerHTML = ph ? `<div class="e ph"><img src="${ph.r2 || ph.src}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('ph');this.parentNode.textContent='${k.e}'"><i>${k.e}</i></div><div class="n">${esc(mapN(k.n))}</div>` : `<div class="e">${k.e}</div><div class="n">${esc(mapN(k.n))}</div>`; el.onclick = ev=>{ ev.stopPropagation(); openCard(k); }; }
     const ll = isNpc ? [k.lon, k.lat] : streetPos(k);
-    streetItems.set(k, {el, ll, npc: isNpc, pri: isNpc ? 1.5 : k.t, w: isNpc ? 56 : Math.max(48, mapN(k.n).length * (UI === "zh" ? 13 : 7)), h: isNpc ? 84 : 72, m: new maplibregl.Marker({element: el, anchor: "bottom"}).setLngLat(ll).addTo(streetMap)}); });
+    streetItems.set(k, {el, ll, npc: isNpc, big: k.t === 1 && !isNpc, pri: isNpc ? 1.5 : k.t, w: isNpc ? 56 : Math.max(48, mapN(k.n).length * (UI === "zh" ? 13 : 7)), h: isNpc ? 84 : 72, m: new maplibregl.Marker({element: el, anchor: "bottom"}).setLngLat(ll).addTo(streetMap)}); });
   streetDeclutter();
 }
 // 挤在一起时，重要的先显示（世界级地标 > 人 > 其他），放大了其余的出来
+// 挤不挤只看照片（人看身体），名字放得下才显示；远看时照片变小；挤在一起的往旁边挪一点；实在放不下的算进「+N」
 function streetDeclutter(){
-  const placed = [], far = streetMap.getZoom() < 12, pr = it => far && it.npc ? 9 : it.pri;   // 看一片地区时，地标代表城市；放大到城里，人才排到前面
-  [...streetItems.values()].sort((a, b)=>pr(a) - pr(b)).forEach(it=>{ const p = streetMap.project(it.ll), b = [p.x - it.w / 2, p.y - it.h, p.x + it.w / 2, p.y];
-    const hit = placed.find(c=>b[0] < c.b[2] && b[2] > c.b[0] && b[1] < c.b[3] && b[3] > c.b[1]); it.el.classList.toggle("s-hide", !!hit);
-    if (hit) hit.n++; else placed.push({b, it, n: 0}); });
-  // 被挡住的贴纸不丢：挡住它们的那张角上显示「+N」，点一下放大到那里
+  const z = streetMap.getZoom(), small = z < 13, far = z < 12, pr = it => far && it.npc ? 9 : it.pri;   // 看一片地区时，地标代表城市；放大到城里，人才排到前面
+  streetDiv.classList.toggle("s-small", small);
+  const ov = (a, b)=>a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1], placed = [], hidden = [];
+  const NUDGE = [[0, 0]]; [0.8, 1.3].forEach(r=>{ for (let i = 0; i < 8; i++){ const a = i * Math.PI / 4; NUDGE.push([Math.cos(a) * r, Math.sin(a) * r]); } });
+  [...streetItems.values()].sort((a, b)=>pr(a) - pr(b)).forEach(it=>{
+    const p = streetMap.project(it.ll), w = it.npc ? (small ? 30 : 44) : (small ? 32 : it.big ? 58 : 48), h = it.npc ? (small ? 46 : 66) : w;
+    const box = (dx, dy)=>[p.x + dx - w / 2 + 2, p.y + dy - h + 2, p.x + dx + w / 2 - 2, p.y + dy];
+    let spot = null;
+    for (const [fx, fy] of NUDGE){ const dx = fx * w, dy = fy * h, bb = box(dx, dy); if (!placed.some(c=>ov(bb, c.b))){ spot = {b: bb, it, n: 0, dx, dy, x: p.x + dx, y: p.y + dy}; break; } }
+    it.el.classList.toggle("s-hide", !spot);
+    if (spot){ placed.push(spot); it.m.setOffset([spot.dx, spot.dy]); } else hidden.push(p);
+  });
+  // 被挡住的贴纸算到附近最重要的那张上（角标集中在少数几张，不满屏都是红点）；附近没有就算到最近的
+  hidden.forEach(p=>{ let best = placed.find(c=>Math.hypot(c.x - p.x, c.y - p.y) < 110), bd = 1e9;
+    if (!best) placed.forEach(c=>{ const d = Math.hypot(c.x - p.x, c.y - p.y); if (d < bd){ bd = d; best = c; } }); if (best) best.n++; });
+  // 名字：放得下才显示（不压照片、不压别的名字），重要的先放
+  const labs = [];
+  placed.forEach(c=>{ const n = c.it.el.querySelector(c.it.npc ? ".tag" : ".n"); if (!n) return;
+    if (!c.it.lw) c.it.lw = n.offsetWidth || 60;
+    const lb = [c.x - c.it.lw / 2, c.y + 1, c.x + c.it.lw / 2, c.y + 18];
+    const ok = !labs.some(l=>ov(lb, l)) && !placed.some(o=>o !== c && ov(lb, o.b));
+    c.it.el.classList.toggle("s-nolab", !ok); if (ok) labs.push(lb); });
   placed.forEach(c=>{ let m = c.it.el.querySelector(".more");
     if (!c.n){ if (m) m.remove(); return; }
     if (!m){ m = document.createElement("b"); m.className = "more"; c.it.el.prepend(m); }
