@@ -501,6 +501,18 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .mn-tray{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.mn-tray .chip{padding:2px 4px 2px 10px}.mn-tw,.mn-tx{all:unset;cursor:pointer}.mn-tx{padding:0 6px;color:#868e96}   /* 拍照标词：照片下面的词卡 */
 .stk-word{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0 2px}.stk-word .chip.hot b{font-size:16px}   /* 贴纸的词和发音 */
 .npc-hello{display:flex;gap:8px;align-items:flex-start;background:#fff8e1;border:2px solid #1f2a37;border-radius:14px;padding:8px 10px;margin:8px 0;box-shadow:2px 3px 0 #1f2a37}.npc-hello b{font-size:15px;line-height:1.35}   /* 人物的一句话 */
+/* 🏙️ 城市街道地图（MapLibre 用到的最少样式写在这里，不另外引外部样式表） */
+#street{position:absolute;inset:0;z-index:1;background:#cfe98f}
+#street .maplibregl-canvas{position:absolute;left:0;top:0}#street .maplibregl-canvas-container.maplibregl-interactive{cursor:grab}
+.maplibregl-map{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}.maplibregl-marker{position:absolute;top:0;left:0;will-change:transform}
+.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-top-left{position:absolute;pointer-events:none;z-index:2}.maplibregl-ctrl-bottom-right{right:0;bottom:0}
+.maplibregl-ctrl{pointer-events:auto;clear:both}.maplibregl-ctrl-attrib{background:rgba(255,255,255,.75);padding:1px 6px;font-size:11px;margin:0 0 66px}.maplibregl-ctrl-attrib a{color:inherit}.maplibregl-ctrl-attrib-button{display:none}
+#streetBack{position:absolute;left:50%;transform:translateX(-50%);top:14px;z-index:3}@media (max-width:700px){#streetBack{top:auto;bottom:76px}}
+.street-on #more,.street-on #hint{display:none}
+.s-stk{display:flex;flex-direction:column;align-items:center;cursor:pointer}.s-stk .e{width:38px;height:38px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);box-shadow:2px 3px 0 var(--ink);display:grid;place-items:center;font-size:21px}
+.s-stk .n{margin-top:3px;font-family:var(--f-display);font-size:13px;color:#1c4a8a;white-space:nowrap;paint-order:stroke;-webkit-text-stroke:3px #fff}.s-stk.big .e{width:46px;height:46px;font-size:26px}
+.s-npc{display:flex;flex-direction:column;align-items:center;cursor:pointer}.s-npc svg{overflow:visible}.s-npc .tag{margin-top:-2px;background:#e8322f;color:#fff;border-radius:999px;padding:1px 9px;font-family:var(--f-display);font-size:12px;border:2px solid #fff;white-space:nowrap}
+.s-hide{visibility:hidden;pointer-events:none}
 </style>
 
 <div id="app">
@@ -4131,6 +4143,7 @@ function updateMore(n){
 moreBtn.onclick = ()=>svg.transition().duration(500).call(zoom.scaleBy, 2);
 function render(){
   const t = d3.zoomTransform(svg.node()), rel = relOf(t.k);
+  if (typeof STREET_READY !== "undefined") streetCheck(t, rel);   // 放大到城市：换成街道地图
   world.attr("transform", t);
   labels.attr("transform", d=>{ const [x,y]=t.apply(d.p); return `translate(${x},${y})`; })
     .style("opacity", d => (d.t===1 && rel<5) || (d.t===2 && rel>=1.8 && rel<40) || (d.t===3 && rel>=3) ? (d.t===3?.85:1) : 0);
@@ -4866,6 +4879,7 @@ function openCity(c){
   openArea({title: c.n, icon:"🏙️", badge:"📍 城市", sub: country, list, profile: country || null});
   // 看一座城市：地图飞过去放大，城里的人和贴纸摊开看得清
   const k = Math.max(d3.zoomTransform(svg.node()).k, kOf(NPCS.some(n=>n.city === c.n) ? 140 : 60));
+  if (typeof STREET_READY !== "undefined" && canStreet){ enterStreet([c.lon, c.lat], NPCS.some(n=>n.city === c.n) ? 12.6 : 11.6); return; }
   svg.transition().duration(1200).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(c.p, k));
 }
 // draw: per-country hit areas, US states, province hit areas, city markers
@@ -5033,6 +5047,11 @@ document.getElementById("cmpBtn").onclick = ()=>setCmp(cmpDim ? null : "eat.stap
 const npcG = d3.select("#npcG");
 const NPC_REL = 2.6;
 const npcById = id => NPCS.find(n=>n.id===id);
+// 上海的人住在自己的区、站在自己的店门口（以前都在市中心附近，连线都汇到一个点）
+const NPC_HOME = {chen: [121.4372, 31.1955], zhou: [121.5010, 31.2985], emma: [121.5085, 31.2958], fang: [121.4488, 31.2285], wang: [121.5068, 31.2378],
+  lt_wangayi: [121.4578, 31.2176], lt_laozhou: [121.4591, 31.2176], lt_laojin: [121.4603, 31.2219], lt_xiaoli: [121.4446, 31.2243], lt_meimei: [121.4464, 31.2191], lt_laochen: [121.4563, 31.2268],
+  lt_zhangyeye: [121.4503, 31.2242], lt_qianlao: [121.4516, 31.2242], lt_xiaoyun: [121.4427, 31.2155], lt_axiang: [121.4557, 31.2096], lt_laozhao: [121.4503, 31.2111], lt_xiaoma: [121.4450, 31.2101]};
+NPCS.forEach(n=>{ const h = NPC_HOME[n.id]; if (h){ n.lon = h[0]; n.lat = h[1]; } });
 NPCS.forEach(n=>{ n.p = projection([n.lon, n.lat]); n.stops = n.route.map(r=>({...r, s: r.stop ? data.find(x=>x.n===r.stop) : null})); });
 const npcEls = npcG.selectAll("g.npc").data(NPCS).join("g").attr("class","npc").attr("role","button").attr("tabindex",0)
   .attr("aria-label", d=>`${d.name}，NPC，${d.type}`)
@@ -5068,16 +5087,24 @@ npcOff.append("text").attr("class","nn").attr("y",17).text(d=>d.name);
 npcOff.append("text").attr("class","nt").attr("y",33).text(d=>"NPC · "+d.type.split(" ")[0]);
 // 同一座城市的人挤在一起时，按蜂窝一圈圈往外排；优先排在 TA 所在的省市或国家的陆地上，不漂到海里
 const NPC_RING = (()=>{ const out = []; for (let r = -3; r <= 3; r++) for (let q = -4; q <= 4; q++){ const ox = q*62 + (r & 1 ? 31 : 0), oy = r*100; out.push([ox, oy]); } return out.sort((a, b)=>Math.hypot(a[0], a[1]*0.8) - Math.hypot(b[0], b[1]*0.8)); })();
-NPCS.forEach(n=>{ try { n.land = (typeof CHINA !== "undefined" && CHINA.features.find(f=>d3.geoContains(f, [n.lon, n.lat]))) || countries.features.find(f=>d3.geoContains(f, [n.lon, n.lat])) || null; } catch(e){ n.land = null; } });
+// 每个人站在哪块地上：取包含 TA 的最小一块（有的边界方向反了，会“包住”整个地球，所以按面积挑最小的）
+NPCS.forEach(n=>{ try { const all = [...(typeof CHINA !== "undefined" ? CHINA.features : []), ...countries.features].filter(f=>d3.geoArea(f) < 2*Math.PI && d3.geoContains(f, [n.lon, n.lat]));
+  n.land = all.sort((a, b)=>d3.geoArea(a) - d3.geoArea(b))[0] || null; } catch(e){ n.land = null; } });
+// 城里站不下的人合成一张「👥 还有 N 位」的人群牌，点一下放大到这座城市（人不站到海上、也不站进别的城市）
+const npcCrowdG = npcG.append("g").attr("class", "ncrowds");
+const npcCityP = {}; NPCS.forEach(n=>{ const c = npcCityP[n.city] || (npcCityP[n.city] = {lon: 0, lat: 0, k: 0}); c.lon += n.lon; c.lat += n.lat; c.k++; });
+Object.values(npcCityP).forEach(c=>{ c.ll = [c.lon / c.k, c.lat / c.k]; c.p = projection(c.ll); });
 function placeNpcs(t, rel){
   const on = (rel >= NPC_REL || peopleOnly || npcOnly) && !cmpDim && !mineOnly && !liveOnly, placed = [];
   // 屏幕上的人多了（比如上海一城十几位），人缩小一点、挨近一点，好都站进城里
   let nOn = 0; if (on) npcEls.each(d=>{ const [x, y] = t.apply(d.p); if (x>-40 && x<W+40 && y>-40 && y<H+40) nOn++; });
   const sc = nOn > 8 ? 0.72 : 1;
   const onLand = (d, sx, sy) => { if (!d.land) return true; const ll = projection.invert(t.invert([sx, sy])); try { return !!ll && d3.geoContains(d.land, ll); } catch(e){ return true; } };
+  const crowd = {};   // 城市 → 没站下的人数
   npcEls.each(function(d){
     const [x,y] = t.apply(d.p); let ok = false, dx = 0, dy = 0;
-    if (on && x>-40 && x<W+40 && y>-40 && y<H+40){
+    const inView = on && x>-40 && x<W+40 && y>-40 && y<H+40;
+    if (inView){
       let first = null;
       for (const [ox0,oy0] of NPC_RING){
         const ox = ox0*sc, oy = oy0*sc, b = [x+ox-29*sc, y+oy-64*sc, x+ox+29*sc, y+oy+36*sc];
@@ -5085,13 +5112,28 @@ function placeNpcs(t, rel){
         if (!first) first = [ox, oy, b];
         if (onLand(d, x+ox, y+oy)){ placed.push(b); dx=ox; dy=oy; ok=true; break; }
       }
-      if (!ok && first){ placed.push(first[2]); dx = first[0]; dy = first[1]; ok = true; }
+      // 只有不知道 TA 在哪块地上的人，才退回到“哪里空就站哪里”
+      if (!ok && first && !d.land){ placed.push(first[2]); dx = first[0]; dy = first[1]; ok = true; }
+      if (!ok) crowd[d.city] = (crowd[d.city] || 0) + 1;
     }
     this.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
     this.style.opacity = ok ? 1 : 0; this.style.pointerEvents = ok ? "all" : "none";
     this.querySelector(".off").setAttribute("transform", `translate(${dx},${dy})${sc !== 1 ? ` scale(${sc})` : ""}`);
     const ld = this.querySelector(".lead"); ld.setAttribute("x2", dx); ld.setAttribute("y2", dy); ld.style.opacity = (dx||dy) ? .7 : 0;
   });
+  // 人群牌：放在城市位置附近一个空的地方
+  const chips = Object.entries(crowd).map(([city, n])=>{ const c = npcCityP[city], [x, y] = t.apply(c.p), shown = NPCS.filter(m=>m.city === city).length - n;
+    const label = UI === "zh" ? `👥 ${city} · ${shown ? "还有 " : ""}${n} 位` : `👥 ${shown ? n + " more" : n + " people"} in ${mapL(city)}`, w = label.length * (UI === "zh" ? 12.5 : 7) + 22;
+    let px = x, py = y + 14;
+    for (const [ox, oy] of [[0, 14], [0, -40], [w / 2 + 20, 0], [-w / 2 - 20, 0], [0, 60], [0, -80]]){ const b = [x + ox - w / 2, y + oy - 13, x + ox + w / 2, y + oy + 13]; if (!placed.some(c=>b[0]<c[2] && b[2]>c[0] && b[1]<c[3] && b[3]>c[1])){ px = x + ox; py = y + oy; placed.push(b); break; } }
+    return {city, label, w, px, py, c}; });
+  npcCrowdG.selectAll("g.ncrowd").data(chips, d=>d.city).join(enter=>{ const g = enter.append("g").attr("class", "ncrowd").attr("role", "button").style("cursor", "pointer");
+      g.append("rect").attr("rx", 13).attr("height", 26).attr("y", -13).attr("fill", "#fff").attr("stroke", "#e8322f").attr("stroke-width", 2.5);
+      g.append("text").attr("text-anchor", "middle").attr("dy", "0.35em").attr("font-size", 12.5).attr("font-weight", 700).attr("fill", "#1f2a37");
+      g.on("click", (ev, d)=>{ ev.stopPropagation(); if (typeof STREET_READY !== "undefined" && canStreet){ enterStreet(d.c.ll, 13); return; } svg.transition().duration(1200).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(d.c.p, kOf(140))); });
+      return g; })
+    .attr("transform", d=>`translate(${d.px.toFixed(1)},${d.py.toFixed(1)})`)
+    .call(g=>{ g.select("rect").attr("x", d=>-d.w / 2).attr("width", d=>d.w); g.select("text").text(d=>d.label); });
   NPC_BOXES = placed;
 }
 // events: one block = what happened → the dialogue (data: EVENTS per NPC stop, PLACE_EVENTS per place)
@@ -7049,6 +7091,84 @@ async function syncPull(){
   syncPush();
 }
 { const tick = setInterval(()=>{ if (SOC.ready && SOC.uid && SOC.db){ clearInterval(tick); syncPull(); } }, 1500); }
+// ===== 🏙️ 城市街道地图：看世界时是卡通地图；放大到城市，换成真实街道地图（OpenFreeMap，OpenStreetMap 数据，免费、可商用，署名自动显示），贴纸和人都在真实坐标上 =====
+// claude.ai 里不能连外部地图，照旧用卡通地图
+var STREET_REL = 60, streetOn = false, streetMap = null, streetBusy = false;
+const canStreet = typeof CAN_EMBED !== "undefined" && CAN_EMBED;
+const streetDiv = document.createElement("div"); streetDiv.id = "street"; streetDiv.hidden = true;
+document.getElementById("app").insertBefore(streetDiv, document.getElementById("map").nextSibling);
+const streetBack = document.createElement("button"); streetBack.className = "chip hot"; streetBack.id = "streetBack"; streetBack.hidden = true;
+streetBack.textContent = UI === "zh" ? "🌍 回到世界地图" : "🌍 Back to the world map";
+document.getElementById("app").appendChild(streetBack);
+streetBack.onclick = ()=>exitStreet(8);
+// 地图上每像素多少米 ↔ 街道地图的缩放级别（512 像素的瓦片）
+const mppOf = (ll, k) => { const a = projection(ll), b = projection([ll[0] + 0.01, ll[1]]); return 0.01 * 111320 * Math.cos(ll[1] * Math.PI / 180) / (Math.hypot(b[0] - a[0], b[1] - a[1]) * k); };
+const zOfMpp = (lat, mpp) => Math.log2(40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * mpp));
+const streetEnterZ = lat => zOfMpp(lat, mppOf([121, lat], kOf(STREET_REL)));
+function loadMapLibre(){ if (window.maplibregl) return Promise.resolve(); return new Promise((ok, bad)=>{ const s = document.createElement("script"); s.src = "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
+// 同一个点上的好几张贴纸：按螺旋稍微错开一点（几百米），放大以后都能看见
+const streetPos = (()=>{ const seen = {}, out = new Map(); return d => { if (out.has(d)) return out.get(d); const key = d.lon.toFixed(3) + "," + d.lat.toFixed(3), i = seen[key] = (seen[key] || 0) + 1;
+  const a = i * 2.4, r = i > 1 ? 0.0016 * Math.sqrt(i - 1) : 0, p = [d.lon + Math.cos(a) * r, d.lat + Math.sin(a) * r * 0.86]; out.set(d, p); return p; }; })();
+const streetItems = new Map();   // 贴纸或人 → {el, m, pri, w, h}
+function streetSync(){
+  if (!streetMap) return; const b = streetMap.getBounds(), w = b.getWest(), e = b.getEast(), s = b.getSouth(), n = b.getNorth(), dx = (e - w) * .2, dy = (n - s) * .2;
+  const inB = ll => ll[0] > w - dx && ll[0] < e + dx && ll[1] > s - dy && ll[1] < n + dy;
+  const want = new Set();
+  data.forEach(d=>{ if (!activeCats.has(d.c) && !(typeof focus !== "undefined" && focus && focus.ids.has(d.id))) return; const p = streetPos(d); if (inB(p)) want.add(d); });
+  NPCS.forEach(nn=>{ if (inB([nn.lon, nn.lat])) want.add(nn); });
+  for (const [k, it] of streetItems) if (!want.has(k)){ it.m.remove(); streetItems.delete(k); }
+  want.forEach(k=>{ if (streetItems.has(k)) return; const isNpc = !!k.route, el = document.createElement("div");
+    if (isNpc){ el.className = "s-npc"; el.innerHTML = `<svg width="44" height="66" viewBox="-22 -64 44 66">${figMarkup(k)}</svg><div class="tag">${esc(k.name)}</div>`; el.onclick = ev=>{ ev.stopPropagation(); openNpc(k); }; }
+    else { el.className = "s-stk" + (k.t === 1 ? " big" : ""); el.innerHTML = `<div class="e">${k.e}</div><div class="n">${esc(mapN(k.n))}</div>`; el.onclick = ev=>{ ev.stopPropagation(); openCard(k); }; }
+    const ll = isNpc ? [k.lon, k.lat] : streetPos(k);
+    streetItems.set(k, {el, ll, pri: isNpc ? 1.5 : k.t, w: isNpc ? 56 : Math.max(48, mapN(k.n).length * (UI === "zh" ? 13 : 7)), h: isNpc ? 84 : 62, m: new maplibregl.Marker({element: el, anchor: "bottom"}).setLngLat(ll).addTo(streetMap)}); });
+  streetDeclutter();
+}
+// 挤在一起时，重要的先显示（世界级地标 > 人 > 其他），放大了其余的出来
+function streetDeclutter(){
+  const placed = [];
+  [...streetItems.values()].sort((a, b)=>a.pri - b.pri).forEach(it=>{ const p = streetMap.project(it.ll), b = [p.x - it.w / 2, p.y - it.h, p.x + it.w / 2, p.y];
+    const hit = placed.some(c=>b[0] < c[2] && b[2] > c[0] && b[1] < c[3] && b[3] > c[1]); it.el.classList.toggle("s-hide", hit); if (!hit) placed.push(b); });
+}
+async function enterStreet(ll, z){
+  if (!canStreet || streetBusy) return false; streetBusy = true;
+  try { await loadMapLibre(); } catch(e){ streetBusy = false; return false; }
+  if (!streetMap){
+    streetMap = new maplibregl.Map({container: streetDiv, style: "https://tiles.openfreemap.org/styles/positron", center: ll, zoom: z, minZoom: 3, maxZoom: 18, attributionControl: {compact: false}});
+    streetMap.on("load", ()=>{ for (const l of streetMap.getStyle().layers){ const id = l.id; try {   // 配成卡通地图的颜色
+      if (l.type === "background") streetMap.setPaintProperty(id, "background-color", "#cfe98f");
+      else if (l.type === "fill" && /water/.test(id)) streetMap.setPaintProperty(id, "fill-color", "#7fd0ee");
+      else if (l.type === "fill" && /park|wood|grass|landcover/.test(id)){ streetMap.setPaintProperty(id, "fill-color", "#a9dc6a"); streetMap.setPaintProperty(id, "fill-opacity", .7); }
+      else if (l.type === "fill" && /building/.test(id)){ streetMap.setPaintProperty(id, "fill-color", "#bcd97c"); streetMap.setPaintProperty(id, "fill-opacity", .5); }
+      else if (l.type === "fill" && /landuse|residential/.test(id)) streetMap.setPaintProperty(id, "fill-color", "#c4e388");
+      else if (l.type === "line" && /water|river/.test(id)) streetMap.setPaintProperty(id, "line-color", "#5bb9df");
+      else if (l.type === "line" && /casing/.test(id)) streetMap.setPaintProperty(id, "line-color", "#9fc463");
+      else if (l.type === "line" && /highway|road|street|tunnel|bridge|path/.test(id)) streetMap.setPaintProperty(id, "line-color", "#ffffff");
+      else if (l.type === "line" && /boundary|admin/.test(id)) streetMap.setPaintProperty(id, "line-color", "#5d7b3a");
+      else if (l.type === "symbol" && l.paint && "text-color" in l.paint){ streetMap.setPaintProperty(id, "text-color", "#3d5a2a"); streetMap.setPaintProperty(id, "text-halo-color", "#f4fbe6"); }
+    } catch(e){} } streetSync(); });
+    let raf = 0; streetMap.on("move", ()=>{ if (!raf) raf = requestAnimationFrame(()=>{ raf = 0; streetDeclutter(); }); });
+    streetMap.on("moveend", ()=>{ streetSync(); if (streetOn && streetMap.getZoom() < streetEnterZ(streetMap.getCenter().lat) - 0.8) exitStreet(); });
+  } else streetMap.jumpTo({center: ll, zoom: z});
+  streetDiv.hidden = false; streetBack.hidden = false; streetOn = true; streetBusy = false;
+  document.getElementById("map").style.visibility = "hidden"; document.getElementById("app").classList.add("street-on");
+  requestAnimationFrame(()=>{ streetMap.resize(); streetSync(); });
+  return true;
+}
+// 缩小回去：回到卡通世界地图的同一个地方（比切换点再远一点，免得又切回来）
+function exitStreet(rel){
+  if (!streetOn) return; streetOn = false;
+  const c = streetMap.getCenter(), p = projection([c.lng, c.lat]);
+  streetDiv.hidden = true; streetBack.hidden = true; document.getElementById("map").style.visibility = ""; document.getElementById("app").classList.remove("street-on");
+  if (rel !== false) svg.call(zoom.transform, centerOn(p, kOf(rel || STREET_REL * 0.6)));
+}
+// 卡通地图放大到城市一级：自动切到街道地图（看贴纸对比、在飞的时候不切）
+function streetCheck(t, rel){
+  if (!canStreet || streetOn || streetBusy || rel < STREET_REL || flying || cmpDim) return;
+  const ll = projection.invert(t.invert([W / 2, H / 2])); if (!ll) return;
+  enterStreet(ll, zOfMpp(ll[1], mppOf(ll, t.k)));
+}
+var STREET_READY = true;
 var clubPinReady = true; render();
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
 const npcBadge = `<span class="soc-badge" style="background:#eef6ff;color:#1c5fa8">NPC</span>`;
@@ -7918,6 +8038,7 @@ const routeEl = d3.select("#route"), plane = d3.select("#plane");
 let flying = false;
 function flyTo(d){
   if (flying) return;
+  if (streetOn) exitStreet(false);
   const t0 = d3.zoomTransform(svg.node());
   const from = selected ? [selected.lon, selected.lat] : (projection.invert(t0.invert([W/2,H/2])) || [0,20]);
   if (selected) selected.el.classList.remove("sel");
