@@ -4266,7 +4266,7 @@ function openCard(d){
     ${proLinkHtml(d.n)}
     ${placeEventsHtml(d.n)}
     <div class="c-stamp">${UI === "zh" ? (fresh ? "🎉 新印章！已盖进你的旅行护照。" : "✅ 这枚印章你已经收集过了。") + " 共 " : (fresh ? "🎉 New stamp in your passport!" : "✅ You already have this stamp.") + " Total "}${stamps.size} / ${data.length}</div>
-    <div class="c-near"><h3>${UI === "zh" ? "附近还有" : "Nearby"}</h3><div>${near.map(o=>`<button class="chip" data-id="${o.id}">${o.e} ${esc(o.n)}</button>`).join("")}</div></div>
+    <div class="c-near"><h3>${UI === "zh" ? "附近还有" : "Nearby"}</h3><div>${near.map(o=>`<button class="chip" data-id="${o.id}">${o.e} ${esc(mapN(o.n))}</button>`).join("")}</div></div>
     <div class="c-near"><div>${hasProfile(d.country)?`<button class="chip" id="seeProfile">🪪 ${UI === "zh" ? esc(d.country) + "名片" : esc(mapL(d.country)) + " card"}</button>`:""}<button class="chip" id="seeCountry">📚 ${UI === "zh" ? `${esc(d.country)}的全部 ${sameCountry} 枚贴纸` : `All ${sameCountry} stickers in ${esc(mapL(d.country))}`}</button></div></div>`;
   card.hidden = false; SOUND.seed = "s" + d.id;
   { const s = storyOf(d.n); showSpread(s && s.route); const b = card.querySelector("#spFit"); if (b) b.onclick = fitSpread; const bk = document.getElementById("spBack"); if (bk) bk.hidden = true; }
@@ -4619,7 +4619,7 @@ function openCountry(name){
   const list = data.filter(s=>s.country===name);
   const money = list.filter(s=>s.c==="M"), inds = list.filter(s=>s.c==="I");
   const cont = contOf[name] || "";
-  const chip = s => `<button class="chip" data-id="${s.id}">${esc(s.e)} ${esc(s.n)}</button>`;
+  const chip = s => `<button class="chip" data-id="${s.id}">${esc(s.e)} ${esc(mapN(s.n))}</button>`;
   const gdpHtml = p.gdp ? `
       <div class="eco"><span>GDP 总量</span><b>${fmtGdp(p.gdp)}</b><span class="bar wide"><i style="width:${Math.max(1.5,p.gdp/maxGdp*100).toFixed(1)}%"></i></span><small>地图上 ${gdpRank.length} 个国家中第 ${gdpRank.indexOf(name)+1}</small></div>
       <div class="eco"><span>人均 GDP</span><b>约 ${p.pc.toLocaleString()} 美元</b><span class="bar wide"><i style="width:${Math.max(1.5,p.pc/maxPc*100).toFixed(1)}%"></i></span><small>地图上 ${pcRank.length} 个国家中第 ${pcRank.indexOf(name)+1}</small></div>`
@@ -4677,7 +4677,7 @@ function openRegion(r){
     <p>${esc(r.d)}</p>
     <section><h3>必做体验</h3><ul class="todo">${r.todo.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>
     <section><h3>最佳季节</h3><p class="season">📅 ${esc(r.season)}</p></section>
-    <section><h3>代表贴纸</h3><div class="chips">${r.list.map(s=>`<button class="chip" data-id="${s.id}">${esc(s.e)} ${esc(s.n)}</button>`).join("")}</div></section>
+    <section><h3>代表贴纸</h3><div class="chips">${r.list.map(s=>`<button class="chip" data-id="${s.id}">${esc(s.e)} ${esc(mapN(s.n))}</button>`).join("")}</div></section>
     <div class="chips"><button class="chip" id="rFly">✈️ 飞到${esc(r.n)}</button></div>`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard;
@@ -4815,7 +4815,7 @@ function openArea(o){
     ${o.facts&&o.facts.length?`<dl class="facts">${o.facts.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`:""}
     ${o.title && o.title !== "这个地方" ? videoHtml(o.video || o.title) : ""}
     <div class="chips">${list.length?`<button class="chip" id="aFocus">👀 地图上只看这里</button><button class="chip" id="aFly">✈️ 飞过去</button>`:""}${o.profile&&PROFILES[o.profile]?`<button class="chip" id="aProf">🪪 ${esc(o.profile)}名片</button>`:""}${o.profile&&typeof NOW!=="undefined"&&NOW[o.profile]?`<button class="chip hot" id="aNow">🔥 ${esc(o.profile)}现在大家在聊</button>`:""}</div>
-    ${list.length ? groups.map(([g,l])=>`<section><h3>${g.icon} ${g.name} · ${l.length}</h3><div class="chips">${l.map(s=>`<button class="chip${stamps.has(s.id)?" got":""}" data-id="${s.id}">${esc(s.e)} ${esc(s.n)}</button>`).join("")}</div></section>`).join("")
+    ${list.length ? groups.map(([g,l])=>`<section><h3>${g.icon} ${g.name} · ${l.length}</h3><div class="chips">${l.map(s=>`<button class="chip${stamps.has(s.id)?" got":""}" data-id="${s.id}">${esc(s.e)} ${esc(mapN(s.n))}</button>`).join("")}</div></section>`).join("")
       : `<p class="note">这里还没有贴纸。可以告诉我想加什么！</p>`}`;
   card.hidden = false; card.scrollTop = 0;
   card.querySelector(".x").onclick = closeCard;
@@ -7360,7 +7360,7 @@ function openClub(id){
   const cm = CLUB_MAP[id], ms = typeof MONEY_STORIES !== "undefined" ? MONEY_STORIES : {};
   const mapNames = [...(cm ? Object.keys(ms).filter(n=>ms[n].grp===cm[0] && (!cm[1] || ms[n].layer===cm[1])) : []), ...Object.keys(typeof PRO_LINK !== "undefined" ? PRO_LINK : {}).filter(n=>c.name.includes(PRO_LINK[n].club))];
   const mapStk = mapNames.map(n=>data.find(x=>x.n===n)).filter(Boolean);
-  const mapHtml = () => mapStk.length ? `<section><h3>${Z("🗺️ 地图上相关的贴纸 ·")} ${mapStk.length}</h3><p class="note">${Z("点一下飞到地图上，看故事、学词、读短文，再回来聊。")}</p><div class="chips">${mapStk.map(x=>`<button class="chip" data-clubfly="${esc(x.n)}">${esc(x.e)} ${esc(x.n)}</button>`).join("")}</div></section>` : "";
+  const mapHtml = () => mapStk.length ? `<section><h3>${Z("🗺️ 地图上相关的贴纸 ·")} ${mapStk.length}</h3><p class="note">${Z("点一下飞到地图上，看故事、学词、读短文，再回来聊。")}</p><div class="chips">${mapStk.map(x=>`<button class="chip" data-clubfly="${esc(x.n)}">${esc(x.e)} ${esc(mapN(x.n))}</button>`).join("")}</div></section>` : "";
   // 圈子常用的词：连到对应的词汇墙
   const CLUB_WORDS = {fashion_club:"fashion", growth_club:"growth", trends_now:"g4", med_club:"med", dev_club:"dev", first_money:"g5", social_money:"g5", economy_club:"g5", body_mind:"g9"};
   const wordsHtml = () => { const g = CLUB_WORDS[id], W = g && typeof MONEY_WORDS !== "undefined" && MONEY_WORDS[g]; if (!W) return "";
