@@ -503,6 +503,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .npc-hello{display:flex;gap:8px;align-items:flex-start;background:#fff8e1;border:2px solid #1f2a37;border-radius:14px;padding:8px 10px;margin:8px 0;box-shadow:2px 3px 0 #1f2a37}.npc-hello b{font-size:15px;line-height:1.35}   /* 人物的一句话 */
 /* 🏙️ 城市街道地图（MapLibre 用到的最少样式写在这里，不另外引外部样式表） */
 #street{position:absolute;inset:0;z-index:1;background:#cfe98f}
+.s-stk,.s-npc{position:relative}#street .more{position:absolute;top:-8px;left:50%;margin-left:12px;z-index:2;min-width:24px;height:22px;padding:0 6px;border-radius:11px;background:#e8453c;color:#fff;border:2px solid #fff;font:700 12px/18px var(--f-display,sans-serif);text-align:center;cursor:zoom-in;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 #street .maplibregl-canvas{position:absolute;left:0;top:0}#street .maplibregl-canvas-container.maplibregl-interactive{cursor:grab}
 .maplibregl-map{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}.maplibregl-marker{position:absolute;top:0;left:0;will-change:transform}
 .maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-top-left{position:absolute;pointer-events:none;z-index:2}.maplibregl-ctrl-bottom-right{right:0;bottom:0}
@@ -4159,7 +4160,9 @@ function render(){
   const ring = filtered ? OFFS_WIDE : OFFS;
   let hidden = 0;
   // 放大到一座城市：先让城里的人站进城里，贴纸再绕着他们摊开
-  const cityFirst = rel >= 30 && typeof placeNpcs === "function";
+  // 能用街道地图时，放大到 22 倍就换成街道地图，卡通地图不再把贴纸一圈圈摊开（摊开会飘到海里）
+  const spreadCity = rel >= 30 && !(typeof CAN_EMBED !== "undefined" && CAN_EMBED);
+  const cityFirst = spreadCity && typeof placeNpcs === "function";
   if (cityFirst) placeNpcs(t, rel);
   const placed = cityFirst ? NPC_BOXES.slice() : [];
   const base = REC.ids.size ? REC.order : order;
@@ -4173,7 +4176,7 @@ function render(){
     let dx=0, dy=0;
     if (show){
       show = false;
-      const cands = fan ? ring : (flat && rel >= 30 ? OFFS_CITY : flat && filtered ? OFFS_NEAR : OFFS.slice(0,1));
+      const cands = fan ? ring : (flat && spreadCity ? OFFS_CITY : flat && filtered ? OFFS_NEAR : OFFS.slice(0,1));
       for (const [ox,oy] of cands){
         const cx = x+ox, cy = y+oy;
         const hw = flat ? Math.max(15*fsc, s.n.length*5.6+4) : s.w*sc/2;
@@ -7094,7 +7097,7 @@ async function syncPull(){
 { const tick = setInterval(()=>{ if (SOC.ready && SOC.uid && SOC.db){ clearInterval(tick); syncPull(); } }, 1500); }
 // ===== 🏙️ 城市街道地图：看世界时是卡通地图；放大到城市，换成真实街道地图（OpenFreeMap，OpenStreetMap 数据，免费、可商用，署名自动显示），贴纸和人都在真实坐标上 =====
 // claude.ai 里不能连外部地图，照旧用卡通地图
-var STREET_REL = 60, streetOn = false, streetMap = null, streetBusy = false;
+var STREET_REL = 22, streetOn = false, streetMap = null, streetBusy = false;
 const canStreet = typeof CAN_EMBED !== "undefined" && CAN_EMBED;
 const streetDiv = document.createElement("div"); streetDiv.id = "street"; streetDiv.hidden = true;
 document.getElementById("app").insertBefore(streetDiv, document.getElementById("map").nextSibling);
@@ -7123,14 +7126,20 @@ function streetSync(){
     else { el.className = "s-stk" + (k.t === 1 ? " big" : ""); const ph = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[k.n];   // 有照片就用真实照片当头像，角上留一个小 emoji；没照片才用 emoji
       el.innerHTML = ph ? `<div class="e ph"><img src="${ph.r2 || ph.src}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('ph');this.parentNode.textContent='${k.e}'"><i>${k.e}</i></div><div class="n">${esc(mapN(k.n))}</div>` : `<div class="e">${k.e}</div><div class="n">${esc(mapN(k.n))}</div>`; el.onclick = ev=>{ ev.stopPropagation(); openCard(k); }; }
     const ll = isNpc ? [k.lon, k.lat] : streetPos(k);
-    streetItems.set(k, {el, ll, pri: isNpc ? 1.5 : k.t, w: isNpc ? 56 : Math.max(48, mapN(k.n).length * (UI === "zh" ? 13 : 7)), h: isNpc ? 84 : 72, m: new maplibregl.Marker({element: el, anchor: "bottom"}).setLngLat(ll).addTo(streetMap)}); });
+    streetItems.set(k, {el, ll, npc: isNpc, pri: isNpc ? 1.5 : k.t, w: isNpc ? 56 : Math.max(48, mapN(k.n).length * (UI === "zh" ? 13 : 7)), h: isNpc ? 84 : 72, m: new maplibregl.Marker({element: el, anchor: "bottom"}).setLngLat(ll).addTo(streetMap)}); });
   streetDeclutter();
 }
 // 挤在一起时，重要的先显示（世界级地标 > 人 > 其他），放大了其余的出来
 function streetDeclutter(){
-  const placed = [];
-  [...streetItems.values()].sort((a, b)=>a.pri - b.pri).forEach(it=>{ const p = streetMap.project(it.ll), b = [p.x - it.w / 2, p.y - it.h, p.x + it.w / 2, p.y];
-    const hit = placed.some(c=>b[0] < c[2] && b[2] > c[0] && b[1] < c[3] && b[3] > c[1]); it.el.classList.toggle("s-hide", hit); if (!hit) placed.push(b); });
+  const placed = [], far = streetMap.getZoom() < 12, pr = it => far && it.npc ? 9 : it.pri;   // 看一片地区时，地标代表城市；放大到城里，人才排到前面
+  [...streetItems.values()].sort((a, b)=>pr(a) - pr(b)).forEach(it=>{ const p = streetMap.project(it.ll), b = [p.x - it.w / 2, p.y - it.h, p.x + it.w / 2, p.y];
+    const hit = placed.find(c=>b[0] < c.b[2] && b[2] > c.b[0] && b[1] < c.b[3] && b[3] > c.b[1]); it.el.classList.toggle("s-hide", !!hit);
+    if (hit) hit.n++; else placed.push({b, it, n: 0}); });
+  // 被挡住的贴纸不丢：挡住它们的那张角上显示「+N」，点一下放大到那里
+  placed.forEach(c=>{ let m = c.it.el.querySelector(".more");
+    if (!c.n){ if (m) m.remove(); return; }
+    if (!m){ m = document.createElement("b"); m.className = "more"; c.it.el.prepend(m); }
+    m.textContent = "+" + c.n; m.onclick = ev=>{ ev.stopPropagation(); streetMap.easeTo({center: c.it.ll, zoom: streetMap.getZoom() + 2}); }; });
 }
 async function enterStreet(ll, z){
   if (!canStreet || streetBusy) return false; streetBusy = true;
