@@ -7597,6 +7597,9 @@ var STREET_READY = true;
 if (UI !== "zh") document.querySelectorAll("#head .legal a").forEach((a, i)=>{ a.textContent = ["About", "Privacy", "Affiliate disclosure"][i]; });
 new MutationObserver(()=>addPinyin(card)).observe(card, {childList: true});
 var clubPinReady = true; render();
+// 链接 /map/?s=adidas（中文名或英文名都行）：打开地图后直接飞到这张贴纸并打开卡片
+try { const sq = new URLSearchParams(location.search).get("s"); if (sq){ const k = sq.trim().toLowerCase(), d = data.find(x=>x.n === sq.trim() || mapN(x.n).toLowerCase() === k || (window.MAP_EN && (MAP_EN.names[x.n] || "").toLowerCase() === k));
+  if (d) setTimeout(()=>{ flyTo(d); setTimeout(()=>openCard(d), 900); }, 600); } } catch(e){}
 const clubNpc = (id, nid) => clubNpcs(id).find(n=>n.id===nid);
 const npcBadge = `<span class="soc-badge" style="background:#eef6ff;color:#1c5fa8">NPC</span>`;
 // ===== 🔗 NPC 连起来：同一个人在圈子、贴纸里的「这件事里的人」和多岗位会议里都能遇到 =====

@@ -39,6 +39,10 @@ section.feat .lead{color:var(--muted);margin:0 0 26px}
 .card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:16px 18px;box-shadow:3px 4px 0 var(--ink)}
 .card b{display:block;font-size:17px;margin-bottom:4px}.card span{color:var(--muted);font-size:15px}
 .final{text-align:center;padding:10px 0 60px}.final h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);margin:0 0 16px}
+.brands{padding:8px 0 40px}.brands h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,3.4vw,36px);margin:0 0 6px}.brands .lead{color:var(--muted);margin:0 0 20px}
+.brandgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.brand{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;background:#fff;color:#1c2a3a;border:2px solid #1c2a3a;border-radius:14px;padding:14px 8px 10px;box-shadow:3px 4px 0 #1c2a3a;transition:transform .1s}.brand:hover{transform:translate(-1px,-1px)}
+.brand img{height:40px;max-width:110px;object-fit:contain}.brand span{font-weight:600;font-size:14px}.brand small{color:#55606e;font-size:12px}.brands .more{margin:16px 0 0;text-align:right}
+@media (max-width:760px){.brandgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 footer{border-top:2px solid var(--ink);padding:20px 0 34px;font-size:14px;color:var(--muted)}
 footer .wrap{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
 footer nav{display:flex;flex-wrap:wrap;gap:6px 16px}
@@ -92,6 +96,12 @@ footer nav{display:flex;flex-wrap:wrap;gap:6px 16px}
   </div>
 </div></section>
 
+<section class="brands"><div class="wrap">
+  <h2><span data-l="en">Brands on the map</span><span data-l="zh">地图上的品牌</span></h2>
+  <p class="lead"><span data-l="en">Tap a brand to fly to its home city and learn the words for shopping there.</span><span data-l="zh">点一个品牌，飞到它的故乡城市，学逛这家店用得上的词。</span></p>
+  <div class="brandgrid"><a class="brand" href="/map/?s=adidas" data-go=""><img src="https://img.heyvoyo.com/logo_adidas.png" alt="adidas" loading="lazy"><span>adidas</span><small>Herzogenaurach</small></a><a class="brand" href="/map/?s=Apple" data-go=""><img src="https://img.heyvoyo.com/logo_apple.png" alt="Apple" loading="lazy"><span>Apple</span><small>Cupertino</small></a><a class="brand" href="/map/?s=Starbucks" data-go=""><img src="https://img.heyvoyo.com/logo_starbucks.png" alt="Starbucks" loading="lazy"><span>Starbucks</span><small>Seattle</small></a><a class="brand" href="/map/?s=Pop%20Mart" data-go=""><img src="https://img.heyvoyo.com/logo_popmart.png" alt="Pop Mart" loading="lazy"><span>Pop Mart</span><small>Beijing</small></a><a class="brand" href="/map/?s=BYD" data-go=""><img src="https://img.heyvoyo.com/logo_byd.png" alt="BYD" loading="lazy"><span>BYD</span><small>Shenzhen</small></a><a class="brand" href="/map/?s=Chanel" data-go=""><img src="https://img.heyvoyo.com/logo_chanel.png" alt="Chanel" loading="lazy"><span>Chanel</span><small>Paris</small></a><a class="brand" href="/map/?s=Nintendo" data-go=""><img src="https://img.heyvoyo.com/logo_nintendo.png" alt="Nintendo" loading="lazy"><span>Nintendo</span><small>Kyoto</small></a><a class="brand" href="/map/?s=LEGO" data-go=""><img src="https://img.heyvoyo.com/logo_lego.png" alt="LEGO" loading="lazy"><span>LEGO</span><small>Billund</small></a><a class="brand" href="/map/?s=Dyson" data-go=""><img src="https://img.heyvoyo.com/logo_dyson.png" alt="Dyson" loading="lazy"><span>Dyson</span><small>Malmesbury</small></a><a class="brand" href="/map/?s=Luckin%20Coffee" data-go=""><img src="https://img.heyvoyo.com/logo_luckincoffee.png" alt="Luckin Coffee" loading="lazy"><span>Luckin Coffee</span><small>Xiamen</small></a></div>
+  <p class="more"><a href="/map/" data-go=""><span data-l="en">See all 39 brands on the map →</span><span data-l="zh">在地图上看全部 39 个品牌 →</span></a></p>
+</div></section>
 <section class="final"><div class="wrap">
   <h2><span data-l="en">Ready to set sail?</span><span data-l="zh">准备出发了吗？</span></h2>
   <div class="cta" style="justify-content:center">
