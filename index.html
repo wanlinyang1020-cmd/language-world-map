@@ -6068,6 +6068,7 @@ function placeClubs(t, rel){
     const [x0, y] = t.apply(projection(ll)), k = seen[n.city] = (seen[n.city] || 0) + 1, x = x0 + (k - 1)*18;
     clubArcG.append("path").attr("class","carc").attr("stroke", clubSel.color).attr("d", cpCurve([cx, cy + 20*s], [x, y], 40));
     const g = clubArcG.append("g").attr("class","cnpin").attr("transform", `translate(${x},${y})`).attr("role","button").attr("data-npcard", n.id).attr("data-npback", "cmap:" + clubSel.id);
+    { const cid = clubSel.id; g.on("click", ev=>{ ev.stopPropagation(); openNpcCard(n.id, ()=>{ const d = clubPinData.find(x=>x.id === cid); if (d) openClubPin(d); }); }); }   // 地图自己的点击会先把卡片关掉，所以这里直接打开人物卡
     g.append("circle").attr("r", 12).attr("stroke", clubSel.color);
     if (npcFaceOf(n)) g.append("g").html(npcAvSvg(n, 0, 0, 24)); else g.append("text").attr("y", 5).attr("text-anchor","middle").attr("font-size", 13).text(n.icon);
     if (k === 1) g.append("text").attr("class","cpl").attr("y", 26).attr("text-anchor","middle").text(n.name + " · " + n.city);
