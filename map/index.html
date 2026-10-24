@@ -4338,7 +4338,9 @@ function render(){
   // 两种显示样式：flat = 贴图模式（贴在原位、随放大变大、不散开）；badge = 徽章散开模式（圆形徽章、扇形散开、虚线连回原位）
   const flat = VIEW_STYLE === "flat";
   const fsc = Math.min(1.8, Math.max(.85, .8*Math.sqrt(rel)));
-  const fan = !flat && (rel >= 3.5 || filtered);
+  // 打开一座岛时（只看这座岛的贴纸）：贴纸钉在自己的位置，不散开、不飘；挤在一起的先藏起来，放大再看
+  const pinned = !!(focus && focus.pin);
+  const fan = !flat && !pinned && (rel >= 3.5 || filtered);
   const ring = filtered ? OFFS_WIDE : OFFS;
   let hidden = 0;
   // 放大到一座城市：先让城里的人站进城里，贴纸再绕着他们摊开
@@ -4358,7 +4360,7 @@ function render(){
     let dx=0, dy=0;
     if (show){
       show = false;
-      const cands = fan ? ring : (flat && spreadCity ? OFFS_CITY : flat && filtered ? OFFS_NEAR : OFFS.slice(0,1));
+      const cands = pinned ? OFFS.slice(0,1) : fan ? ring : (flat && spreadCity ? OFFS_CITY : flat && filtered ? OFFS_NEAR : OFFS.slice(0,1));
       for (const [ox,oy] of cands){
         const cx = x+ox, cy = y+oy;
         const hw = flat ? Math.max(s.cut ? s.cut.w/2*fsc : 15*fsc, s.n.length*5.6+4) : s.w*sc/2;
@@ -4691,6 +4693,7 @@ function isleStkWire(id, first){
     box.querySelectorAll("[data-cpstk]").forEach(b=>b.onclick = ()=>{ const sd = data.find(x=>x.n === b.dataset.cpstk); if (!sd) return; clubSel = null;
       svg.transition().duration(1000).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(sd.p, Math.max(d3.zoomTransform(svg.node()).k, kOf(4)))); setTimeout(()=>openCard(sd), 1050); });
     setFocus(g ? `${nm} · ${zh ? g.zh : g.en}` : nm, list);
+    if (focus){ focus.pin = true; render(); }
     if (fly) svg.transition().duration(1200).ease(d3.easeCubicInOut).call(zoom.transform, fitGroup(list));
   };
   card.querySelectorAll("[data-isk]").forEach(b=>b.onclick = ()=>show(+b.dataset.isk, true));
