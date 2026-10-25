@@ -6809,7 +6809,8 @@ function placeClubs(t, rel){
     this.style.opacity = clubSel && clubSel !== d ? .3 : 1;
   });
   document.getElementById("app").classList.toggle("club-on", !!(clubSel && on));
-  isleEls.each(function(d){ const [x, y] = t.apply(d.club.p); this.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`); this.style.opacity = clubSel && clubSel !== d.club ? .3 : 1; this.style.display = on && x > -60 && x < W + 60 && y > -40 && y < H + 60 ? "" : "none"; });
+  // 岛一直在地图上（选了分类、只看人物/NPC/正在发生/我的，都不藏），只有生活对照时让开
+  isleEls.each(function(d){ const [x, y] = t.apply(d.club.p); this.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s})`); this.style.opacity = clubSel && clubSel !== d.club ? .3 : 1; this.style.display = !cmpDim && x > -60 && x < W + 60 && y > -40 && y < H + 60 ? "" : "none"; });
   st.classed("cp-rel", d=>!!(clubSel && ((STK_CLUB[d.n] && STK_CLUB[d.n].club === clubSel.id) || (focus && focus.ids.has(d.id)))));   // 岛上的贴纸（只看这座岛时）不淡化
   clubArcG.selectAll("*").remove(); dockBoats(t, s, on, rel); prepFlags(t, s, on); drawFlags(t, s, on, rel); placeBoat(t, s, on); if (!on) return;
   if (!clubSel) return;
