@@ -4956,7 +4956,7 @@ function cardsWire(d){
 // 「我的词」自己长出来：在岛上点 🔊 听过的、☆ 收的、写的和说的句子里用到的，都记在这台设备上（wb.<club>）
 const wbOf = id => (typeof ISLE_WORDS !== "undefined" && ISLE_WORDS[id]) || null;
 const wbGet = id => { try { return JSON.parse(localStorage.getItem("wb." + id) || "{}"); } catch(e){ return {}; } };
-const wbMark = (id, zh, k) => { const s = wbGet(id), w = s[zh] || (s[zh] = {}); if (k === "star") w.star = !w.star; else w[k] = (w[k] || 0) + 1; w.t = Date.now(); try { localStorage.setItem("wb." + id, JSON.stringify(s)); } catch(e){} };
+const wbMark = (id, zh, k) => { const s = wbGet(id), w = s[zh] || (s[zh] = {}); if (k === "star") w.star = !w.star; else w[k] = (w[k] || 0) + 1; w.t = Date.now(); try { localStorage.setItem("wb." + id, JSON.stringify(s)); } catch(e){} if (syncMark) syncMark("wb." + id); };   // 登录了就同步到账号
 const wbW = w => LEARN_ZH ? w.zh : w.en.split(" /")[0];
 const wbAlts = w => LEARN_ZH ? [w.zh] : w.en.split("/").map(x=>x.split(" (")[0].trim().toLowerCase()).filter(Boolean);
 function wbScan(id, text, k){ const B = wbOf(id); if (!B || !text) return [];
@@ -8127,7 +8127,8 @@ ${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m
 }
 // ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
 // 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
-const SYNC_KEYS = ["express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1"];
+const SYNC_KEYS = ["express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
+  ...["eat_well", "pet_club", "body_mind", "life_abroad", "first_money", "dev_club", "trends_now", "fashion_club", "see_world", "economy_club", "social_money", "people_values", "life_questions", "med_club", "growth_club", "fun_club"].map(c=>"wb." + c)];   // 每座岛的词汇本
 const syncTs = () => cpLS("sync.ts") || {};
 let syncT = null, syncPulled = false;
 const syncDoc = () => SOC.db.collection("data/users/" + SOC.uid).doc("sync");
