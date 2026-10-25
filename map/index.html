@@ -473,7 +473,33 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .tagx{display:inline-block;font-size:11px;padding:1px 7px;border-radius:8px;background:#eaf6e8;color:#2b6a1f;margin:2px 3px 0 0}
 .vbox{margin-top:5px;position:relative;width:100%;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:#000}
 .vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.pl-map{width:100%;height:auto;display:block;margin:4px 0}.pl-pt{cursor:pointer}.pl-pt .pl-bub{transition:transform .2s}.pl-pt:hover .pl-bub{transform:translateY(-4px)}.pl-lbl{font:700 16px -apple-system,"PingFang SC",sans-serif;fill:#2f2b3a}.pl-cnt{font:700 13px -apple-system,sans-serif;fill:#fff}@keyframes pldash{to{stroke-dashoffset:-44}}.pl-trail{animation:pldash 1.4s linear infinite}@keyframes plbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}.pl-pt.today .pl-bub{animation:plbob 2.2s ease-in-out infinite}@media (prefers-reduced-motion:reduce){.pl-trail,.pl-pt.today .pl-bub{animation:none}}.pl-top,.pl-head{display:flex;align-items:center;gap:10px}.pl-top b{flex:1}.pl-head b{flex:1}.pl-head [data-plclose]{margin-left:auto}.pl-ev{background:#fff;border:2px solid #f1e3b5;border-radius:16px;margin:6px 0;overflow:hidden}.pl-ev.open{border-color:#ff7a45}.pl-evh{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:9px 12px;cursor:pointer}.pl-body{padding:0 12px 10px;border-top:1px dashed #f1e3b5}.pl-body .ic-card{border:0;padding:6px 0;margin:0}.pl-body [data-icopen]{display:none}.ic-card{background:#fff;border:2px solid #f1e3b5;border-radius:16px;padding:10px 14px;margin:8px 0}.ic-now{border-color:#ffd0b8}.ic-talk{border-color:#c9e7f5}.ic-date{display:inline-block;background:#ffe3d6;border-radius:999px;padding:0 9px;font-size:12px}.fun-opts{display:grid;gap:6px;margin:6px 0}.fun-opt{font:inherit;text-align:left;border:2px solid #eadfc0;border-radius:14px;background:#fffdf6;padding:7px 12px;cursor:pointer;color:inherit}.fun-opt b{font-size:19px;margin-right:4px}.fun-opt.ok{border-color:#36b37e;background:#e8f8f0}.fun-opt.no{border-color:#e5484d;background:#fdecec}.fun-opt[disabled]{cursor:default}.fun-rev{background:#fff4e8;border-radius:12px;padding:8px 12px;margin-top:6px;animation:funpop .35s}@keyframes funpop{0%{transform:scale(.92);opacity:0}100%{transform:none;opacity:1}}.fun-q{border-bottom:1px dashed #eadfc0;padding-bottom:6px;margin-bottom:6px}.fun-tiny{background:#fff1ea;border-color:#ff7a45}.bm h3{margin-bottom:4px}.bm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}@media(max-width:520px){.bm-grid{grid-template-columns:repeat(2,1fr)}}.bm-cz{font:inherit;border:2px solid var(--paper-edge,#e7dfc8);border-radius:14px;background:#fff;padding:8px 6px;cursor:pointer;color:inherit;text-align:center}.bm-cz span{display:block;font-size:24px}.bm-cz b{font-size:14px}.bm-cz.on{border-color:#7fa985;background:#eef6ef}.bm-q{background:#f3f7f2;border-radius:10px;padding:6px 10px;margin:4px 0}.bm-k{border-left:4px solid #7fa985;padding:2px 0 2px 10px;margin:8px 0}.bm-tiny{background:#fff3ec;border:1px dashed #f2b8a0;border-radius:12px;padding:8px 10px;margin-top:8px}.bm-more{border-top:1px solid #eee8da;padding-top:8px;margin-top:10px}.bm-more summary{cursor:pointer}
+.pl-map{width:100%;height:auto;display:block;margin:4px 0}.pl-pt{cursor:pointer}.pl-pt .pl-bub{transition:transform .2s}.pl-pt:hover .pl-bub{transform:translateY(-4px)}.pl-lbl{font:700 16px -apple-system,"PingFang SC",sans-serif;fill:#2f2b3a}.pl-cnt{font:700 13px -apple-system,sans-serif;fill:#fff}@keyframes pldash{to{stroke-dashoffset:-44}}.pl-trail{animation:pldash 1.4s linear infinite}@keyframes plbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}.pl-pt.today .pl-bub{animation:plbob 2.2s ease-in-out infinite}@media (prefers-reduced-motion:reduce){.pl-trail,.pl-pt.today .pl-bub{animation:none}}.pl-top,.pl-head{display:flex;align-items:center;gap:10px}.pl-top b{flex:1}.pl-head b{flex:1}.pl-head [data-plclose]{margin-left:auto}.pl-ev{background:#fff;border:2px solid #f1e3b5;border-radius:16px;margin:6px 0;overflow:hidden}.pl-ev.open{border-color:#ff7a45}.pl-evh{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:9px 12px;cursor:pointer}.pl-body{padding:0 12px 10px;border-top:1px dashed #f1e3b5}.pl-body .ic-card{border:0;padding:6px 0;margin:0}.pl-body [data-icopen]{display:none}.ic-card{background:#fff;border:2px solid #f1e3b5;border-radius:16px;padding:10px 14px;margin:8px 0}.ic-now{border-color:#ffd0b8}.ic-talk{border-color:#c9e7f5}.ic-date{display:inline-block;background:#ffe3d6;border-radius:999px;padding:0 9px;font-size:12px}.au-prompt{border:2px solid #9cc3ee;border-radius:14px;padding:12px 14px;margin:6px 0;background:#f6f9ff}.au-prompt b{font-size:16px}.au-prompt p{margin:6px 0;font-size:14px;line-height:1.5}.au-prompt .au-small{font-size:12.5px;color:#64708a}
+.au-prompt-btns{display:flex;gap:8px;margin:8px 0}.au-pbtn{flex:1;font:inherit;font-size:15px;font-weight:700;border-radius:10px;padding:9px;cursor:pointer;border:1.5px solid #d9dfea;background:#fff;color:#14305c}.au-pbtn.primary{background:#1b57b8;border-color:#1b57b8;color:#fff}
+.au-bd{--au-ink:#14305c;--au-muted:#64708a;--au-line:#d9dfea;--au-bg:#f4f6fb;--au-brand:#1b57b8;--au-err:#d4383a;position:fixed;inset:0;z-index:1000;background:rgba(10,24,48,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--au-ink)}.au-bd[hidden]{display:none}
+.au-card{position:relative;width:100%;max-width:420px;max-height:100%;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(10,24,48,.28);padding:32px 32px 22px}
+@media(max-width:480px){.au-bd{padding:0;align-items:stretch}.au-card{max-width:none;border-radius:0;padding:28px 20px}}
+.au-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;background:transparent;font-size:20px;color:var(--au-muted);cursor:pointer}.au-close:hover,.au-back:hover{background:var(--au-bg)}
+.au-back{position:absolute;top:14px;left:14px;height:34px;border:0;background:transparent;color:var(--au-muted);font:inherit;font-size:14px;cursor:pointer;padding:0 8px;border-radius:8px}
+.au-brand{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:20px;margin-bottom:18px}.au-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#1b57b8,#4cc3e6);display:grid;place-items:center;font-size:19px}
+.au-card h1{font-size:22px;margin:0 0 6px;text-align:center;font-family:inherit}.au-sub{color:var(--au-muted);font-size:14.5px;text-align:center;margin:0 0 20px;line-height:1.55}
+.au-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--au-bg);border-radius:12px;padding:4px;margin-bottom:20px}.au-tabs button{font:inherit;font-size:15px;font-weight:600;border:0;background:transparent;color:var(--au-muted);padding:9px;border-radius:9px;cursor:pointer}.au-tabs button.on{background:#fff;color:var(--au-ink);box-shadow:0 1px 3px rgba(10,24,48,.12)}
+.au-field{margin-bottom:14px}.au-field label{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:6px}.au-field label a{font-weight:500}
+.au-inp{position:relative}.au-inp input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:var(--au-ink);border:1.5px solid var(--au-line);border-radius:11px;padding:11px 14px;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.au-inp input:focus{border-color:var(--au-brand);box-shadow:0 0 0 4px rgba(27,87,184,.14)}.au-inp input.bad{border-color:var(--au-err)}.au-inp input.au-pw{padding-right:64px}
+.au-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--au-muted);font:inherit;font-size:13px;padding:6px 8px;cursor:pointer;border-radius:8px}
+.au-msg{font-size:13px;margin-top:6px;color:var(--au-err)}.au-hint{font-size:13px;margin-top:6px;color:var(--au-muted)}
+.au-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}.au-meter i{height:4px;border-radius:2px;background:var(--au-line)}.au-meter.s1 i:nth-child(-n+1){background:var(--au-err)}.au-meter.s2 i:nth-child(-n+2){background:#f0a020}.au-meter.s3 i:nth-child(-n+3){background:#7cbf3a}.au-meter.s4 i{background:#1f9d55}
+.au-card a{color:var(--au-brand);text-decoration:none}.au-card a:hover{text-decoration:underline}
+.au-btn{width:100%;font:inherit;font-size:16px;font-weight:700;border:0;border-radius:11px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}.au-btn.primary{background:var(--au-brand);color:#fff}.au-btn.primary:hover{background:#14438f}.au-btn:disabled{opacity:.6;cursor:default}
+.au-btn.secondary{background:#fff;color:var(--au-ink);border:1.5px solid var(--au-line)}.au-btn.secondary:hover{background:var(--au-bg)}
+.au-spin{width:16px;height:16px;border:2.5px solid #fff8;border-top-color:#fff;border-radius:50%;animation:ausp .7s linear infinite}@keyframes ausp{to{transform:rotate(360deg)}}
+.au-or{display:flex;align-items:center;gap:10px;color:var(--au-muted);font-size:13px;margin:16px 0}.au-or:before,.au-or:after{content:"";flex:1;height:1px;background:var(--au-line)}
+.au-check{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--au-muted);line-height:1.5;margin:4px 0 16px}.au-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--au-brand)}
+.au-alert{border-radius:11px;padding:10px 12px;font-size:14px;margin-bottom:14px;line-height:1.5;background:#fdecec;color:#9c2325}
+.au-big{font-size:44px;text-align:center;margin:4px 0 10px}.au-foot{text-align:center;font-size:12.5px;color:var(--au-muted);margin-top:18px;line-height:1.6}.au-switch{text-align:center;font-size:14px;color:var(--au-muted);margin-top:16px}
+.au-lang{display:flex;justify-content:center;gap:4px;margin-top:10px;color:var(--au-muted)}.au-lang button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--au-muted);cursor:pointer;padding:2px 6px;border-radius:6px}.au-lang button.on{color:var(--au-ink);font-weight:700}
+.au-list{font-size:13.5px;color:var(--au-muted);margin:0 0 16px;padding-left:18px;line-height:1.7}
+.fun-opts{display:grid;gap:6px;margin:6px 0}.fun-opt{font:inherit;text-align:left;border:2px solid #eadfc0;border-radius:14px;background:#fffdf6;padding:7px 12px;cursor:pointer;color:inherit}.fun-opt b{font-size:19px;margin-right:4px}.fun-opt.ok{border-color:#36b37e;background:#e8f8f0}.fun-opt.no{border-color:#e5484d;background:#fdecec}.fun-opt[disabled]{cursor:default}.fun-rev{background:#fff4e8;border-radius:12px;padding:8px 12px;margin-top:6px;animation:funpop .35s}@keyframes funpop{0%{transform:scale(.92);opacity:0}100%{transform:none;opacity:1}}.fun-q{border-bottom:1px dashed #eadfc0;padding-bottom:6px;margin-bottom:6px}.fun-tiny{background:#fff1ea;border-color:#ff7a45}.bm h3{margin-bottom:4px}.bm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}@media(max-width:520px){.bm-grid{grid-template-columns:repeat(2,1fr)}}.bm-cz{font:inherit;border:2px solid var(--paper-edge,#e7dfc8);border-radius:14px;background:#fff;padding:8px 6px;cursor:pointer;color:inherit;text-align:center}.bm-cz span{display:block;font-size:24px}.bm-cz b{font-size:14px}.bm-cz.on{border-color:#7fa985;background:#eef6ef}.bm-q{background:#f3f7f2;border-radius:10px;padding:6px 10px;margin:4px 0}.bm-k{border-left:4px solid #7fa985;padding:2px 0 2px 10px;margin:8px 0}.bm-tiny{background:#fff3ec;border:1px dashed #f2b8a0;border-radius:12px;padding:8px 10px;margin-top:8px}.bm-more{border-top:1px solid #eee8da;padding-top:8px;margin-top:10px}.bm-more summary{cursor:pointer}
 .iv-list{display:flex;flex-direction:column;gap:7px}
 .iv{display:flex;gap:9px;align-items:flex-start;border:2px solid var(--paper-edge);border-radius:10px;background:#fff;padding:6px;cursor:pointer}.iv:hover{background:var(--hover)}.iv.on{outline:3px solid #e8453c}
 .iv img{width:112px;aspect-ratio:16/9;object-fit:cover;border-radius:7px;flex:none;background:#ddd}
@@ -3903,6 +3929,8 @@ const LABELS = [
 // HV_CONFIG 由 deploy.sh 从 ../后台/config.json 填进来；没填时整个后台不启用。
 var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": ""};
 var HV = {sb: null, session: null, user: null, db: null, sample: null, ready: false};
+// 从「重设密码」邮件点回来时，网址里带着 type=recovery：记下来，登录后直接打开「设新密码」
+try { if (/type=recovery/.test(location.hash + location.search)) sessionStorage.setItem("hv.recovery", "1"); } catch(e){}
 
 function hvLoadScript(src){ return new Promise((ok, bad)=>{ const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
 
@@ -3912,11 +3940,12 @@ async function hvInit(){
   HV.sb = window.supabase.createClient(HV_CONFIG.url, HV_CONFIG.anonKey, {auth: {persistSession: true, detectSessionInUrl: true}});
   const {data} = await HV.sb.auth.getSession();
   HV.session = data.session;
-  HV.sb.auth.onAuthStateChange((ev, session)=>{ const was = !!HV.session; HV.session = session; if (!!session !== was) location.reload(); });
+  HV.sb.auth.onAuthStateChange((ev, session)=>{ if (ev === "PASSWORD_RECOVERY") try { sessionStorage.setItem("hv.recovery", "1"); } catch(e){} const was = !!HV.session; HV.session = session; if (!!session !== was) location.reload(); });
   if (!HV.session) return true;
   const uid = HV.session.user.id, email = HV.session.user.email || "";
   let admin = false; try { const r = await HV.sb.from("admins").select("uid").eq("uid", uid).maybeSingle(); admin = !!(r.data); } catch(e){}
   HV.user = {
+    metaName: (HV.session.user.user_metadata || {}).name || "",   // 注册时填的昵称
     id: async ()=>uid, isOwner: async ()=>admin, canEdit: ()=>admin, can: async ()=>true, email,
     profiles: async ids => { const out = {}; if (!ids.length) return out;
       const r = await HV.sb.from("docs").select("id,data").eq("coll", "profiles").in("id", ids);
@@ -4007,6 +4036,22 @@ async function hvSignOut(){ await HV.sb.auth.signOut(); }
 // ---- 邮箱 + 密码：第一次用登录链接进来，之后在「👤 我」里设密码，以后直接用密码登录（不用等邮件）
 async function hvSignInPassword(email, password){
   const r = await HV.sb.auth.signInWithPassword({email, password});
+  if (r.error) throw r.error;
+}
+// ---- 注册（邮箱 + 密码 + 昵称）：Supabase 会发一封确认邮件，点了才算注册完
+async function hvSignUp(email, password, name){
+  const r = await HV.sb.auth.signUp({email, password, options: {data: {name}, emailRedirectTo: location.origin + location.pathname}});
+  if (r.error) throw r.error;
+  if (r.data && r.data.user && Array.isArray(r.data.user.identities) && !r.data.user.identities.length) throw {code: "exists", message: "already registered"};   // 邮箱已经注册过
+}
+// ---- 忘记密码：发一封重设邮件，点回来以后打开「设新密码」
+async function hvResetPassword(email){
+  const r = await HV.sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+  if (r.error) throw r.error;
+}
+// ---- 重新发送确认邮件
+async function hvResendSignup(email){
+  const r = await HV.sb.auth.resend({type: "signup", email, options: {emailRedirectTo: location.origin + location.pathname}});
   if (r.error) throw r.error;
 }
 async function hvSetPassword(password){
@@ -6762,9 +6807,7 @@ function openSoc(){
   SOC.view = "list";
   if (selected) selected.el.classList.remove("sel"); selected = null;
   if (!SOC.ready && !window.claude && typeof HV !== "undefined" && HV.sb && !HV.session){
-    card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#2f9e8f">🤝</div><div><h2>登录 HeyVoyo</h2><span class="c-cat" style="background:#2f9e8f">找同行者 · 进圈子</span></div></div>${loginHtml("", "")}`;
-    card.hidden = false; card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
-    bindLogin(card);
+    SOC.view = null; auOpen("login", "clubs");   // 没登录：直接弹出登录窗
     return;
   }
   if (!SOC.ready){
@@ -8340,34 +8383,141 @@ function npcTalkHtml(id, tid, lang){
 }
 // ===== 登录 / 注册（网站上用邮箱链接登录；claude.ai 里用 Claude 的账户）和「我」的菜单 =====
 const SITE_LOGIN = () => !window.claude && typeof HV !== "undefined" && HV.sb;
+// 🔐 登录 / 注册：地图里的入口只放两个按钮，点了弹出正规的登录注册窗口（auOpen）。默认英文，可以切中文（存在 hv.authLang）
 function loginHtml(title, after){
-  return `<div style="border:2px solid #9cc3ee;border-radius:12px;padding:10px 12px;margin:6px 0">
-    <b>${esc(title || "登录 HeyVoyo")}</b>
-    <div class="soc-form" style="margin-top:6px"><label for="hvEmail">邮箱</label><input id="hvEmail" type="email" autocomplete="email" placeholder="you@example.com">
-      <label for="hvPw">密码（设过密码的话）</label><input id="hvPw" type="password" autocomplete="current-password" placeholder="没设过就留空">
-      <div class="chips"><button class="chip hot" id="hvPwGo" data-after="${esc(after||"")}">用密码登录</button><button class="chip" id="hvSend" data-after="${esc(after||"")}">发登录链接到邮箱</button></div>
-      <span class="note" id="hvNote"></span></div>
-    <p class="note">第一次来、或者忘了密码：点「发登录链接到邮箱」，邮件里点一下就登录（第一次登录就是注册）。登录后可以在「👤 我」里设一个密码，以后直接用密码登录。</p>
-    <p class="note">地图、贴纸、视频和圈子里的内容，不登录也能看。${after ? "登录后会回到这里。" : ""}</p></div>`;
+  const en = auLang() === "en";
+  return `<div class="au-prompt"><b>${esc(title || (en ? "Join HeyVoyo" : "加入 HeyVoyo"))}</b>
+    <p>${en ? "Log in or create a free account to post in clubs, follow fellow travellers and keep your word books on every device." : "登录或免费注册，就能在圈子里发言、关注同行者，词汇本也会跟着你的账号走。"}</p>
+    <div class="au-prompt-btns"><button class="au-pbtn primary" data-au="login" data-after="${esc(after || "")}">${en ? "Log in" : "登录"}</button><button class="au-pbtn" data-au="signup" data-after="${esc(after || "")}">${en ? "Sign up free" : "免费注册"}</button></div>
+    <p class="au-small">${en ? "The map, islands and club posts are open to everyone — no account needed to look around." : "地图、岛和圈子里的内容，不登录也能看。"}</p></div>`;
 }
-function bindLogin(root){
-  const pg = root.querySelector("#hvPwGo");
-  if (pg) pg.onclick = async ()=>{ const em = root.querySelector("#hvEmail").value.trim(), pw = root.querySelector("#hvPw").value, n = root.querySelector("#hvNote");
-    if (!SITE_LOGIN()){ n.textContent = "这里不能用邮箱登录。"; return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ n.textContent = "请输入正确的邮箱。"; return; }
-    if (!pw){ n.textContent = "请输入密码；没设过密码的话，点「发登录链接到邮箱」。"; return; }
-    try { if (pg.dataset.after) localStorage.setItem("hv.after", pg.dataset.after); } catch(e){}
-    n.textContent = "正在登录…"; pg.disabled = true;
-    try { await hvSignInPassword(em, pw); n.textContent = "登录成功！"; }
-    catch(e){ pg.disabled = false; n.textContent = /invalid/i.test(e && e.message || "") ? "邮箱或密码不对。还没设过密码？点「发登录链接到邮箱」，登录后在「👤 我」里设密码。" : "没登录上：" + (e && e.message || "请稍后再试"); } };
-  const pwIn = root.querySelector("#hvPw"); if (pwIn && pg) pwIn.onkeydown = e=>{ if (e.key === "Enter") pg.click(); };
-  const b = root.querySelector("#hvSend"); if (!b) return;
-  b.onclick = async ()=>{ const em = root.querySelector("#hvEmail").value.trim(), n = root.querySelector("#hvNote");
-    if (!SITE_LOGIN()){ n.textContent = "这里不能用邮箱登录。"; return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ n.textContent = "请输入正确的邮箱。"; return; }
-    try { if (b.dataset.after) localStorage.setItem("hv.after", b.dataset.after); } catch(e){}
-    n.textContent = "正在发送…"; try { await hvSignIn(em); n.textContent = "已发送！去邮箱点登录链接（看不到的话找找垃圾邮件）。"; } catch(e){ n.textContent = "没发出去：" + (e && e.message || "请稍后再试"); } };
+function bindLogin(root){ root.querySelectorAll("[data-au]").forEach(b=>b.onclick = ()=>auOpen(b.dataset.au, b.dataset.after)); }
+const AU_T = {en:{brand:"HeyVoyo",login:"Log in",signup:"Sign up",
+  loginTitle:"Welcome back",loginSub:"Log in to pick up your voyage — your clubs, word books and friends are waiting.",
+  signupTitle:"Create your account",signupSub:"It's free. The map and islands are open to everyone; an account lets you post, follow and sync your word books.",
+  email:"Email",emailPh:"you@example.com",pw:"Password",pwPh:"Enter your password",newPwPh:"At least 8 characters",name:"Display name",namePh:"What people see in clubs",
+  show:"Show",hide:"Hide",forgot:"Forgot password?",loginBtn:"Log in",signupBtn:"Create account",or:"or",magic:"✉️  Email me a login link (no password)",
+  agree:'I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>',
+  noAcc:"New to HeyVoyo?",haveAcc:"Already have an account?",toSignup:"Sign up free",toLogin:"Log in",
+  foot:'By logging in you agree to our <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
+  e_email:"Please enter a valid email address",e_pw:"Please enter your password",e_pwShort:"Use at least 8 characters",e_name:"Please add a display name (1–20 characters)",e_agree:"Please accept the Terms and Privacy Policy",
+  e_cred:"Wrong email or password. <a href='#' data-aug='forgot'>Reset your password</a> or use a login link.",
+  e_unconf:"Please confirm your email first — check your inbox for the confirmation link. <a href='#' data-aug='resend_signup'>Resend it</a>",
+  e_exists:"This email is already registered. <a href='#' data-aug='login'>Log in instead</a>",
+  e_rate:"Too many attempts. Please wait a minute and try again.",e_net:"Something went wrong. Please try again.",
+  strength:["Weak","Fair","Good","Strong"],pwHint:"At least 8 characters — mix letters and numbers",
+  forgotTitle:"Reset your password",forgotSub:"Enter the email you signed up with and we'll send you a reset link.",sendReset:"Send reset email",back:"← Back",
+  sentTitle:"Check your inbox",sentReset:"We sent a password reset email to <b>{e}</b>. Click the button in it to choose a new password.",
+  sentSignup:"We sent a confirmation email to <b>{e}</b>. Click the button in it to finish signing up.",sentMagic:"We sent a login link to <b>{e}</b>. Open it on this device to log in.",
+  notGot:"Didn't get it?",tips:["Check your spam or promotions folder","It comes from HeyVoyo &lt;login@mail.heyvoyo.com&gt;","It can take a minute or two"],
+  resend:"Resend",resendIn:"Resend in {s}s",resent:"Sent again ✓",changeEmail:"Use a different email",
+  resetTitle:"Choose a new password",resetSub:"Set a new password for your account.",newPw:"New password",confirmPw:"Confirm password",e_match:"Passwords don't match",saveBtn:"Save password",
+  doneTitle:"All set ⛵",doneSub:"Your new password is saved and you're logged in.",start:"Start exploring",close:"Close"},
+ zh:{brand:"HeyVoyo",login:"登录",signup:"注册",
+  loginTitle:"欢迎回来",loginSub:"登录后继续你的航行：圈子、词汇本、关注的人都在。",
+  signupTitle:"创建你的账号",signupSub:"免费注册。地图、岛和内容不登录也能看；登录后才能发言、关注、同步词汇本。",
+  email:"邮箱",emailPh:"you@example.com",pw:"密码",pwPh:"输入密码",newPwPh:"至少 8 位",name:"昵称",namePh:"别人在圈子里看到的名字",
+  show:"显示",hide:"隐藏",forgot:"忘记密码？",loginBtn:"登录",signupBtn:"创建账号",or:"或",magic:"✉️  用邮箱登录链接（免密码）",
+  agree:'我已阅读并同意 <a href="/terms.html" target="_blank" rel="noopener">用户协议</a> 和 <a href="/privacy.html" target="_blank" rel="noopener">隐私政策</a>',
+  noAcc:"还没有账号？",haveAcc:"已经有账号了？",toSignup:"免费注册",toLogin:"去登录",
+  foot:'登录即表示你同意 <a href="/terms.html" target="_blank" rel="noopener">用户协议</a> 和 <a href="/privacy.html" target="_blank" rel="noopener">隐私政策</a>。',
+  e_email:"请输入正确的邮箱地址",e_pw:"请输入密码",e_pwShort:"密码至少要 8 位",e_name:"请填一个昵称（1–20 个字）",e_agree:"请先同意用户协议和隐私政策",
+  e_cred:"邮箱或密码不正确。忘了密码？可以 <a href='#' data-aug='forgot'>重设密码</a>，或用登录链接登录。",
+  e_unconf:"请先确认邮箱：去收件箱点确认链接。<a href='#' data-aug='resend_signup'>重新发送</a>",
+  e_exists:"这个邮箱已经注册过了。<a href='#' data-aug='login'>直接登录</a>",
+  e_rate:"试得太频繁了，请等一分钟再试。",e_net:"出了点问题，请再试一次。",
+  strength:["太弱","一般","不错","很强"],pwHint:"至少 8 位，字母和数字混着用更安全",
+  forgotTitle:"重设密码",forgotSub:"输入你注册用的邮箱，我们会发一封重设密码的邮件。",sendReset:"发送重设邮件",back:"← 返回",
+  sentTitle:"去查收邮件",sentReset:"我们给 <b>{e}</b> 发了一封重设密码的邮件，点邮件里的按钮就能设新密码。",
+  sentSignup:"我们给 <b>{e}</b> 发了一封确认邮件，点邮件里的按钮就完成注册了。",sentMagic:"我们给 <b>{e}</b> 发了一个登录链接，在这台设备上点开就能登录。",
+  notGot:"没收到？",tips:["看看垃圾邮件 / 推广邮件","发件人是 HeyVoyo &lt;login@mail.heyvoyo.com&gt;","邮件可能要一两分钟才到"],
+  resend:"重新发送",resendIn:"{s} 秒后可以重新发送",resent:"已重新发送 ✓",changeEmail:"换一个邮箱",
+  resetTitle:"设置新密码",resetSub:"给你的账号设一个新密码。",newPw:"新密码",confirmPw:"再输一次",e_match:"两次输入的密码不一样",saveBtn:"保存密码",
+  doneTitle:"设好了 ⛵",doneSub:"新密码已经保存，你已经登录了。",start:"开始航行",close:"关闭"}};
+function auLang(){ try { const v = localStorage.getItem("hv.authLang"); if (v === "zh" || v === "en") return v; } catch(e){} return "en"; }
+let AU = {v: "login", email: "", cd: 0, timer: null, show: {}, after: "", alert: ""};
+const auT = k => AU_T[auLang()][k];
+function auView(){
+  const t = auT, S = AU.v;
+  const pwIn = (id, ph, auto) => `<div class="au-inp"><input id="${id}" class="au-pw" type="${AU.show[id] ? "text" : "password"}" placeholder="${ph}" autocomplete="${auto}"><button type="button" class="au-eye" data-aueye="${id}">${AU.show[id] ? t("hide") : t("show")}</button></div>`;
+  const emailIn = `<div class="au-field"><label for="auEm">${t("email")}</label><div class="au-inp"><input id="auEm" type="email" inputmode="email" autocomplete="email" placeholder="${t("emailPh")}" value="${esc(AU.email)}"></div></div>`;
+  const head = (title, sub, back) => `<button class="au-close" data-auclose aria-label="${t("close")}">✕</button>${back ? `<button class="au-back" data-aug="${back}">${t("back")}</button>` : ""}<div class="au-brand"><span class="au-logo">⛵</span>${t("brand")}</div><h1 id="auTitle">${title}</h1>${sub ? `<p class="au-sub">${sub}</p>` : ""}${AU.alert ? `<div class="au-alert" role="alert">${t(AU.alert)}</div>` : ""}`;
+  const lang = `<div class="au-lang"><button data-aul="en" class="${auLang() === "en" ? "on" : ""}">English</button>·<button data-aul="zh" class="${auLang() === "zh" ? "on" : ""}">中文</button></div>`;
+  const tabs = on => `<div class="au-tabs" role="tablist"><button role="tab" class="${on === "login" ? "on" : ""}" data-aug="login">${t("login")}</button><button role="tab" class="${on === "signup" ? "on" : ""}" data-aug="signup">${t("signup")}</button></div>`;
+  if (S === "login") return head(t("loginTitle"), t("loginSub")) + tabs("login") + `<form novalidate id="auF">${emailIn}
+    <div class="au-field"><label for="auPw">${t("pw")} <a href="#" data-aug="forgot">${t("forgot")}</a></label>${pwIn("auPw", t("pwPh"), "current-password")}</div>
+    <button class="au-btn primary" id="auGo">${t("loginBtn")}</button></form><div class="au-or">${t("or")}</div><button class="au-btn secondary" id="auMagic">${t("magic")}</button>
+    <p class="au-switch">${t("noAcc")} <a href="#" data-aug="signup">${t("toSignup")}</a></p><p class="au-foot">${t("foot")}</p>${lang}`;
+  if (S === "signup") return head(t("signupTitle"), t("signupSub")) + tabs("signup") + `<form novalidate id="auF">
+    <div class="au-field"><label for="auNm">${t("name")}</label><div class="au-inp"><input id="auNm" autocomplete="nickname" maxlength="20" placeholder="${t("namePh")}"></div></div>${emailIn}
+    <div class="au-field"><label for="auPw">${t("pw")}</label>${pwIn("auPw", t("newPwPh"), "new-password")}<div class="au-meter" id="auMeter"><i></i><i></i><i></i><i></i></div><div class="au-hint" id="auPwh">${t("pwHint")}</div></div>
+    <label class="au-check"><input type="checkbox" id="auAg"><span>${t("agree")}</span></label><button class="au-btn primary" id="auGo">${t("signupBtn")}</button></form>
+    <p class="au-switch">${t("haveAcc")} <a href="#" data-aug="login">${t("toLogin")}</a></p>${lang}`;
+  if (S === "forgot") return head(t("forgotTitle"), t("forgotSub"), "login") + `<form novalidate id="auF">${emailIn}<button class="au-btn primary" id="auGo">${t("sendReset")}</button></form>${lang}`;
+  if (S.startsWith("sent_")){ const k = {sent_reset: "sentReset", sent_signup: "sentSignup", sent_magic: "sentMagic"}[S];
+    return head(t("sentTitle"), "", "login") + `<div class="au-big">📬</div><p class="au-sub">${t(k).replace("{e}", esc(AU.email))}</p>
+    <p class="au-hint" style="font-weight:600;color:var(--au-ink)">${t("notGot")}</p><ul class="au-list">${t("tips").map(x=>`<li>${x}</li>`).join("")}</ul>
+    <button class="au-btn secondary" id="auResend" ${AU.cd ? "disabled" : ""}>${AU.cd ? t("resendIn").replace("{s}", AU.cd) : t("resend")}</button>
+    <p class="au-switch"><a href="#" data-aug="${S === "sent_signup" ? "signup" : S === "sent_reset" ? "forgot" : "login"}">${t("changeEmail")}</a></p>${lang}`; }
+  if (S === "reset") return head(t("resetTitle"), t("resetSub")) + `<form novalidate id="auF">
+    <div class="au-field"><label for="auPw">${t("newPw")}</label>${pwIn("auPw", t("newPwPh"), "new-password")}<div class="au-meter" id="auMeter"><i></i><i></i><i></i><i></i></div></div>
+    <div class="au-field"><label for="auPw2">${t("confirmPw")}</label>${pwIn("auPw2", t("newPwPh"), "new-password")}</div><button class="au-btn primary" id="auGo">${t("saveBtn")}</button></form>${lang}`;
+  return head(t("doneTitle"), t("doneSub")) + `<div class="au-big">🎉</div><button class="au-btn primary" data-auclose>${t("start")}</button>${lang}`;
 }
+function auOpen(view, after){
+  if (!SITE_LOGIN() && view !== "reset"){ return; }
+  AU.v = view || "login"; AU.alert = ""; if (after != null) AU.after = after;
+  let bd = document.getElementById("auBd");
+  if (!bd){ bd = document.createElement("div"); bd.id = "auBd"; bd.className = "au-bd"; bd.innerHTML = `<div class="au-card" role="dialog" aria-modal="true" aria-labelledby="auTitle"></div>`; document.body.appendChild(bd);
+    bd.addEventListener("mousedown", e=>{ if (e.target === bd) auClose(); }); document.addEventListener("keydown", e=>{ if (e.key === "Escape" && !bd.hidden) auClose(); }); }
+  bd.hidden = false; auDraw(); setTimeout(()=>{ const f = bd.querySelector("input"); if (f) f.focus(); }, 30);
+}
+function auClose(){ const bd = document.getElementById("auBd"); if (bd) bd.hidden = true; clearInterval(AU.timer); }
+function auGo(v){ const em = document.getElementById("auEm"); if (em) AU.email = em.value.trim(); AU.v = v; AU.alert = ""; auDraw(); }
+function auErr(id, msg){ const i = document.getElementById(id); if (!i) return; i.classList.add("bad"); i.setAttribute("aria-invalid", "true"); const box = i.closest(".au-field"); const m = document.createElement("div"); m.className = "au-msg"; m.setAttribute("role", "alert"); m.textContent = "⚠ " + msg; box.appendChild(m); }
+const auOk = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+const auStr = v => { let s = 0; if (v.length >= 8) s++; if (/[a-z]/i.test(v) && /\d/.test(v)) s++; if (v.length >= 12) s++; if (/[^a-z0-9]/i.test(v)) s++; return v ? Math.max(1, s) : 0; };
+function auCd(){ AU.cd = 60; clearInterval(AU.timer); AU.timer = setInterval(()=>{ AU.cd--; if (AU.cd <= 0) clearInterval(AU.timer); const b = document.getElementById("auResend"); if (b){ b.disabled = AU.cd > 0; b.textContent = AU.cd > 0 ? auT("resendIn").replace("{s}", AU.cd) : auT("resend"); } }, 1000); }
+function auFail(e, fallback){ const m = String(e && (e.message || e.code) || "");
+  AU.alert = e && e.code === "exists" ? "e_exists" : /invalid login|invalid credentials/i.test(m) ? "e_cred" : /not confirmed/i.test(m) ? "e_unconf" : /rate|too many|seconds/i.test(m) ? "e_rate" : (fallback || "e_net"); auDraw(); }
+function auBusy(on){ const b = document.getElementById("auGo"); if (b){ b.disabled = on; b.innerHTML = on ? `<span class="au-spin"></span>` : b.dataset.label; } }
+function auDraw(){
+  const card = document.querySelector("#auBd .au-card"); if (!card) return; card.innerHTML = auView();
+  card.querySelectorAll("[data-auclose]").forEach(b=>b.onclick = auClose);
+  card.querySelectorAll("[data-aug]").forEach(b=>b.onclick = async e=>{ e.preventDefault(); const g = b.dataset.aug;
+    if (g === "resend_signup"){ try { await hvResendSignup(AU.email); AU.v = "sent_signup"; AU.alert = ""; auDraw(); auCd(); } catch(err){ auFail(err); } return; }
+    auGo(g); });
+  card.querySelectorAll("[data-aul]").forEach(b=>b.onclick = ()=>{ try { localStorage.setItem("hv.authLang", b.dataset.aul); } catch(e){} auDraw(); });
+  card.querySelectorAll("[data-aueye]").forEach(b=>b.onclick = ()=>{ const id = b.dataset.aueye, i = document.getElementById(id), v = i.value; AU.show[id] = !AU.show[id]; i.type = AU.show[id] ? "text" : "password"; b.textContent = AU.show[id] ? auT("hide") : auT("show"); i.value = v; i.focus(); });
+  const pw = document.getElementById("auPw"), mt = document.getElementById("auMeter");
+  if (pw && mt) pw.oninput = ()=>{ const s = auStr(pw.value); mt.className = "au-meter" + (s ? " s" + s : ""); const h = document.getElementById("auPwh"); if (h) h.textContent = s ? auT("strength")[s - 1] + " · " + auT("pwHint") : auT("pwHint"); };
+  const go = document.getElementById("auGo"); if (go) go.dataset.label = go.textContent;
+  const keepAfter = () => { try { if (AU.after) localStorage.setItem("hv.after", AU.after); } catch(e){} };
+  const mg = document.getElementById("auMagic");
+  if (mg) mg.onclick = async ()=>{ card.querySelectorAll(".au-msg").forEach(x=>x.remove()); const em = document.getElementById("auEm"); AU.email = em.value.trim();
+    if (!auOk(AU.email)){ auErr("auEm", auT("e_email")); em.focus(); return; }
+    keepAfter(); mg.disabled = true; try { await hvSignIn(AU.email); AU.v = "sent_magic"; AU.alert = ""; auDraw(); auCd(); } catch(e){ auFail(e); } };
+  const rs = document.getElementById("auResend");
+  if (rs) rs.onclick = async ()=>{ rs.disabled = true; try { if (AU.v === "sent_signup") await hvResendSignup(AU.email); else if (AU.v === "sent_reset") await hvResetPassword(AU.email); else await hvSignIn(AU.email); auCd(); } catch(e){ auFail(e); } };
+  const f = document.getElementById("auF"); if (!f) return;
+  f.onsubmit = async e=>{ e.preventDefault(); card.querySelectorAll(".au-msg").forEach(x=>x.remove()); card.querySelectorAll(".bad").forEach(x=>{ x.classList.remove("bad"); x.removeAttribute("aria-invalid"); });
+    const em = document.getElementById("auEm"); if (em) AU.email = em.value.trim(); let bad = false;
+    if (em && !auOk(AU.email)){ auErr("auEm", auT("e_email")); bad = true; }
+    if (AU.v === "login"){ if (!pw.value){ auErr("auPw", auT("e_pw")); bad = true; }
+      if (!bad){ keepAfter(); auBusy(true); try { await hvSignInPassword(AU.email, pw.value); } catch(err){ auFail(err); } } }   // 登录成功后页面会自己刷新
+    else if (AU.v === "signup"){ const nm = document.getElementById("auNm").value.trim(); if (!nm || nm.length > 20){ auErr("auNm", auT("e_name")); bad = true; }
+      if (pw.value.length < 8){ auErr("auPw", auT("e_pwShort")); bad = true; }
+      if (!document.getElementById("auAg").checked){ const c = card.querySelector(".au-check"); c.insertAdjacentHTML("afterend", `<div class="au-msg" role="alert" style="margin:-10px 0 12px">⚠ ${auT("e_agree")}</div>`); bad = true; }
+      if (!bad){ keepAfter(); auBusy(true); try { await hvSignUp(AU.email, pw.value, nm); AU.v = "sent_signup"; AU.alert = ""; auDraw(); auCd(); } catch(err){ auFail(err); } } }
+    else if (AU.v === "forgot"){ if (!bad){ auBusy(true); try { await hvResetPassword(AU.email); AU.v = "sent_reset"; AU.alert = ""; auDraw(); auCd(); } catch(err){ auFail(err); } } }
+    else if (AU.v === "reset"){ const p2 = document.getElementById("auPw2"); if (pw.value.length < 8){ auErr("auPw", auT("e_pwShort")); bad = true; } else if (pw.value !== p2.value){ auErr("auPw2", auT("e_match")); bad = true; }
+      if (!bad){ auBusy(true); try { await hvSetPassword(pw.value); try { sessionStorage.removeItem("hv.recovery"); } catch(e){} AU.v = "done"; AU.alert = ""; auDraw(); } catch(err){ auFail(err); } } }
+    const first = card.querySelector(".bad"); if (first) first.focus(); };
+}
+// 从「重设密码」邮件点回来：登录好以后打开「设新密码」；注册时填的昵称，第一次登录时写进资料
+(async ()=>{ if (typeof HV_BOOT === "undefined") return; await HV_BOOT; if (!HV.session) return;
+  let rec = false; try { rec = sessionStorage.getItem("hv.recovery") === "1"; } catch(e){} if (rec) auOpen("reset");
+  setTimeout(async ()=>{ try { if (SOC.ready && HV.user && HV.user.metaName){ const me = SOC.profiles[SOC.uid] || {}; if (!me.name){ const body = {...me, name: HV.user.metaName.slice(0, 20)}; delete body.id; await SOC.db.doc("profiles/" + SOC.uid).set(body); } } } catch(e){} }, 4000); })();
 function updateMeBtn(){
   const b = document.getElementById("meBtn"); if (!b) return;
   if (SOC.ready){ const me = SOC.profiles[SOC.uid] || {}; b.textContent = "👤 " + (me.name || (SOC.site && HV.user && HV.user.email ? HV.user.email.split("@")[0] : "我")); b.classList.remove("hot"); }
@@ -8380,7 +8530,7 @@ function openMe(){
       <button class="chip" id="mePath2" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">🧭 <span><b>${t_("myPath")}</b><br><small class="note">${t_("myPathSub")} · ${t_("noLogin")}</small></span></button>
       <button class="chip" id="meReview2" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">🔁 <span><b>${t_("revTitle")}</b><br><small class="note">${esc(t_("revDueN", {n: revDueN()}))}</small></span></button>
       <button class="chip" id="meLearn2" style="display:flex;width:100%;justify-content:flex-start;gap:8px;margin:4px 0;text-align:left">⭐ <span><b>${t_("learnBook")}</b><br><small class="note">${loadLearn().length} ${t_("sentences")} · ${t_("onDevice")}</small></span></button>
-      ${SITE_LOGIN() ? loginHtml("登录 / 注册：进圈子、找同行者", "") : `<p class="note">进圈子、找同行者需要登录。</p>`}`;
+      ${SITE_LOGIN() ? loginHtml("", "") : `<p class="note">进圈子、找同行者需要登录。</p>`}`;
     card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard; bindLogin(card); card.querySelector("#mePrefs2").onclick = ()=>openPrefs(false); card.querySelector("#meLearn2").onclick = openLearnBook; card.querySelector("#meReview2").onclick = openReview; card.querySelector("#mePath2").onclick = ()=>openPath(); return; }
   SOC.view = null; if (selected) selected.el.classList.remove("sel"); selected = null;
   const mine = SOC.clubmem.filter(m=>m.by===SOC.uid).map(m=>SOC.clubs.find(c=>c.id===m.club)).filter(Boolean);
@@ -8493,7 +8643,7 @@ function openClubs(){
     ${SOC.ready ? `<div class="chips"><button class="chip" id="clsNew">${Z("＋ 建一个圈子")}</button></div>` : ""}`;
   card.hidden = false; card.querySelector(".x").onclick = ()=>{ SOC.view = null; closeCard(); };
   card.querySelectorAll("[data-openclub]").forEach(b=>b.onclick = ()=>{ openClub(b.dataset.openclub); card.scrollTop = 0; });
-  const l = card.querySelector("#clsLogin"); if (l) l.onclick = openMe;
+  const l = card.querySelector("#clsLogin"); if (l) l.onclick = ()=>auOpen("login", "clubs");
   const n = card.querySelector("#clsNew"); if (n) n.onclick = ()=>{ openSoc(); const h = [...card.querySelectorAll("h3")].find(x=>x.textContent.startsWith(Z("👥 圈子"))); if (h) h.scrollIntoView(); };
 }
 // 圈子页面：像群聊一样——置顶话题、大家的发言（NPC 和真人）、点赞、回复、底部输入框和快捷回复
