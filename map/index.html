@@ -581,6 +581,13 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .lb-pack:hover{background:#fff3e0}
 .lb-led{list-style:none;padding:0;margin:4px 0}.lb-led li{display:flex;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed #d8d2c0}
 .lb-led li span{flex:1}.lb-led .up{color:#2f9e44}.lb-led .down{color:#c92a2a}.lb-led small{color:#5b6673}
+#blBubble{position:fixed;left:12px;bottom:220px;z-index:31;max-width:280px;background:#fff;border:2.5px solid #1f2a37;border-radius:16px;padding:10px 12px;box-shadow:2px 3px 0 #1f2a37;font-size:14px}
+#blBubble .x{position:absolute;right:6px;top:4px;border:0;background:none;font-size:15px;cursor:pointer}
+.bl-e{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #efe2bd;border-radius:14px;padding:8px 10px;margin:6px 0}.bl-ic{font-size:22px;line-height:1.2}
+.bl-st{font-size:11px;color:#fff;background:#2f9e44;border-radius:999px;padding:0 7px;font-weight:800;white-space:nowrap;align-self:center}
+.bl-route{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:8px 0}.bl-stop{border:2px solid #1f2a37;border-radius:12px;background:#fff;padding:3px 8px;font-size:12.5px;text-align:center}
+.bl-stop.cur{background:#ffe9dc}.bl-stop.done{background:#dff2e4}.bl-dash{flex:0 0 14px;border-top:3px dashed #1f2a37}
+.bl-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bl-ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid #efe2bd}
 </style>
 
 <div id="app">
@@ -5243,7 +5250,7 @@ function plItemBody(id, it){ const C = cardsOf(id), [t, k] = it;
   const x = (C[t] || []).find(y=>y.k === k); if (!x) return "";
   if (t === "now"){ const g = plOf(id).geo[k]; return icNowHtml(C, x, true) + (g ? `<button class="chip hot pl-fly" data-plfly="${k}">✈️ ${Z("飞去世界地图上的")} ${esc(UI === "zh" ? g[2] : g[3])}</button>` : ""); }
   return t === "talk" ? icTalkHtml(C, x) : icBasHtml(C, x); }
-function plDetail(id){ const X = plOf(id);
+function plDetail(id){ const X = plOf(id); if (plCur && plCur !== "plaza" && !plWb && tkOf(id, plCur)){ const L0 = blGet().last; if (!L0 || L0.id !== id || L0.k !== plCur || Date.now() - L0.t > 10 * 60 * 1000) try { boatLog(id, plCur, e=>{ e.o = 1; }); } catch(e){} }
   if (plWb) return `<div class="pl-head"><b>📖 ${Z("我的词汇本")}</b><button class="chip" data-plclose>✕</button></div>${wbHtml(id)}`;
   if (plCur === "plaza" && PL_PLAZA[id]){ const P = PL_PLAZA[id];
     return `<div class="pl-head"><span style="font-size:34px">🏖️</span><div><b style="font-size:18px">${Z("广场")}</b><br><small class="note">${Z("岛上的人在这里聊天")} · ${P.n} ${Z("位")}</small></div><button class="chip" data-plclose>✕</button></div>
@@ -5309,7 +5316,7 @@ document.getElementById("isleBoardX").onclick = () => { const c = card.querySele
 // 🗣️ 岛上学，开船去大地图上的真实地点说（content-skeleton/body_mind_talk.json）：岛上的地方 = 这里的词 + 常识题；「⛵ 开船去」= 小船开到那个城市的真实地点，跟住在那儿的人说一句
 const tkOf = (id, k) => (typeof ISLE_TALK !== "undefined" && ISLE_TALK[id] && (LEARN === "en" || LEARN_ZH) && ISLE_TALK[id].places[k]) || null;
 const tkGet = id => { try { return JSON.parse(localStorage.getItem("talk." + id) || "{}"); } catch(e){ return {}; } };   // {w:{en:{p,said}}, done:{k:日期}}
-const tkSet = (id, s) => { try { localStorage.setItem("talk." + id, JSON.stringify(s)); } catch(e){} if (syncMark) syncMark("talk." + id); };
+const tkSet = (id, s) => { const prev = tkGet(id); try { localStorage.setItem("talk." + id, JSON.stringify(s)); } catch(e){} if (syncMark) syncMark("talk." + id); try { blDiff(id, prev, s); } catch(e){} };
 const tkWord = (id, en) => Object.values(ISLE_TALK[id].places).flatMap(x=>x.words).find(w=>w.en === en);
 function tkSave(id, k, en, said){ const s = tkGet(id), W = s.w || (s.w = {}), o = W[en] || (W[en] = {p: k}); if (said) o.said = (o.said || 0) + 1; o.t = Date.now(); tkSet(id, s); }
 const tkDone = (id, k) => !!(tkGet(id).done || {})[k];
@@ -5335,6 +5342,104 @@ function tkWbHtml(id){ if (typeof ISLE_TALK === "undefined" || !ISLE_TALK[id] ||
     return `<div class="tk-w"><span>${o.said ? "🗣️" : "✓"}</span><b>${esc(bmT(w))}</b><span class="note">${esc(bmG(w))}<br><small>${p ? p.e + " " + esc(bmU(p)) : ""}${o.said ? " · " + (g ? Z("在") + g.flag + " " + esc(bmU(g.city)) : "") + Z("说过") : ""}</small></span></div>`; }).join("")}</div>`; }
 // 睡眠、手机里这种开不了船的地方：说自己、记自己。先有几条别人发的照片动态（每条一句，用这里的词），下面「📷 跟一张」：自己的照片配一句；
 // 用到的词记成「说过」，发过的按日期留在这里（照片存在这台设备上：talkph.<岛>）
+// ⛵ 航海日志：船自己记下每天在哪座岛、哪个主题做了什么（boatlog.v1，跟着账号同步）；「我的船」、复习航线、接着来都读它
+const BL_KEY = "boatlog.v1";
+const blDay = t => { const d = new Date(t || Date.now()); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const blGet = () => { try { return JSON.parse(localStorage.getItem(BL_KEY) || "{}"); } catch(e){ return {}; } };
+const blSet = L => { try { localStorage.setItem(BL_KEY, JSON.stringify(L)); } catch(e){} try { if (syncMark) syncMark(BL_KEY); } catch(e){} };
+const blAdd = (e, f, v) => { if (v) e[f] = [...new Set([...(e[f] || []), v])].slice(-20); };
+function boatLog(id, k, f){ if (!id || !k || !tkOf(id, k)) return; const L = blGet(), day = blDay(); L.days = L.days || {}; const D = L.days[day] = L.days[day] || {}, key = id + "|" + k, e = D[key] = D[key] || {};
+  f(e); e.t = Date.now(); L.last = {id, k, t: e.t};
+  const ks = Object.keys(L.days).sort(); while (ks.length > 90) delete L.days[ks.shift()];
+  blSet(L); try { blFlags(); } catch(err){} }
+function blTheme(id){ return tkCur && tkCur.id === id ? tkCur.k : plIsle === id ? plCur : null; }
+function blDiff(id, prev, s){ const k = blTheme(id); if (!k) return; const W = s.w || {}, P = prev.w || {}, add = [];
+  const X = tkOf(id, k), mine = ((s.mine || {})[k] || []).length > ((prev.mine || {})[k] || []).length;
+  Object.keys(W).forEach(en=>{ if (!P[en]) add.push(["w", en]); if (W[en] && W[en].said && !(P[en] && P[en].said)) add.push(["said", en]); });
+  Object.keys(s.sent || {}).forEach(t=>{ if (!(prev.sent || {})[t]) add.push(["s", t]); });
+  if (mine){ const L = (s.mine || {})[k]; add.push(["my", L[L.length - 1]]); }
+  if ((s.done || {})[k] && (s.done || {})[k] !== (prev.done || {})[k]) add.push(["done", 1]);
+  if (!add.length || !X) return;
+  boatLog(id, k, e=>add.forEach(([f, v])=>f === "done" ? e.done = 1 : blAdd(e, f, typeof v === "string" ? v : (v && (v.t || v.text)) || "")));
+}
+const blIsleName = id => { const n = (Object.entries(ISLE_CLUB).find(([n, c])=>c === id) || [id])[0]; return typeof mapN === "function" ? mapN(n) : n; };
+const blIsleE = id => (Object.entries(ISLE_CLUB).find(([n, c])=>c === id) ? ((typeof data !== "undefined" && data.find(d=>d.n === Object.entries(ISLE_CLUB).find(([n, c])=>c === id)[0])) || {}).e : "") || "🏝️";
+const blPlace = (id, k) => { const P = (typeof ISLE_PLACES !== "undefined" && ISLE_PLACES[id] && ISLE_PLACES[id].places || []).find(p=>p.k === k) || {}; return {e: P.e || "📍", n: UI === "zh" ? (P.zh || k) : (P.en || P.zh || k)}; };
+function blAgo(day){ const n = Math.round((new Date(blDay()) - new Date(day)) / 864e5), [y, m, d] = day.split("-").map(Number);
+  const rel = n === 0 ? Z("今天") : n === 1 ? Z("昨天") : n + " " + Z("天前"); return rel + " · " + (UI === "zh" ? `${m} 月 ${d} 日` : `${d}/${m}`); }
+function blDid(id, k, e){ const X = tkOf(id, k), out = [];
+  if (e.go){ const n = npcAny(e.go) || {}, g = X && X.go; out.push("⛵ " + Z("开船去") + " " + (g ? bmU(g.city) : "") + Z("，跟") + " " + (n.name || "") + " " + Z("说了一句")); }
+  if (e.w && e.w.length) out.push(Z("存了") + " " + e.w.slice(0, 4).join("、") + (e.w.length > 4 ? " …" : ""));
+  if (e.my && e.my.length) out.push(Z("说了") + "「" + e.my[e.my.length - 1] + "」");
+  if (e.s && e.s.length) out.push("☆ " + Z("收藏了") + " " + e.s.length + " " + Z("句"));
+  if (e.ph) out.push("📷 " + Z("发了") + " " + e.ph + " " + Z("张照片"));
+  if (e.done) out.push("✓ " + Z("做完了"));
+  if (!out.length) out.push(Z("去看了看"));
+  return out; }
+// 复习航线：按 1 天、3 天、7 天前挑最多 3 个学过的主题；复习过以后，那一天的记录盖章
+function blRoute(){ const L = blGet(), today = blDay(), seen = new Set(), cand = [];
+  Object.entries(L.days || {}).forEach(([day, D])=>{ if (day >= today) return; const n = Math.round((new Date(today) - new Date(day)) / 864e5);
+    Object.entries(D).forEach(([key, e])=>{ const [id, k] = key.split("|"); if (!tkOf(id, k)) return; const rv = (L.rev || {})[key]; if (rv && rv >= day) return;
+      cand.push({key, id, k, day, n, e, score: Math.min(...[1, 3, 7].map(x=>Math.abs(x - n))) + (n > 7 ? (n - 7) / 10 : 0)}); }); });
+  return cand.sort((a, b)=>a.score - b.score || b.n - a.n).filter(c=>!seen.has(c.key) && seen.add(c.key)).slice(0, 3).sort((a, b)=>a.n - b.n); }
+function blLine(c){ const X = tkOf(c.id, c.k), M = X.chat.msgs, plain = t => t.replace(/[\[\]]/g, ""), e = c.e;
+  const fromChat = t => { const m = M.find(x=>plain(x[1]) === t); return m ? {t, zh: m[2]} : null; };
+  if (e.my && e.my.length && e.my[e.my.length - 1]) return {t: e.my[e.my.length - 1], zh: "", why: Z("你那天自己说的这句：")};
+  if (e.s && e.s.length){ const r = fromChat(e.s[0]); if (r) return {...r, why: Z("你那天收藏的这句：")}; }
+  if (e.go && X.go){ const r = X.go.replies[0]; return {t: r.say.en, zh: r.say.zh, why: Z("你那天开船去说的这句：")}; }
+  if (e.w && e.w.length){ const w = e.w[0].toLowerCase(), m = M.find(x=>plain(x[1]).toLowerCase().includes(w)); if (m) return {t: plain(m[1]), zh: m[2], why: Z("你那天存的词，在这句里：")}; }
+  return {t: X.chat.you.q.en, zh: X.chat.you.q.zh, why: Z("那天岛上的人问你的这句：")}; }
+let blStop = -1, blRt = [];
+function openMyBoat(tab){ tab = tab || "log"; const L = blGet(), days = Object.keys(L.days || {}).sort().reverse();
+  const tabs = [["log", "🧭 " + Z("航海日志")], ["route", "🟣 " + Z("今天的复习航线")], ["hold", "🧳 " + Z("船舱")]];
+  let body = "";
+  if (tab === "log") body = days.length ? `<p class="note">${Z("船自己记的：去过哪座岛、哪个主题、做了什么。点「开回去」，船就开到那里。")}</p>` + days.map(day=>`<h3 style="margin:12px 0 4px;color:#c25a2c">${blAgo(day)}</h3>` + Object.entries(L.days[day]).sort((a, b)=>b[1].t - a[1].t).map(([key, e])=>{ const [id, k] = key.split("|"), P = blPlace(id, k), rv = (L.rev || {})[key];
+      return `<div class="bl-e"><span class="bl-ic">${blIsleE(id)}</span><div style="flex:1"><b>${esc(blIsleName(id))} · ${P.e} ${esc(P.n)}</b><small class="note" style="display:block">${blDid(id, k, e).map(esc).join(" · ")}</small></div>${rv && rv >= day ? `<span class="bl-st">✓ ${Z("复习过")}</span>` : ""}<button class="chip" data-blgo="${esc(key)}">${Z("开回去")}</button></div>`; }).join("")).join("")
+    : `<p class="note">${Z("还没有记录。去任何一座岛点开一个主题，船就会开始记：哪天在哪儿、存了哪些词、说了什么。")}</p>`;
+  if (tab === "route"){ if (blStop < 0) blRt = blRoute(); const R = blRt;
+    body = !R.length ? `<p class="note">${Z("今天没有要复习的。昨天以前去过的主题，第二天起会出现在这里（1 天、3 天、7 天后各回来一次）。")}</p>`
+      : `<p class="note">${Z("船按「1 天前、3 天前、7 天前」挑了")} ${R.length} ${Z("个你学过的主题，一站一分钟：先看一眼场景，再听一句你当时的话，跟着说一遍。")}</p>
+      <div class="bl-route"><span class="bl-stop done">⚓ ${Z("母港")}</span>${R.map((c, i)=>`<i class="bl-dash"></i><span class="bl-stop${i < blStop || (blStop >= R.length) ? " done" : i === blStop ? " cur" : ""}">${blIsleE(c.id)} ${c.n} ${Z("天前")}<br><small>${blPlace(c.id, c.k).e} ${esc(blPlace(c.id, c.k).n)}</small></span>`).join("")}</div>
+      ${blStop < 0 ? `<div class="chips"><button class="chip hot" id="blSail">⛵ ${Z("起航")}</button></div>` : blStop >= R.length ? `<section><h3>🎉 ${Z("复习航线开完了")}</h3><p class="note">${R.length} ${Z("个主题盖上了「✓ 复习过」，岛上的小旗变绿了。明天船会挑新的几站。")}</p></section>` : (()=>{ const c = R[blStop], X = tkOf(c.id, c.k), H = X.head, ln = blLine(c);
+        return `<div class="bl-rv">${H ? `<div class="tk-head"><video autoplay muted loop playsinline preload="auto" poster="${esc(H.poster)}" src="${esc(H.src)}" onerror="this.parentNode.style.display='none'"></video><a href="${esc(H.url)}" target="_blank" rel="noopener">🎬 ${esc(H.by)} · Pexels</a></div>` : ""}
+          <p class="note" style="margin:8px 0 2px">${blIsleE(c.id)} ${esc(blIsleName(c.id))} · ${blPlace(c.id, c.k).e} ${esc(blPlace(c.id, c.k).n)} · ${esc(ln.why)}</p>
+          <p style="font-size:18px;font-weight:700;margin:2px 0">“${esc(ln.t)}”</p>${ln.zh ? `<button class="chip" id="blZh">${Z("看中文")}</button>` : ""}
+          <div class="chips">${expSay(ln.t, LEARN)}<button class="chip" id="blMic">🎤 ${Z("跟着说")}</button><button class="chip hot" id="blNext">${Z("下一站")} →</button></div><p class="note" id="blRes"></p></div>`; })()}`; }
+  if (tab === "hold"){ const groups = Object.keys(typeof ISLE_TALK !== "undefined" ? ISLE_TALK : {}).map(id=>{ const S = tkGet(id), W = S.w || {}, sent = S.sent || {}, plain = t => t.replace(/[\[\]]/g, "");
+      const th = Object.entries(ISLE_TALK[id].places).map(([k, X])=>({k, w: X.words.filter(w=>W[w.en]), s: X.chat.msgs.filter(m=>sent[plain(m[1])]).map(m=>[plain(m[1]), m[2]]).concat([...new Set(((S.mine || {})[k] || []).filter(t=>typeof t === "string"))].map(t=>[t, ""])).filter((x, i, A)=>A.findIndex(y=>y[0] === x[0]) === i)})).filter(t=>t.w.length || t.s.length);
+      return th.length ? `<h3 style="margin:12px 0 2px">${blIsleE(id)} ${esc(blIsleName(id))}</h3>` + th.map(t=>`<p class="note" style="margin:4px 0 2px;color:#c25a2c;font-weight:700">${blPlace(id, t.k).e} ${esc(blPlace(id, t.k).n)}</p><div class="chips">${t.w.map(w=>`<span class="chip">${esc(w.en)} <small class="note">${esc(w.zh)}</small> ${expSay(w.en, LEARN)}</span>`).join("")}</div>${t.s.map(([en, zh])=>`<div class="ex-line" style="padding:4px 0">💬 <b>${esc(en)}</b> ${expSay(en, LEARN)}${zh ? `<br><small class="note">${esc(zh)}</small>` : ""}</div>`).join("")}`).join("") : ""; }).join("");
+    const ph = (typeof myPhotos === "function" ? myPhotos() : []).filter(p=>p.img).slice(0, 12);
+    body = (groups || `<p class="note">${Z("船舱还是空的。在岛上的群聊里点画线的词「存」，或者给一句话点 ☆，就会收进来，按岛和主题分好。")}</p>`) + (ph.length ? `<h3 style="margin:12px 0 4px">📷 ${Z("我的照片")}</h3><div class="bl-ph">${ph.map(p=>`<img src="${esc(p.img)}" alt="" loading="lazy">`).join("")}</div>` : "") + `<div class="chips" style="margin-top:10px"><button class="chip" id="blOldHold">🧳 ${Z("以前的船舱（贴纸里收的话）")}</button></div>`; }
+  card.innerHTML = expTop("⛵", Z("我的船"), Z("航海日志 · 复习航线 · 船舱"), "#1c7ed6") + `<div class="chips">${tabs.map(([t, l])=>`<button class="chip" data-bltab="${t}"${t === tab ? ' aria-pressed="true"' : ""}>${l}</button>`).join("")}</div>${body}`;
+  expOpen(); if (tab !== "route" || blStop < 0) card.scrollTop = 0;
+  card.querySelectorAll("[data-bltab]").forEach(b=>b.onclick = ()=>{ if (b.dataset.bltab !== "route") blStop = -1; openMyBoat(b.dataset.bltab); });
+  card.querySelectorAll("[data-blgo]").forEach(b=>b.onclick = ()=>{ const [id, k] = b.dataset.blgo.split("|"); blGo(id, k); });
+  const o = card.querySelector("#blOldHold"); if (o) o.onclick = ()=>openHold();
+  const sl = card.querySelector("#blSail"); if (sl) sl.onclick = ()=>{ blStop = 0; openMyBoat("route"); };
+  const zh = card.querySelector("#blZh"); if (zh) zh.onclick = ()=>{ zh.outerHTML = `<p class="note" style="margin:0">${esc(blLine(blRt[blStop]).zh)}</p>`; };
+  const mic = card.querySelector("#blMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#blRes"), Rc = window.SpeechRecognition || window.webkitSpeechRecognition, t = blLine(blRt[blStop]).t;
+    if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
+    const rec = new Rc(); rec.lang = LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
+    rec.onresult = ev=>{ const said = ev.results[0][0].transcript, w = t.toLowerCase().replace(/[^a-z' ]/g, "").split(" ").filter(Boolean), got = w.filter(x=>said.toLowerCase().includes(x)).length; out.textContent = `${Z("听到：")}「${said}」 · ${got}/${w.length}`; };
+    rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); };
+  const nx = card.querySelector("#blNext"); if (nx) nx.onclick = ()=>{ const c = blRt[blStop], L2 = blGet(); (L2.rev || (L2.rev = {}))[c.key] = blDay(); blSet(L2); blStop++; try { blFlags(); } catch(e){} openMyBoat("route"); card.scrollTop = 0; };
+}
+function blGo(id, k){ const c = clubPinData.find(x=>x.id === id); if (!c) return; plIsle = id; plCur = k; plWb = false; openClubPin(c); }
+// 接着来：打开地图时，船边冒一个小气泡，说上次在哪儿（每次打开只问一次）
+function blWelcome(){ try { if (sessionStorage.getItem("blw")) return; sessionStorage.setItem("blw", "1"); } catch(e){}
+  const L = blGet(), last = L.last; if (!last || !tkOf(last.id, last.k) || Date.now() - last.t < 20 * 60 * 1000) return;
+  const n = blRoute().length, P = blPlace(last.id, last.k), el = document.createElement("div"); el.id = "blBubble"; el.setAttribute("role", "dialog");
+  el.innerHTML = `<button class="x" aria-label="${Z("关闭")}">✕</button><b>👋 ${Z("欢迎回来")}</b><div>${Z("上次在")} ${esc(blIsleName(last.id))} · ${P.e} ${esc(P.n)}${Z("，接着来？")}</div><div class="chips"><button class="chip hot" data-blw="go">${Z("接着来")}</button>${n ? `<button class="chip" data-blw="rv">🟣 ${Z("先复习")} · ${n} ${Z("站")}</button>` : ""}</div>`;
+  document.body.appendChild(el);
+  el.querySelector(".x").onclick = ()=>el.remove();
+  el.querySelector('[data-blw="go"]').onclick = ()=>{ el.remove(); blGo(last.id, last.k); };
+  const rv = el.querySelector('[data-blw="rv"]'); if (rv) rv.onclick = ()=>{ el.remove(); blStop = -1; openMyBoat("route"); }; }
+// 岛上的小旗：学过几个主题（今天复习过的变绿）
+function blFlags(){ const L = blGet(), cnt = {}, today = blDay(), rvd = {};
+  Object.values(L.days || {}).forEach(D=>Object.keys(D).forEach(key=>{ const [id, k] = key.split("|"); (cnt[id] = cnt[id] || new Set()).add(k); }));
+  Object.entries(L.rev || {}).forEach(([key, d])=>{ if (d === today) rvd[key.split("|")[0]] = 1; });
+  isleEls.each(function(d){ const id = d.club.id, n = cnt[id] ? cnt[id].size : 0; let g = d3.select(this).select("g.isle-flag"); if (g.empty()) g = d3.select(this).select("g.bob").append("g").attr("class", "isle-flag");
+    g.attr("transform", `translate(${(mapN(d.n).length * 6.5 + 6).toFixed(0)},26) scale(1.25)`).html(n ? `<line y1="0" y2="22" stroke="#1f2a37" stroke-width="1.6"/><path d="M0,0 h${n > 9 ? 22 : 17} l-4,5 l4,5 h-${n > 9 ? 22 : 17}z" fill="${rvd[id] ? "#2f9e44" : "#ff7a45"}" stroke="#1f2a37" stroke-width="1"/><text x="${n > 9 ? 9 : 7}" y="8.2" font-size="8" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>` : ""); }); }
 const tkPhGet = id => { try { return JSON.parse(localStorage.getItem("talkph." + id) || "{}"); } catch(e){ return {}; } };
 const tkPhSet = (id, s) => { try { localStorage.setItem("talkph." + id, JSON.stringify(s)); return true; } catch(e){ return false; } };
 let tkPhoto = null;   // 正在发的那张（缩到 480 宽的 jpeg）
@@ -5369,6 +5474,7 @@ function tkSelfCheck(id, k, text, box){ const X = tkOf(id, k), lo = text.toLower
       .catch(()=>{ R.mine = R.mine.filter(x=>x.ts !== m.ts); const P = tkPhGet(id), L = P[k] || (P[k] = []); L.push(m); tkPhSet(id, P); tkRedraw && tkRedraw(); }); }
   else { const P = tkPhGet(id), L = P[k] || (P[k] = []); L.push(m); while (L.length > 20) L.shift();
     if (!tkPhSet(id, P)){ L.pop(); L.push({...m, img: null}); tkPhSet(id, P); } }   // 设备存满了就只记字
+  try { boatLog(id, k, e=>{ e.ph = (e.ph || 0) + 1; }); } catch(e){}
   tkPhoto = null; return got; }
 let tkRedraw = null;
 function tkSelfWire(id, box, redraw){
@@ -5532,7 +5638,7 @@ const TK_ROOMS = {konbini: `<div class="tk-room konbini"><i class="tk-sign">24h<
 const TK_DIR = "scene/";
 function tkBgHtml(g){ return `${TK_ROOMS[g.room] || ""}${g.props.map(([e, x, y])=>`<i class="tk-prop" style="left:${x};top:${y}">${e}</i>`).join("")}
   ${g.clip ? `<video class="tk-v" autoplay muted loop playsinline preload="auto" poster="${g.clip.poster || TK_DIR + g.clip.f + ".webp"}" src="${g.clip.src || TK_DIR + g.clip.f + ".mp4"}"></video>` : ""}${g.room === "ward" ? `<i class="tk-clock tk-over">04:00</i>` : ""}`; }
-function tkOpen(id, k){ const el = document.getElementById("talkScene"), g0 = tkOf(id, k).go; tkCur = {id, k}; tkPick = null; el.hidden = false; el.classList.remove("tk-live");
+function tkOpen(id, k){ const el = document.getElementById("talkScene"), g0 = tkOf(id, k).go; tkCur = {id, k}; try { boatLog(id, k, e=>{ e.go = g0 && g0.npc; }); } catch(e){} tkPick = null; el.hidden = false; el.classList.remove("tk-live");
   el.innerHTML = `<div class="tk-bg">${tkBgHtml(g0)}</div><div class="tk-ui"></div>`; const v = el.querySelector(".tk-v");
   if (v){ v.addEventListener("playing", ()=>el.classList.add("tk-live"), {once: true}); v.addEventListener("error", ()=>v.remove()); v.play && v.play().catch(()=>{}); }
   tkDraw(); const g = tkOf(id, k).go; setTimeout(()=>sayIt(bmT(g.hello), LEARN_TTS, .9, {}), 300); }
@@ -7681,6 +7787,7 @@ boatFind.className = "chip"; boatFind.hidden = true; boatFind.textContent = type
 boatFind.style.cssText = "position:fixed;left:12px;bottom:170px;z-index:30;background:#fff;border:2.5px solid #1f2a37;border-radius:999px;padding:6px 12px;font-weight:700;box-shadow:2px 3px 0 #1f2a37";
 boatFind.onclick = ()=>{ const k = Math.max(d3.zoomTransform(svg.node()).k, 2); svg.transition().duration(900).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(boatNow().ll), k)); };
 document.body.appendChild(boatFind);
+setTimeout(()=>{ try { blFlags(); } catch(e){} try { blWelcome(); } catch(e){} }, 1800);
 function placeBoat(t, s, on){
   if (on === undefined) on = !cmpDim && !mineOnly && !liveOnly;
   s = s || (W < 700 ? .8 : 1);
@@ -7699,7 +7806,7 @@ function placeBoat(t, s, on){
     .on("click", e=>{ e.stopPropagation(); boatMenu = false; openReview(); }));
   voyDraw(t, s);
   if (!boatMenu) return;
-  const items = [["🌦️", Z("心情"), ()=>openMood()], ["❓", Z("疑惑"), ()=>openDoubt()], ["🙋", Z("介绍我"), ()=>openIntro()], ["🚩", Z("插旗"), ()=>setFlagMode(true)], ["📷", Z("拍照学词"), ()=>openPhotoLearn()],
+  const items = [["🧭", Z("我的船"), ()=>{ blStop = -1; openMyBoat(); }], ["🌦️", Z("心情"), ()=>openMood()], ["❓", Z("疑惑"), ()=>openDoubt()], ["🙋", Z("介绍我"), ()=>openIntro()], ["🚩", Z("插旗"), ()=>setFlagMode(true)], ["📷", Z("拍照学词"), ()=>openPhotoLearn()],
     ["🟣", Z("今天的航线"), ()=>openVoyage()], ["🧳", Z("船舱"), ()=>openHold()], ["🧰", Z("工具箱"), ()=>openSkills()], ["📒", Z("准备册"), ()=>openPrep()], ["⚓", Z("我的圈子"), ()=>openClubs()], ["📍", boatHome() ? Z("母港") : Z("选母港"), openBoatHome]];
   items.forEach(([e, label, fn], i)=>{ const a = -Math.PI/2 + i*2*Math.PI/items.length, R = 96*s;
     const r = boatMenuG.append("g").attr("class","cradial").attr("transform", `translate(${x + Math.cos(a)*R},${y - 8*s + Math.sin(a)*R})`).attr("role","button")
@@ -8557,7 +8664,7 @@ ${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m
 }
 // ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
 // 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
-const SYNC_KEYS = ["talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
+const SYNC_KEYS = ["boatlog.v1", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
   ...["eat_well", "pet_club", "body_mind", "life_abroad", "first_money", "dev_club", "trends_now", "fashion_club", "see_world", "economy_club", "social_money", "people_values", "life_questions", "med_club", "growth_club", "fun_club"].map(c=>"wb." + c)];   // 每座岛的词汇本
 const syncTs = () => cpLS("sync.ts") || {};
 let syncT = null, syncPulled = false;
