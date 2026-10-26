@@ -7783,9 +7783,9 @@ const boatMenuG = clubBoatG.append("g");
 let revMemo = [0, 0]; const revN = () => { if (Date.now() - revMemo[0] < 3000) return revMemo[1]; try { revMemo = [Date.now(), revDueN()]; } catch(e){ revMemo = [Date.now(), 0]; } return revMemo[1]; };
 // 船不在屏幕上时（手机上常见），左下角出现「⛵ 我的船」，点一下飞过去
 const boatFind = document.createElement("button");
-boatFind.className = "chip"; boatFind.hidden = true; boatFind.textContent = typeof Z === "function" ? "⛵ " + (UI === "zh" ? "我的船" : "My boat") : "⛵ 我的船";
+boatFind.className = "chip"; boatFind.hidden = false; boatFind.textContent = typeof Z === "function" ? "⛵ " + (UI === "zh" ? "我的船" : "My boat") : "⛵ 我的船";
 boatFind.style.cssText = "position:fixed;left:12px;bottom:170px;z-index:30;background:#fff;border:2.5px solid #1f2a37;border-radius:999px;padding:6px 12px;font-weight:700;box-shadow:2px 3px 0 #1f2a37";
-boatFind.onclick = ()=>{ const k = Math.max(d3.zoomTransform(svg.node()).k, 2); svg.transition().duration(900).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(boatNow().ll), k)); };
+boatFind.onclick = ()=>{ if (boatFind.dataset.off){ const k = Math.max(d3.zoomTransform(svg.node()).k, 2); svg.transition().duration(900).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(boatNow().ll), k)); } blStop = -1; openMyBoat(); };   // 一直在左下角：点一下打开「我的船」，船不在屏幕上时顺便飞过去
 document.body.appendChild(boatFind);
 setTimeout(()=>{ try { blFlags(); } catch(e){} try { blWelcome(); } catch(e){} }, 1800);
 function placeBoat(t, s, on){
@@ -7795,7 +7795,7 @@ function placeBoat(t, s, on){
   clubBoatG.style("display", on ? null : "none"); friendBoats(t, s, on);
   boatEl.attr("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${s*1.1})`);
   clubPinG.style("opacity", boatMenu && on ? .2 : null); boatEl.select(".cbl").style("display", boatMenu ? "none" : null);   // 菜单打开时，旁边的圈子气泡淡下去，字不会叠在一起
-  { const r = boatEl.node().getBoundingClientRect(), off = r.right < 0 || r.left > innerWidth || r.bottom < 0 || r.top > innerHeight; boatFind.hidden = !on || !off || !!(card && !card.hidden && innerWidth < 700); }
+  { const r = boatEl.node().getBoundingClientRect(), off = r.right < 0 || r.left > innerWidth || r.bottom < 0 || r.top > innerHeight; boatFind.hidden = !!(card && !card.hidden && innerWidth < 700); boatFind.dataset.off = off || !on ? "1" : ""; }
   boatEl.select(".csail").attr("fill", SAIL[LEARN] || "#f2b705");
   boatEl.select(".cbl").text("" + Z("你 ·") + " " + b.where);
   boatEl.select(".cpens").html(clubPinData.filter(d=>harborFull(d.id)).slice(0, 5).map((d, i)=>`<path d="M-1,${-30 + i*6} l-9,2.5 l9,2.5z" fill="${d.color}" stroke="#1f2a37" stroke-width=".6"/>`).join(""));
