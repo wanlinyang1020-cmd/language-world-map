@@ -586,6 +586,9 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .bl-e{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #efe2bd;border-radius:14px;padding:8px 10px;margin:6px 0}.bl-ic{font-size:22px;line-height:1.2}
 .bl-st{font-size:11px;color:#fff;background:#2f9e44;border-radius:999px;padding:0 7px;font-weight:800;white-space:nowrap;align-self:center}
 .bl-route{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:8px 0}.bl-stop{border:2px solid #1f2a37;border-radius:12px;background:#fff;padding:3px 8px;font-size:12.5px;text-align:center}
+.ct-pass{display:flex;gap:6px;flex-wrap:wrap;background:#24305e;border-radius:14px;padding:8px;margin:6px 0 10px}.ct-st{width:60px;height:60px;border-radius:50%;border:2.5px dashed #6c78a8;color:#9aa4cc;background:#2b386c;display:grid;place-items:center;text-align:center;font-size:10.5px;line-height:1.2;font-weight:700}
+.ct-st.on{border:3px double #c8372d;color:#c8372d;background:#fff8ef;transform:rotate(-8deg)}.ct-st b{font-size:18px;display:block}
+.ct-npc{display:flex;gap:8px;align-items:flex-start}.ct-av{flex:none;width:38px;height:38px;border-radius:50%;background:#ffe9c9;border:2px solid #1f2a37;display:grid;place-items:center;font-size:19px}.ct-msg{background:#eef6ff;border-radius:4px 14px 14px 14px;padding:5px 9px}
 .bl-stop.cur{background:#ffe9dc}.bl-stop.done{background:#dff2e4}.bl-dash{flex:0 0 14px;border-top:3px dashed #1f2a37}
 .bl-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bl-ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid #efe2bd}
 </style>
@@ -5396,7 +5399,8 @@ let blStop = -1, blRt = [];
 function openMyBoat(tab){ tab = tab || (plGet() || !Object.keys(blGet().days || {}).length ? "plan" : "log"); const L = blGet(), days = Object.keys(L.days || {}).sort().reverse();
   const tabs = [["plan", "🗺️ " + Z("航海计划")], ["log", "🧭 " + Z("航海日志")], ["route", "🟣 " + Z("复习航线")], ["hold", "🧳 " + Z("船舱")]];
   let body = "";
-  if (tab === "plan") body = planHtml();
+  if (tab === "plan"){ const m = plMode || (ctState() && !plGet() ? "trip" : "isles");
+    body = `<div class="chips" style="margin-top:4px">${[["isles", Z("🧭 跨岛航线")], ["trip", Z("🎒 文化之旅")]].map(([k, l])=>`<button class="chip" data-plmode="${k}"${k === m ? ' aria-pressed="true"' : ""}>${l}</button>`).join("")}</div>` + (m === "trip" ? ctHtml() : planHtml()); }
   if (tab === "log") body = days.length ? `<p class="note">${Z("船自己记的：去过哪座岛、哪个主题、做了什么。点「开回去」，船就开到那里。")}</p>` + days.map(day=>`<h3 style="margin:12px 0 4px;color:#c25a2c">${blAgo(day)}</h3>` + Object.entries(L.days[day]).sort((a, b)=>b[1].t - a[1].t).map(([key, e])=>{ const [id, k] = key.split("|"), P = blPlace(id, k), rv = (L.rev || {})[key];
       return `<div class="bl-e"><span class="bl-ic">${blIsleE(id)}</span><div style="flex:1"><b>${esc(blIsleName(id))} · ${P.e} ${esc(P.n)}</b><small class="note" style="display:block">${blDid(id, k, e).map(esc).join(" · ")}</small></div>${rv && rv >= day ? `<span class="bl-st">✓ ${Z("复习过")}</span>` : ""}<button class="chip" data-blgo="${esc(key)}">${Z("开回去")}</button></div>`; }).join("")).join("")
     : `<p class="note">${Z("还没有记录。去任何一座岛点开一个主题，船就会开始记：哪天在哪儿、存了哪些词、说了什么。")}</p>`;
@@ -5421,6 +5425,7 @@ function openMyBoat(tab){ tab = tab || (plGet() || !Object.keys(blGet().days || 
   card.querySelectorAll("[data-blgo]").forEach(b=>b.onclick = ()=>{ const [id, k] = b.dataset.blgo.split("|"); blGo(id, k); });
   const o = card.querySelector("#blOldHold"); if (o) o.onclick = ()=>openHold();
   card.querySelectorAll("[data-plk]").forEach(b=>b.onclick = ()=>{ planPick(b.dataset.plk); openMyBoat("plan"); });
+  if (tab === "plan") ctBind();
   const pc = card.querySelector("#plChange"), ps = card.querySelector("#plStop"); if (pc) pc.onclick = ()=>{ plSet(null); try { placeBoat(d3.zoomTransform(svg.node())); } catch(e){} openMyBoat("plan"); }; if (ps) ps.onclick = ()=>{ plSet(null); try { placeBoat(d3.zoomTransform(svg.node())); } catch(e){} openMyBoat("log"); };
   const vy = card.querySelector("#blVoy"); if (vy) vy.onclick = ()=>openVoyage();
   const sl = card.querySelector("#blSail"); if (sl) sl.onclick = ()=>{ blStop = 0; openMyBoat("route"); };
@@ -5477,6 +5482,90 @@ function planDraw(t, s){ const S = planState(); if (!S) return; const pts = [boa
   const g = boatMenuG.append("g").attr("transform", `translate(${end[0]},${end[1]})`).style("pointer-events", "none");
   g.append("text").attr("y", -6).attr("text-anchor", "middle").attr("font-size", 16 * s).text("📍");
   g.append("text").attr("class", "cpl").attr("y", 10 * s).attr("text-anchor", "middle").text(`${S.P.e} ${bmU(G.city)}`); }
+// 🎒 文化之旅：航海计划的第二种，不去岛上练，直接开船去真实城市；一天一站：当地贴纸、一句当地人真会说的话、跟住在那儿的人说一句，说完护照盖章（cultrip.v1）
+// 学中文的看「中国游学」，学英语的看「英国游学」
+const CTRIPS = {
+ cn: {k: "cn", e: "🇨🇳", name: {zh: "中国游学", en: "Study trip: China"}, why: {zh: "从皇城到夜市，四座城一条线", en: "From the Forbidden City to night markets — four cities, one line"},
+  stops: [
+   {city: {zh: "北京", en: "Beijing"}, ll: [116.40, 39.90], stamp: "🏯", stk: ["故宫", "万里长城", "胡同", "北京烤鸭"],
+    say: {t: "请问，去故宫怎么走？", py: "Qǐngwèn, qù Gùgōng zěnme zǒu?", g: "Excuse me, how do I get to the Forbidden City?"},
+    npc: {e: "🚲", n: {zh: "老周 · 胡同里修自行车的", en: "Lao Zhou · fixes bikes in a hutong"}, t: "往前走到红绿灯右拐，十分钟。门票买了吗？现在都得提前在网上约。", g: "Straight on, right at the lights, ten minutes. Got a ticket? You have to book online in advance now."},
+    fact: {zh: "故宫每天限流，门票要提前在官网或小程序实名预约，到门口买不到。", en: "The Palace Museum caps daily visitors: tickets must be booked online in advance with your passport — you can't buy them at the gate.", src: "故宫博物院 · 购票须知"}},
+   {city: {zh: "西安", en: "Xi'an"}, ll: [108.94, 34.34], stamp: "🗿", stk: ["兵马俑", "西安城墙", "肉夹馍", "羊肉泡馍"],
+    say: {t: "老板，来一个肉夹馍！", py: "Lǎobǎn, lái yí ge ròujiāmó!", g: "One roujiamo, please! (Calling the stall owner 老板 \"boss\" is normal.)"},
+    npc: {e: "🥙", n: {zh: "马师傅 · 回民街卖馍的", en: "Master Ma · roujiamo stall, Muslim Quarter"}, t: "好嘞！要肥的还是瘦的？吃完去城墙上骑车，一圈十四公里。", g: "Coming up! Fatty or lean? After this, go cycle on the city wall — it's 14 km round."},
+    fact: {zh: "兵马俑是 1974 年当地农民打井时挖出来的；西安城墙一圈约 14 公里，上面可以租自行车。", en: "The Terracotta Army was found in 1974 by farmers digging a well. Xi'an's city wall is about 14 km round, and you can rent bikes on top.", src: "秦始皇帝陵博物院 · 西安城墙景区"}},
+   {city: {zh: "成都", en: "Chengdu"}, ll: [104.07, 30.67], stamp: "🐼", stk: ["大熊猫", "麻婆豆腐", "川剧变脸", "麻将"],
+    say: {t: "微辣就行，谢谢。", py: "Wēi là jiù xíng, xièxie.", g: "Just a little spicy is fine, thanks."},
+    npc: {e: "🀄", n: {zh: "张嬢嬢 · 茶馆里打麻将的", en: "Auntie Zhang · plays mahjong in a teahouse"}, t: "微辣？我们这儿的微辣，你们那儿算特辣哦！看熊猫要早点去，天一热它们就睡觉了。", g: "\"A little spicy\"? Our little spicy is your extra hot! Go see the pandas early — once it's hot they just sleep."},
+    fact: {zh: "成都大熊猫基地一般早上开门后那一两个小时熊猫最活跃，天热以后多在睡觉。", en: "At the Chengdu Panda Base, the pandas are most active in the first hour or two after opening; when it gets hot they mostly sleep.", src: "成都大熊猫繁育研究基地 · 游览提示"}},
+   {city: {zh: "上海", en: "Shanghai"}, ll: [121.47, 31.23], stamp: "🥟", stk: ["小笼包", "豫园", "外滩", "生煎包"],
+    say: {t: "小心烫，先咬一小口。", py: "Xiǎoxīn tàng, xiān yǎo yì xiǎo kǒu.", g: "Careful, it's hot — take a small bite first."},
+    npc: {e: "🥐", n: {zh: "阿芳 · 上海美食探访", en: "A-Fang · Shanghai food explorer"}, t: "对！先咬个小口子，把汤吸掉，再蘸醋。你这四站走下来，点菜已经比很多留学生厉害了。", g: "Right! Bite a little hole, sip the soup, then dip in vinegar. After four cities, you order food better than lots of exchange students."},
+    fact: {zh: "小笼包里的汤是包进去的肉皮冻，蒸热后化成汤，所以一口咬下去会烫嘴。", en: "The soup in xiaolongbao is pork-skin jelly wrapped inside; it melts when steamed — that's why the first bite burns.", src: "常识 · 肉皮冻"}}]},
+ uk: {k: "uk", e: "🇬🇧", name: {zh: "英国游学", en: "Study trip: UK"}, why: {zh: "从首都到大学城，再一路往北", en: "From the capital to a university town, then north"},
+  stops: [
+   {city: {zh: "伦敦", en: "London"}, ll: [-0.13, 51.51], stamp: "🕰️", stk: ["大本钟", "伦敦塔桥", "大英博物馆", "英式下午茶", "炸鱼薯条"],
+    say: {t: "Could I try a bit first?", g: "能先尝一点吗？（市场里问摊主，很常见）"},
+    npc: {e: "🥬", n: {zh: "Nadia · 博罗市场", en: "Nadia · Borough Market"}, t: "Of course, go on! And if you're going to the British Museum later — it's free, no ticket needed.", g: "当然，尝吧！待会儿要去大英博物馆的话——免费的，不用买票。"},
+    fact: {zh: "大英博物馆、国家美术馆这些国立博物馆常设展免费，热门特展才收费。", en: "National museums like the British Museum are free; only special exhibitions charge.", src: "British Museum 官网"}},
+   {city: {zh: "牛津", en: "Oxford"}, ll: [-1.26, 51.75], stamp: "🎓", stk: ["牛津大学", "哈利·波特"],
+    say: {t: "Which college are you at?", g: "你是哪个学院的？（牛津学生见面常问）"},
+    npc: {e: "🚲", n: {zh: "Priya · 牛津的研究生", en: "Priya · Oxford grad student"}, t: "I'm at Balliol. Everyone here goes by bike — watch out on Broad Street!", g: "我在贝利奥尔学院。这里人人骑车——走宽街的时候小心点！"},
+    fact: {zh: "牛津大学由三十多个学院组成，学生先属于某个学院，吃住和小班辅导（tutorial）都在学院里。", en: "Oxford is made up of over thirty colleges; students eat, live and have tutorials in their own college.", src: "University of Oxford · Colleges"}},
+   {city: {zh: "利兹", en: "Leeds"}, ll: [-1.55, 53.80], stamp: "☕", stk: ["曼彻斯特足球", "披头士乐队"],
+    say: {t: "Ta, love.", g: "谢啦。（英格兰北部很常听到，love 是亲切的称呼，不是表白）"},
+    npc: {e: "👵", n: {zh: "Maggie · 利兹", en: "Maggie · Leeds"}, t: "You're welcome, love! Don't be surprised — up here everyone calls you love, even the bus driver.", g: "不客气，亲爱的！别惊讶——在这儿谁都叫你 love，公交司机也是。"},
+    fact: {zh: "在英格兰北部，店员、司机叫陌生人 love、pet、duck 都很平常，只是友好的称呼。", en: "In the north of England, shop staff and drivers call strangers love, pet or duck — it's just friendly.", src: "常识 · 英格兰北部口语"}},
+   {city: {zh: "爱丁堡", en: "Edinburgh"}, ll: [-3.19, 55.95], stamp: "🎶", stk: ["哈利·波特", "苏格兰风笛"],
+    say: {t: "Is it always this windy?", g: "这儿一直这么大风吗？（聊天气是最安全的开场）"},
+    npc: {e: "🎭", n: {zh: "Callum · 艺穗节的街头演员", en: "Callum · Fringe street performer"}, t: "Ha, this is a calm day! Come back in August — the whole city turns into one big stage.", g: "哈，今天算没风！八月再来——整座城都变成一个大舞台。"},
+    fact: {zh: "爱丁堡艺穗节每年 8 月举行，是世界上规模最大的艺术节之一，谁都可以报名演出。", en: "The Edinburgh Festival Fringe, every August, is one of the world's largest arts festivals — anyone can sign up to perform.", src: "Edinburgh Festival Fringe Society"}}]}};
+const CT_KEY = "cultrip.v1", ctGet = () => cpLS(CT_KEY), ctSet = v => cpLS(CT_KEY, v);
+const ctRoute = () => CTRIPS[LEARN_ZH ? "cn" : "uk"];
+const ctState = () => { const R = ctRoute(), v = ctGet(); return v && v.k === R.k ? v : null; };
+let plMode = null;
+if (ZE) Object.assign(ZE, {"🧭 跨岛航线": "🧭 Island routes", "🎒 文化之旅": "🎒 Culture trip", "一天一站：收集当地的贴纸、学一句当地人真会说的话、跟住在那儿的人说上一句，说完护照盖一个章。": "One city a day: collect local stickers, learn one thing locals really say, say it to someone who lives there — then get a passport stamp.",
+  "护照": "Passport", "未盖章": "no stamp", "出发：开船去": "Set off: sail to", "今天这一站": "Today's stop", "已盖章": "Stamped", "① 收集这里的贴纸": "① Collect the stickers here", "② 学一句当地人真会说的": "② Learn one thing locals really say",
+  "③ 跟住在这儿的人说上一句": "③ Say it to someone who lives here", "💡 去之前知道这一条": "💡 Good to know before you go", "出处：": "Source: ", "开船去": "Sail to", "🎤 跟着说": "🎤 Say it", "说完了，盖章": "Done — stamp it", "护照盖满了": "Passport full",
+  "一路说过的话：": "What you said along the way:", "再走一遍": "Do it again", "换回跨岛航线": "Back to island routes", "点贴纸，地图飞过去打开它。": "Tap a sticker to fly to it.", "这一带的贴纸": "Stickers nearby", "听到：": "Heard: ", "在听……": "Listening…", "没听清，再说一遍": "Didn't catch that — try again", "这个浏览器听不了你说，大声说一遍也算 ✓": "This browser can't listen — saying it out loud counts ✓"});
+function ctSail(i, fly){ const R = ctRoute(), p = R.stops[i]; if (!p) return; boatSail(p.ll, (UI === "zh" ? "在" : "In ") + bmU(p.city) + " " + p.stamp);
+  if (fly) { if (W < 700) card.hidden = true; svg.transition().duration(1100).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(p.ll), Math.max(d3.zoomTransform(svg.node()).k, kOf(12)))); } }
+function ctHtml(){ const R = ctRoute(), S = ctState(), N = R.stops.length, at = S ? S.at : 0, fin = S && at >= N;
+  const head = `<p style="margin:6px 0 0"><b>${R.e} ${esc(bmU(R.name))}</b> <small class="note">· ${R.stops.map(p=>esc(bmU(p.city))).join(" → ")}</small></p><p class="note" style="margin:2px 0 6px">${esc(bmU(R.why))} · ${Z("一天一站：收集当地的贴纸、学一句当地人真会说的话、跟住在那儿的人说上一句，说完护照盖一个章。")}</p>`;
+  const pass = `<div class="ct-pass" aria-label="${Z("护照")}">${R.stops.map((p, i)=>S && i < at ? `<span class="ct-st on"><b>${p.stamp}</b>${esc(bmU(p.city))}</span>` : `<span class="ct-st">${esc(bmU(p.city))}<br>${Z("未盖章")}</span>`).join("")}</div>`;
+  if (!S) return head + pass + `<div class="chips"><button class="chip hot" data-ct="start">⛵ ${Z("出发：开船去")} ${esc(bmU(R.stops[0].city))}</button></div>`;
+  if (fin) return head + pass + `<section><h3>🎉 ${Z("护照盖满了")}</h3><p class="note">${Z("一路说过的话：")}</p>${R.stops.map(p=>`<div class="ex-line" style="padding:3px 0">${p.stamp} <b>${esc(p.say.t)}</b> ${expSay(p.say.t, LEARN)} <small class="note">${esc(bmU(p.city))}</small></div>`).join("")}<div class="chips" style="margin-top:8px"><button class="chip" data-ct="again">${Z("再走一遍")}</button></div></section>`;
+  const p = R.stops[at], here = d3.geoDistance(boatNow().ll, p.ll) < .002;
+  const stk = p.stk.map(n=>data.find(x=>x.n === n)).filter(Boolean);
+  return head + pass + `<div class="bl-rv"><h3 style="margin:0">${p.stamp} ${esc(bmU(p.city))} <small class="note">· ${Z("今天这一站")} ${at + 1}/${N}</small></h3>
+    <p class="note" style="margin:8px 0 2px;font-weight:700">${Z("① 收集这里的贴纸")}</p><div class="chips">${stk.map(d=>`<button class="chip" data-ctstk="${esc(d.n)}">${d.e} ${esc(mapN(d.n))}</button>`).join("")}</div><small class="note">${Z("点贴纸，地图飞过去打开它。")}</small>
+    <p class="note" style="margin:8px 0 2px;font-weight:700">${Z("② 学一句当地人真会说的")}</p><p style="font-size:18px;font-weight:700;margin:2px 0">${esc(p.say.t)}</p>${p.say.py ? `<p class="note" style="margin:0;color:#3f7fb0">${esc(p.say.py)}</p>` : ""}<p class="note" style="margin:0">${esc(p.say.g)}</p>
+    <div class="chips">${expSay(p.say.t, LEARN)}<button class="chip" id="ctMic">${Z("🎤 跟着说")}</button></div><p class="note" id="ctRes"></p>
+    <p class="note" style="margin:8px 0 2px;font-weight:700">${Z("③ 跟住在这儿的人说上一句")}</p><div class="ct-npc"><span class="ct-av">${p.npc.e}</span><div class="ct-msg"><small class="note"><b>${esc(bmU(p.npc.n))}</b></small><br>${esc(p.npc.t)} ${expSay(p.npc.t, LEARN)}<br><small class="note">${esc(p.npc.g)}</small></div></div>
+    <p class="note" style="margin:8px 0 2px;font-weight:700">${Z("💡 去之前知道这一条")}</p><p style="margin:0;border-left:4px solid #ff7a45;padding-left:8px">${esc(bmU(p.fact))}<br><small class="note">${Z("出处：")}${esc(p.fact.src)}</small></p>
+    <div class="chips" style="margin-top:10px">${here ? "" : `<button class="chip" data-ct="sail">⛵ ${Z("开船去")} ${esc(bmU(p.city))}</button>`}<button class="chip hot" data-ct="stamp">✅ ${Z("说完了，盖章")}</button></div></div>`; }
+function ctBind(){ const R = ctRoute();
+  card.querySelectorAll("[data-plmode]").forEach(b=>b.onclick = ()=>{ plMode = b.dataset.plmode; openMyBoat("plan"); });
+  card.querySelectorAll("[data-ctstk]").forEach(b=>b.onclick = ()=>{ const d = data.find(x=>x.n === b.dataset.ctstk); if (d) flyTo(d); });
+  card.querySelectorAll("[data-ct]").forEach(b=>b.onclick = ()=>{ const a = b.dataset.ct, S = ctState();
+    if (a === "start" || a === "again"){ ctSet({k: R.k, at: 0, from: blDay(), said: []}); ctSail(0, true); }
+    if (a === "sail" && S) ctSail(S.at, true);
+    if (a === "stamp" && S){ S.said = (S.said || []).concat(R.stops[S.at].say.t); S.at++; S.t = Date.now(); ctSet(S); if (S.at < R.stops.length) ctSail(S.at, false); else placeBoat(d3.zoomTransform(svg.node())); }
+    plMode = "trip"; openMyBoat("plan"); });
+  const mic = card.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#ctRes"), S = ctState(), t = R.stops[S ? S.at : 0].say.t, Rc = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
+    const rec = new Rc(); rec.lang = LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
+    rec.onresult = ev=>{ out.textContent = `${Z("听到：")}「${ev.results[0][0].transcript}」 ✓`; }; rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); }; }
+// 文化之旅画在世界地图上：城市连成一条线，盖过章的城市打勾，今天这一站插 📍
+function ctDraw(t, s){ const S = ctState(); if (!S) return; const R = ctRoute(), xy = R.stops.map(p=>t.apply(projection(p.ll))), at = Math.min(S.at, xy.length - 1);
+  const dd = A => "M" + A.map(p=>p.map(v=>v.toFixed(1)).join(",")).join("L");
+  boatMenuG.append("path").attr("d", dd(xy)).attr("fill", "none").attr("stroke", "#1f2a37").attr("stroke-width", 6).attr("stroke-linecap", "round").attr("stroke-linejoin", "round").attr("opacity", .3).style("pointer-events", "none");
+  boatMenuG.append("path").attr("d", dd(xy)).attr("fill", "none").attr("stroke", "#fff").attr("stroke-width", 3).attr("stroke-dasharray", "8 6").style("pointer-events", "none");
+  if (at > 0) boatMenuG.append("path").attr("d", dd(xy.slice(0, at + 1))).attr("fill", "none").attr("stroke", "#ff7a45").attr("stroke-width", 3.4).attr("stroke-linecap", "round").style("pointer-events", "none");
+  R.stops.forEach((p, i)=>{ const g = boatMenuG.append("g").attr("transform", `translate(${xy[i][0]},${xy[i][1]})`).style("pointer-events", "none");
+    g.append("text").attr("y", -8 * s).attr("text-anchor", "middle").attr("font-size", 14 * s).text(i < S.at ? "✅" : i === S.at ? "📍" : p.stamp);
+    if (i === S.at || (i === R.stops.length - 1 && S.at < i - 1)) g.append("text").attr("class", "cpl").attr("y", 9 * s).attr("text-anchor", "middle").text(`${i === S.at ? "🎒 " : ""}${bmU(p.city)}`); }); }
 function blGo(id, k){ const c = clubPinData.find(x=>x.id === id); if (!c) return; plIsle = id; plCur = k === "_prac" ? null : k; plWb = false; openClubPin(c); }
 // 接着来：打开地图时，船边冒一个小气泡，说上次在哪儿（每次打开只问一次）
 function blWelcome(){ try { if (sessionStorage.getItem("blw")) return; sessionStorage.setItem("blw", "1"); } catch(e){}
@@ -7860,7 +7949,7 @@ function placeBoat(t, s, on){
   const n = revN(); boatMenuG.selectAll("*").remove();
   [[30,14],[-34,10],[24,-30]].slice(0, Math.min(3, n)).forEach((o, i)=>boatMenuG.append("text").attr("class","cbottle").attr("x", x + o[0]*s).attr("y", y + o[1]*s).attr("font-size", 15*s).style("animation-delay", i*.6 + "s").text("🍾")
     .on("click", e=>{ e.stopPropagation(); boatMenu = false; openReview(); }));
-  voyDraw(t, s); try { planDraw(t, s); } catch(e){}
+  voyDraw(t, s); try { planDraw(t, s); } catch(e){} try { ctDraw(t, s); } catch(e){}
   if (!boatMenu) return;
   const items = [["🧭", Z("我的船"), ()=>{ blStop = -1; openMyBoat(); }], ["🌦️", Z("心情"), ()=>openMood()], ["❓", Z("疑惑"), ()=>openDoubt()], ["🙋", Z("介绍我"), ()=>openIntro()], ["🚩", Z("插旗"), ()=>setFlagMode(true)], ["📷", Z("拍照学词"), ()=>openPhotoLearn()],
     ["🧳", Z("船舱"), ()=>openHold()], ["🧰", Z("工具箱"), ()=>openSkills()], ["📒", Z("准备册"), ()=>openPrep()], ["⚓", Z("我的圈子"), ()=>openClubs()], ["📍", boatHome() ? Z("母港") : Z("选母港"), openBoatHome]];
@@ -8739,7 +8828,7 @@ ${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m
 }
 // ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
 // 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
-const SYNC_KEYS = ["boatlog.v1", "voyplan.v1", "voyage.v2", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
+const SYNC_KEYS = ["boatlog.v1", "voyplan.v1", "cultrip.v1", "voyage.v2", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
   ...["eat_well", "pet_club", "body_mind", "life_abroad", "first_money", "dev_club", "trends_now", "fashion_club", "see_world", "economy_club", "social_money", "people_values", "life_questions", "med_club", "growth_club", "fun_club"].map(c=>"wb." + c)];   // 每座岛的词汇本
 const syncTs = () => cpLS("sync.ts") || {};
 let syncT = null, syncPulled = false;
