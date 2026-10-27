@@ -589,6 +589,9 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .ct-pass{display:flex;gap:6px;flex-wrap:wrap;background:#24305e;border-radius:14px;padding:8px;margin:6px 0 10px}.ct-st{width:60px;height:60px;border-radius:50%;border:2.5px dashed #6c78a8;color:#9aa4cc;background:#2b386c;display:grid;place-items:center;text-align:center;font-size:10.5px;line-height:1.2;font-weight:700}
 .ct-st.on{border:3px double #c8372d;color:#c8372d;background:#fff8ef;transform:rotate(-8deg)}.ct-st b{font-size:18px;display:block}
 .ct-q{background:#24305e;color:#fff;border-radius:14px;padding:7px 11px;margin:6px 0}.ct-q small{display:block;color:#c9d0ee;font-size:11.5px}.ct-q b{font-size:16px}
+.ct-ship{background:#24305e;color:#fff;border-radius:14px;padding:6px 10px;margin:6px 0}.ct-ship small{color:#c9d0ee}.ct-mate{display:inline-block;background:#2f3d78;border-radius:999px;padding:1px 9px;margin:3px 4px 0 0;font-size:12.5px}.ct-mate i{font-style:normal;color:#ffd2b8;margin-left:3px}
+.ct-posts{display:flex;gap:6px;overflow-x:auto;padding:2px 0}.ct-post{flex:0 0 190px;background:#fff;border:2px solid #efe2bd;border-radius:12px;padding:5px 8px;font-size:13.5px}.ct-post small{display:block;color:#6b6577;font-weight:700;font-size:11.5px}.ct-post.mine{border-color:#ff7a45;background:#fff8f2}
+.ct-ask{background:#f0f8f2;border:2px solid #bfe3c9;border-radius:12px;padding:5px 9px;margin:4px 0;font-size:13.5px}.ct-ans{background:#fff;border-radius:9px;padding:4px 7px;margin-top:4px}.ct-badge{font-size:11px;background:#2f9e5b;color:#fff;border-radius:999px;padding:0 6px;margin-left:4px}
 .ct-tl{list-style:none;margin:6px 0 4px;padding:0}.ct-tl li{border-left:3px solid #efe2bd;padding:0 0 8px 12px;position:relative}.ct-tl li::before{content:"";position:absolute;left:-8px;top:5px;width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid #c9bb92}.ct-tl li.done::before{background:#2f9e5b;border-color:#2f9e5b}.ct-tl li.cur::before{background:#ff7a45;border-color:#ff7a45}
 .ct-hd{all:unset;cursor:pointer;font-weight:700}.ct-hd small{color:#6b6577;font-weight:600}.ct-hd:focus-visible{outline:3px solid #3f9fd6}
 .ct-npc{display:flex;gap:8px;align-items:flex-start}.ct-av{flex:none;width:38px;height:38px;border-radius:50%;background:#ffe9c9;border:2px solid #1f2a37;display:grid;place-items:center;font-size:19px}.ct-msg{background:#eef6ff;border-radius:4px 14px 14px 14px;padding:5px 9px}
@@ -5495,7 +5498,7 @@ const ctRoute = () => { const ks = CT_BY_LEARN[LEARN] || ["uk"], v = ctGet(); re
 const ctState = () => { const R = ctRoute(), v = ctGet(); return v && v.k === R.k ? v : null; };
 const ctStk = n => data.find(x=>x.n === n);
 if (ZE) Object.assign(ZE, {"🧭 跨岛航线": "🧭 Island routes", "🎒 文化之旅": "🎒 Culture trip", "这条游学路线想回答的问题": "The question this trip answers", "每天一座城，从早到晚经过地图上的经典贴纸。每到一张贴纸：看贴纸上写的、学一句在那儿真会说的话、知道它为什么重要。每天回答这个问题的一块。": "One city a day, from morning to night past classic stickers on the map. At each one: read the sticker, learn one thing people really say there, and find out why it matters. Each day answers part of the question.",
-  "出发：开船去": "Set off: sail to", "贴纸上写着": "On the sticker", "在这儿说一句": "Say it here", "在这儿碰到": "Who you meet here", "同路的留学生": "travelling with you", "住在这儿": "lives here", "Emma 跟你一起走：法国来的留学生，也在学中文，会说错、会问问题。每座城还会碰到住在那儿的人。": "Emma travels with you: an exchange student from France who's learning Chinese too — she makes mistakes and asks questions. In each city you'll also meet people who live there.", "为什么它重要": "Why it matters", "🎤 跟着说": "🎤 Say it", "🚗 开到这儿": "🚗 Drive here", "✓ 说完了，开往下一张：": "✓ Done — drive on to: ", "✓ 说完了，今天走完": "✓ Done — that's today",
+  "出发：开船去": "Set off: sail to", "贴纸上写着": "On the sticker", "在这儿说一句": "Say it here", "在这儿碰到": "Who you meet here", "同一班船 · 这周出发走这条路线的人": "Same ship · people who set off on this route this week", "走完了 ✓": "Finished ✓", "这周还只有你，别人出发后会出现在这里。": "Just you so far this week — others will show up here when they set off.", "登录以后，能看到同一周出发的人走到了哪儿。": "Log in to see where people who set off this week have got to.", "到过这儿的人留下的一句": "Lines left by people who passed here", "我也是": "Me too", "示例": "example", "还没有人留": "Nothing yet", "你说完这一站的话，可以第一个留在这儿。": "Say this stop's line and be the first to leave it here.", "把我说的这句留在这儿": "Leave my line here", "留一句": "Leave a line", "自己写一句": "Write my own", "以后就能留一句、问当地人": "to leave lines and ask locals", "在 heyvoyo.com 登录以后，能在这里留一句、问当地人。": "Log in on heyvoyo.com to leave lines and ask locals here.", "问问住在": "Ask people who live in ", "的人": "", "谢谢": "Thanks", "我是这儿的人，我来回答": "I live here — I'll answer", "我来回答": "I'll answer", "当地人": "A local", "问一个问题": "Ask a question", "住在这座城的人会收到提醒。回答被说「谢谢」，回答的人会得到 1 个 🛟。": "People who live here get a heads-up. When an answer is thanked, the person who answered gets 1 🛟.", "答案墙": "Answer wall", "贴到墙上": "Post to the wall", "登录以后，你的答案也能贴上去。": "Log in to post your answer too.", "一位旅人": "A traveller", "在这一站留一句（最多 280 个字）：": "Leave a line at this stop (up to 280 characters):", "想问住在这儿的人什么？": "What would you like to ask people who live here?", "你的回答：": "Your answer:", "个正在游学的人想问": "travellers want to ask people in ", "回答": "Answer", "回答了": "Answered", "同路的留学生": "travelling with you", "住在这儿": "lives here", "Emma 跟你一起走：法国来的留学生，也在学中文，会说错、会问问题。每座城还会碰到住在那儿的人。": "Emma travels with you: an exchange student from France who's learning Chinese too — she makes mistakes and asks questions. In each city you'll also meet people who live there.", "为什么它重要": "Why it matters", "🎤 跟着说": "🎤 Say it", "🚗 开到这儿": "🚗 Drive here", "✓ 说完了，开往下一张：": "✓ Done — drive on to: ", "✓ 说完了，今天走完": "✓ Done — that's today",
   "🧩 今天拼到的一块答案": "🧩 Today's piece of the answer", "在地图上看今天的路线": "Show today's route on the map", "🛂 盖章，明天去": "🛂 Stamp it — tomorrow:", "🛂 盖章": "🛂 Stamp it", "走完了：": "Trip complete: ", "再走一遍": "Do it again", "点走过的贴纸，地图飞过去打开它。": "Tap a sticker you've passed to fly to it.", "听到：": "Heard: ", "在听……": "Listening…", "没听清，再说一遍": "Didn't catch that — try again", "这个浏览器听不了你说，大声说一遍也算 ✓": "This browser can't listen — saying it out loud counts ✓"});
 // 把这一天的贴纸都放进屏幕
 function ctFit(d){ const R = ctRoute(), D = R.days[d]; if (!D) return; if (W < 700) card.hidden = true;
@@ -5514,8 +5517,8 @@ function ctHtml(){ const R = ctRoute(), S = ctState(), ks = CT_BY_LEARN[LEARN] |
   if (!S) return pick + head + (R.k === "cn" ? `<div class="ct-npc"><span class="ct-av" style="background:#e8e2ff">🎒</span><div class="ct-msg" style="background:#f1edff">${Z("Emma 跟你一起走：法国来的留学生，也在学中文，会说错、会问问题。每座城还会碰到住在那儿的人。")}</div></div>` : "") + `<p class="note">${Z("每天一座城，从早到晚经过地图上的经典贴纸。每到一张贴纸：看贴纸上写的、学一句在那儿真会说的话、知道它为什么重要。每天回答这个问题的一块。")}</p>
     ${R.days.map((D, i)=>`<div class="bl-e"><span class="bl-ic">${D.stamp}</span><div style="flex:1"><b>${(UI === "zh" ? "第" : "Day")} ${i + 1} · ${esc(bmU(D.city))}：${esc(bmU(D.theme))}</b><small class="note" style="display:block">${D.stops.map(st=>esc(mapN(st.n))).join(" → ")}</small></div></div>`).join("")}
     <div class="chips"><button class="chip hot" data-ct="start">⛵ ${Z("出发：开船去")} ${esc(bmU(R.days[0].city))}</button></div>`;
-  if (S.d >= ND) return pick + head + `<section><h3>🎓 ${Z("走完了：")}${esc(bmU(R.q))}</h3>${R.days.map(D=>`<p style="margin:3px 0">${D.stamp} <b>${esc(bmU(D.city))}</b> · ${esc(bmU(D.piece))}</p>`).join("")}<p class="note">${esc(bmU(R.end))}</p>
-    <p class="note">${(S.said || []).map(t=>`<span class="tagx">${esc(t)}</span>`).join(" ")}</p><div class="chips"><button class="chip" data-ct="again">${Z("再走一遍")}</button></div></section>`;
+  if (S.d >= ND) return pick + head + ctShipHtml(R, S) + `<section><h3>🎓 ${Z("走完了：")}${esc(bmU(R.q))}</h3>${R.days.map(D=>`<p style="margin:3px 0">${D.stamp} <b>${esc(bmU(D.city))}</b> · ${esc(bmU(D.piece))}</p>`).join("")}<p class="note">${esc(bmU(R.end))}</p>
+    <p class="note">${(S.said || []).map(t=>`<span class="tagx">${esc(t)}</span>`).join(" ")}</p><div class="chips"><button class="chip" data-ct="again">${Z("再走一遍")}</button></div>${ctWallHtml(R)}</section>`;
   const D = R.days[S.d], N = D.stops.length, op = ctOpen >= 0 && ctOpen < N ? ctOpen : Math.min(S.at, N - 1);
   const tl = D.stops.map((st, i)=>{ const d = ctStk(st.n), cls = i < S.at ? "done" : i === S.at ? "cur" : "";
     let x = `<li class="${cls}"><button class="ct-hd" data-cto="${i}"><small>${esc(bmU(st.t))}</small> ${st.e || (d ? d.e : "📍")} ${esc(mapN(st.n))}${i < S.at ? " ✓" : ""}</button>`;
@@ -5527,28 +5530,113 @@ function ctHtml(){ const R = ctRoute(), S = ctState(), ks = CT_BY_LEARN[LEARN] |
         <div class="chips">${expSay(st.say[0], R.tts)}<button class="chip" id="ctMic">${Z("🎤 跟着说")}</button></div><p class="note" id="ctRes"></p>
         <p class="note" style="margin:8px 0 2px;font-weight:700">${Z("为什么它重要")}</p><p style="margin:0;border-left:4px solid #ff7a45;padding-left:8px">${esc(bmU(st.core))}</p>
         ${st.npc ? `<div class="ct-npc" style="margin-top:8px"><span class="ct-av">${st.npc.e}</span><div class="ct-msg"><small class="note"><b>${esc(bmU(st.npc.n))}</b></small><br>${esc(st.npc.t)} ${expSay(st.npc.t, R.tts)}${st.npc.g ? `<br><small class="note">${esc(st.npc.g)}</small>` : ""}</div></div>` : ""}
-        ${i === S.at ? `<div class="chips" style="margin-top:8px">${here ? "" : `<button class="chip" data-ct="drive">${Z("🚗 开到这儿")}</button>`}<button class="chip hot" data-ct="next">${i < N - 1 ? Z("✓ 说完了，开往下一张：") + esc(mapN(D.stops[i + 1].n)) : Z("✓ 说完了，今天走完")}</button></div>` : ""}</div>`; }
+        ${i === S.at ? `<div class="chips" style="margin-top:8px">${here ? "" : `<button class="chip" data-ct="drive">${Z("🚗 开到这儿")}</button>`}<button class="chip hot" data-ct="next">${i < N - 1 ? Z("✓ 说完了，开往下一张：") + esc(mapN(D.stops[i + 1].n)) : Z("✓ 说完了，今天走完")}</button></div>` : ""}${ctSocHtml(R, S, S.d, i)}</div>`; }
     return x + "</li>"; }).join("");
   const fin = S.at >= N, nextD = R.days[S.d + 1];
-  return pick + head + `<h3 style="margin:10px 0 0">${D.stamp} ${(UI === "zh" ? "第" : "Day")} ${S.d + 1} · ${esc(bmU(D.city))}：${esc(bmU(D.theme))}</h3><div class="chips"><button class="chip" data-ct="fit">🗺️ ${Z("在地图上看今天的路线")}</button></div><ul class="ct-tl">${tl}</ul><small class="note">${Z("点走过的贴纸，地图飞过去打开它。")}</small>
+  return pick + head + ctShipHtml(R, S) + `<h3 style="margin:10px 0 0">${D.stamp} ${(UI === "zh" ? "第" : "Day")} ${S.d + 1} · ${esc(bmU(D.city))}：${esc(bmU(D.theme))}</h3><div class="chips"><button class="chip" data-ct="fit">🗺️ ${Z("在地图上看今天的路线")}</button></div><ul class="ct-tl">${tl}</ul><small class="note">${Z("点走过的贴纸，地图飞过去打开它。")}</small>
     ${fin ? `<section style="border:2.5px dashed #c8372d;background:#fff8ef"><h3>${Z("🧩 今天拼到的一块答案")}</h3><p style="margin:0">${esc(bmU(D.piece))}</p><div class="chips"><button class="chip hot" data-ct="stamp">${nextD ? Z("🛂 盖章，明天去") + " " + esc(bmU(nextD.city)) : Z("🛂 盖章")}</button></div></section>` : ""}`; }
 function ctBind(){ const R = ctRoute();
   card.querySelectorAll("[data-plmode]").forEach(b=>b.onclick = ()=>{ plMode = b.dataset.plmode; openMyBoat("plan"); });
   card.querySelectorAll("[data-ctk]").forEach(b=>b.onclick = ()=>{ ctPickK = b.dataset.ctk; ctOpen = -1; plMode = "trip"; openMyBoat("plan"); });
   card.querySelectorAll("[data-cto]").forEach(b=>b.onclick = ()=>{ ctOpen = +b.dataset.cto; plMode = "trip"; openMyBoat("plan"); });
+  ctSocBind(R);
+  { const S0 = ctState(), now = Date.now(), due = k => !CT_SOC["t:" + k] || now - CT_SOC["t:" + k] > 20000;   // 打开面板时去后台读一次（20 秒内不重复读）
+    if (S0 && due("ship")){ CT_SOC["t:ship"] = now; ctLoadShip(R.k, S0); }
+    if (S0 && S0.d < R.days.length){ const i = ctOpen >= 0 ? ctOpen : Math.min(S0.at, R.days[S0.d].stops.length - 1), k = ctKey(R.k, S0.d, i); if (due(k)){ CT_SOC["t:" + k] = now; ctLoadStop(R.k, S0.d, i); } } }
   card.querySelectorAll("[data-ctnpc]").forEach(b=>b.onclick = ()=>{ const n = npcById(b.dataset.ctnpc); if (n) openNpc(n); });
   card.querySelectorAll("[data-ctstk]").forEach(b=>b.onclick = ()=>{ const d = ctStk(b.dataset.ctstk); if (d) flyTo(d); });
   card.querySelectorAll("[data-ct]").forEach(b=>b.onclick = ()=>{ const a = b.dataset.ct, S = ctState(); ctOpen = -1;
-    if (a === "start" || a === "again"){ ctSet({k: R.k, d: 0, at: 0, from: blDay(), said: []}); ctSail(0, 0, true); }
+    if (a === "start" || a === "again"){ ctSet({k: R.k, d: 0, at: 0, from: blDay(), said: []}); ctSail(0, 0, true); ctShipSave(R, ctState()); }
     if (a === "drive" && S) ctSail(S.d, S.at, false);
     if (a === "fit" && S) ctFit(S.d);
-    if (a === "next" && S){ const st = R.days[S.d].stops[S.at]; S.said = (S.said || []).concat(st.say[0]); S.at++; S.t = Date.now(); ctSet(S); if (S.at < R.days[S.d].stops.length) ctSail(S.d, S.at, false); else placeBoat(d3.zoomTransform(svg.node())); }
-    if (a === "stamp" && S){ S.d++; S.at = 0; S.t = Date.now(); ctSet(S); if (S.d < R.days.length) ctSail(S.d, 0, true); else placeBoat(d3.zoomTransform(svg.node())); }
+    if (a === "next" && S){ const st = R.days[S.d].stops[S.at]; S.said = (S.said || []).concat(st.say[0]); S.at++; S.t = Date.now(); ctSet(S); if (S.at < R.days[S.d].stops.length) ctSail(S.d, S.at, false); else placeBoat(d3.zoomTransform(svg.node())); ctShipSave(R, S); }
+    if (a === "stamp" && S){ S.d++; S.at = 0; S.t = Date.now(); ctSet(S); if (S.d < R.days.length) ctSail(S.d, 0, true); else placeBoat(d3.zoomTransform(svg.node())); ctShipSave(R, S); }
     plMode = "trip"; openMyBoat("plan"); });
   const mic = card.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#ctRes"), S = ctState(), D = R.days[S ? Math.min(S.d, R.days.length - 1) : 0], st = D.stops[ctOpen >= 0 ? ctOpen : Math.min(S ? S.at : 0, D.stops.length - 1)], Rc = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
     const rec = new Rc(); rec.lang = EXP_TTS[R.tts] || LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
     rec.onresult = ev=>{ out.textContent = `${Z("听到：")}「${ev.results[0][0].transcript}」 ✓`; }; rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); void st; }; }
+// 🎒 游学的弱社交（后台见 后台/trip_social.sql）：每站「到过这儿的人留下的一句」+「我也是」、问问当地人（被谢谢的人得 🛟）、同一班船（同一周出发）、走完的答案墙
+// 没登录或在 claude.ai 上只能看示例；登录后（heyvoyo.com）才能写
+const CT_SOC = {}, ctKey = (k, d, i) => k + "|" + d + "|" + i;
+const CT_SEED = {   // 示例：还没人留的时候先给一点样子，标「示例」
+ "cn|3|0": {lines: [["Lukas · 柏林", "第一次喝咸豆浆，真的像汤！🥣"], ["Mei · 台北", "台北也有咸豆浆，我们加油条碎和醋。"]], ask: ["大饼油条去哪儿吃最地道？", "早上 6 点到 9 点，弄堂口的小摊最地道，去晚了就卖完了。"]},
+ "cn|3|1": {lines: [["Ana · 马德里", "头顶上全是衣服，像彩旗一样 🏳️"], ["Sophie · 里昂", "一位奶奶请我进去看她的天井，好热情！"]]},
+ "cn|3|2": {lines: [["Kofi · 阿克拉", "我也被烫到了 😂 下次一定先咬小口。"]], ask: ["有没有不放猪肉的小笼包？", "有的！很多店有蟹粉、虾仁或者素的，点之前问一句「有不放猪肉的吗？」"]},
+ "cn|3|4": {lines: [["Mei · 台北", "七点一到，对岸的灯全亮了，好多人一起「哇」✨"]], ask: ["外滩几点去最好？", "天黑前半小时到，能看到对岸亮灯那一下。周末人超多，工作日好一点。"]},
+ "uk|0|5": {lines: [["小林 · 杭州", "Salt and vinegar 第一次听不懂，店员又说了一遍 😅"]]},
+ "us|0|1": {lines: [["阿杰 · 广州", "everything bagel 上面真的什么都有，芝麻、洋葱、蒜……"]]}};
+const CT_WALL_SEED = {cn: [["Sophie · 里昂", "中国很大，但是一个字大家都能看懂。"], ["Kofi · 阿克拉", "我觉得是吃饭：一起吃饭，就变成朋友。"]],
+  uk: [["小林 · 杭州", "Britain changed the world with its language and its stories."]], us: [["阿杰 · 广州", "The American Dream is the idea that you can start over."]]};
+const ctWeek = from => { const d = new Date((from || blDay()) + "T00:00:00"); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return blDay(d.getTime()); };
+async function ctNames(ids){ ids = [...new Set(ids)].filter(u=>u && u !== SOC.uid && !SOC.names[u]); if (!ids.length || !SOC.user) return; try { const ps = await SOC.user.profiles(ids); Object.entries(ps || {}).forEach(([u, p])=>{ SOC.names[u] = (p && p.name) || ""; }); } catch(e){} }
+// 读一站的留言、「我也是」、问题、回答、谢谢；有变化就重画面板
+async function ctLoadStop(k, d, i){ if (!tkLogged()) return; const key = ctKey(k, d, i), old = JSON.stringify(CT_SOC[key] || null); try {
+    const q = c => SOC.db.collection(c).where("stop", "==", key).limit(60).get().then(s=>s.docs.map(x=>({id: x.id, ...x.data()})));
+    const [lines, metoo, asks] = await Promise.all([q("tripline"), q("tripmetoo"), q("tripask")]);
+    const ans = asks.length ? (await SOC.db.collection("tripans").where("ask", "in", asks.map(a=>a.id)).limit(100).get()).docs.map(x=>({id: x.id, ...x.data()})) : [];
+    const thx = ans.length ? (await SOC.db.collection("tripthx").where("ans", "in", ans.map(a=>a.id)).limit(300).get()).docs.map(x=>x.data()) : [];
+    await ctNames([...lines, ...asks, ...ans].map(x=>x.author));
+    CT_SOC[key] = {lines: lines.sort((a, b)=>b.ts - a.ts), metoo, asks: asks.sort((a, b)=>b.ts - a.ts).map(a=>({...a, ans: ans.filter(x=>x.ask === a.id).map(x=>({...x, thx: thx.filter(t=>t.ans === x.id)}))}))};
+  } catch(e){ return; }
+  if (JSON.stringify(CT_SOC[key]) !== old && plMode === "trip" && !card.hidden && card.querySelector("[data-ctsoc]")) openMyBoat("plan"); }
+async function ctLoadShip(k, S){ if (!tkLogged() || !S) return; const key = "ship|" + k, old = JSON.stringify(CT_SOC[key] || null); try {
+    const arr = (await SOC.db.collection("tripship").where("trip", "==", k).where("week", "==", ctWeek(S.from)).limit(40).get()).docs.map(x=>x.data());
+    const wall = (await SOC.db.collection("tripwall").where("trip", "==", k).limit(40).get()).docs.map(x=>x.data());
+    await ctNames([...arr, ...wall].map(x=>x.author)); CT_SOC[key] = {ship: arr, wall: wall.sort((a, b)=>b.ts - a.ts)};
+  } catch(e){ return; }
+  if (JSON.stringify(CT_SOC[key]) !== old && plMode === "trip" && !card.hidden && card.querySelector("[data-ctsoc]")) openMyBoat("plan"); }
+function ctShipSave(R, S){ if (!tkLogged() || !S) return; SOC.db.doc("tripship/" + SOC.uid + "_" + R.k).set({author: SOC.uid, trip: R.k, week: ctWeek(S.from), d: S.d, at: S.at, ts: Date.now()}).catch(()=>{}); }
+const ctWho = u => u === SOC.uid ? Z("你") : esc(socName(u) || Z("一位旅人"));
+// 同一班船：这周出发走同一条路线的人走到了哪儿
+function ctShipHtml(R, S){ const D = CT_SOC["ship|" + R.k], arr = (D ? D.ship : []).filter(x=>x.author !== SOC.uid);
+  const where = x => x.d >= R.days.length ? Z("走完了 ✓") : `${bmU(R.days[x.d].city)} · ${UI === "zh" ? "第" : "Day"} ${x.d + 1}`;
+  return `<div class="ct-ship" data-ctsoc><small>⛴️ ${Z("同一班船 · 这周出发走这条路线的人")}</small><div>${arr.length ? arr.slice(0, 12).map(x=>`<span class="ct-mate">${ctWho(x.author)} <i>${esc(where(x))}</i></span>`).join("") : `<span class="ct-mate">${tkLogged() ? Z("这周还只有你，别人出发后会出现在这里。") : Z("登录以后，能看到同一周出发的人走到了哪儿。")}</span>`}</div></div>`; }
+// 一站下面的「留一句」和「问问当地人」
+function ctSocHtml(R, S, d, i){ const key = ctKey(R.k, d, i), D = CT_SOC[key], seed = CT_SEED[key] || {}, st = R.days[d].stops[i], city = bmU(R.days[d].city), cityZh = R.days[d].city.zh, me = tkLogged();
+  const lines = D ? D.lines : [], mine = lines.some(x=>x.author === SOC.uid), saidHere = S && (d < S.d || (d === S.d && i < S.at));
+  const mt = id => D ? D.metoo.filter(x=>x.line === id) : [];
+  let h = `<div data-ctsoc><p class="note" style="margin:10px 0 2px;font-weight:700">💬 ${Z("到过这儿的人留下的一句")}</p><div class="ct-posts">`;
+  h += lines.slice(0, 8).map(x=>{ const m = mt(x.id), my = m.some(y=>y.author === SOC.uid); return `<div class="ct-post${x.author === SOC.uid ? " mine" : ""}"><small>${ctWho(x.author)}</small>${esc(x.text)}<br>${x.author !== SOC.uid && me ? `<button class="chip" style="padding:0 8px;font-size:12px" data-ctmetoo="${esc(x.id)}"${my ? " disabled" : ""}>👍 ${Z("我也是")} ${m.length || ""}</button>` : `<small>👍 ${m.length}</small>`}</div>`; }).join("");
+  if (!lines.length) h += (seed.lines || []).map(([w, t])=>`<div class="ct-post"><small>${esc(w)} · ${Z("示例")}</small>${esc(t)}</div>`).join("") || `<div class="ct-post"><small>${Z("还没有人留")}</small>${Z("你说完这一站的话，可以第一个留在这儿。")}</div>`;
+  h += `</div>`;
+  if (me && !mine) h += `<div class="chips"><button class="chip${saidHere ? " hot" : ""}" data-ctleave="${esc(key)}">${saidHere ? Z("把我说的这句留在这儿") : Z("留一句")}：「${esc(st.say[0])}」</button><button class="chip" data-ctleavew="${esc(key)}">✍️ ${Z("自己写一句")}</button></div>`;
+  else if (!me) h += `<p class="note">${SOC.site ? `<button class="chip" data-ctlogin>${Z("登录")}</button> ${Z("以后就能留一句、问当地人")}` : Z("在 heyvoyo.com 登录以后，能在这里留一句、问当地人。")}</p>`;
+  // 问问当地人
+  const asks = D ? D.asks : [], local = myCity() === cityZh;
+  h += `<p class="note" style="margin:10px 0 2px;font-weight:700">🙋 ${Z("问问住在")}${esc(city)}${Z("的人")}</p>`;
+  h += asks.slice(0, 6).map(a=>`<div class="ct-ask"><b>${ctWho(a.author)}：${esc(a.text)}</b>${a.ans.map(x=>{ const my = x.thx.some(t=>t.author === SOC.uid); return `<div class="ct-ans">${ctWho(x.author)}${x.local ? `<span class="ct-badge">📍${esc(city)}</span>` : ""}：${esc(x.text)} ${me && x.author !== SOC.uid ? `<button class="chip" style="padding:0 8px;font-size:12px" data-ctthx="${esc(x.id)}" data-ctto="${esc(x.author)}"${my ? " disabled" : ""}>🙏 ${Z("谢谢")} ${x.thx.length || ""}</button>` : `<small class="note">🙏 ${x.thx.length}</small>`}</div>`; }).join("")}
+    ${me && a.author !== SOC.uid && !a.ans.some(x=>x.author === SOC.uid) ? `<button class="chip" style="font-size:12px" data-ctans="${esc(a.id)}">${local ? Z("我是这儿的人，我来回答") : Z("我来回答")}</button>` : ""}</div>`).join("");
+  if (!asks.length && seed.ask) h += `<div class="ct-ask"><b>${Z("示例")}：${esc(seed.ask[0])}</b><div class="ct-ans">${Z("当地人")}<span class="ct-badge">📍${esc(city)}</span>：${esc(seed.ask[1])}</div></div>`;
+  if (me) h += `<div class="chips"><button class="chip" data-ctask="${esc(key)}" data-ctcity="${esc(cityZh)}">✍️ ${Z("问一个问题")}</button></div><p class="note" style="margin:2px 0">${Z("住在这座城的人会收到提醒。回答被说「谢谢」，回答的人会得到 1 个 🛟。")}</p>`;
+  return h + `</div>`; }
+// 答案墙（走完以后）
+function ctWallHtml(R){ const D = CT_SOC["ship|" + R.k], wall = D ? D.wall : [], mine = wall.find(x=>x.author === SOC.uid);
+  return `<div data-ctsoc><p class="note" style="margin:10px 0 2px;font-weight:700">🧱 ${Z("答案墙")} · ${esc(bmU(R.q))}</p>
+    ${(wall.length ? wall.slice(0, 20).map(x=>`<div class="ct-post" style="display:block;margin:4px 0">${esc(x.text)}<br><small>${ctWho(x.author)}</small></div>`) : (CT_WALL_SEED[R.k] || []).map(([w, t])=>`<div class="ct-post" style="display:block;margin:4px 0">${esc(t)}<br><small>${esc(w)} · ${Z("示例")}</small></div>`)).join("")}
+    ${tkLogged() ? (mine ? "" : `<textarea rows="2" data-ctwalltxt style="width:100%;margin-top:6px" placeholder="${esc(bmU(R.end))}"></textarea><div class="chips"><button class="chip hot" data-ctwall>${Z("贴到墙上")}</button></div>`) : `<p class="note">${SOC.site ? `<button class="chip" data-ctlogin>${Z("登录")}</button> ` : ""}${Z("登录以后，你的答案也能贴上去。")}</p>`}</div>`; }
+function ctSocBind(R){ const S = ctState(), add = (c, m) => SOC.db.collection(c).add({...m, author: SOC.uid, ts: Date.now()});
+  const reload = key => { const [k, d, i] = key.split("|"); return ctLoadStop(k, +d, +i); };
+  card.querySelectorAll("[data-ctlogin]").forEach(b=>b.onclick = ()=>auOpen("login"));
+  card.querySelectorAll("[data-ctleave]").forEach(b=>b.onclick = async ()=>{ const key = b.dataset.ctleave, [, d, i] = key.split("|"); b.disabled = true; try { await add("tripline", {trip: R.k, stop: key, text: R.days[+d].stops[+i].say[0]}); } catch(e){} reload(key); });
+  card.querySelectorAll("[data-ctleavew]").forEach(b=>b.onclick = async ()=>{ const t = (prompt(Z("在这一站留一句（最多 280 个字）：")) || "").trim().slice(0, 280); if (!t) return; const key = b.dataset.ctleavew; try { await add("tripline", {trip: R.k, stop: key, text: t}); } catch(e){} reload(key); });
+  card.querySelectorAll("[data-ctmetoo]").forEach(b=>b.onclick = async ()=>{ b.disabled = true; const id = b.dataset.ctmetoo, key = Object.keys(CT_SOC).find(k=>CT_SOC[k].lines && CT_SOC[k].lines.some(x=>x.id === id)); try { await SOC.db.doc("tripmetoo/" + id + "_" + SOC.uid).set({author: SOC.uid, line: id, stop: key, ts: Date.now()}); } catch(e){} if (key) reload(key); });
+  card.querySelectorAll("[data-ctask]").forEach(b=>b.onclick = async ()=>{ const t = (prompt(Z("想问住在这儿的人什么？")) || "").trim().slice(0, 280); if (!t) return; const key = b.dataset.ctask; try { await add("tripask", {trip: R.k, stop: key, city: b.dataset.ctcity, text: t}); } catch(e){} reload(key); });
+  card.querySelectorAll("[data-ctans]").forEach(b=>b.onclick = async ()=>{ const t = (prompt(Z("你的回答：")) || "").trim().slice(0, 280); if (!t) return; const id = b.dataset.ctans, key = Object.keys(CT_SOC).find(k=>CT_SOC[k].asks && CT_SOC[k].asks.some(a=>a.id === id)), a = key && CT_SOC[key].asks.find(x=>x.id === id);
+    try { await add("tripans", {ask: id, city: a ? a.city : "", text: t, local: !!(a && myCity() === a.city)}); } catch(e){} if (key) reload(key); });
+  card.querySelectorAll("[data-ctthx]").forEach(b=>b.onclick = async ()=>{ b.disabled = true; const id = b.dataset.ctthx, key = Object.keys(CT_SOC).find(k=>CT_SOC[k].asks && CT_SOC[k].asks.some(a=>a.ans.some(x=>x.id === id))); try { await SOC.db.doc("tripthx/" + id + "_" + SOC.uid).set({author: SOC.uid, ans: id, to: b.dataset.ctto, ts: Date.now()}); } catch(e){} if (key) reload(key); });
+  const w = card.querySelector("[data-ctwall]"); if (w) w.onclick = async ()=>{ const t = (card.querySelector("[data-ctwalltxt]").value || "").trim().slice(0, 280); if (!t) return; w.disabled = true; try { await SOC.db.doc("tripwall/" + SOC.uid + "_" + R.k).set({author: SOC.uid, trip: R.k, text: t, ts: Date.now()}); } catch(e){} ctLoadShip(R.k, S); }; }
+// 住在游学城市的人：打开地图一会儿后，如果有人在问这座城，冒一个小气泡（每次打开只一次）
+setTimeout(async ()=>{ try { if (!tkLogged() || sessionStorage.getItem("ctask")) return; const c = myCity(); if (!c || !Object.values(CULTURE_TRIPS).some(R=>R.days && R.days.some(D=>D.city.zh === c))) return;
+    const asks = (await SOC.db.collection("tripask").where("city", "==", c).limit(50).get()).docs.map(x=>({id: x.id, ...x.data()})).filter(a=>a.author !== SOC.uid && Date.now() - a.ts < 14 * 864e5); if (!asks.length) return;
+    const ans = (await SOC.db.collection("tripans").where("ask", "in", asks.map(a=>a.id)).limit(200).get()).docs.map(x=>x.data()), open = asks.filter(a=>!ans.some(x=>x.ask === a.id)); if (!open.length) return;
+    sessionStorage.setItem("ctask", "1"); const el = document.createElement("div"); el.id = "blBubble"; el.setAttribute("role", "dialog");
+    const stopN = a => { const [k, d, i] = a.stop.split("|"), R = CULTURE_TRIPS[k], st = R && R.days[+d] && R.days[+d].stops[+i]; return st ? mapN(st.n) : ""; };
+    el.innerHTML = `<button class="x" aria-label="${Z("关闭")}">✕</button><b>🙋 ${open.length} ${Z("个正在游学的人想问")}${esc(c)}${UI === "zh" ? "人" : ""}</b>${open.slice(0, 3).map((a, j)=>`<div style="margin-top:4px">「${esc(a.text)}」<small class="note"> · ${esc(stopN(a))}</small> <button class="chip" data-ctgo="${j}">${Z("回答")}</button></div>`).join("")}`;
+    document.body.appendChild(el); el.querySelector(".x").onclick = ()=>el.remove();
+    el.querySelectorAll("[data-ctgo]").forEach(b=>b.onclick = async ()=>{ const a = open[+b.dataset.ctgo], t = (prompt(Z("你的回答：")) || "").trim().slice(0, 280); if (!t) return;
+      try { await SOC.db.collection("tripans").add({ask: a.id, city: c, text: t, local: true, author: SOC.uid, ts: Date.now()}); b.textContent = "✓ " + Z("回答了"); b.disabled = true; } catch(e){} });
+  } catch(e){} }, 8000);
 // 今天的贴纸路线画在地图最上面一层：城里的贴纸常常挤在一个点上，所以这一层把今天这几站摊开画（细线连回真实位置），一站连一站
 let ctG = null;
 function ctDraw(t, s){ if (!ctG) ctG = d3.select(clubBoatG.node().parentNode).append("g").attr("class", "ctg"); ctG.raise().selectAll("*").remove();
