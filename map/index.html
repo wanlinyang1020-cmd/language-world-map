@@ -4691,6 +4691,11 @@ function stkWordHtml(d){
   const gloss = "";   // 标题已经是「我说」的语言，这里只放在学的词
   return `<div class="stk-word"><button class="chip hot" id="stkWord" data-say="${esc(w)}" data-tts="${LEARN_TTS}" data-rate=".85" data-auto="1" aria-label="${esc(w)}">🔊 <b>${esc(w)}</b></button>${gloss ? ` <span class="note">${esc(gloss)}</span>` : ""}<button class="chip" data-say="${esc(w)}" data-tts="${LEARN_TTS}" data-rate=".6" aria-label="慢速">🐢</button></div>`;
 }
+// 贴纸卡片最上面的门头短片：游学里给这张贴纸挑过的那段（content-skeleton/trip_heads.json），能放外部视频的地方才放
+let STK_HEADS = null;
+function stkHeadHtml(n){ if (!CAN_EMBED || typeof CULTURE_TRIPS === "undefined") return "";
+  if (!STK_HEADS){ STK_HEADS = {}; Object.values(CULTURE_TRIPS).forEach(R=>R && R.days && R.days.forEach(D=>D.stops.forEach(st=>{ if (st.head && !STK_HEADS[st.n]) STK_HEADS[st.n] = st.head; }))); }
+  const h = STK_HEADS[n]; return h ? `<div class="ct-head" style="margin:34px 0 10px"><video autoplay muted loop playsinline preload="auto" poster="${esc(h.poster)}" src="${esc(h.hd)}" onerror="this.parentNode.remove()"></video><a href="${esc(h.url)}" target="_blank" rel="noopener">🎬 ${esc(h.nm)} · Pexels</a></div>` : ""; }
 function openCard(d){
   if (typeof ISLE_CLUB !== "undefined" && ISLE_CLUB[d.n]){ const c = clubPinData.find(x=>x.id === ISLE_CLUB[d.n]); if (c){ openClubPin(c); return; } }
   if (selected) selected.el.classList.remove("sel");
@@ -4700,7 +4705,7 @@ function openCard(d){
     .map(o=>[o, d3.geoDistance([d.lon,d.lat],[o.lon,o.lat])]).sort((a,b)=>a[1]-b[1]).slice(0,6).map(x=>x[0]);
   const c = CAT[d.c], sameCountry = data.filter(o=>o.country===d.country).length;
   card.innerHTML = `
-    <button class="x" aria-label="关闭">✕</button>
+    <button class="x" aria-label="关闭">✕</button>${stkHeadHtml(d.n)}
     <div class="c-top"><div class="c-emo${d.sym?" sym":""}" style="border-color:${c.color}${d.sym?`;font-size:${parseFloat(symSize(d.e))*1.5}px`:""}">${kindOf(d.n) ? signSvg(kindOf(d.n), 56) : logoOf(d.n) ? `<img src="${logoOf(d.n).u}" alt="" style="width:78%;height:78%;object-fit:contain">` : esc(d.e)}</div>
       <div><h2>${esc(mapN(d.n))}</h2>${MEN && mapN(d.n) !== d.n ? `<div class="note">${esc(d.n)}</div>` : ""}<div class="c-region">📍 ${esc(mapR(d.r))}</div><span class="c-cat" style="background:${c.color}">${c.icon} ${c.name}</span> <span class="c-cat" style="background:var(--muted)">${TIER_NAME[d.t]}</span></div></div>
     ${stkWordHtml(d)}
