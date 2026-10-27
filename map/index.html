@@ -5352,6 +5352,8 @@ function boatLog(id, k, f){ if (!id || !k || !tkOf(id, k)) return; const L = blG
   f(e); e.t = Date.now(); L.last = {id, k, t: e.t};
   const ks = Object.keys(L.days).sort(); while (ks.length > 90) delete L.days[ks.shift()];
   blSet(L); try { blFlags(); } catch(err){} }
+function blPrac(id, c, n){ if (!id) return; const L = blGet(), day = blDay(); L.days = L.days || {}; const D = L.days[day] = L.days[day] || {}, e = D[id + "|_prac"] = D[id + "|_prac"] || {};
+  e.pr = [...(e.pr || []), c + "/" + n].slice(-5); e.t = Date.now(); blSet(L); try { blFlags(); } catch(err){} }
 function blTheme(id){ return tkCur && tkCur.id === id ? tkCur.k : plIsle === id ? plCur : null; }
 function blDiff(id, prev, s){ const k = blTheme(id); if (!k) return; const W = s.w || {}, P = prev.w || {}, add = [];
   const X = tkOf(id, k), mine = ((s.mine || {})[k] || []).length > ((prev.mine || {})[k] || []).length;
@@ -5364,10 +5366,11 @@ function blDiff(id, prev, s){ const k = blTheme(id); if (!k) return; const W = s
 }
 const blIsleName = id => { const n = (Object.entries(ISLE_CLUB).find(([n, c])=>c === id) || [id])[0]; return typeof mapN === "function" ? mapN(n) : n; };
 const blIsleE = id => (Object.entries(ISLE_CLUB).find(([n, c])=>c === id) ? ((typeof data !== "undefined" && data.find(d=>d.n === Object.entries(ISLE_CLUB).find(([n, c])=>c === id)[0])) || {}).e : "") || "🏝️";
-const blPlace = (id, k) => { const P = (typeof ISLE_PLACES !== "undefined" && ISLE_PLACES[id] && ISLE_PLACES[id].places || []).find(p=>p.k === k) || {}; return {e: P.e || "📍", n: UI === "zh" ? (P.zh || k) : (P.en || P.zh || k)}; };
+const blPlace = (id, k) => { if (k === "_prac") return {e: "🏋️", n: Z("再练一轮")}; const P = (typeof ISLE_PLACES !== "undefined" && ISLE_PLACES[id] && ISLE_PLACES[id].places || []).find(p=>p.k === k) || {}; return {e: P.e || "📍", n: UI === "zh" ? (P.zh || k) : (P.en || P.zh || k)}; };
 function blAgo(day){ const n = Math.round((new Date(blDay()) - new Date(day)) / 864e5), [y, m, d] = day.split("-").map(Number);
   const rel = n === 0 ? Z("今天") : n === 1 ? Z("昨天") : n + " " + Z("天前"); return rel + " · " + (UI === "zh" ? `${m} 月 ${d} 日` : `${d}/${m}`); }
 function blDid(id, k, e){ const X = tkOf(id, k), out = [];
+  if (k === "_prac") return [`🏋️ ${Z("练了")} ${e.pr.length} ${Z("轮 · 答对")} ${e.pr.join("、")}`];
   if (e.go){ const n = npcAny(e.go) || {}, g = X && X.go; out.push("⛵ " + Z("开船去") + " " + (g ? bmU(g.city) : "") + Z("，跟") + " " + (n.name || "") + " " + Z("说了一句")); }
   if (e.w && e.w.length) out.push(Z("存了") + " " + e.w.slice(0, 4).join("、") + (e.w.length > 4 ? " …" : ""));
   if (e.my && e.my.length) out.push(Z("说了") + "「" + e.my[e.my.length - 1] + "」");
@@ -5405,6 +5408,7 @@ function openMyBoat(tab){ tab = tab || "log"; const L = blGet(), days = Object.k
           <p class="note" style="margin:8px 0 2px">${blIsleE(c.id)} ${esc(blIsleName(c.id))} · ${blPlace(c.id, c.k).e} ${esc(blPlace(c.id, c.k).n)} · ${esc(ln.why)}</p>
           <p style="font-size:18px;font-weight:700;margin:2px 0">“${esc(ln.t)}”</p>${ln.zh ? `<button class="chip" id="blZh">${Z("看中文")}</button>` : ""}
           <div class="chips">${expSay(ln.t, LEARN)}<button class="chip" id="blMic">🎤 ${Z("跟着说")}</button><button class="chip hot" id="blNext">${Z("下一站")} →</button></div><p class="note" id="blRes"></p></div>`; })()}`; }
+  if (tab === "route") body += `<section style="margin-top:14px"><h3>🏋️ ${Z("再练一轮")}</h3><p class="note">${Z("用船舱里收的词和句子出 6 道题：选意思、听句子、配对、拼句子、回想、跟读。一座岛一座岛开过去，答得好会隔 1、3、7、14、30 天再出现。")}</p><div class="chips"><button class="chip" id="blVoy">🟣 ${Z("开始练")}</button></div></section>`;
   if (tab === "hold"){ const groups = Object.keys(typeof ISLE_TALK !== "undefined" ? ISLE_TALK : {}).map(id=>{ const S = tkGet(id), W = S.w || {}, sent = S.sent || {}, plain = t => t.replace(/[\[\]]/g, "");
       const th = Object.entries(ISLE_TALK[id].places).map(([k, X])=>({k, w: X.words.filter(w=>W[w.en]), s: X.chat.msgs.filter(m=>sent[plain(m[1])]).map(m=>[plain(m[1]), m[2]]).concat([...new Set(((S.mine || {})[k] || []).filter(t=>typeof t === "string"))].map(t=>[t, ""])).filter((x, i, A)=>A.findIndex(y=>y[0] === x[0]) === i)})).filter(t=>t.w.length || t.s.length);
       return th.length ? `<h3 style="margin:12px 0 2px">${blIsleE(id)} ${esc(blIsleName(id))}</h3>` + th.map(t=>`<p class="note" style="margin:4px 0 2px;color:#c25a2c;font-weight:700">${blPlace(id, t.k).e} ${esc(blPlace(id, t.k).n)}</p><div class="chips">${t.w.map(w=>`<span class="chip">${esc(w.en)} <small class="note">${esc(w.zh)}</small> ${expSay(w.en, LEARN)}</span>`).join("")}</div>${t.s.map(([en, zh])=>`<div class="ex-line" style="padding:4px 0">💬 <b>${esc(en)}</b> ${expSay(en, LEARN)}${zh ? `<br><small class="note">${esc(zh)}</small>` : ""}</div>`).join("")}`).join("") : ""; }).join("");
@@ -5415,6 +5419,7 @@ function openMyBoat(tab){ tab = tab || "log"; const L = blGet(), days = Object.k
   card.querySelectorAll("[data-bltab]").forEach(b=>b.onclick = ()=>{ if (b.dataset.bltab !== "route") blStop = -1; openMyBoat(b.dataset.bltab); });
   card.querySelectorAll("[data-blgo]").forEach(b=>b.onclick = ()=>{ const [id, k] = b.dataset.blgo.split("|"); blGo(id, k); });
   const o = card.querySelector("#blOldHold"); if (o) o.onclick = ()=>openHold();
+  const vy = card.querySelector("#blVoy"); if (vy) vy.onclick = ()=>openVoyage();
   const sl = card.querySelector("#blSail"); if (sl) sl.onclick = ()=>{ blStop = 0; openMyBoat("route"); };
   const zh = card.querySelector("#blZh"); if (zh) zh.onclick = ()=>{ zh.outerHTML = `<p class="note" style="margin:0">${esc(blLine(blRt[blStop]).zh)}</p>`; };
   const mic = card.querySelector("#blMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#blRes"), Rc = window.SpeechRecognition || window.webkitSpeechRecognition, t = blLine(blRt[blStop]).t;
@@ -5424,7 +5429,7 @@ function openMyBoat(tab){ tab = tab || "log"; const L = blGet(), days = Object.k
     rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); };
   const nx = card.querySelector("#blNext"); if (nx) nx.onclick = ()=>{ const c = blRt[blStop], L2 = blGet(); (L2.rev || (L2.rev = {}))[c.key] = blDay(); blSet(L2); blStop++; try { blFlags(); } catch(e){} openMyBoat("route"); card.scrollTop = 0; };
 }
-function blGo(id, k){ const c = clubPinData.find(x=>x.id === id); if (!c) return; plIsle = id; plCur = k; plWb = false; openClubPin(c); }
+function blGo(id, k){ const c = clubPinData.find(x=>x.id === id); if (!c) return; plIsle = id; plCur = k === "_prac" ? null : k; plWb = false; openClubPin(c); }
 // 接着来：打开地图时，船边冒一个小气泡，说上次在哪儿（每次打开只问一次）
 function blWelcome(){ try { if (sessionStorage.getItem("blw")) return; sessionStorage.setItem("blw", "1"); } catch(e){}
   const L = blGet(), last = L.last; if (!last || !tkOf(last.id, last.k) || Date.now() - last.t < 20 * 60 * 1000) return;
@@ -5436,7 +5441,7 @@ function blWelcome(){ try { if (sessionStorage.getItem("blw")) return; sessionSt
   const rv = el.querySelector('[data-blw="rv"]'); if (rv) rv.onclick = ()=>{ el.remove(); blStop = -1; openMyBoat("route"); }; }
 // 岛上的小旗：学过几个主题（今天复习过的变绿）
 function blFlags(){ const L = blGet(), cnt = {}, today = blDay(), rvd = {};
-  Object.values(L.days || {}).forEach(D=>Object.keys(D).forEach(key=>{ const [id, k] = key.split("|"); (cnt[id] = cnt[id] || new Set()).add(k); }));
+  Object.values(L.days || {}).forEach(D=>Object.keys(D).forEach(key=>{ const [id, k] = key.split("|"); if (k !== "_prac") (cnt[id] = cnt[id] || new Set()).add(k); }));
   Object.entries(L.rev || {}).forEach(([key, d])=>{ if (d === today) rvd[key.split("|")[0]] = 1; });
   isleEls.each(function(d){ const id = d.club.id, n = cnt[id] ? cnt[id].size : 0; let g = d3.select(this).select("g.isle-flag"); if (g.empty()) g = d3.select(this).select("g.bob").append("g").attr("class", "isle-flag");
     g.attr("transform", `translate(${(mapN(d.n).length * 6.5 + 6).toFixed(0)},26) scale(1.25)`).html(n ? `<line y1="0" y2="22" stroke="#1f2a37" stroke-width="1.6"/><path d="M0,0 h${n > 9 ? 22 : 17} l-4,5 l4,5 h-${n > 9 ? 22 : 17}z" fill="${rvd[id] ? "#2f9e44" : "#ff7a45"}" stroke="#1f2a37" stroke-width="1"/><text x="${n > 9 ? 9 : 7}" y="8.2" font-size="8" font-weight="800" fill="#fff" text-anchor="middle">${n}</text>` : ""); }); }
@@ -7807,7 +7812,7 @@ function placeBoat(t, s, on){
   voyDraw(t, s);
   if (!boatMenu) return;
   const items = [["🧭", Z("我的船"), ()=>{ blStop = -1; openMyBoat(); }], ["🌦️", Z("心情"), ()=>openMood()], ["❓", Z("疑惑"), ()=>openDoubt()], ["🙋", Z("介绍我"), ()=>openIntro()], ["🚩", Z("插旗"), ()=>setFlagMode(true)], ["📷", Z("拍照学词"), ()=>openPhotoLearn()],
-    ["🟣", Z("今天的航线"), ()=>openVoyage()], ["🧳", Z("船舱"), ()=>openHold()], ["🧰", Z("工具箱"), ()=>openSkills()], ["📒", Z("准备册"), ()=>openPrep()], ["⚓", Z("我的圈子"), ()=>openClubs()], ["📍", boatHome() ? Z("母港") : Z("选母港"), openBoatHome]];
+    ["🧳", Z("船舱"), ()=>openHold()], ["🧰", Z("工具箱"), ()=>openSkills()], ["📒", Z("准备册"), ()=>openPrep()], ["⚓", Z("我的圈子"), ()=>openClubs()], ["📍", boatHome() ? Z("母港") : Z("选母港"), openBoatHome]];
   items.forEach(([e, label, fn], i)=>{ const a = -Math.PI/2 + i*2*Math.PI/items.length, R = 96*s;
     const r = boatMenuG.append("g").attr("class","cradial").attr("transform", `translate(${x + Math.cos(a)*R},${y - 8*s + Math.sin(a)*R})`).attr("role","button")
       .on("click", ev=>{ ev.stopPropagation(); boatMenu = false; placeBoat(d3.zoomTransform(svg.node())); fn(); });
@@ -8009,10 +8014,18 @@ function openHold(src){
 }
 // ===== 🟣 今天的航线：用言己的引擎出题。一份内容 = 一次航行 = 四座小岛（四小轮），船从母港出发，一座岛一座岛开过去 =====
 const VOY_KEY = "voyage.v1";
-const voyLoad = () => cpLS(VOY_KEY), voySave = v => cpLS(VOY_KEY, v);
+const VOY2 = "voyage.v2"; let VOY_CUR = null;   // 再练一轮：每座地图上的真岛一份练习 {by: {岛: {id, content, rounds}}}
+const voyLoad = () => { const A = cpLS(VOY2) || {}; return VOY_CUR && A.by ? A.by[VOY_CUR] || null : null; };
+const voySave = v => { if (!VOY_CUR) return; const A = cpLS(VOY2) || {}; A.by = A.by || {}; if (v === null) delete A.by[VOY_CUR]; else A.by[VOY_CUR] = v; cpLS(VOY2, A); };
 function voyContent(){
   const H = holdItems(), pri = {mine: 0, skill: 1, npc: 2, world: 3}, by = k => H.filter(x=>x.kind === k && x.mean).sort((a, b)=>pri[a.src] - pri[b.src]);
-  let words = by("word").slice(0, 6), sents = by("sentence").filter(x=>PracticeRounds.pieces(x.text).length <= 14).slice(0, 6);
+  // 先用岛上存的词和收藏的句子（每个都记得来自哪座岛、哪个主题），再用以前船舱里的话
+  const IW = [], IS = [], plain = t => t.replace(/[\[\]]/g, "");
+  Object.keys(typeof ISLE_TALK !== "undefined" ? ISLE_TALK : {}).forEach(id=>{ const S = tkGet(id), W = S.w || {}, sent = S.sent || {};
+    Object.entries(ISLE_TALK[id].places).forEach(([pk, X])=>{ const from = "🏝️ " + blIsleName(id) + " · " + blPlace(id, pk).n;
+      X.words.filter(w=>W[w.en]).forEach(w=>IW.push({kind: "word", text: w.en, mean: w.zh, src: "mine", from, ts: (W[w.en] && W[w.en].t) || 0}));
+      X.chat.msgs.filter(m=>sent[plain(m[1])] && m[2]).forEach(m=>IS.push({kind: "sentence", text: plain(m[1]), mean: m[2], src: "mine", from})); }); });
+  let words = [...IW, ...by("word")].filter((x, i, A)=>A.findIndex(y=>y.text === x.text) === i).slice(0, 6), sents = [...IS, ...by("sentence")].filter(x=>PracticeRounds.pieces(x.text).length <= 14).filter((x, i, A)=>A.findIndex(y=>y.text === x.text) === i).slice(0, 6);
   // 船舱还空的时候，先用你路线上的词和句子起航
   const k = (()=>{ try { return localStorage.getItem("path:who") || "dev"; } catch(e){ return "dev"; } })(), P = PATHS[k] || PATHS.dev;
   if (words.length < 3) words = [...words, ...wallWords(P.wall).filter(w=>tgt(w) && glossOf(w)).slice(0, 6 - words.length).map(w=>({kind: "word", text: tgt(w), mean: glossOf(w), src: "world", from: "🗺️ " + (WALL_NAME[P.wall] || "")}))];
@@ -8022,7 +8035,8 @@ function voyContent(){
 const voyIsles = () => { const h = boatHome() || [-35, 15]; return [[4, 4], [9, 0], [6, -5], [0, -6]].map(([dx, dy])=>[h[0] + dx, h[1] + dy]); };
 let voyOn = false;
 function voyDraw(t, s){
-  boatMenuG.selectAll(".voy").remove(); const v = voyLoad(); if (!voyOn || !v) return;
+  boatMenuG.selectAll(".voy").remove(); return;   // 2026-10-27 起「再练一轮」开往地图上的真岛，不再画母港旁边的四座假岛
+  const v = voyLoad(); if (!voyOn || !v) return;
   const nodes = PracticeRounds.islands(v.rounds || {}, v.content), home = boatHome() || [-35, 15], pts = [home, ...voyIsles(), home].map(ll=>t.apply(projection(ll)));
   boatMenuG.insert("path", ":first-child").attr("class","voy cvoy").attr("d", d3.line().curve(d3.curveCatmullRom)(pts));
   voyIsles().forEach((ll, i)=>{ const [x, y] = t.apply(projection(ll)), n = nodes[i], g = boatMenuG.append("g").attr("class","voy cisle").attr("transform", `translate(${x},${y}) scale(${s})`).on("click", e=>{ e.stopPropagation(); openVoyage(); });
@@ -8030,29 +8044,40 @@ function voyDraw(t, s){
     g.append("text").attr("y",-1).attr("text-anchor","middle").attr("font-size",12).text(n.finished ? "✅" : n.unfinished ? "⛵" : "🏝️");
     g.append("text").attr("class","cpl").attr("y",24).attr("text-anchor","middle").text(`${Z("第")} ${i + 1} ${Z("岛")}`); });
 }
-function openVoyage(fresh){
-  let v = voyLoad(); const now = Date.now();
-  if (fresh || !v || !v.content){ v = {id: "v" + now, content: voyContent(), rounds: {}}; voySave(v); }
-  if (v.content.words.length < 3 || v.content.sentences.length < 3){ card.innerHTML = expTop("🟣", Z("今天的航线"), Z("船舱里的话还不够"), "#7048e8") + `<p>${Z("出海至少要 3 个词和 3 句话。先挂一片心情天气、写一句「介绍我」，或者在词汇墙上学几个词。")}</p><div class="chips"><button class="chip hot" id="vyHold">${Z("🧳 看船舱")}</button></div>`; expOpen(); card.querySelector("#vyHold").onclick = ()=>openHold(); voySave(null); return; }
-  if (!voyOn) svg.transition().duration(800).ease(d3.easeCubicInOut).call(zoom.transform, cpFitBeside());   // 第一次打开：退到能看见母港和四座岛的大小
-  voyOn = true; render();
-  const nodes = PracticeRounds.islands(v.rounds, v.content), a = v.rounds.active, going = a && !a.finished, next = nodes.findIndex(n=>!n.finished), due = v.rounds.dueAt;
-  card.innerHTML = expTop("🟣", Z("今天的航线"), Z("一小轮最多 6 题 · 练到听得懂、说得出、接得住"), "#7048e8") + `
-    <p class="note">${Z("从母港出发，一座岛一座岛开过去。每座岛是一小轮练习；答得好，下一次隔 1、3、7、14、30 天再出海。这里不评价发音。")}</p>
-    ${nodes.map((n, i)=>`<div class="box" style="border:2px solid ${n.finished ? "#8fd18f" : i === next ? "#f2b705" : "#e7dfc8"};border-radius:12px;padding:6px 10px;margin:6px 0;background:${i === next ? "#fffbe6" : "#fff"}">${n.finished ? "✅" : i === next ? "⛵" : "🏝️"} <b>${Z("第")} ${i + 1} ${Z("岛")}</b> <small class="note">${n.finished ? `${Z("练过")} ${n.rounds} ${Z("次")}` : n.unfinished ? `${Z("做到第")} ${n.done} / ${n.total} ${Z("题")}` : Z("还没去")}</small></div>`).join("")}
-    ${next < 0 ? `<p><b>${Z("🎉 这次航行四座岛都到过了。")}</b></p>` : ""}${due && due > now ? `<p class="note">${Z("按记忆规律，下一次出海建议在")} ${new Date(due).toLocaleDateString()} ${Z("以后；现在也可以接着练。")}</p>` : ""}
-    <div class="chips">${next >= 0 ? `<button class="chip hot" id="vyGo">${going ? Z("⛵ 接着开") : `${Z("⛵ 开往第")} ${next + 1} ${Z("岛")}`}</button>` : ""}<button class="chip" id="vyNew">${Z("🔄 用船舱里新的话，换一条航线")}</button><button class="chip" id="vyHold">${Z("🧳 看船舱")}</button></div>
-    <h3>${Z("这次航行带上的话")}</h3>${v.content.words.map(w=>`<span class="tagx">🔤 ${esc(w.term)} · ${esc(w.meaning)}</span>`).join(" ")}<br>${v.content.sentences.map(s=>`<div class="ex-line">💬 ${esc(s.text)}<br><small class="note">${esc(s.from || "")}</small></div>`).join("")}`;
-  stageA(); expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
-  const go = card.querySelector("#vyGo"); if (go) go.onclick = ()=>{ const w = voyLoad(); if (!w.rounds.active || w.rounds.active.finished){ w.rounds.active = PracticeRounds.create(w.content, w.rounds, w.id + ":" + Date.now(), Date.now(), next); voySave(w); } boatSail(voyIsles()[next], `${Z("去第")} ${next + 1} ${Z("岛")}`); voyTask(); };
-  card.querySelector("#vyNew").onclick = ()=>openVoyage(true);
+// 一座岛的题目：先用你在这座岛存的词、收藏的句子，不够再用你去过的主题里的词和句子
+function vyBuild(id){ const S = tkGet(id), W = S.w || {}, sent = S.sent || {}, P = ISLE_TALK[id].places, plain = t => t.replace(/[\[\]]/g, "");
+  const L = blGet(), seen = new Set(); Object.values(L.days || {}).forEach(D=>Object.keys(D).forEach(key=>{ const [i2, k] = key.split("|"); if (i2 === id && P[k]) seen.add(k); }));
+  const ks = [...Object.keys(P).filter(k=>seen.has(k) || P[k].words.some(w=>W[w.en])), ...Object.keys(P)], from = k => "🏝️ " + blIsleName(id) + " · " + blPlace(id, k).n;
+  const words = [], sents = [], addW = (w, k) => { if (!words.some(x=>x.term === w.en)) words.push({term: w.en, meaning: w.zh, from: from(k)}); }, addS = (m, k) => { const t = plain(m[1]); if (m[2] && PracticeRounds.pieces(t).length <= 14 && !sents.some(x=>x.text === t)) sents.push({text: t, translation: m[2], from: from(k)}); };
+  Object.entries(P).forEach(([k, X])=>{ X.words.filter(w=>W[w.en]).forEach(w=>addW(w, k)); X.chat.msgs.filter(m=>sent[plain(m[1])]).forEach(m=>addS(m, k)); });
+  const mine = words.length, mineS = sents.length;
+  ks.forEach(k=>{ if (words.length < 6) P[k].words.forEach(w=>{ if (words.length < 6) addW(w, k); }); if (sents.length < 6) P[k].chat.msgs.forEach(m=>{ if (sents.length < 6) addS(m, k); }); });
+  return {words: words.slice(0, 6), sentences: sents.slice(0, 6), mine, mineS}; }
+function vyIsles(){ const L = blGet(), vis = {}; Object.values(L.days || {}).forEach(D=>Object.keys(D).forEach(key=>{ vis[key.split("|")[0]] = 1; }));
+  return Object.keys(typeof ISLE_TALK !== "undefined" ? ISLE_TALK : {}).map(id=>{ const S = tkGet(id), w = Object.keys(S.w || {}).length, sn = Object.keys(S.sent || {}).length; return {id, w, sn, vis: !!vis[id]}; }).filter(x=>x.w || x.sn || x.vis).sort((a, b)=>(b.w + b.sn) - (a.w + a.sn)); }
+const vyPos = id => { const c = clubPinData.find(x=>x.id === id); return c && c.pos; };
+function openVoyage(){ VOY_CUR = null; voyOn = false; const A = cpLS(VOY2) || {}, by = A.by || {}, now = Date.now(), list = vyIsles();
+  card.innerHTML = expTop("🏋️", Z("再练一轮"), Z("开往地图上的真岛 · 每座岛用它自己的词和句子出 6 题"), "#7048e8") + `
+    <p class="note">${Z("哪座岛上你存的词、收藏的句子最多，就排在前面。点一座岛，船开过去，用那座岛的话出题：选意思、听句子、配对、拼句子、回想、跟读。答得好，下一次隔 1、3、7、14、30 天再来。这里不评价发音。")}</p>
+    ${list.length ? list.map(x=>{ const v = by[x.id], r = v && v.rounds || {}, a = r.active, going = a && !a.finished, h = (r.history || []), last = h[h.length - 1], due = r.dueAt;
+      const st = going ? `${Z("做了")} ${a.index} / ${a.tasks.length} ${Z("题 · 还差")} ${a.tasks.length - a.index} ${Z("题")}` : last ? `${Z("练过")} ${h.length} ${Z("次 · 上次答对")} ${last.correct} / ${last.total}${due && due > now ? ` · ${Z("建议")} ${new Date(due).toLocaleDateString()} ${Z("以后再来")}` : ` · ${Z("可以再练了")}`}` : Z("还没在这里练过");
+      return `<div class="bl-e"><span class="bl-ic">${blIsleE(x.id)}</span><div style="flex:1"><b>${esc(blIsleName(x.id))}</b><small class="note" style="display:block">${x.w || x.sn ? `${Z("存了")} ${x.w} ${Z("个词")} · ${x.sn} ${Z("句话")}` : Z("去过，还没存词")} · ${st}</small></div><button class="chip${going || !last || !(due > now) ? " hot" : ""}" data-vygo="${x.id}">${going ? Z("⛵ 接着练") : Z("⛵ 开往这里")}</button></div>`; }).join("")
+      : `<p class="note">${Z("还没有可以练的岛。去任何一座岛点开一个主题，在群聊里点画线的词「存」，或者给一句话点 ☆，这座岛就会出现在这里。")}</p>`}
+    <div class="chips" style="margin-top:8px"><button class="chip" id="vyBoat">⛵ ${Z("回到我的船")}</button><button class="chip" id="vyHold">${Z("🧳 以前的船舱")}</button></div>`;
+  stageA(); expOpen();
+  card.querySelectorAll("[data-vygo]").forEach(b=>b.onclick = ()=>{ VOY_CUR = b.dataset.vygo; let v = voyLoad(); const C = vyBuild(VOY_CUR);
+    if (C.words.length < 3 || C.sentences.length < 3){ b.outerHTML = `<small class="note">${Z("这座岛的词和句子还不够出题")}</small>`; VOY_CUR = null; return; }
+    if (!v) v = {id: VOY_CUR + ":" + Date.now(), content: C, rounds: {}};
+    if (!v.rounds.active || v.rounds.active.finished){ v.content = C; v.rounds.active = PracticeRounds.create(v.content, v.rounds, v.id + ":" + Date.now(), Date.now(), 0); }
+    voySave(v); const ll = vyPos(VOY_CUR); if (ll) boatSail(ll, blIsleName(VOY_CUR)); voyTask(); });
+  card.querySelector("#vyBoat").onclick = ()=>openMyBoat("route");
   card.querySelector("#vyHold").onclick = ()=>openHold();
 }
 // 一道题：按言己的题型画出来，答完交给引擎判
 function voyTask(fb){
   const v = voyLoad(), a = v && v.rounds.active; if (!a) return openVoyage();
-  if (a.finished){ const s = v.rounds.last || {}; fx("good"); const h = boatHome(); if (h) boatSail(h, "" + Z("母港 ·") + " " + mapL(myCity()));
-    card.innerHTML = expTop("🏝️", `${Z("第")} ${(s.island || 0) + 1} ${Z("岛 · 到了")}`, `${Z("答对")} ${s.correct} / ${s.total}`, "#2f9e44") + `<p>${s.strong ? Z("这一轮很稳，记忆往前走了一格。") : Z("有几题还不太熟，会留到下次巩固。")}</p>${s.dueAt ? `<p class="note">${Z("下一次出海建议：")}${new Date(s.dueAt).toLocaleDateString()} ${Z("以后。")}</p>` : ""}<div class="chips"><button class="chip hot" id="vyBack">${Z("🟣 回到航线")}</button></div>`;
+  if (a.finished){ const s = v.rounds.last || {}; fx("good"); if (!a.logged){ a.logged = 1; voySave(v); try { blPrac(VOY_CUR, s.correct, s.total); } catch(e){} }
+    card.innerHTML = expTop(blIsleE(VOY_CUR), `${blIsleName(VOY_CUR)} · ${Z("这一轮练完了")}`, `${Z("答对")} ${s.correct} / ${s.total}`, "#2f9e44") + `<p>${s.strong ? Z("这一轮很稳，记忆往前走了一格。") : Z("有几题还不太熟，会留到下次巩固。")}</p>${s.dueAt ? `<p class="note">${Z("下一次出海建议：")}${new Date(s.dueAt).toLocaleDateString()} ${Z("以后。")}</p>` : ""}<div class="chips"><button class="chip hot" id="vyBack">${Z("🏋️ 换一座岛练")}</button></div>`;
     stageA(); expOpen(); card.querySelector("#vyBack").onclick = ()=>openVoyage(); return; }
   const t = a.tasks[a.index], C = v.content, Wd = C.words, Sn = C.sentences, sh = (arr, seed) => PracticeRounds.shuffled(arr, seed);
   const opts = (pool, right) => sh([...new Set([right, ...pool.filter(x=>x && x !== right)].slice(0, 4))], t.id);
@@ -8064,13 +8089,12 @@ function voyTask(fb){
   if (t.type === "recall"){ const w = Wd[t.index]; tip = Z("你会怎么说？"); body = `<p style="font-size:20px"><b>${esc(w.meaning)}</b></p><input id="rcIn" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit" autocomplete="off"><div class="chips"><button class="chip hot" id="rcOk">${Z("检查")}</button><button class="chip" id="rcHint">${Z("给一点提示")}</button><span class="note" id="rcTip"></span></div>`; }
   if (t.type === "use"){ const w = Wd[t.index]; tip = Z("用它说一句和你自己有关的话"); body = `<p style="font-size:18px"><b>${esc(w.term)}</b> · ${esc(w.meaning)}</p><textarea id="useIn" rows="3" style="width:100%;box-sizing:border-box;padding:6px;border-radius:8px;border:1px solid #e7dfc8;font:inherit"></textarea><div class="chips"><button class="chip hot" id="useOk">${Z("说好了")}</button></div>`; }
   if (t.type === "shadow"){ const s = Sn[t.index]; tip = Z("跟读整句"); body = `<p style="font-size:17px"><b>${esc(s.text)}</b> ${expSay(s.text, "")}</p><p class="note">${esc(s.translation)}</p>${micB(s.text)}<div class="chips"><button class="chip hot" data-sh="75">${Z("🎤 我跟读了")}</button><button class="chip" data-sh="40">${Z("还不太顺，下次再来")}</button></div><p class="note">${Z("这里不评价发音，跟着读出来就好。")}</p>`; }
-  const isle = (a.island || 0) + 1;
-  card.innerHTML = expTop("⛵", `${Z("第")} ${isle} ${Z("岛 · 第")} ${Math.min(a.index + 1, a.tasks.length)} / ${a.tasks.length} ${Z("题")}`, tip, "#7048e8") + saBar(a.index, a.tasks.length) + (fb ? `<p style="color:${fb.correct ? "#2f9e44" : "#e8590c"}"><b>${fb.correct ? Z("✓ 对了") : fb.skipped ? Z("先跳过") : Z("✗ 还不太对")}</b>${fb.right ? `${Z("：")}${esc(fb.right)}` : ""}</p>` : "") + `<section>${body}</section><div class="chips"><button class="chip" id="vySkip">${Z("这题稍后练")}</button><button class="chip" id="vyStop">${Z("🟣 回到航线")}</button></div>`;
+  card.innerHTML = expTop(blIsleE(VOY_CUR), `${blIsleName(VOY_CUR)} · ${Z("第")} ${Math.min(a.index + 1, a.tasks.length)} / ${a.tasks.length} ${Z("题")}`, tip, "#7048e8") + saBar(a.index, a.tasks.length) + (fb ? `<p style="color:${fb.correct ? "#2f9e44" : "#e8590c"}"><b>${fb.correct ? Z("✓ 对了") : fb.skipped ? Z("先跳过") : Z("✗ 还不太对")}</b>${fb.right ? `${Z("：")}${esc(fb.right)}` : ""}</p>` : "") + `<section>${body}</section><div class="chips"><button class="chip" id="vySkip">${Z("这题稍后练")}</button><button class="chip" id="vyStop">${Z("⏸ 先停在这儿")}</button></div>`;
   stageA(); expOpen(); card.querySelector(".x").onclick = ()=>{ voyOn = false; closeCard(); };
   const right = () => t.type === "meaning" ? Wd[t.index].meaning : t.type === "listen" ? Sn[t.index].translation : t.type === "recall" ? Wd[t.index].term : t.type === "puzzle" ? Sn[t.index].text : "";
   const submit = (input, ev) => { const w = voyLoad(); if (ev){ w.rounds.active.evidence = {...(w.rounds.active.evidence || {}), [t.id]: ev}; }
     try { const r = PracticeRounds.advance(w.content, {rounds: w.rounds}, w.rounds.active.id, t.id, input, Date.now()); w.rounds = r.rounds; voySave(w); if (r.feedback.correct) fx("good"); voyTask({...r.feedback, right: r.feedback.correct ? "" : right()}); voyDraw(d3.zoomTransform(svg.node()), W < 700 ? .8 : 1); }
-    catch(e){ openVoyage(); } };
+    catch(e){ try { voyTask(); } catch(e2){ openVoyage(); } } };   // 出了问题留在当前这题，不悄悄退回航线列表
   card.querySelectorAll("[data-ans]").forEach(b=>b.onclick = ()=>submit({answer: b.dataset.ans}));
   const pairs = []; let pick = null;
   card.querySelectorAll("[data-ml]").forEach(b=>b.onclick = ()=>{ pick = +b.dataset.ml; card.querySelectorAll("[data-ml]").forEach(x=>x.style.background = x === b ? "#fff3bf" : ""); });
@@ -8664,7 +8688,7 @@ ${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m
 }
 // ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
 // 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
-const SYNC_KEYS = ["boatlog.v1", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
+const SYNC_KEYS = ["boatlog.v1", "voyage.v2", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1",
   ...["eat_well", "pet_club", "body_mind", "life_abroad", "first_money", "dev_club", "trends_now", "fashion_club", "see_world", "economy_club", "social_money", "people_values", "life_questions", "med_club", "growth_club", "fun_club"].map(c=>"wb." + c)];   // 每座岛的词汇本
 const syncTs = () => cpLS("sync.ts") || {};
 let syncT = null, syncPulled = false;
