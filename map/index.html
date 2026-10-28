@@ -6184,7 +6184,7 @@ let tkPick = null, tkCur = null;
 // 🧭 船票地点的导览：在真实地点说完一句，下面是 GetYourGuide 官方小卡片（content-skeleton/ticket_tours.json，合作伙伴 MAL5N0D）
 const GYG_PID = "MAL5N0D"; const VI_PID = "P00328582";   // Viator：GetYourGuide 对不上的几个地点用它
 function tkTourHtml(id, k){ const T = CAN_EMBED && typeof TICKET_TOURS !== "undefined" ? TICKET_TOURS[id + "|" + k] : null; if (!T) return "";
-  return `<div class="tk-tour"><p style="margin:10px 0 2px"><b>🧭 ${Z("到了这里，可以跟当地人走一圈")}</b>${UI === "zh" ? `<br><small class="note">${esc(T.zh)}</small>` : ""}</p>
+  return `<div class="tk-tour" style="max-height:0;overflow:hidden"><p style="margin:10px 0 2px"><b>🧭 ${Z("到了这里，可以跟当地人走一圈")}</b>${UI === "zh" ? ` <small class="note">· ${esc(T.zh)}</small>` : ""}</p>
     ${T.vi ? `<div data-vi-partner-id="${VI_PID}" data-vi-widget-ref="${esc(T.vi)}"></div>` : `<div data-gyg-href="https://widget.getyourguide.com/default/activities.frame" data-gyg-locale-code="${LEARN_ZH ? "zh-CN" : "en-GB"}" data-gyg-widget="activities" data-gyg-number-of-items="2" data-gyg-partner-id="${GYG_PID}" data-gyg-q="${esc(T.q)}"><span>Powered by <a target="_blank" rel="sponsored" href="https://www.getyourguide.com/">GetYourGuide</a></span></div>`}
     <small class="note">${Z("联盟链接：通过它订导览，HeyVoyo 会拿到一点佣金，你付的价钱不变。")}</small></div>`; }
 // 🗣️ 说完一句之后：找 italki 真人老师（只有一个推广链接，没有老师资料，所以不放头像）
@@ -6197,6 +6197,9 @@ function gygLoad(){ if (!CAN_EMBED) return;
   if (document.querySelector("[data-vi-widget-ref]")){ const v = document.getElementById("viW"); if (v) v.remove(); const s = document.createElement("script"); s.id = "viW"; s.async = true; s.src = "https://www.viator.com/orion/partner/widget.js?t=" + Date.now(); document.head.appendChild(s);
     // Viator 的卡片有时比它的脚本先加载完，告诉网页高度的消息会丢，框就一直是 0 高；几秒后还是 0 高就把卡片重载一次
     [2500, 5000, 8000].forEach(ms=>setTimeout(()=>document.querySelectorAll("[data-vi-widget-ref]").forEach(d=>{ const f = d.querySelector("iframe"); if (f && d.getBoundingClientRect().height < 20) f.src = f.src; }), ms)); }
+  // 导览块先藏着，卡片真的加载出来（有高度）才显示；9 秒后还没出来就不显示，免得只剩标题和披露两行小字
+  const show = () => document.querySelectorAll(".tk-tour").forEach(b=>{ const w = b.querySelector("[data-vi-widget-ref], [data-gyg-widget]"), f = w && w.querySelector("iframe"); if (f && f.getBoundingClientRect().height > 40){ b.style.maxHeight = ""; b.style.overflow = ""; } });
+  [800, 1600, 2500, 4000, 6000, 9000].forEach(ms=>setTimeout(show, ms));
   if (!document.querySelector("[data-gyg-widget]")) return; const o = document.getElementById("gygPa"); if (o) o.remove();
   const sc = document.createElement("script"); sc.id = "gygPa"; sc.async = true; sc.src = "https://widget.getyourguide.com/dist/pa.umd.production.min.js?t=" + Date.now(); sc.setAttribute("data-gyg-partner-id", GYG_PID); document.head.appendChild(sc); }
 if (ZE) Object.assign(ZE, {"到了这里，可以跟当地人走一圈": "Now you're here, walk it with a local", "联盟链接：通过它订导览，HeyVoyo 会拿到一点佣金，你付的价钱不变。": "Affiliate link: HeyVoyo earns a small commission if you book, at no extra cost to you."});
