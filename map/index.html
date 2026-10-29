@@ -49,6 +49,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .lbl .sea{stroke:none;fill:#fff;opacity:.8;font-size:17px;letter-spacing:.5em}
 .lbl g{transition:opacity .3s}
 .st{cursor:pointer}
+.st .pile-bk,.st .pile-n{display:none}.st.piled .pile-bk,.st.piled .pile-n{display:inline}.st .pile-bk rect{fill:#fff;stroke:rgba(0,0,0,.18);stroke-width:1.2px}.st .pile-n{cursor:pointer}.st .pile-n rect{fill:#e8662f;stroke:#fff;stroke-width:2px}.st .pile-n text{fill:#fff;font-size:11.5px;font-weight:800;font-family:var(--f-body,sans-serif)}
 .st .lead{stroke:var(--ink);stroke-width:1.3px;stroke-dasharray:2 3;opacity:.7}
 .st .pin{fill:var(--ink)}
 .st:not(.on) .lead,.st:not(.on) .pin,.st:not(.moved) .lead,.st:not(.moved) .pin{opacity:0}
@@ -556,6 +557,38 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .maplibregl-map{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}.maplibregl-marker{position:absolute;top:0;left:0;will-change:transform}
 .maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-top-left{position:absolute;pointer-events:none;z-index:2}.maplibregl-ctrl-bottom-right{right:0;bottom:0}
 .maplibregl-ctrl{pointer-events:auto;clear:both}.maplibregl-ctrl-attrib{background:rgba(255,255,255,.75);padding:1px 6px;font-size:11px;margin:0 0 66px}.maplibregl-ctrl-attrib a{color:inherit}.maplibregl-ctrl-attrib-button{display:none}
+@media (max-width:700px){
+  body:not(.gal-on) #head{left:10px;right:10px;top:10px;width:auto;padding:6px 8px 6px 12px;border-radius:24px}
+  body:not(.gal-on) #head h1,body:not(.gal-on) #head .sub,body:not(.gal-on) #head .legal{display:none}
+  body:not(.gal-on) #head .search{margin-right:96px}
+  body:not(.gal-on) #head #meBtn{top:8px}body:not(.gal-on) #head #soundBtn{top:8px}
+  body:not(.gal-on) #bottom{top:62px;bottom:auto;left:6px;right:6px}
+  body:not(.gal-on) #cats{flex-wrap:nowrap}body:not(.gal-on) #cats .tag{display:none}
+  body:not(.gal-on) #ctrl{top:112px}
+  #card.msheet{position:fixed;left:0;right:0;top:auto;bottom:0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));width:auto;max-height:none;border-radius:20px 20px 0 0;transition:height .28s cubic-bezier(.2,.9,.3,1);padding-top:0;z-index:40;overflow-y:auto;overscroll-behavior:contain}
+  #mHere{position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));border-radius:20px 20px 0 0;z-index:30;overflow-y:auto;padding:0 14px 10px;transition:height .28s cubic-bezier(.2,.9,.3,1);overscroll-behavior:contain}
+  .sh-grab{position:sticky;top:0;z-index:3;padding:8px 0 6px;margin:0 -18px;touch-action:none;cursor:grab;background:inherit}.sh-grab i{display:block;width:40px;height:5px;border-radius:3px;background:#cfc6b0;margin:0 auto}
+  #mHere .sh-grab{margin:0 -14px;background:var(--panel,#fffbf0)}
+  .mh-h{display:flex;gap:6px;align-items:baseline;margin:0 0 6px;cursor:pointer}.mh-h b{font-size:16px}.mh-h small{color:var(--muted);font-size:12.5px}
+  .mh-row{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid rgba(0,0,0,.08);cursor:pointer}
+  .mh-th{width:48px;height:48px;border-radius:10px;background:#f3ecdc center/cover;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .mh-row b{display:block;font-size:14.5px}.mh-row small{color:var(--muted);font-size:12.5px}.mh-k{font-size:11px;border-radius:999px;padding:0 6px;background:#fff4dc;color:#8a5a00;margin-left:5px;font-weight:600}
+  #mLoc{position:fixed;right:12px;z-index:31;width:44px;height:44px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);font-size:20px;transition:bottom .28s}
+  body:not(.gal-on) #more{display:none!important}body.mh-on #hint{display:none!important}
+}
+@media (min-width:700px){
+  body:not(.gal-on) #head{left:0;top:0;width:400px;border-radius:0;border-width:0 2.5px 2.5px 0;box-shadow:none}
+  #app > #card{left:0;right:auto;top:var(--hh,150px);bottom:0;width:400px;max-height:none;border-radius:0;border-width:0 2.5px 0 0;box-shadow:none;animation:none;align-content:start}
+  #mHere{position:absolute;left:0;top:var(--hh,150px);bottom:0;width:400px;box-sizing:border-box;border-radius:0;border-width:0 2.5px 0 0;box-shadow:none;overflow-y:auto;padding:6px 16px 16px;z-index:3}
+  #mHere .sh-grab{display:none}
+  .mh-h{display:flex;gap:6px;align-items:baseline;margin:4px 0 6px}.mh-h b{font-size:16px}.mh-h small{color:var(--muted);font-size:12.5px}
+  .mh-row{display:flex;gap:10px;align-items:center;padding:7px 6px;border-radius:10px;cursor:pointer}.mh-row:hover{background:rgba(0,0,0,.05)}
+  .mh-th{width:50px;height:50px;border-radius:10px;background:#f3ecdc center/cover;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .mh-row b{display:block;font-size:14.5px}.mh-row small{color:var(--muted);font-size:12.5px}.mh-k{font-size:11px;border-radius:999px;padding:0 6px;background:#fff4dc;color:#8a5a00;margin-left:5px;font-weight:600}
+  body:not(.gal-on) #bottom{left:416px;right:76px}
+  body:not(.gal-on) #boatFind{left:416px!important}
+  body:not(.gal-on) #more{display:none!important}body.mh-on #hint{display:none!important}
+}
 #streetBack{position:absolute;left:50%;transform:translateX(-50%);top:14px;z-index:3}@media (max-width:700px){#streetBack{top:auto;bottom:76px}}
 .street-on #more,.street-on #hint{display:none}
 .s-stk{display:flex;flex-direction:column;align-items:center;cursor:pointer}.s-stk .e{width:44px;height:44px;display:grid;place-items:center;font-size:36px;line-height:1;filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(1px 2px 1px rgba(20,48,92,.35))}.s-stk.big .e{width:52px;height:52px;font-size:44px}.s-stk .e.sg{width:44px;height:44px;filter:drop-shadow(1px 2px 1px rgba(20,48,92,.35))}.s-stk .e.sg svg{display:block}#street.s-small .s-stk .e.sg,#street.s-small .s-stk .e.sg svg{width:34px;height:34px}.s-stk .e.lg{width:auto;min-width:30px;max-width:76px;height:auto;padding:4px 6px;background:#fff;border-radius:10px;filter:drop-shadow(1px 2px 1px rgba(20,48,92,.35))}.s-stk .e.lg img{display:block;height:28px;max-width:64px;object-fit:contain}
@@ -4574,8 +4607,8 @@ function homeTransform(){
 }
 function viewBox(){ // usable screen area not covered by open panels
   let x0=0, x1=W, y0=0, y1=H;
-  if (W>=700){ if (!dir.hidden) x0 = 360; if (cardWillOpen || !card.hidden) x1 = W-410; }
-  else if (cardWillOpen || !card.hidden || !dir.hidden) y1 = H*0.42;
+  if (W>=700){ x0 = 400; x1 = W - 60; if (!dir.hidden) x1 = W - 380; }   // 电脑上左边一整条侧栏（搜索、这一片有什么、贴纸卡片）
+  else if (cardWillOpen || !card.hidden || !dir.hidden) y1 = H - 310;
   return [x0,y0,x1,y1];
 }
 let cardWillOpen = false;
@@ -4667,6 +4700,12 @@ function render(){
     if (show !== s.on){ s.on = show; s.el.classList.toggle("on", show); if (show && !s.artOn){ s.artOn = true; if (s.cut) loadCut(s); const im = s.el.querySelector("image[data-href]"); if (im){ im.setAttribute("href", im.getAttribute("data-href")); im.removeAttribute("data-href"); } } }   // 贴纸图第一次出现在眼前才加载
   }
   STK_BOXES = placed;
+  // 一叠贴纸：挤不下、藏起来的贴纸，算进离它最近的那张显示着的贴纸下面——那张后面露出两张白边，右上角 +N，点 +N 放大散开
+  { const shown = seq.filter(o=>o.on), PIL = new Map();
+    if (shown.length) for (const o of seq){ if (o.on || !activeCats.has(o.c) || (focus && !focus.ids.has(o.id)) || !(filtered || rel >= TIER_MIN[o.t]) || o.x < -20 || o.x > W + 20 || o.y < -20 || o.y > H + 20) continue;
+      let best = null, bd = 4900; for (const q of shown){ const a = q.x + q.dx - o.x, b = q.y + q.dy - o.y, d = a*a + b*b; if (d < bd){ bd = d; best = q; } }
+      if (best){ if (!PIL.has(best)) PIL.set(best, []); PIL.get(best).push(o); } }
+    for (const o of seq) pileMark(o, o.on ? PIL.get(o) || null : null); }
   updateMore(hidden);
   placeMovers(t);
   if (typeof placeRibbons === "function") placeRibbons(t, rel);
@@ -4677,6 +4716,15 @@ function render(){
   if (typeof placeLive === "function") placeLive(t, rel);
   placeSpread(t);
 }
+function pileMark(s, L){ const n = L ? L.length : 0; s.pile = L; if (n === (s.pileN || 0)) return; s.pileN = n; s.el.classList.toggle("piled", n > 0);
+  if (n && !s.pileBk){ const bob = s.el.querySelector(".bob"), r = s.t === 1 ? 26 : 23, ns = "http://www.w3.org/2000/svg";
+    const bk = document.createElementNS(ns, "g"); bk.setAttribute("class", "pile-bk");
+    [[-11, -5, 1], [9, 4, -1]].forEach(([deg, dx, dy])=>{ const re = document.createElementNS(ns, "rect"); re.setAttribute("x", -r + dx); re.setAttribute("y", -r + dy - 3); re.setAttribute("width", r * 2); re.setAttribute("height", r * 2); re.setAttribute("rx", 9); re.setAttribute("transform", `rotate(${deg})`); bk.appendChild(re); });
+    bob.insertBefore(bk, bob.firstChild); s.pileBk = bk;
+    const g = document.createElementNS(ns, "g"); g.setAttribute("class", "pile-n"); g.setAttribute("transform", `translate(${r - 2},${-r - 2})`); g.setAttribute("role", "button");
+    g.innerHTML = `<rect x="-13" y="-9" width="26" height="18" rx="9"></rect><text y="4.5" text-anchor="middle"></text>`; bob.appendChild(g); s.pileNEl = g;
+    g.addEventListener("click", e=>{ e.stopPropagation(); if (s.pile && s.pile.length) goGroup([s, ...s.pile]); }); }
+  if (s.pileNEl){ s.pileNEl.querySelector("text").textContent = "+" + (n > 99 ? 99 : n); s.pileNEl.setAttribute("aria-label", Z("还有") + " " + n + " " + Z("张，放大看")); } }
 // ===== 地球村贴纸：在地图上画“传到世界”的路线（打开贴纸时出现，关掉就消失）=====
 let SPREAD = [];
 function showSpread(route){
@@ -6703,6 +6751,8 @@ function shrOpen(){ if (!shr) return; let box = document.getElementById("shrBox"
       mr.start(); b.textContent = "⏹ " + Z("说完了"); box.querySelector(".shr-msg").textContent = Z("请说：") + bmT(tkOf(S.id, S.k).go.replies[S.ri].say); setTimeout(()=>mr.state === "recording" && mr.stop(), 7000); }
     catch(err){ box.querySelector(".shr-msg").textContent = Z("没拿到麦克风。"); } };
   shrPaint(); }
+if (ZE) Object.assign(ZE, {"张，放大看":"more — zoom in"});
+if (ZE) Object.assign(ZE, {"这一片有什么": "What's around here", "张贴纸 · 滑地图会跟着换": "stickers · moves with the map", "这一片没有贴纸，滑一滑或者缩小看看。": "No stickers here — move the map or zoom out.", "回到我的城市": "Back to my city"});
 if (ZE) Object.assign(ZE, {"删掉": "Delete", "再点一下，确定删掉": "Tap again to delete", "删掉了": "Deleted", "这条已经从地图上删掉了。": "It's been removed from the map.", "没删掉：": "Couldn't delete: ", "删掉这条": "Delete this"});
 if (ZE) Object.assign(ZE, {"个人在说这儿": "people talking about this place", "你在学的": "Your language", "先只有你看得到；审核通过后公开到世界地图。被大家谢谢过几次、没被举报的人，以后加的直接公开。": "Only you can see it at first; once reviewed it goes public on the world map. People who've been thanked a few times and never reported go public straight away.", "写一句你在这儿看到、听到或者想到的。": "Write a line about what you saw, heard or thought here.", "可以照着说：我是……来的 / 我在这儿看到了…… / 来了一定要……": "Try: I'm from… / Here I saw… / If you come, you have to…", "同一个地方谁都可以再加一条，十个人有十个角度。拍一张、说一句、写下来，就挂在这张贴纸下面。": "Anyone can add to the same place — ten people, ten angles. Take a photo, say a line, write it down, and it hangs under this sticker.", "在这儿说的": "Said here", "地方": "Place", "大家说": "What people say", "已举报，先藏起来等审核": "Reported — hidden until reviewed", "录音": "Audio", "我也来加一条（照片 / 视频 / 录音）": "Add mine too (photo / video / audio)", "我也来加一条：你在这儿看到、听到的": "Add yours: what you saw and heard here", "挂到这张贴纸下面": "Add under this sticker", "排在前面的：被谢谢得多的、你在学的语言、刚加的。": "First: most thanked, in the language you're learning, and newly added.", "改": "Edit", "改我加的那条": "Edit what I added", "条": "items", "登录以后才能用": "Sign in first", "看全部": "See all", "说一段（30 秒以内），用哪种语言都行": "Say something (under 30 seconds), in any language", "谢谢过了": "Thanked", "还没有人在这儿说过。去过的话，拍一张、说一句，你就是第一个。": "No one has said anything here yet. If you've been, take a photo, say a line — you'll be the first."});
 if (ZE) Object.assign(ZE, {"分享这一刻": "Share this moment", "马上好……": "Almost ready…", "✓ 你的声音已经合进去了": "✓ Your voice is in", "这次没做成，可以只分享链接": "Couldn't make the clip this time — you can still share the link", "关上": "Close",
@@ -8886,6 +8936,52 @@ const galPhone = () => window.matchMedia && window.matchMedia("(max-width: 700px
 let galQuiet = 0;   // 卡片（比如第一次的语言卡片）连续两次检查都关着，才打开群岛，免得盖住它
 function galBoot(){ if (!galPhone() || typeof ISLE_TALK === "undefined" || /[?&]go=/.test(location.search)) return; galQuiet = card.hidden ? galQuiet + 1 : 0; if (galQuiet < 2){ setTimeout(galBoot, 900); return; } galOpen(); }
 setTimeout(galBoot, 2500);
+// 📱 手机上的地图像 Google 地图：贴纸卡片变成底部抽屉（露一小条 / 一半 / 全屏，拖把手或点一下换），
+// 没打开卡片时，抽屉是「这一片有什么」——屏幕里的贴纸排成列表，滑地图跟着换，手指不用点准小图标；右下 📍 回到自己的城市
+const mPhone = () => galPhone() && !document.body.classList.contains("gal-on");
+const mOther = () => !document.getElementById("talkScene").hidden || !document.getElementById("isleStage").hidden || !dir.hidden;
+const mH = () => { const h = innerHeight - (card.hidden ? 84 : 0); return {half: Math.round(h * .55), full: h - 60}; };
+function mSet(el, st){ el.dataset.sh = st; el.style.height = (st === "peek" ? +el.dataset.peek : mH()[st]) + "px"; mLocPos(); }
+function mGrab(el){ let g = el.querySelector(":scope > .sh-grab"); if (g) return g; g = document.createElement("div"); g.className = "sh-grab"; g.innerHTML = "<i></i>"; el.prepend(g);
+  let y0 = null, h0 = 0, moved = false;
+  g.addEventListener("pointerdown", e=>{ y0 = e.clientY; h0 = el.offsetHeight; moved = false; el.style.transition = "none"; try { g.setPointerCapture(e.pointerId); } catch(err){} });
+  g.addEventListener("pointermove", e=>{ if (y0 == null) return; const d = y0 - e.clientY; if (Math.abs(d) > 4) moved = true; el.style.height = Math.max(+el.dataset.peek - 20, Math.min(mH().full, h0 + d)) + "px"; mLocPos(); });
+  g.addEventListener("pointerup", ()=>{ if (y0 == null) return; y0 = null; el.style.transition = ""; const cur = el.dataset.sh;
+    if (!moved){ mSet(el, cur === "peek" ? "half" : cur === "half" ? "full" : "peek"); return; }
+    const h = el.offsetHeight, M = mH(), opts = {peek: +el.dataset.peek, half: M.half, full: M.full}; mSet(el, Object.keys(opts).reduce((a, k)=>Math.abs(opts[k] - h) < Math.abs(opts[a] - h) ? k : a, "peek")); });
+  return g; }
+// 卡片：手机地图上打开时变成抽屉；贴纸先露一小条（照片和名字），别的（我的主页、表单……）先开一半
+new MutationObserver(()=>{ const on = !card.hidden && mPhone() && card.parentElement && card.parentElement.id !== "isleStage";
+  card.classList.toggle("msheet", on); const who = selected ? "s" + selected.id : "x";
+  if (on){ mGrab(card); card.dataset.peek = 290; if (!card.dataset.sh || (selected && card.dataset.shFor !== who)) mSet(card, selected ? "peek" : "half"); card.dataset.shFor = who; } else { delete card.dataset.sh; delete card.dataset.shFor; card.style.height = ""; }
+  mHereSoon(); }).observe(card, {attributes: true, attributeFilter: ["hidden"], childList: true});
+// 「这一片有什么」
+const mHere = document.createElement("aside"); mHere.id = "mHere"; mHere.className = "panel msheet"; mHere.hidden = true; mHere.dataset.peek = 64; mHere.innerHTML = `<div id="mHereB"></div>`; document.getElementById("app").appendChild(mHere); mGrab(mHere);
+const mLoc = document.createElement("button"); mLoc.id = "mLoc"; mLoc.hidden = true; mLoc.setAttribute("aria-label", Z("回到我的城市")); mLoc.textContent = "📍"; document.getElementById("app").appendChild(mLoc);
+mLoc.onclick = ()=>{ const c = myCity(), ll = c && (CPIN.home || {})[c]; if (!ll){ openBoatHome(); return; } if (streetOn) exitStreet(false); closeCard(); svg.transition().duration(1200).ease(d3.easeCubicInOut).call(zoom.transform, centerOn(projection(ll), kOf(12))); };
+function mLocPos(){ const el = !card.hidden && card.classList.contains("msheet") ? card : !mHere.hidden ? mHere : null; mLoc.style.bottom = (el ? Math.min(el.offsetHeight || +el.style.height.replace("px", "") || 0, mH().half) + (el === card ? 0 : 84) + 10 : 96) + "px"; }
+let mHereT = 0;
+function mHereSoon(){ clearTimeout(mHereT); mHereT = setTimeout(mHereDraw, 250); }
+function mHereList(){ const out = [], t = d3.zoomTransform(svg.node()), b = streetOn && streetMap ? streetMap.getBounds() : null;
+  data.forEach(d=>{ if (!activeCats.has(d.c)) return; if (b){ if (!b.contains([d.lon, d.lat])) return; } else { const [x, y] = t.apply(d.p); if (x < 0 || x > W || y < 50 || y > H) return; } out.push(d); });
+  const N = {}; try { htGroups().forEach(G=>{ if (G.stk) N[G.stk] = G.items.length; }); } catch(e){}
+  return {n: out.length, L: out.sort((a, b)=>(N[b.n] || 0) - (N[a.n] || 0) || a.t - b.t).slice(0, 60).map(d=>[d, N[d.n] || 0])}; }
+const mDesk = () => !galPhone() && innerWidth >= 700;
+function mHereDraw(){ const show = (mPhone() || mDesk()) && card.hidden && document.getElementById("talkScene").hidden && document.getElementById("isleStage").hidden && (mDesk() || dir.hidden) && !cmpDim;
+  mHere.hidden = !show; mLoc.hidden = !mPhone() || mOther() || (!card.hidden && !card.classList.contains("msheet")); document.body.classList.toggle("mh-on", show);
+  if (!show){ mLocPos(); return; } if (mPhone() && !mHere.dataset.sh) mSet(mHere, "peek"); if (mDesk()){ delete mHere.dataset.sh; mHere.style.height = ""; }
+  const {n, L} = mHereList(), pic = d => { const p = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[d.n]; return p && typeof CAN_EMBED !== "undefined" && CAN_EMBED ? p.r2 || p.src : ""; };
+  document.getElementById("mHereB").innerHTML = `<div class="mh-h"><b>${Z("这一片有什么")}</b><small>${n} ${Z("张贴纸 · 滑地图会跟着换")}</small></div>`
+    + (L.length ? L.map(([d, k])=>{ const ph = pic(d); return `<div class="mh-row" data-mh="${d.id}"><div class="mh-th"${ph ? ` style="background-image:url('${esc(ph)}')"` : ""}>${ph ? "" : esc(d.e)}</div><div><b>${esc(mapN(d.n))}${k ? `<span class="mh-k">👥 ${k}</span>` : ""}</b><small>${esc(mapR(d.r))}</small></div></div>`; }).join("")
+      : `<p class="note">${Z("这一片没有贴纸，滑一滑或者缩小看看。")}</p>`);
+  mLocPos(); }
+mHere.addEventListener("click", e=>{ const r = e.target.closest("[data-mh]"); if (r){ const d = data[+r.dataset.mh]; if (!d) return; openCard(d);
+    if (!streetOn) svg.transition().duration(600).call(zoom.transform, centerOn(d.p, d3.zoomTransform(svg.node()).k)); return; } if (e.target.closest(".mh-h") && mHere.dataset.sh === "peek") mSet(mHere, "half"); });
+addEventListener("resize", ()=>{ if (!card.hidden && card.dataset.sh) mSet(card, card.dataset.sh); if (mHere.dataset.sh) mSet(mHere, mHere.dataset.sh); mHereSoon(); });
+setInterval(()=>{ if (mPhone() || mDesk() || !mHere.hidden) mHereSoon(); }, 1500);
+// 电脑上：侧栏从搜索框下面开始
+const mHH = ()=>{ const h = document.getElementById("head"); if (h) document.documentElement.style.setProperty("--hh", h.offsetHeight + "px"); };
+addEventListener("resize", mHH); setTimeout(mHH, 300); setTimeout(mHH, 2000);
 
 function placeBoat(t, s, on){
   if (on === undefined) on = !cmpDim && !mineOnly && !liveOnly;
@@ -9457,7 +9553,7 @@ function htGroups(){ const G = [];
     if (!g){ g = o ? {key: "s:" + h.stk, stk: h.stk, o, lat: o.lat, lng: o.lon, city: h.stk, items: []} : {key: "c:" + h.id, city: h.city, country: h.country, lat: h.lat, lng: h.lng, items: []}; G.push(g); }
     g.items.push(h); });
   return G; }
-function drawHometowns(t, s, on, rel){ htG.selectAll("*").remove(); if (!on) return;
+function drawHometowns(t, s, on, rel){ htG.selectAll("*").remove(); if (typeof mHereSoon === "function") mHereSoon(); if (!on) return;
   htGroups().forEach(G=>{ const n = G.items.length, pub = G.items.some(h=>h.status === "public");
     if (G.stk){ const o = G.o; if (!o.on || !o.el) return;   // 系统贴纸：不另画点，在贴纸右上角挂一个「👥 几」
       const [x, y] = t.apply(projection([o.lon, o.lat])), m = o.offEl && /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(o.offEl.style.transform || ""), dx = m ? +m[1] : 0, dy = m ? +m[2] : 0;
