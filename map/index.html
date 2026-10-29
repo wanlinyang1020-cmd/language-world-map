@@ -9546,7 +9546,7 @@ async function openHometownMake(stk){ SOC.view = null; stk = stk || ""; if (stk 
     <p class="note" style="border-left:3px solid #2f9e5b;padding-left:8px">${Z("先只有你看得到；审核通过后公开到世界地图。被大家谢谢过几次、没被举报的人，以后加的直接公开。")}</p>`;
   expOpen();
   const $ = s => card.querySelector(s), keepTx = ()=>{ D.tx = $("#htTx").value; D.mean = $("#htMean").value; D.ls = $("#htLs").value; D.lsm = $("#htLsm").value; D.city = D.lat != null ? D.city : $("#htQ").value; };
-  $("#htFind").onclick = async ()=>{ keepTx(); const q = $("#htQ").value.trim(); if (!q) return; $("#htRes").innerHTML = `<span class="note">${Z("在找……")}</span>`;
+  if ($("#htFind")) $("#htFind").onclick = async ()=>{ keepTx(); const q = $("#htQ").value.trim(); if (!q) return; $("#htRes").innerHTML = `<span class="note">${Z("在找……")}</span>`;
     try { const r = await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&accept-language=" + (UI === "zh" ? "zh,en" : "en") + "&q=" + encodeURIComponent(q)); const J = await r.json();
       const P = J.map(x=>{ const a = x.address || {}; return {city: a.city || a.town || a.village || a.county || a.state || x.name, country: a.country || "", lat: Math.round(+x.lat * 100) / 100, lng: Math.round(+x.lon * 100) / 100}; }).filter(x=>x.city);
       $("#htRes").innerHTML = P.length ? P.map((x, i)=>`<button class="chip" data-htp="${i}">${esc(x.city)} · ${esc(x.country)}</button>`).join("") : `<span class="note">${Z("没找到，换个写法试试")}</span>`;
