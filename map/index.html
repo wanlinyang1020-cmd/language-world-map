@@ -512,7 +512,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .iv-hd{display:flex;gap:9px;align-items:center}.iv-av{width:42px;height:42px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:19px;border:2px solid var(--ink)}
 .ph{margin:0;display:grid;gap:3px}
 .ph img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;border:2px solid var(--paper-edge);display:block;background:#eee}
-.ph figcaption{font-size:10.5px;color:var(--muted);line-height:1.35}
+.ph figcaption{font-size:10.5px;color:var(--muted);line-height:1.35}figure.ph{position:relative}figure.ph>figcaption{display:none}figure.ph.cr>figcaption{display:block}.ph-i{position:absolute;right:8px;top:8px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:13px;line-height:22px;padding:0;cursor:pointer}
 .chip.hot{background:#fff1ec;border-color:#e8322f;color:#b3261e}
 .now-ppl{list-style:none;margin:6px 0 8px;padding:0;display:grid;gap:6px}
 .now-ppl li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start}
@@ -6760,6 +6760,7 @@ function shrOpen(){ if (!shr) return; let box = document.getElementById("shrBox"
       mr.start(); b.textContent = "⏹ " + Z("说完了"); box.querySelector(".shr-msg").textContent = Z("请说：") + bmT(tkOf(S.id, S.k).go.replies[S.ri].say); setTimeout(()=>mr.state === "recording" && mr.stop(), 7000); }
     catch(err){ box.querySelector(".shr-msg").textContent = Z("没拿到麦克风。"); } };
   shrPaint(); }
+if (ZE) Object.assign(ZE, {"照片来源":"Photo credit"});
 if (ZE) Object.assign(ZE, {"角色": "Character", "图：Pexels 示意图，不是": "Photo: Pexels stock image, not taken by", "拍的": ""});
 if (ZE) Object.assign(ZE, {"为什么有名": "Why it's famous", "你可能不知道": "You might not know", "出处：": "Source: ", "到了那儿说一句": "Say it there"});
 if (ZE) Object.assign(ZE, {"张，放大看":"more — zoom in"});
@@ -6941,9 +6942,9 @@ function moneyIsleWire(id){
 }
 // 真实照片（维基共享资源，自由许可，卡片上署名）
 function photoHtml(n){
-  const p = (typeof STICKER_PHOTOS !== "undefined") && STICKER_PHOTOS[n]; if (!p) return cutCredit(n) ? `<figure class="ph"><figcaption>${cutCredit(n).replace("<br>", "")}</figcaption></figure>` : "";
+  const p = (typeof STICKER_PHOTOS !== "undefined") && STICKER_PHOTOS[n]; if (!p) return "";   // Pixabay 的插画不要求署名，不再写
   const src = (typeof CAN_EMBED !== "undefined" && CAN_EMBED && p.r2) ? p.r2 : p.src;
-  return `<figure class="ph"><img src="${esc(src)}" alt="${esc(n)}${Z("的照片\" loading=\"lazy\" onerror=\"this.closest('figure').remove()\">")}<figcaption>📷 ${p.cap ? `<b>${esc(p.cap)}</b> · ` : ""}${esc(p.artist)} · ${esc(p.license)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">${/pixabay\.com/.test(p.page || "") ? "Pixabay" : Z("维基共享资源")}</a>${cutOf(n) && !cutOf(n)[3] ? Z(" · 地图上的贴纸用这张照片") + (STICKER_CUTS[n][1] === "c" ? Z("抠图") : Z("缩小")) + Z("做成，按同一许可使用") : ""}${cutCredit(n)}</figcaption></figure>`;
+  return `<figure class="ph"><img src="${esc(src)}" alt="${esc(n)}${Z("的照片\" loading=\"lazy\" onerror=\"this.closest('figure').remove()\">")}<button class="ph-i" type="button" aria-label="${Z("照片来源")}" onclick="this.parentNode.classList.toggle('cr')">ⓘ</button><figcaption>📷 ${p.cap ? `<b>${esc(p.cap)}</b> · ` : ""}${esc(p.artist)} · ${esc(p.license)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">${/pixabay\.com/.test(p.page || "") ? "Pixabay" : Z("维基共享资源")}</a>${cutOf(n) && !cutOf(n)[3] ? Z(" · 地图上的贴纸用这张照片") + (STICKER_CUTS[n][1] === "c" ? Z("抠图") : Z("缩小")) + Z("做成，按同一许可使用") : ""}</figcaption></figure>`;
 }
 // 地图上的贴纸用的是别处的插画（比如 Pixabay）：在照片署名后面再写一句插画来源
 function cutCredit(n){ const c = cutOf(n) && cutOf(n)[3]; if (!c) return "";
