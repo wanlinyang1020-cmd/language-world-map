@@ -6703,6 +6703,7 @@ function shrOpen(){ if (!shr) return; let box = document.getElementById("shrBox"
       mr.start(); b.textContent = "⏹ " + Z("说完了"); box.querySelector(".shr-msg").textContent = Z("请说：") + bmT(tkOf(S.id, S.k).go.replies[S.ri].say); setTimeout(()=>mr.state === "recording" && mr.stop(), 7000); }
     catch(err){ box.querySelector(".shr-msg").textContent = Z("没拿到麦克风。"); } };
   shrPaint(); }
+if (ZE) Object.assign(ZE, {"删掉": "Delete", "再点一下，确定删掉": "Tap again to delete", "删掉了": "Deleted", "这条已经从地图上删掉了。": "It's been removed from the map.", "没删掉：": "Couldn't delete: ", "删掉这条": "Delete this"});
 if (ZE) Object.assign(ZE, {"个人在说这儿": "people talking about this place", "你在学的": "Your language", "先只有你看得到；审核通过后公开到世界地图。被大家谢谢过几次、没被举报的人，以后加的直接公开。": "Only you can see it at first; once reviewed it goes public on the world map. People who've been thanked a few times and never reported go public straight away.", "写一句你在这儿看到、听到或者想到的。": "Write a line about what you saw, heard or thought here.", "可以照着说：我是……来的 / 我在这儿看到了…… / 来了一定要……": "Try: I'm from… / Here I saw… / If you come, you have to…", "同一个地方谁都可以再加一条，十个人有十个角度。拍一张、说一句、写下来，就挂在这张贴纸下面。": "Anyone can add to the same place — ten people, ten angles. Take a photo, say a line, write it down, and it hangs under this sticker.", "在这儿说的": "Said here", "地方": "Place", "大家说": "What people say", "已举报，先藏起来等审核": "Reported — hidden until reviewed", "录音": "Audio", "我也来加一条（照片 / 视频 / 录音）": "Add mine too (photo / video / audio)", "我也来加一条：你在这儿看到、听到的": "Add yours: what you saw and heard here", "挂到这张贴纸下面": "Add under this sticker", "排在前面的：被谢谢得多的、你在学的语言、刚加的。": "First: most thanked, in the language you're learning, and newly added.", "改": "Edit", "改我加的那条": "Edit what I added", "条": "items", "登录以后才能用": "Sign in first", "看全部": "See all", "说一段（30 秒以内），用哪种语言都行": "Say something (under 30 seconds), in any language", "谢谢过了": "Thanked", "还没有人在这儿说过。去过的话，拍一张、说一句，你就是第一个。": "No one has said anything here yet. If you've been, take a photo, say a line — you'll be the first."});
 if (ZE) Object.assign(ZE, {"分享这一刻": "Share this moment", "马上好……": "Almost ready…", "✓ 你的声音已经合进去了": "✓ Your voice is in", "这次没做成，可以只分享链接": "Couldn't make the clip this time — you can still share the link", "关上": "Close",
   "重录我的声音": "Re-record my voice", "加上我的声音": "Add my voice", "分享": "Share", "文案和这一关的链接会自动复制，发帖时粘贴进去。": "The caption and a link to this stop are copied for you — paste them into your post.",
@@ -9485,7 +9486,7 @@ function htItemHtml(h){ const mine = htMine(h), n = HT_THX[h.id] || 0, home = !h
   return `<div class="ht-post"><div class="ht-av">${h.vid ? "🎬" : h.audio ? "🎧" : "📷"}</div><div>
     <div class="ht-h"><b>${esc(h.name || Z("一位旅人"))}</b>${home ? `<small>${Z("来自")} ${esc(home.city)}</small>` : h.stk ? "" : `<small>${esc(h.city)}</small>`}${lang === LEARN ? `<span class="ht-b lang">${Z("你在学的")}</span>` : ""}${Date.now() - (h.ts || 0) < HT_NEW ? `<span class="ht-b new">${Z("新")}</span>` : ""}<span class="ht-b">${kind}</span>${mine ? `<span class="ht-b">${Z("我的")}</span>` : ""}</div>
     ${htCardHtml(h)}
-    <div class="chips" style="margin-top:2px">${mine ? `<button class="chip" data-htedit="${esc(h.stk || "")}">✏️ ${Z("改")}</button>${n ? `<span class="note">🙏 ${n}</span>` : ""}` : `<button class="chip" data-htthx="${esc(h.id)}"${HT_MYTHX.has(h.id) ? " disabled" : ""}>🙏 ${HT_MYTHX.has(h.id) ? Z("谢谢过了") : Z("谢谢")} · ${n}</button><button class="chip" data-htrep="${esc(h.id)}">⚑ ${Z("举报")}</button>`}</div></div></div>`; }
+    <div class="chips" style="margin-top:2px">${mine ? `<button class="chip" data-htedit="${esc(h.stk || "")}">✏️ ${Z("改")}</button><button class="chip" data-htdel="${esc(h.id)}">🗑 ${Z("删掉")}</button>${n ? `<span class="note">🙏 ${n}</span>` : ""}` : `<button class="chip" data-htthx="${esc(h.id)}"${HT_MYTHX.has(h.id) ? " disabled" : ""}>🙏 ${HT_MYTHX.has(h.id) ? Z("谢谢过了") : Z("谢谢")} · ${n}</button><button class="chip" data-htrep="${esc(h.id)}">⚑ ${Z("举报")}</button>`}</div></div></div>`; }
 // 「大家说」：前 3 条，其余点「看全部」
 function htSaysHtml(G, all){ const L = [...G.items].sort((a, b)=>htScore(b) - htScore(a)), show = all ? L : L.slice(0, 3);
   return `<section class="ht-says" data-htg="${esc(G.key)}">${G.stk ? `<h3>👥 ${Z("大家说")} · ${L.length}</h3>` : ""}${show.map(htItemHtml).join("")}
@@ -9501,9 +9502,17 @@ function openHtGroup(key){ const G = htGroups().find(x=>x.key === key); if (!G) 
   card.innerHTML = expTop("📍", G.city + (G.country ? " · " + G.country : ""), n > 1 ? `👥 ${n} ${Z("个人在说这儿")}` : (G.items[0].name ? G.items[0].name + " · " : "") + Z("家乡贴纸"), "#c9902c") + htSaysHtml(G, false)
     + `<div class="chips" style="margin-top:8px">${mineHome ? `<button class="chip hot" data-htedit="">✏️ ${Z("改我的家乡")}</button>` : `<button class="chip" data-htedit="">📍 ${Z("我也做一张我的家乡")}</button>`}</div>`;
   expOpen(); card.scrollTop = 0; }
+// 删掉自己发的：文档、视频文件一起删（别人给的谢谢留着没关系）
+async function htDelete(id, b){ const h = HT.find(x=>x.id === id); if (!h || !htMine(h) || !SOC.db) return; if (b) b.disabled = true;
+  try { await SOC.db.doc("hometowns/" + id).delete();
+    const m = h.vid && /\/hometown\/(.+)$/.exec(h.vid); if (m) { try { await HV.sb.storage.from("hometown").remove([decodeURIComponent(m[1])]); } catch(e){} }
+    HT = HT.filter(x=>x.id !== id); htDraft = null; render(); if (typeof htStreetBadges === "function") htStreetBadges();
+    const o = h.stk ? data.find(d=>d.n === h.stk) : null; if (o) openCard(o); else { card.innerHTML = expTop("📍", Z("删掉了"), "", "#c9902c") + `<p class="note">${Z("这条已经从地图上删掉了。")}</p>`; expOpen(); }
+  } catch(e){ if (b){ b.disabled = false; b.textContent = Z("没删掉：") + (e.message || e); } } }
 function openHometown(id){ const G = htGroups().find(x=>x.items.some(h=>h.id === id)); if (G){ if (G.stk) openCard(G.o); else openHtGroup(G.key); } }
 // 卡片里的按钮（贴纸卡片和家乡卡片都用）：谢谢、举报、看全部、加一条、改
-card.addEventListener("click", async e=>{ const b = e.target.closest("[data-htthx],[data-htrep],[data-htall],[data-htadd],[data-htedit]"); if (!b) return; e.stopPropagation();
+card.addEventListener("click", async e=>{ const b = e.target.closest("[data-htthx],[data-htrep],[data-htall],[data-htadd],[data-htedit],[data-htdel]"); if (!b) return; e.stopPropagation();
+  if (b.dataset.htdel){ if (!b.dataset.sure){ b.dataset.sure = "1"; b.textContent = "🗑 " + Z("再点一下，确定删掉"); return; } htDelete(b.dataset.htdel, b); return; }
   if (b.dataset.htadd !== undefined) return openHometownMake(b.dataset.htadd);
   if (b.dataset.htedit !== undefined) return openHometownMake(b.dataset.htedit);
   if (b.dataset.htall !== undefined){ const sec = b.closest(".ht-says"), G = htGroups().find(x=>x.key === sec.dataset.htg); if (G) sec.outerHTML = htSaysHtml(G, b.dataset.htall === "1"); return; }
@@ -9533,7 +9542,7 @@ async function openHometownMake(stk){ SOC.view = null; stk = stk || ""; if (stk 
       ${D.audio ? `<audio src="${esc(D.audio)}" controls style="width:100%;margin-top:4px"></audio>` : ""}</div>
     <div class="ht-step"><b>4 · ${Z("把你说的话写下来")}</b><textarea id="htTx" rows="3" placeholder="${Z("照着说的写，家乡话、口音词都照写")}">${esc(D.tx)}</textarea><textarea id="htMean" rows="2" placeholder="${Z("意思：用普通话或标准英语写一遍")}">${esc(D.mean)}</textarea></div>
     <div class="ht-step"${O ? " hidden" : ""}><b>5 · ${Z("我们那儿的人爱说")}</b><input id="htLs" type="text" value="${esc(D.ls)}" placeholder="${Z("比如：巴适得板！")}"><input id="htLsm" type="text" value="${esc(D.lsm)}" placeholder="${Z("意思和什么时候说")}"></div>
-    <div class="chips"><button class="chip hot" id="htSave">📍 ${O ? Z("挂到这张贴纸下面") : Z("放到地图上")}</button><span class="note" id="htMsg"></span></div>
+    <div class="chips">${HT.some(x=>x.id === myId) ? `<button class="chip" data-htdel="${esc(myId)}">🗑 ${Z("删掉这条")}</button>` : ""}<button class="chip hot" id="htSave">📍 ${O ? Z("挂到这张贴纸下面") : Z("放到地图上")}</button><span class="note" id="htMsg"></span></div>
     <p class="note" style="border-left:3px solid #2f9e5b;padding-left:8px">${Z("先只有你看得到；审核通过后公开到世界地图。被大家谢谢过几次、没被举报的人，以后加的直接公开。")}</p>`;
   expOpen();
   const $ = s => card.querySelector(s), keepTx = ()=>{ D.tx = $("#htTx").value; D.mean = $("#htMean").value; D.ls = $("#htLs").value; D.lsm = $("#htLsm").value; D.city = D.lat != null ? D.city : $("#htQ").value; };
