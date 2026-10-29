@@ -49,7 +49,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .lbl .sea{stroke:none;fill:#fff;opacity:.8;font-size:17px;letter-spacing:.5em}
 .lbl g{transition:opacity .3s}
 .st{cursor:pointer}
-.st .pile-bk,.st .pile-n{display:none}.st.piled .pile-bk,.st.piled .pile-n{display:inline}.st .pile-bk rect{fill:#fff;stroke:rgba(0,0,0,.18);stroke-width:1.2px}.st .pile-n{cursor:pointer}.st .pile-n rect{fill:#e8662f;stroke:#fff;stroke-width:2px}.st .pile-n text{fill:#fff;font-size:11.5px;font-weight:800;font-family:var(--f-body,sans-serif)}
+.st .pile-bk,.st .pile-n{display:none}.st.piled .pile-n{display:inline}.st.piled:hover .pile-bk{display:inline}.st .pile-bk rect{fill:#fff;stroke:rgba(0,0,0,.18);stroke-width:1.2px}.st .pile-n{cursor:pointer}.st .pile-n rect{fill:#e8662f;stroke:#fff;stroke-width:2px}.st .pile-n{transform-box:fill-box}.st .pile-n text{fill:#fff;font-size:10px;font-weight:800;font-family:var(--f-body,sans-serif)}
 .st .lead{stroke:var(--ink);stroke-width:1.3px;stroke-dasharray:2 3;opacity:.7}
 .st .pin{fill:var(--ink)}
 .st:not(.on) .lead,.st:not(.on) .pin,.st:not(.moved) .lead,.st:not(.moved) .pin{opacity:0}
@@ -587,6 +587,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
   .mh-row b{display:block;font-size:14.5px}.mh-row small{color:var(--muted);font-size:12.5px}.mh-k{font-size:11px;border-radius:999px;padding:0 6px;background:#fff4dc;color:#8a5a00;margin-left:5px;font-weight:600}
   body:not(.gal-on) #bottom{left:416px;right:76px}
   body:not(.gal-on) #boatFind{left:416px!important}
+  body:not(.gal-on) #blBubble{left:416px}
   body:not(.gal-on) #more{display:none!important}body.mh-on #hint{display:none!important}
 }
 #streetBack{position:absolute;left:50%;transform:translateX(-50%);top:14px;z-index:3}@media (max-width:700px){#streetBack{top:auto;bottom:76px}}
@@ -4730,7 +4731,7 @@ function pileMark(s, L){ const n = L ? L.length : 0; s.pile = L; if (n === (s.pi
     [[-11, -5, 1], [9, 4, -1]].forEach(([deg, dx, dy])=>{ const re = document.createElementNS(ns, "rect"); re.setAttribute("x", -r + dx); re.setAttribute("y", -r + dy - 3); re.setAttribute("width", r * 2); re.setAttribute("height", r * 2); re.setAttribute("rx", 9); re.setAttribute("transform", `rotate(${deg})`); bk.appendChild(re); });
     bob.insertBefore(bk, bob.firstChild); s.pileBk = bk;
     const g = document.createElementNS(ns, "g"); g.setAttribute("class", "pile-n"); g.setAttribute("transform", `translate(${r - 2},${-r - 2})`); g.setAttribute("role", "button");
-    g.innerHTML = `<rect x="-13" y="-9" width="26" height="18" rx="9"></rect><text y="4.5" text-anchor="middle"></text>`; bob.appendChild(g); s.pileNEl = g;
+    g.innerHTML = `<rect x="-11" y="-7.5" width="22" height="15" rx="7.5"></rect><text y="3.6" text-anchor="middle"></text>`; bob.appendChild(g); s.pileNEl = g;
     g.addEventListener("click", e=>{ e.stopPropagation(); if (s.pile && s.pile.length) goGroup([s, ...s.pile]); }); }
   if (s.pileNEl){ s.pileNEl.querySelector("text").textContent = "+" + (n > 99 ? 99 : n); s.pileNEl.setAttribute("aria-label", Z("还有") + " " + n + " " + Z("张，放大看")); } }
 // ===== 地球村贴纸：在地图上画“传到世界”的路线（打开贴纸时出现，关掉就消失）=====
