@@ -6315,7 +6315,7 @@ const tkWordByKey = (X, key) => { const lo = key.toLowerCase(); return X.words.f
 // 👥 主题群里的真人（2026-10-30，先只开身心岛「睡眠」）：世界各地的人在同一个群，各用自己在学的语言回答同一个问题。
 // docs 里两种：isletalk 说的一句 {author, nm, i, k, l 用的语言, t, m 自己写的意思, ask 用母语问, nat 母语, ts}；
 // isletalkx 对一句的回应 {author, nm, p 那句的 id, kind: metoo / fix / ans / thx, t, ts}。没登录也能看，登录才能说。
-const TT_ON = (id, k) => id === "body_mind" && k === "bed" && typeof HV !== "undefined" && !!HV.sb;
+const TT_ON = (id, k) => typeof HV !== "undefined" && !!HV.sb && !!tkChatOf(id, k);   // 2026-10-30 起所有岛的所有主题都开
 const TT = {}, TT_FX = {}, TT_TR = {}, TT_REDRAW = {};
 let TT_F = "all", TT_L = null, TT_TAB = "now", TT_OPEN = -1; const TT_LATE = {};
 // 📚 两周换一个问题（ISLE_TALK_NPC 里的 plan）：从 start 那天起每 14 天一期，问完一轮从头再来。往期收起来，每期有自动挑的精选，能补答（补答带 pd，标「后来补的」）
@@ -6349,7 +6349,15 @@ async function ttTranslate(p){ const to = UI, from = p.l; if (TT_TR[p.id]) retur
   try { if (window.Translator && Translator.create){ const tr = await Translator.create({sourceLanguage: from, targetLanguage: to}); TT_TR[p.id] = await tr.translate(p.t); return; } } catch(e){}
   TT_TR[p.id] = {link: `https://translate.google.com/?sl=${from}&tl=${to === "zh" ? "zh-CN" : to}&text=${encodeURIComponent(p.t)}`}; }
 // 🎭 角色回你（不用 AI）：按这句话里的词挑 ISLE_TALK_NPC 里第一条对得上的回复，都对不上就按这句的 id 轮一条通用的；所以每个人看到的回话都一样
-const ttNpcOf = (id, k) => typeof ISLE_TALK_NPC !== "undefined" && ISLE_TALK_NPC[id + "|" + k];
+// 还没写好专门回话和轮换问题的主题：问「轮到你」的那个角色用几句通用的话回，不分期（没有 start）
+const TT_GEN = {}, ttNpcOf = (id, k) => (typeof ISLE_TALK_NPC !== "undefined" && ISLE_TALK_NPC[id + "|" + k]) || TT_GEN[id + "|" + k] || (TT_GEN[id + "|" + k] = ttGen(id, k));
+function ttGen(id, k){ const X = tkChatOf(id, k), w = (X && X.chat.you && X.chat.you.who) || "maggie";
+  return {replies: [], posts: [], fallback: [
+    {lang: "en", npc: w, en: "Thanks for sharing! Where are you writing from?", zh: "谢谢你分享！你在哪儿写的这句？"},
+    {lang: "en", npc: w, en: "Love this 😄 Is it the same where you live?", zh: "喜欢 😄 你住的地方也是这样吗？"},
+    {lang: "en", npc: w, en: "Interesting! Can you tell us a bit more?", zh: "有意思！能再多说一点吗？"},
+    {lang: "zh", npc: w, en: "Thanks for sharing! Where are you writing from?", zh: "谢谢你分享！你在哪儿写的这句？"},
+    {lang: "zh", npc: w, en: "Interesting! Is it the same where you live?", zh: "有意思！你住的地方也是这样吗？"}]}; }
 const ttHit = (t, w) => /^[a-z0-9' ]+$/.test(w) ? new RegExp("(^|[^a-z0-9])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])").test(t) : t.includes(w);
 function ttNpcReply(C, p){ if (!C || p.ask || !["en", "zh"].includes(p.l)) return null; const t = String(p.t || "").toLowerCase();
   const q = ttPd(C, p) % ((C.plan || []).length || 1), r = C.replies.find(r=>r.lang === p.l && (r.pd == null || r.pd === q) && r.match.some(w=>ttHit(t, w))); if (r) return r;
