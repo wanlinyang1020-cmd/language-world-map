@@ -651,6 +651,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .ct-npc{display:flex;gap:8px;align-items:flex-start}.ct-av{flex:none;width:38px;height:38px;border-radius:50%;background:#ffe9c9;border:2px solid #1f2a37;display:grid;place-items:center;font-size:19px}.ct-msg{background:#eef6ff;border-radius:4px 14px 14px 14px;padding:5px 9px}
 .bl-stop.cur{background:#ffe9dc}.bl-stop.done{background:#dff2e4}.bl-dash{flex:0 0 14px;border-top:3px dashed #1f2a37}
 .bl-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.bl-ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid #efe2bd}
+.tt-box{margin:10px 0 4px;padding:8px 0 0;border-top:1.5px dashed var(--paper-edge)}.tt-h{font-weight:700;font-size:13.5px;margin:0 0 6px}.tt-m .tk-bub{cursor:pointer}.tt-av{display:grid;place-items:center;font-size:18px;width:30px;height:30px;border-radius:50%;background:#eef3f6}.tt-ask .tk-bub{background:#f1f3f5;border:1.5px dashed #c3ccd4;font-size:13.5px}.tt-acts{margin-top:3px}.tt-acts .chip{font-size:12px;padding:2px 8px}.tt-acts .chip.on{background:#e6f4fa;border-color:#8fcbe2}.tt-rep{opacity:.6}.tt-fix{margin:5px 0 0;padding:6px 9px;border-radius:10px;background:#fff6d6;font-size:13px}.tt-fix div{cursor:pointer}.tt-fixbox textarea,.tt-fixbox input,.tt-mean{width:100%;box-sizing:border-box;font:inherit;font-size:13.5px;border:1.5px solid var(--paper-edge);border-radius:8px;padding:4px 7px;margin:4px 0}.tt-lang .chip{font-size:12px;padding:2px 8px}.tt-lang .chip.on{background:#0b7fab;color:#fff;border-color:#0b7fab}
 </style>
 
 <div id="app">
@@ -6310,6 +6311,69 @@ function tkSelfWire(id, box, redraw){
 const TK_READ = {}, TK_SEEN = {}; let tkChatQ = {}, tkKeyArm = null;
 const tkChatOf = (id, k) => { const X = tkOf(id, k); return X && X.chat ? X : null; };
 const tkWordByKey = (X, key) => { const lo = key.toLowerCase(); return X.words.find(w=>w.en.toLowerCase() === lo || (w.alt || []).some(a=>a.toLowerCase() === lo)); };
+// 👥 主题群里的真人（2026-10-30，先只开身心岛「睡眠」）：世界各地的人在同一个群，各用自己在学的语言回答同一个问题。
+// docs 里两种：isletalk 说的一句 {author, nm, i, k, l 用的语言, t, m 自己写的意思, ask 用母语问, nat 母语, ts}；
+// isletalkx 对一句的回应 {author, nm, p 那句的 id, kind: metoo / fix / ans / thx, t, ts}。没登录也能看，登录才能说。
+const TT_ON = (id, k) => id === "body_mind" && k === "bed" && typeof HV !== "undefined" && !!HV.sb;
+const TT = {}, TT_FX = {}, TT_TR = {}, TT_REDRAW = {};
+let TT_F = "all", TT_L = null;
+const TT_FL = {en:"🇬🇧", zh:"🇨🇳", fr:"🇫🇷", es:"🇪🇸", ja:"🇯🇵", pt:"🇧🇷"};
+const ttLn = l => (LEARN_LANGS[l] && LEARN_LANGS[l].name[UI]) || UI_LANGS[l] || l;
+const ttTts = l => ({en:"en-GB", zh:"zh-CN", fr:"fr-FR", es:"es-ES", ja:"ja-JP", pt:"pt-BR"})[l] || LEARN_TTS;
+const ttMyName = () => (SOC.profiles && SOC.profiles[SOC.uid] && SOC.profiles[SOC.uid].name) || (SOC.user && SOC.user.metaName) || "";
+async function ttFetch(id, k){ const key = id + ":" + k; if (TT[key] && TT[key].loading) return; TT[key] = {...(TT[key] || {}), loading: true};
+  try { const r = await HV.sb.from("docs").select("id,owner,data").eq("coll", "isletalk").eq("data->>i", id).eq("data->>k", k).limit(200);
+    const P = (r.data || []).map(d=>({id: d.id, ...d.data})).filter(p=>!p.hid).sort((a, b)=>a.ts - b.ts).slice(-80);
+    let X = []; if (P.length){ const r2 = await HV.sb.from("docs").select("id,data").eq("coll", "isletalkx").in("data->>p", P.map(p=>p.id)).limit(2000); X = (r2.data || []).map(d=>({id: d.id, ...d.data})); }
+    TT[key] = {P, X, at: Date.now()}; } catch(e){ TT[key] = {P: [], X: [], at: Date.now(), err: true}; }
+  if (TT_REDRAW[key]) TT_REDRAW[key](); }
+async function ttTranslate(p){ const to = UI, from = p.l; if (TT_TR[p.id]) return;
+  try { if (window.Translator && Translator.create){ const tr = await Translator.create({sourceLanguage: from, targetLanguage: to}); TT_TR[p.id] = await tr.translate(p.t); return; } } catch(e){}
+  TT_TR[p.id] = {link: `https://translate.google.com/?sl=${from}&tl=${to === "zh" ? "zh-CN" : to}&text=${encodeURIComponent(p.t)}`}; }
+function ttHtml(id, k){ if (!TT_ON(id, k)) return ""; const key = id + ":" + k, D = TT[key];
+  if (!D || (!D.P && !D.loading)) { setTimeout(()=>ttFetch(id, k), 0); return `<div class="tt-box"><p class="note">👥 ${Z("群里的人……")}</p></div>`; }
+  if (!D.P) return `<div class="tt-box"><p class="note">👥 ${Z("群里的人……")}</p></div>`;
+  const me = SOC.uid, X = D.X || [], P = D.P.filter(p=>TT_F === "all" || p.l === TT_F && !p.ask);
+  const langs = [...new Set(D.P.map(p=>p.l))], people = new Set(D.P.map(p=>p.author)).size;
+  const line = p => { const xs = X.filter(x=>x.p === p.id), mt = xs.filter(x=>x.kind === "metoo"), fx = xs.filter(x=>x.kind === "fix" || x.kind === "ans"), mine = p.author === me;
+    const tr = TT_TR[p.id], showM = p.m && p.nat === UI && p.l !== UI;
+    const canFix = me && !mine && !p.ask && p.l === UI && !fx.some(x=>x.author === me), canAns = me && !mine && p.ask && !fx.some(x=>x.author === me);
+    return `<div class="tk-m tt-m${mine ? " me" : ""}${p.ask ? " tt-ask" : ""}">${mine ? "" : `<span class="tk-m-av tt-av">🧑</span>`}<div class="tk-m-b">
+      <div class="tk-m-who">${TT_FL[p.l] || "💬"} ${mine ? Z("我") : esc(p.nm || Z("一位伙伴"))}${p.ask ? ` · 💬 ${Z("用母语问")}` : ""}</div>
+      <div class="tk-bub tt-bub" data-ttsay="${esc(p.id)}">${esc(p.t)}${showM ? `<small class="tk-gl" style="display:block">${esc(p.m)}</small>` : ""}${typeof tr === "string" ? `<small class="tk-gl" style="display:block">${esc(tr)}</small>` : ""}</div>
+      <div class="chips tt-acts">${mine ? (mt.length ? `<span class="note">🙋 ${mt.length}</span>` : "") : `<button class="chip${mt.some(x=>x.author === me) ? " on" : ""}" data-ttmetoo="${esc(p.id)}">🙋 ${Z("我也是")}${mt.length ? " · " + mt.length : ""}</button>`}
+        ${!mine && p.l !== UI && !showM && !tr ? `<button class="chip" data-tttr="${esc(p.id)}">🌐 ${Z("翻译")}</button>` : tr && tr.link ? `<a class="chip" href="${esc(tr.link)}" target="_blank" rel="noopener">🌐 ${Z("在谷歌翻译里看")} ↗</a>` : ""}
+        ${canFix ? `<button class="chip" data-ttfix="${esc(p.id)}">✏️ ${Z("改一个词")}</button>` : ""}${canAns ? `<button class="chip" data-ttfix="${esc(p.id)}">💬 ${Z("回答")}</button>` : ""}
+        ${!mine && me ? `<button class="chip tt-rep" data-ttrep="${esc(p.id)}" title="${Z("举报")}">⚑</button>` : ""}${mine ? `<button class="chip tt-rep" data-ttdel="${esc(p.id)}">🗑</button>` : ""}</div>
+      ${TT_FX[p.id] ? `<div class="tt-fixbox"><textarea rows="2" data-ttfixt="${esc(p.id)}">${p.ask ? "" : esc(p.t)}</textarea><input data-ttfixw="${esc(p.id)}" placeholder="${p.ask ? Z("（可以不写）") : Z("为什么这样改？（可以不写）")}"><button class="chip hot" data-ttfixgo="${esc(p.id)}">${p.ask ? Z("发出去") : Z("改好了")}</button></div>` : ""}
+      ${fx.map(x=>{ const thx = X.some(y=>y.kind === "thx" && y.p === p.id && y.t === x.id);
+        return `<div class="tt-fix">${x.kind === "fix" ? "✏️" : "💬"} <b>${x.author === me ? Z("我") : esc(x.nm || Z("一位伙伴"))}</b> ${x.kind === "fix" ? Z("改了一下") : ""}<div data-ttsayt="${esc(x.t)}" data-ttl="${esc(x.kind === "fix" ? p.l : "")}">${esc(x.t)}</div>${x.why ? `<small class="note">${esc(x.why)}</small>` : ""}
+          ${mine && x.author !== me ? (thx ? `<div class="note">🙏 ${Z("谢谢过了")}</div>` : `<button class="chip" data-ttthx="${esc(p.id)}|${esc(x.id)}">🙏 ${Z("谢谢")}</button>`) : thx ? `<div class="note">🙏</div>` : ""}</div>`; }).join("")}
+    </div></div>`; };
+  return `<div class="tt-box"><div class="tt-h">👥 ${Z("群里的人")}${people ? ` · ${people} ${Z("人")} · ${langs.map(l=>TT_FL[l] || "").join(" ")}` : ""}</div>
+    ${D.P.length ? `<div class="chips"><button class="chip${TT_F === "all" ? " on" : ""}" data-ttf="all">${Z("全部")}</button><button class="chip${TT_F === LEARN ? " on" : ""}" data-ttf="${LEARN}">${Z("只看")} ${TT_FL[LEARN] || ""} ${esc(ttLn(LEARN))}</button></div>` : `<p class="note">${Z("还没有真人在这儿说过。世界各地的人都可以来，用自己在学的语言回答上面这个问题——你可以是第一个。")}</p>`}
+    ${P.map(line).join("")}
+    ${me ? "" : `<p class="note">${Z("登录以后，你说的这句会留在群里，大家都能看到、帮你改。")}${SOC.site ? ` <button class="chip" data-tklogin>${Z("登录")}</button>` : ""}</p>`}</div>`; }
+function ttWire(id, k, box, keep){ if (!TT_ON(id, k)) return; const key = id + ":" + k; TT_REDRAW[key] = keep;
+  const D = TT[key] || {}, find = pid => (D.P || []).find(p=>p.id === pid);
+  const addX = async (pid, kind, extra) => { const doc = {author: SOC.uid, nm: ttMyName(), p: pid, kind, ts: Date.now(), ...(extra || {})};
+    const id2 = kind === "metoo" ? pid + "_" + SOC.uid : undefined;
+    try { const ref = id2 ? SOC.db.doc("isletalkx/" + id2) : SOC.db.collection("isletalkx").doc(); await ref.set(doc); (D.X || (D.X = [])).push({id: ref.id || id2, ...doc}); } catch(e){} keep(); };
+  box.querySelectorAll("[data-ttf]").forEach(b=>b.onclick = ()=>{ TT_F = b.dataset.ttf; keep(); });
+  box.querySelectorAll("[data-ttsay]").forEach(b=>b.onclick = ()=>{ const p = find(b.dataset.ttsay); if (p) sayIt(p.t, ttTts(p.l), .92, {}); });
+  box.querySelectorAll("[data-ttsayt]").forEach(b=>b.onclick = ()=>{ if (b.dataset.ttl) sayIt(b.dataset.ttsayt, ttTts(b.dataset.ttl), .92, {}); });
+  box.querySelectorAll("[data-tttr]").forEach(b=>b.onclick = async ()=>{ const p = find(b.dataset.tttr); if (!p) return; b.disabled = true; await ttTranslate(p); keep(); });
+  box.querySelectorAll("[data-ttmetoo]").forEach(b=>b.onclick = ()=>{ if (!tkLogged() || b.classList.contains("on")) return; addX(b.dataset.ttmetoo, "metoo"); });
+  box.querySelectorAll("[data-ttfix]").forEach(b=>b.onclick = ()=>{ TT_FX[b.dataset.ttfix] = !TT_FX[b.dataset.ttfix]; keep(); });
+  box.querySelectorAll("[data-ttfixgo]").forEach(b=>b.onclick = ()=>{ const pid = b.dataset.ttfixgo, p = find(pid), t = (box.querySelector(`[data-ttfixt="${pid}"]`).value || "").trim(), why = (box.querySelector(`[data-ttfixw="${pid}"]`).value || "").trim();
+    if (!t || !p || (!p.ask && t === p.t)) return; TT_FX[pid] = false; addX(pid, p.ask ? "ans" : "fix", {t: t.slice(0, 280), why: why.slice(0, 200)}); });
+  box.querySelectorAll("[data-ttthx]").forEach(b=>b.onclick = ()=>{ const [pid, xid] = b.dataset.ttthx.split("|"); addX(pid, "thx", {t: xid}); });
+  box.querySelectorAll("[data-ttrep]").forEach(b=>b.onclick = async ()=>{ if (!tkLogged()) return; try { await SOC.db.collection("reports").add({by: SOC.uid, target: "isletalk/" + b.dataset.ttrep, ts: Date.now()}); D.P = D.P.filter(p=>p.id !== b.dataset.ttrep); keep(); } catch(e){} });
+  box.querySelectorAll("[data-ttdel]").forEach(b=>b.onclick = async ()=>{ if (b.dataset.arm !== "1"){ b.dataset.arm = "1"; b.textContent = "🗑 " + Z("再点一下删掉"); return; }
+    try { await SOC.db.doc("isletalk/" + b.dataset.ttdel).delete(); D.P = D.P.filter(p=>p.id !== b.dataset.ttdel); keep(); } catch(e){} }); }
+async function ttPost(id, k, t, ask, m){ if (!TT_ON(id, k) || !tkLogged()) return false; const key = id + ":" + k, l = ask ? UI : (TT_L || LEARN);
+  const doc = {author: SOC.uid, nm: ttMyName(), i: id, k, l, t: t.slice(0, 280), m: (m || "").slice(0, 280), ask: !!ask, nat: UI, ts: Date.now()};
+  try { const ref = SOC.db.collection("isletalk").doc(); await ref.set(doc); const D = TT[key] || (TT[key] = {P: [], X: []}); (D.P || (D.P = [])).push({id: ref.id, ...doc}); return true; } catch(e){ return false; } }
 function tkChatHtml(id, k){ const X = tkChatOf(id, k), C = X.chat, S = tkGet(id), W = S.w || {}, sent = S.sent || {}, mine = (S.mine || {})[k] || [], qa = tkChatQ[id + k];
   const keyed = t => esc(t).replace(/\[([^\]]+)\]/g, (m, w)=>{ const o = tkWordByKey(X, w); return `<button class="tk-k${o && W[o.en] ? " saved" : ""}${tkKeyArm === id + k + w ? " arm" : ""}" data-tkkey="${esc(w)}">${esc(w)}</button>${tkKeyArm === id + k + w && o ? `<span class="tk-kz">${esc(o.zh)} <button class="chip" data-tkksave="${esc(o.en)}">${W[o.en] ? "✓ " + Z("已存") : "＋ " + Z("存")}</button></span>` : ""}`; });
   const msg = (who, en, zh, cls, star) => { const n = npcAny(who) || {}; const plain = en.replace(/[\[\]]/g, "");
@@ -6323,8 +6387,9 @@ function tkChatHtml(id, k){ const X = tkChatOf(id, k), C = X.chat, S = tkGet(id)
       <div class="tk-bub" data-tksay="${esc(q.q.en)}">${esc(bmT(q.q))}<small class="tk-gl">${esc(bmG(q.q))}</small><div class="chips" style="margin-top:6px">${q.ops.map((o, i)=>`<button class="chip${qa != null ? (i === q.a ? " tk-ok" : i === qa ? " tk-no" : "") : ""}" data-tkcq="${i}">${esc(o)}</button>`).join("")}</div></div>
       ${qa != null ? `<div class="tk-bub" style="margin-top:6px">${qa === q.a ? "✓ " : ""}${esc(bmT(q.why))}<small class="tk-gl">${esc(bmG(q.why))} · ${esc(q.src)}</small></div>` : ""}</div></div>` : ""}
     ${y ? msg(y.who, y.q.en, y.q.zh, "ask", false) : ""}
-    ${mine.map(t=>`<div class="tk-m me"><div class="tk-m-b"><div class="tk-m-who">${Z("我")}</div><div class="tk-bub" data-tksay="${esc(t)}">${esc(t)}</div></div></div>`).join("")}
-    ${y ? `<div class="tk-you"><div class="chips">${y.opts.map(o=>`<button class="chip" data-tkyou="${esc(o)}">${esc(o)}</button>`).join("")}</div><textarea rows="1" data-tkyoux placeholder="${Z("也可以自己写一句……")}"></textarea><button class="chip hot" data-tkyousend>${Z("发出去")}</button> <button class="chip" data-tkyoumic>🎤 ${Z("说出来")}</button></div>` : ""}
+    ${TT_ON(id, k) && tkLogged() ? "" : mine.map(t=>`<div class="tk-m me"><div class="tk-m-b"><div class="tk-m-who">${Z("我")}</div><div class="tk-bub" data-tksay="${esc(t)}">${esc(t)}</div></div></div>`).join("")}
+    ${ttHtml(id, k)}
+    ${y ? `<div class="tk-you"><div class="chips">${y.opts.map(o=>`<button class="chip" data-tkyou="${esc(o)}">${esc(o)}</button>`).join("")}</div>${TT_ON(id, k) ? `<div class="chips tt-lang"><span class="note">${Z("我用")}</span>${Object.keys(LEARN_LANGS).filter(l=>l !== UI).map(l=>`<button class="chip${(TT_L || LEARN) === l ? " on" : ""}" data-ttl="${l}">${TT_FL[l] || ""} ${esc(ttLn(l))}</button>`).join("")}</div>` : ""}<textarea rows="1" data-tkyoux placeholder="${Z("也可以自己写一句……")}"></textarea>${TT_ON(id, k) ? `<input class="tt-mean" data-ttmean placeholder="${Z("意思（用你的母语写，可以不写）")}">` : ""}<button class="chip hot" data-tkyousend>${Z("发出去")}</button> <button class="chip" data-tkyoumic>🎤 ${Z("说出来")}</button>${TT_ON(id, k) ? ` <button class="chip" data-ttask>💬 ${Z("用母语问")}</button>` : ""}</div>` : ""}
     ${askBlockHtml(id, k)}
     <button class="tk-prog" data-tkprog>📖 ${X.words.length} ${Z("个词")} · ${Z("存了")} ${got} · ${Z("说过")} ${said} ${TK_READ["w" + id + k] ? "▾" : "▸"}</button>
     ${TK_READ["w" + id + k] ? `<div class="chips">${X.words.map(w=>`<button class="chip${W[w.en] ? " tk-used" : ""}" data-say="${esc(w.en)}" data-tts="${LEARN_TTS}">${W[w.en] ? (W[w.en].said ? "🗣️" : "✓") : "·"} ${esc(w.en)} <small class="note">${esc(w.zh)}</small></button>`).join("")}</div>` : ""}</div>`; }
@@ -6340,14 +6405,19 @@ function tkChatWire(id, box, redraw){ const k0 = plCur, X = tkChatOf(id, k0); if
   box.querySelectorAll("[data-tkcq]").forEach(b=>b.onclick = ()=>{ tkChatQ[id + k0] = +b.dataset.tkcq; keep(); });
   const send = t => { const s = tkGet(id), M = s.mine || (s.mine = {}); (M[k0] || (M[k0] = [])).push(t); tkSet(id, s); sayIt(t, LEARN_TTS, .92, {});
     const lo = t.toLowerCase(); X.words.filter(w=>[w.en, ...(w.alt || [])].some(a=>lo.includes(a.toLowerCase()))).forEach(w=>tkSave(id, k0, w.en, true));
-    const s2 = tkGet(id); (s2.done || (s2.done = {}))[k0] = s2.done[k0] || new Date().toISOString().slice(0, 10); tkSet(id, s2); keep(); };
+    const s2 = tkGet(id); (s2.done || (s2.done = {}))[k0] = s2.done[k0] || new Date().toISOString().slice(0, 10); tkSet(id, s2);
+    const mn = box.querySelector("[data-ttmean]"); ttPost(id, k0, t, false, mn ? mn.value.trim() : "").then(keep); keep(); };
   box.querySelectorAll("[data-tkyou]").forEach(b=>b.onclick = ()=>send(b.dataset.tkyou));
   const ys = box.querySelector("[data-tkyousend]"); if (ys) ys.onclick = ()=>{ const v = box.querySelector("[data-tkyoux]").value.trim(); if (v) send(v); };
   const ym = box.querySelector("[data-tkyoumic]"); if (ym) ym.onclick = ()=>{ const R = window.SpeechRecognition || window.webkitSpeechRecognition; if (!R){ ym.textContent = Z("这个浏览器不能听你说，先写下来吧"); return; }
     const rec = new R(); rec.lang = LEARN_TTS; ym.textContent = "🎤 " + Z("在听……"); rec.onresult = e=>{ box.querySelector("[data-tkyoux]").value = e.results[0][0].transcript; ym.textContent = "🎤 " + Z("说出来"); tkSkMark(id, k0, "mouth"); };
     rec.onerror = ()=>{ ym.textContent = "🎤 " + Z("没听清，再试一次"); }; rec.start(); };
   const pg = box.querySelector("[data-tkprog]"); if (pg) pg.onclick = ()=>{ TK_READ["w" + id + k0] = !TK_READ["w" + id + k0]; keep(); };
-  const rd = box.querySelector("[data-tkread]"); if (rd) rd.onclick = ()=>{ TK_READ[id + k0] = !TK_READ[id + k0]; keep(); }; }
+  const rd = box.querySelector("[data-tkread]"); if (rd) rd.onclick = ()=>{ TK_READ[id + k0] = !TK_READ[id + k0]; keep(); };
+  box.querySelectorAll("[data-ttl]").forEach(b=>b.onclick = ()=>{ TT_L = b.dataset.ttl; keep(); });
+  const ak = box.querySelector("[data-ttask]"); if (ak) ak.onclick = ()=>{ const v = box.querySelector("[data-tkyoux]").value.trim(); if (!tkLogged()){ auOpen("login"); return; } if (v) ttPost(id, k0, v, true).then(keep); };
+  const lg = box.querySelector("[data-tklogin]"); if (lg) lg.onclick = ()=>auOpen("login");
+  ttWire(id, k0, box, keep); }
 // 🎛️ 一个主题三种进门：📷 照片 · 💬 聊天 · 🎧 听一听。先打开照片（大家今天发的，你跟一张），用户随时点标签换；发过照片的地方，📷 上显示连续几天
 const TK_MODES = [["photo", "📷", "照片"], ["chat", "💬", "聊天"], ["listen", "🎧", "听一听"], ["drill", "🧠", "练一轮"]], TK_MODE = {}, TK_LS = {};
 const tkModeOf = (id, k) => TK_MODE[id + k] || "photo";
