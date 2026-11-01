@@ -20,3 +20,14 @@ self.addEventListener("fetch", e => {
     e.respondWith(caches.open(V).then(c => c.match(r).then(m => { const net = fetch(r).then(res => { if (res && (res.ok || res.type === "opaque")) c.put(r, res.clone()); return res; }).catch(() => m); return m || net; })));
   }
 });
+
+// 🔔 今日世界每天一条提醒（云函数 today-push 发来）：安卓、电脑 Chrome 放大照片；点一下打开地图上的今日世界
+self.addEventListener("push", e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch(x){ d = {body: e.data && e.data.text()}; }
+  e.waitUntil(self.registration.showNotification(d.title || "HeyVoyo", {body: d.body || "", image: d.image, icon: "/app/icon-192.png", tag: d.tag || "today", data: {url: d.url || "/map/?today=1"}, actions: d.go ? [{action: "go", title: d.go}] : []}));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close(); const url = (e.notification.data && e.notification.data.url) || "/map/";
+  e.waitUntil(clients.matchAll({type: "window", includeUncontrolled: true}).then(ws => { const w = ws.find(c => new URL(c.url).pathname.startsWith("/map"));
+    if (w) return w.navigate(url).then(x => (x || w).focus()).catch(() => clients.openWindow(url)); return clients.openWindow(url); }));
+});

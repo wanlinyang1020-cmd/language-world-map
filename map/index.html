@@ -784,6 +784,7 @@ body:has(#galTabs) #meBtn{display:none!important}#galTabs button b{display:flex;
 .tw-stamps{display:flex;justify-content:space-around;margin-top:8px}.tw-stamp{width:84px;height:84px;border-radius:50%;border:3px double #b3261e;color:#b3261e;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(var(--r));background:rgba(255,255,255,.4)}.tw-stamp img{width:36px;height:36px;border-radius:50%;object-fit:cover;filter:sepia(.4)}.tw-stamp b{font-size:12px;line-height:1.2}.tw-stamp small{font-size:9px;font-family:ui-monospace,monospace}.tw-stamp.dim{opacity:.45}
 .tw-streak{display:inline-block;background:#fff4dc;border-radius:999px;padding:3px 12px;font-weight:800;color:#c25a2c}.tw-count{margin:10px 0 0;font-size:14px;color:#6b6577}.tw-count b{color:#24303a;font-size:18px}
 .tw-copy{font-family:ui-monospace,monospace;font-size:13px;background:#fff;border:1px dashed #d8cfb8;border-radius:12px;padding:10px;text-align:left;white-space:pre-line}.tw-tmr{margin-top:10px;font-size:13px;color:#6b6577}
+.tw-push{margin:14px 0 0;background:#fff;border:1px solid #e8dfcc;border-radius:16px;padding:12px;text-align:left}.tw-push b{display:block;font-size:15px}.tw-push small{display:block;color:#6b6577;font-size:12.5px;margin-top:3px}.tw-pt{display:flex;gap:6px;margin:10px 0 0}.tw-pt button{all:unset;box-sizing:border-box;cursor:pointer;flex:1;text-align:center;border:1px solid #e1d8c4;border-radius:12px;padding:8px 0;font-size:13.5px;background:#fffdf8}.tw-pt button.on{border-color:#1f7a74;background:#e7f3f1;color:#1f7a74;font-weight:800}.tw-pon,.tw-poff{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;text-align:center;margin-top:10px;border-radius:12px;padding:10px 0;font-weight:800;background:#1f7a74;color:#fff}.tw-poff{background:none;color:#8a8494;font-weight:600;padding:6px 0}.tw-push .tw-pmsg{color:#b0563b}
 .tw-g .tw-halo{fill:rgba(255,215,106,.35);stroke:#ffd76a;stroke-width:2;animation:twglow 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}.tw-g .tw-ring{fill:none;stroke:#ffd76a;stroke-width:4}.tw-g .done image{filter:none}.tw-g .done .tw-halo{fill:rgba(95,211,141,.3);stroke:#5fd38d;animation:none}.tw-g .done .tw-ring{stroke:#5fd38d}
 @keyframes twglow{50%{transform:scale(1.25);opacity:.6}}
 #flSheet{position:fixed;inset:0;z-index:70;background:rgba(20,24,40,.45);display:flex;align-items:flex-end;justify-content:center}.fl-sheet{width:min(520px,100%);max-height:92vh;overflow-y:auto;background:#fbf8f0;color:#24303a;border-radius:22px 22px 0 0;padding:14px 14px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25);animation:cardIn .3s ease}.fl-sh{font-size:14px;color:#1f7a45;margin:0 2px 8px}.fl-sh b{color:#c25a2c}.fl-sheet .fl-box{margin:0;border:0;padding:0;background:none}.fl-skip{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;text-align:center;margin-top:12px;border-radius:14px;padding:10px;color:#6b6577;font-size:14px;background:#f1ece0}.fl-skip.ok{background:#2f9e5b;color:#fff;font-weight:800;font-size:15px}
@@ -10007,6 +10008,7 @@ function twWire(sh, T, m){ const q = s => sh.querySelector(s);
   if (q("[data-twsay]")) q("[data-twsay]").onclick = () => { const x = T[twS.i]; sayLine({out: q(".tw-out"), want: twSay(x), from: "today", onDone: ()=>{ twS.said = true; const o = q(".tw-out").innerHTML; twDraw(); const n = sh.querySelector(".tw-out"); if (n) n.innerHTML = o; }}); };
   sh.querySelectorAll("[data-twnext]").forEach(b=>b.onclick = () => { const k = m.res.findIndex(r=>r === null); if (k < 0){ twS.view = "res"; twSend(m).then(()=>twLoadStats()).then(()=>{ if (twS.view === "res") twDraw(); }); } else { twS.i = k; twS.pick = null; twS.said = false; } twDraw(); sh.scrollTop = 0; });
   if (q("[data-twshare]")) q("[data-twshare]").onclick = () => twShare(T, m);
+  twpWire(sh);
   if (q("[data-twmap]")) q("[data-twmap]").onclick = () => { twClose(); galClose(); const st = document.getElementById("isleStage"); if (!card.hidden && st && !st.hidden) closeCard(); }; }
 function twResHtml(T, m){ const ok = m.res.filter(r=>r === 1).length, sk = twStreak(), wave = m.res.map(r=>r === 1 ? "🟢" : "⚪").join("〰️"), mid = new Date(); mid.setHours(24, 0, 0, 0);
   const left = mid - new Date(), hh = Math.floor(left / 36e5), mm = Math.floor(left % 36e5 / 6e4);
@@ -10020,7 +10022,43 @@ function twResHtml(T, m){ const ok = m.res.filter(r=>r === 1).length, sk = twStr
     <button class="tw-share" data-twshare>${Z("分享今天的 3 张")}</button>
     <div class="tw-copy">HeyVoyo ${Z("今日世界")} #${twNo()}\n⛵〰️${wave}〰️⚓${sk ? "  🔥" + sk : ""}\n${Z("今天跨了 3 个大洲，你猜得到是哪儿吗？")}\nheyvoyo.com</div>
     <div class="tw-tmr">${Z("明天的 3 张还有")} <b>${hh} ${Z("小时")} ${mm} ${Z("分")}</b> </div>
+    ${twpHtml()}
     <button class="tw-next" data-twmap>${Z("回到地图（三张都亮了）")}</button></div>`; }
+// 🔔 每天一条提醒（网页推送）：做完三张后在结果页选时间；订阅存 Supabase push_subs（后台/todaypush.sql），云函数 today-push 按各人那里的时间发，
+// 今天已经做完就不发。安卓、电脑 Chrome 有照片；iPhone 要先添加到主屏幕；微信里、大陆没有谷歌服务的安卓收不到（这块整个不显示）
+const TWP_KEY = "hv.push", TWP_SLOTS = ["08:30", "12:30", "20:00"];
+const twpGet = () => { try { return localStorage.getItem(TWP_KEY) || ""; } catch(e){ return ""; } };
+const twpSet = v => { try { v ? localStorage.setItem(TWP_KEY, v) : localStorage.removeItem(TWP_KEY); } catch(e){} };
+const twpCan = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && typeof HV !== "undefined" && !!HV.sb;
+const twpIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !(navigator.standalone || matchMedia("(display-mode: standalone)").matches);
+const twpLbl = s => Z({"08:30": "早上 8:30", "12:30": "中午 12:30", "20:00": "晚上 8:00"}[s] || s);
+let twpPick = "12:30", twpMsg = "";
+function twpHtml(){
+  if (twpIos() && typeof HV !== "undefined" && HV.sb) return `<div class="tw-push"><b>🔔 ${Z("明天的 3 张，要我叫你吗？")}</b><small>${Z("先把 HeyVoyo 添加到主屏幕：点下面的分享 ⬆️ →「添加到主屏幕」，再从桌面打开，这里就能开提醒。")}</small></div>`;
+  if (!twpCan() || Notification.permission === "denied") return "";
+  const on = twpGet(), cur = on || twpPick;
+  return `<div class="tw-push"><b>🔔 ${on ? Z("每天") + " " + twpLbl(on) + " " + Z("叫你") : Z("明天的 3 张，要我叫你吗？")}</b>
+    <small>${on ? Z("今天已经做完就不叫。点别的时间就换。") : Z("提醒里就是明天的那张贴纸，一天一条，随时能关。")}</small>
+    <div class="tw-pt">${TWP_SLOTS.map(s=>`<button data-twpt="${s}"${s === cur ? ' class="on"' : ""}>${twpLbl(s)}</button>`).join("")}</div>
+    ${on ? `<button class="tw-poff" data-twpoff>${Z("关掉提醒")}</button>` : `<button class="tw-pon" data-twpon>${Z("好，明天叫我")}</button>`}
+    ${twpMsg ? `<small class="tw-pmsg">${twpMsg}</small>` : ""}</div>`; }
+const twpKey = s => { const b = atob((s + "=".repeat((4 - s.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, c=>c.charCodeAt(0)); };
+async function twpSub(slot){
+  if (await Notification.requestPermission() !== "granted") throw new Error("denied");
+  const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, no)=>setTimeout(()=>no(new Error("no sw")), 6000))]);
+  const k = await HV.sb.rpc("push_pubkey"); if (k.error || !k.data) throw new Error("no key");
+  const sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: twpKey(k.data)});
+  const r = await HV.sb.rpc("push_save", {p_sub: sub.toJSON(), p_device: twDev(), p_slot: slot, p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", p_lang: UI === "zh" ? "zh" : "en"});
+  if (r.error) throw r.error; twpSet(slot); }
+async function twpOff(){ try { const reg = await navigator.serviceWorker.getRegistration(), sub = reg && await reg.pushManager.getSubscription();
+  if (sub){ await HV.sb.rpc("push_remove", {p_endpoint: sub.endpoint}); await sub.unsubscribe(); } } catch(e){} twpSet(""); }
+function twpWire(sh){ const box = sh.querySelector(".tw-push"); if (!box) return; const redo = () => { const b = sh.querySelector(".tw-push"); if (b){ b.outerHTML = twpHtml(); twpWire(sh); } };
+  const go = async slot => { twpMsg = Z("正在打开…"); redo(); try { await twpSub(slot); twpMsg = ""; } catch(e){ twpMsg = e && e.message === "denied" ? Z("手机没允许通知，可以在浏览器的网站设置里打开。") : Z("这台手机现在开不了提醒，晚点再试。"); } redo(); };
+  box.querySelectorAll("[data-twpt]").forEach(b=>b.onclick = () => { if (twpGet()) go(b.dataset.twpt); else { twpPick = b.dataset.twpt; redo(); } });
+  if (box.querySelector("[data-twpon]")) box.querySelector("[data-twpon]").onclick = () => go(twpPick);
+  if (box.querySelector("[data-twpoff]")) box.querySelector("[data-twpoff]").onclick = async () => { await twpOff(); twpMsg = ""; redo(); }; }
+// 从提醒点进来（/map/?today=1）：直接打开今日世界
+if (/[?&]today=1/.test(location.search)) setTimeout(()=>{ try { twOpen(); } catch(e){} }, 1200);
 function twRoute(sh, T, m){ const box = sh.querySelector(".tw-route"); if (!box || typeof WORLD === "undefined") return; const sv = box.querySelector("svg"), W = box.clientWidth, H = box.clientHeight;
   const pr = d3.geoNaturalEarth1().fitExtent([[4, 4], [W - 4, H - 4]], {type: "Sphere"}), path = d3.geoPath(pr), L = topojson.feature(WORLD, WORLD.objects.countries);
   const order = T.map((_, j)=>j).sort((a, b)=>T[a].ll[0] - T[b].ll[0]), P = order.map(j=>pr(T[j].ll));
