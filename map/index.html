@@ -106,6 +106,7 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 #catPop{pointer-events:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;padding:10px;background:var(--panel,#fffbf0);border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,.18);max-width:min(520px,calc(100vw - 12px));box-sizing:border-box}
 #catPop[hidden]{display:none}#bottom:has(#catPop:not([hidden])){z-index:6}#catPop .chip{justify-content:center;text-align:center;padding:8px 6px}
 #catMore{border-color:#a855f7}
+.say-r .ok{color:#15803d;font-weight:700}.say-r .no{color:#9ca3af;text-decoration:underline dotted}.say-type input{font:inherit;padding:3px 8px;border:1px solid #d1d5db;border-radius:8px;width:min(220px,60vw)}
 @media (max-width:700px){#cats .chip{padding:4px 9px;font-size:13px}}
 .row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;pointer-events:auto;padding:2px 4px 6px 2px}
 .row::-webkit-scrollbar{display:none}
@@ -5588,11 +5589,8 @@ function wbWire(d, box, redraw){
     const sc = card.scrollTop; redraw(); card.scrollTop = sc; });
   box.querySelectorAll("[data-wbwr]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.wbwr, v = box.querySelector(`[data-wbtk="${k}"]`).value.trim(), r = box.querySelector(`[data-wbres="${k}"]`); if (!v) return;
     const got = wbScan(id, v, "wrote"); r.textContent = got.length ? Z("记进我的词：") + got.map(wbW).join(UI === "zh" ? "、" : ", ") : Z("记下了（这句没用到岛上的词，试试上面的句子）"); });
-  box.querySelectorAll("[data-wbmic]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.wbmic, r = box.querySelector(`[data-wbres="${k}"]`), R = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!R){ r.textContent = Z("这个浏览器不能听你说，先写下来吧"); return; }
-    const rec = new R(); rec.lang = LEARN_TTS; r.textContent = "🎤 " + Z("在听……");
-    rec.onresult = e=>{ const v = e.results[0][0].transcript; box.querySelector(`[data-wbtk="${k}"]`).value = v; const got = wbScan(id, v, "said"); r.textContent = got.length ? Z("你说了：") + got.map(wbW).join(UI === "zh" ? "、" : ", ") + " ✓" : Z("听到了，没用到岛上的词"); };
-    rec.onerror = ()=>{ r.textContent = Z("没听清，再试一次"); }; rec.start(); });
+  box.querySelectorAll("[data-wbmic]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.wbmic, r = box.querySelector(`[data-wbres="${k}"]`);
+    sayFree({out: r, i: id, from: "wordbook", onText: v=>{ box.querySelector(`[data-wbtk="${k}"]`).value = v; const got = wbScan(id, v, "said"); r.textContent = got.length ? Z("你说了：") + got.map(wbW).join(UI === "zh" ? "、" : ", ") + " ✓" : Z("听到了，没用到岛上的词"); }}); });
   box.querySelectorAll("[data-wbpost]").forEach(b=>b.onclick = ()=>{ const v = box.querySelector(`[data-wbtk="${b.dataset.wbpost}"]`).value.trim(); if (!v) return; wbScan(id, v, "wrote"); openClub(id); const ta = card.querySelector("#cpText"); if (ta) ta.value = v; });
 }
 // 岛上任何地方点 🔊 听一个词，都算「听过」；在每天的小路里写的那句，用到的词算「写过」
@@ -5961,7 +5959,7 @@ function myIslesHtml(){ if (typeof LIB === "undefined") return ""; const my = my
         ${nx ? `<button class="chip hot" data-mygo="${i}|${nx.k}" style="margin-top:8px">🧠 ${Z("去练")}：${P(i, nx.k).e} ${esc(P(i, nx.k).n)} →</button>` : `<p class="note">${Z("这座岛的语言入口打通了！开船去真实地点用一用。")}</p>`}</section>`; }).join("") : `<p class="note">${Z("先在上面选一座岛。")}</p>`}`; }
 // 📒 练习记录：每做一件事记一行（哪天、哪座岛哪个主题、跟谁、说了什么、对没对），跟账号同步；「我的航线」和下一轮练习从这里长出来
 const pxGet = () => { try { return JSON.parse(localStorage.getItem("practice.v1") || "[]"); } catch(e){ return []; } };
-function pxAdd(e){ const A = pxGet(); A.push({t: Date.now(), ...e}); while (A.length > 800) A.shift(); try { localStorage.setItem("practice.v1", JSON.stringify(A)); } catch(err){} try { syncMark("practice.v1"); } catch(err){} }
+function pxAdd(e){ const A = pxGet(); A.push({t: Date.now(), ...e}); while (A.length > 800) A.shift(); try { localStorage.setItem("practice.v1", JSON.stringify(A)); } catch(err){} try { syncMark("practice.v1"); } catch(err){} try { pxLedger(e); } catch(err){} }
 // 跟读没说准、后来也没练对的句子（老说不准）
 function pxMiss(){ const A = pxGet(), ok = {}, M = {}; A.forEach(e=>{ if (e.k === "card" && e.ok) ok[e.i + "|" + e.u] = e.t; if (e.k === "miss") M[e.i + "|" + e.s] = e; });
   return Object.values(M).filter(e=>!(ok[e.i + "|" + e.s] > e.t)); }
@@ -6055,11 +6053,7 @@ function openMyBoat(tab){ tab = tab || (!plGet() && typeof LIB_BASICS !== "undef
   const vy = card.querySelector("#blVoy"); if (vy) vy.onclick = ()=>openVoyage();
   const sl = card.querySelector("#blSail"); if (sl) sl.onclick = ()=>{ blStop = 0; openMyBoat("route"); };
   const zh = card.querySelector("#blZh"); if (zh) zh.onclick = ()=>{ zh.outerHTML = `<p class="note" style="margin:0">${esc(blLine(blRt[blStop]).zh)}</p>`; };
-  const mic = card.querySelector("#blMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#blRes"), Rc = window.SpeechRecognition || window.webkitSpeechRecognition, t = blLine(blRt[blStop]).t;
-    if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
-    const rec = new Rc(); rec.lang = LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
-    rec.onresult = ev=>{ const said = ev.results[0][0].transcript, w = t.toLowerCase().replace(/[^a-z' ]/g, "").split(" ").filter(Boolean), got = w.filter(x=>said.toLowerCase().includes(x)).length; out.textContent = `${Z("听到：")}「${said}」 · ${got}/${w.length}`; };
-    rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); };
+  const mic = card.querySelector("#blMic"); if (mic) mic.onclick = ()=>{ const c = blRt[blStop], [ci, ck] = String(c.key || "").split("|"); sayLine({want: blLine(c).t, out: card.querySelector("#blRes"), i: ci, th: ck, from: "review"}); };
   const nx = card.querySelector("#blNext"); if (nx) nx.onclick = ()=>{ const c = blRt[blStop], L2 = blGet(); (L2.rev || (L2.rev = {}))[c.key] = blDay(); blSet(L2); blStop++; try { blFlags(); } catch(e){} openMyBoat("route"); card.scrollTop = 0; };
 }
 // 🧭 航海计划：船长排好的跨岛航线，一天一站，最后一站开船去真实城市（voyplan.v1）；做没做完看航海日志，自动往前走
@@ -6172,10 +6166,7 @@ function ctBind(){ const R = ctRoute();
     if (a === "next" && S){ const st = R.days[S.d].stops[S.at]; blTrip({k: R.k, d: S.d, i: S.at, said: st.say[0]}); S.said = (S.said || []).concat(st.say[0]); S.at++; S.t = Date.now(); ctSet(S); if (S.at < R.days[S.d].stops.length) ctSail(S.d, S.at, false); else placeBoat(d3.zoomTransform(svg.node())); ctShipSave(R, S); }
     if (a === "stamp" && S){ blTrip({k: R.k, d: S.d, stamp: 1}); S.d++; S.at = 0; S.t = Date.now(); ctSet(S); if (S.d < R.days.length) ctSail(S.d, 0, true); else placeBoat(d3.zoomTransform(svg.node())); ctShipSave(R, S); }
     plMode = "trip"; openMyBoat("plan"); });
-  const mic = card.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#ctRes"), S = ctState(), D = R.days[S ? Math.min(S.d, R.days.length - 1) : 0], st = D.stops[ctOpen >= 0 ? ctOpen : Math.min(S ? S.at : 0, D.stops.length - 1)], Rc = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
-    const rec = new Rc(); rec.lang = EXP_TTS[R.tts] || LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
-    rec.onresult = ev=>{ out.textContent = `${Z("听到：")}「${ev.results[0][0].transcript}」 ✓`; }; rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); void st; }; }
+  const mic = card.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = card.querySelector("#ctRes"), S = ctState(), D = R.days[S ? Math.min(S.d, R.days.length - 1) : 0], st = D.stops[ctOpen >= 0 ? ctOpen : Math.min(S ? S.at : 0, D.stops.length - 1)]; sayLine({want: st.say[0], lang: EXP_TTS[R.tts] || LEARN_TTS, out, from: "trip"}); }; }
 // 🎒 游学的弱社交（后台见 后台/trip_social.sql）：每站「到过这儿的人留下的一句」+「我也是」、问问当地人（被谢谢的人得 🛟）、同一班船（同一周出发）、走完的答案墙
 // 没登录或在 claude.ai 上只能看示例；登录后（heyvoyo.com）才能写
 const CT_SOC = {}, ctKey = (k, d, i) => k + "|" + d + "|" + i;
@@ -6309,10 +6300,7 @@ function ctRender(){ if (!ctMode) return; const R = ctRoute(), S = ctState(); if
   root.querySelectorAll("[data-ctnpc]").forEach(b=>b.onclick = ()=>{ const p = npcById(b.dataset.ctnpc); if (p){ ctExit(); openNpc(p); } });
   root.querySelectorAll("[data-ctstk]").forEach(b=>b.onclick = ()=>{ const d = ctStk(b.dataset.ctstk); if (d){ ctExit(); flyTo(d); } });
   ctSocBind(R, root);
-  const mic = root.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = root.querySelector("#ctRes"), S2 = ctState(), st = R.days[S2.d].stops[ctView >= 0 ? ctView : S2.at], Rc = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Rc){ out.textContent = Z("这个浏览器听不了你说，大声说一遍也算 ✓"); return; }
-    const rec = new Rc(); rec.lang = EXP_TTS[R.tts] || LEARN_TTS; out.textContent = "🎤 " + Z("在听……");
-    rec.onresult = ev=>{ out.textContent = `${Z("听到：")}「${ev.results[0][0].transcript}」 ✓`; }; rec.onerror = ()=>{ out.textContent = Z("没听清，再说一遍"); }; rec.start(); void st; }; }
+  const mic = root.querySelector("#ctMic"); if (mic) mic.onclick = ()=>{ const out = root.querySelector("#ctRes"), S2 = ctState(), st = R.days[S2.d].stops[ctView >= 0 ? ctView : S2.at]; sayLine({want: st.say[0], lang: EXP_TTS[R.tts] || LEARN_TTS, out, from: "trip"}); }; }
 if (ZE) Object.assign(ZE, {"看整条路线": "See the whole route", "退出游学模式": "Leave trip mode", "这一天走完了": " — day complete", "今天拼到的一块答案": "Today's piece of the answer", "更多 ▾": "More ▾", "下一站 →": "Next stop →", "今天走完 ✓": "Finish today ✓", "点开贴纸": "Open sticker", "回到地图": "Back to the map", "继续游学": "Continue your trip", "继续 →": "Continue →", "🎒 继续游学模式": "🎒 Continue in trip mode"});
 // 今天的贴纸路线画在地图最上面一层：城里的贴纸常常挤在一个点上，所以这一层把今天这几站摊开画（细线连回真实位置），一站连一站
 let ctG = null;
@@ -6491,11 +6479,8 @@ function tkSelfWire(id, box, redraw){
     rd.readAsDataURL(file); };
   const post = v => { const got = tkSelfCheck(id, plCur, v, box); redraw(); const r = box.querySelector("[data-tkres]"); if (r) r.textContent = got.length ? Z("发好了 · 用上了：") + got.map(bmT).join(UI === "zh" ? "、" : ", ") + " ✓" : Z("发好了。下次试试用上面的词"); };
   box.querySelectorAll("[data-tkwrite]").forEach(b=>b.onclick = ()=>{ const v = box.querySelector("[data-tkself]").value.trim(); if (v) post(v); else box.querySelector("[data-tkres]").textContent = Z("写一句再发：可以点上面的「照着写」"); });
-  box.querySelectorAll("[data-tkmic2]").forEach(b=>b.onclick = ()=>{ const R = window.SpeechRecognition || window.webkitSpeechRecognition, r = box.querySelector("[data-tkres]");
-    if (!R){ r.textContent = Z("这个浏览器不能听你说，先写下来吧"); return; }
-    const rec = new R(); rec.lang = LEARN_TTS; r.textContent = "🎤 " + Z("在听……");
-    rec.onresult = e=>{ box.querySelector("[data-tkself]").value = e.results[0][0].transcript; r.textContent = Z("听到了，看看对不对，再点「发在这里」"); tkSkMark(id, plCur, "mouth"); };
-    rec.onerror = ()=>{ r.textContent = Z("没听清，再试一次"); }; rec.start(); });
+  box.querySelectorAll("[data-tkmic2]").forEach(b=>b.onclick = ()=>{ const r = box.querySelector("[data-tkres]");
+    sayFree({out: r, i: id, th: plCur, from: "self", onText: v=>{ box.querySelector("[data-tkself]").value = v; r.textContent = Z("听到了，看看对不对，再点「发在这里」"); tkSkMark(id, plCur, "mouth"); }}); });
   const see = box.querySelector("[data-tksee]"); if (see) see.onclick = async ()=>{ const r = box.querySelector("[data-tkres]"), out = box.querySelector("[data-tkseen]");   // 要用 AI（🛟），只在想说的东西不会说时用
     if (!tkPhoto){ r.textContent = Z("先选一张照片"); return; } r.textContent = Z("AI 正在看照片……");
     try { const blob = await (await fetch(tkPhoto)).blob(), lang = LEARN_LANGS[LEARN].name.en, gloss = UI === "zh" ? "Chinese" : "English";
@@ -6665,9 +6650,7 @@ function tkChatWire(id, box, redraw){ const k0 = plCur, X = tkChatOf(id, k0); if
     const mn = box.querySelector("[data-ttmean]"); ttPost(id, k0, t, false, mn ? mn.value.trim() : "").then(keep); keep(); };
   box.querySelectorAll("[data-tkyou]").forEach(b=>b.onclick = ()=>send(b.dataset.tkyou));
   const ys = box.querySelector("[data-tkyousend]"); if (ys) ys.onclick = ()=>{ const v = box.querySelector("[data-tkyoux]").value.trim(); if (v) send(v); };
-  const ym = box.querySelector("[data-tkyoumic]"); if (ym) ym.onclick = ()=>{ const R = window.SpeechRecognition || window.webkitSpeechRecognition; if (!R){ ym.textContent = Z("这个浏览器不能听你说，先写下来吧"); return; }
-    const rec = new R(); rec.lang = LEARN_TTS; ym.textContent = "🎤 " + Z("在听……"); rec.onresult = e=>{ box.querySelector("[data-tkyoux]").value = e.results[0][0].transcript; ym.textContent = "🎤 " + Z("说出来"); tkSkMark(id, k0, "mouth"); };
-    rec.onerror = ()=>{ ym.textContent = "🎤 " + Z("没听清，再试一次"); }; rec.start(); };
+  const ym = box.querySelector("[data-tkyoumic]"); if (ym) ym.onclick = ()=>sayFree({out: ym, i: id, th: k0, from: "listen", onText: v=>{ box.querySelector("[data-tkyoux]").value = v; ym.textContent = "🎤 " + Z("说出来"); tkSkMark(id, k0, "mouth"); }});
   const pg = box.querySelector("[data-tkprog]"); if (pg) pg.onclick = ()=>{ TK_READ["w" + id + k0] = !TK_READ["w" + id + k0]; keep(); };
   const rd = box.querySelector("[data-tkread]"); if (rd) rd.onclick = ()=>{ TK_READ[id + k0] = !TK_READ[id + k0]; keep(); };
   box.querySelectorAll("[data-ttl]").forEach(b=>b.onclick = ()=>{ TT_L = b.dataset.ttl; keep(); });
@@ -6718,6 +6701,49 @@ function tkDrToks(t){ t = tkDrPlain(t).trim();
 const tkDrDisp = t => LEARN_ZH ? tkDrToks(t) : tkDrPlain(t).split(/\s+/).filter(Boolean);   // 跟读时照原样显示（带标点），一个词一个词标颜色
 const libM = () => { try { return JSON.parse(localStorage.getItem("libm.v1") || "{}"); } catch(e){ return {}; } };
 function libSet(key, l){ const M = libM(); M[key] = {l: Math.max(0, Math.min(4, l)), t: Date.now()}; try { localStorage.setItem("libm.v1", JSON.stringify(M)); } catch(e){} try { syncMark("libm.v1"); } catch(e){} }
+// 🎤 统一的「说一句」：每个跟着说的地方都用它——听你说 → 一个词一个词比（说到的绿、漏掉的灰，说到七成算对）→ 浏览器听不了就打出来，照样比
+// 判断完记进练习账（practice.v1 的 say），说到的词在「记得多牢」上走一格（见 pxLedger）
+const sayCjk = lang => /^(zh|ja|ko)/i.test(lang || "");
+function sayJudge(want, alts, lang){ const cjk = sayCjk(lang), H = alts.join(" ").toLowerCase(), plain = tkDrPlain(want);
+  let disp; if (cjk){ try { disp = [...new Intl.Segmenter(lang, {granularity: "word"}).segment(plain)].filter(s=>s.isWordLike).map(s=>s.segment); } catch(e){ disp = [...plain].filter(c=>/\p{L}|\p{N}/u.test(c)); } } else disp = plain.split(/\s+/).filter(Boolean);
+  const hs = new Set(H.split(/[^\p{L}\p{N}']+/u).filter(Boolean)), core = w => w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}']+$/gu, "");
+  const hit = disp.map(w=>cjk ? [...w].filter(c=>/\p{L}|\p{N}/u.test(c)).every(c=>H.includes(c.toLowerCase())) : !core(w) || hs.has(core(w)) || hs.has(core(w).replace(/'s$/, "")));
+  const n = hit.filter(Boolean).length; return {disp, hit, n, ok: disp.length > 0 && n >= Math.ceil(disp.length * .7), heard: alts[0] || ""}; }
+function sayLine(o){ const out = o.out; if (!out) return; const lang = o.lang || LEARN_TTS, R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const done = (alts, typed) => { const r = sayJudge(o.want, alts, lang);
+    out.innerHTML = `<span class="say-r">${r.disp.map((w, j)=>`<span class="${r.hit[j] ? "ok" : "no"}">${esc(w)}</span>`).join(sayCjk(lang) ? "" : " ")}</span> ${r.ok ? "✓" : `<small>${Z("灰色的再说一遍")}</small>`}`;
+    if (o.i) pxAdd({k: "say", i: o.i, th: o.th, say: tkDrPlain(o.want), ok: r.ok, miss: r.disp.filter((w, j)=>!r.hit[j]), typed: typed ? 1 : 0, from: o.from || ""});
+    if (o.onDone) o.onDone(r); };
+  const type = msg => { out.innerHTML = `<span class="say-type"><small>${esc(msg)}</small> <input type="text" autocomplete="off" placeholder="${esc(Z("把这句打出来"))}"> <button class="chip" type="button">✓</button></span>`;
+    const inp = out.querySelector("input"), go = () => { const v = inp.value.trim(); if (v) done([v], true); };
+    out.querySelector("button").onclick = go; inp.onkeydown = e=>{ if (e.key === "Enter") go(); }; inp.focus(); };
+  if (!R){ type(Z("这个浏览器听不了你说，打出来也行：")); return; }
+  const rec = new R(); rec.lang = lang; rec.maxAlternatives = 3; out.textContent = "🎤 " + Z("在听……");
+  rec.onresult = e=>done([...e.results[0]].map(a=>a.transcript));
+  rec.onerror = e=>{ if (e.error === "not-allowed" || e.error === "service-not-allowed") type(Z("这里用不了麦克风，打出来也行：")); else out.textContent = e.error === "no-speech" ? Z("没听到声音，再按一下") : Z("没听清，再说一遍"); };
+  if (o.onEnd) rec.onend = o.onEnd;
+  try { rec.start(); } catch(e){ type(Z("这里用不了麦克风，打出来也行：")); } }
+// 自己说一句（没有标准答案）：听写成文字交给 onText；听不了就让你写下来。说出来的话也记进练习账
+function sayFree(o){ const R = window.SpeechRecognition || window.webkitSpeechRecognition, msg = t => { if (o.out) o.out.textContent = t; };
+  if (!R){ msg(Z("这个浏览器听不了你说，先写下来吧")); return; }
+  const rec = new R(); rec.lang = o.lang || LEARN_TTS; msg("🎤 " + Z("在听……"));
+  rec.onresult = e=>{ const v = e.results[0][0].transcript; if (o.i) pxAdd({k: "said", i: o.i, th: o.th, say: v, ok: true, from: o.from || ""}); o.onText(v); };
+  rec.onerror = e=>msg(e.error === "not-allowed" || e.error === "service-not-allowed" ? Z("这里用不了麦克风，先写下来吧") : Z("没听清，再试一次"));
+  try { rec.start(); } catch(e){ msg(Z("这里用不了麦克风，先写下来吧")); } }
+// 📒 一本账：不管在哪儿练（岛上群聊、跟读、船上、港口、游学），说到、写到这座岛的词，在「记得多牢」上走一格——
+// 岛上的词卡（键「岛|卡」）和船上的图（键「岛|th.图」）一起记；没说出来的词退一格。PX_CAP = 这种练法最多到第几格（打字最多到 2 想得起来，跟人说过到 4 用过）
+const PX_CAP = {say: 3, said: 3, myask: 3, own: 3, fill: 2, npc: 4, npcask: 4, know: 4, knowa: 4, miss: 0};
+const pxHas = (lo, w) => { w = tkDrPlain(w || "").toLowerCase().trim(); if (w.length < (LEARN_ZH ? 1 : 2) || (LEARN_ZH && w.length < 2 && !/[一-鿿]/.test(w))) return false;
+  return LEARN_ZH ? lo.includes(w) : new RegExp("(^|[^\\p{L}])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "(s|es|d|ed)?(?![\\p{L}])", "u").test(lo); };
+function pxLedger(e){ if (!e || !e.i || !(e.k in PX_CAP)) return; const cap = e.typed ? Math.min(2, PX_CAP[e.k]) : PX_CAP[e.k];
+  const text = tkDrPlain(e.say || (Array.isArray(e.w) ? e.w.join(" ") : e.w || "")).toLowerCase(); if (!text) return;
+  const missT = tkDrPlain((e.k === "miss" ? e.w : e.miss || []).join(" ")).toLowerCase(), M = libM(), now = Date.now(); let ch = 0;
+  const touch = (key, w) => { if (!pxHas(text, w)) return; const l = (M[key] || {l: -1}).l;
+    if (e.k === "miss" || (missT && pxHas(missT, w))){ if (l > 0){ M[key] = {l: l - 1, t: now}; ch++; } return; }
+    const nl = Math.max(l, Math.min(cap, Math.max(1, l + 1))); M[key] = {l: nl, t: now}; ch++; };
+  if (typeof ISLE_THINGS !== "undefined") Object.keys(ISLE_THINGS).forEach(key=>{ if (!key.startsWith(e.i + "|")) return; (ISLE_THINGS[key] || []).forEach(x=>{ if (x[1] && x[2]) touch(e.i + "|th." + x[0], LEARN_ZH ? x[2] : x[1]); }); });
+  const T = typeof LIB !== "undefined" && LIB[e.i] && LIB[e.i].themes; if (T) Object.values(T).forEach(t=>(t.units || []).forEach(u=>{ if (u.lv !== "sentence") touch(e.i + "|" + u.id, libTg(u)); }));
+  if (!ch) return; try { localStorage.setItem("libm.v1", JSON.stringify(M)); } catch(err){} try { syncMark("libm.v1"); } catch(err){} }
 const libUnits = (id, k) => (typeof LIB !== "undefined" && LIB[id] && LIB[id].themes[k] && LIB[id].themes[k].units) || null;
 // 开船去说过、发过照片：这个主题里已经「说得出」的语块变成「用过」
 function libUsed(id, k){ const U = libUnits(id, k); if (!U) return; const M = libM(); U.forEach(u=>{ const key = id + "|" + u.id; if (M[key] && M[key].l >= 3) libSet(key, 4); }); }
@@ -6939,10 +6965,7 @@ function tkModesWire(id, box, redraw){ const k0 = plCur; if (!tkChatOf(id, k0)) 
   box.querySelectorAll("[data-tklspick]").forEach(b=>b.onclick = ()=>{ const r = R[S.i]; S.pick = +b.dataset.tklspick; if (r.opts[S.pick] === r.m) S.score++; keep(); });
   const nx = box.querySelector("[data-tklsnext]"); if (nx) nx.onclick = ()=>{ S.i++; S.shown = 0; S.pick = null; S.played = 0; keep(); };
   const ag = box.querySelector("[data-tklsagain]"); if (ag) ag.onclick = ()=>{ TK_LS[id + k0] = {i: 0, score: 0, pick: null}; keep(); };
-  const rp = box.querySelector("[data-tklsrep]"); if (rp) rp.onclick = ()=>{ const Rc = window.SpeechRecognition || window.webkitSpeechRecognition, res = box.querySelector("[data-tklsres]"); if (!Rc){ res.textContent = Z("这个浏览器不能听你说"); return; }
-    const rec = new Rc(); rec.lang = LEARN_TTS; res.textContent = Z("在听……"); rec.onresult = e=>{ const toks = t => String(t).toLowerCase().replace(/[^\p{L}\p{N}' ]/gu, " ").split(/\s+/).filter(Boolean), want = toks(rp.dataset.tklsrep), got = new Set(toks(e.results[0][0].transcript));
-      const n = want.filter(w=>got.has(w)).length; res.textContent = `${Z("说对了")} ${n} / ${want.length} ${Z("个词")}${n >= want.length * .7 ? " ✓" : ""}`; tkSkMark(id, k0, "mouth"); };
-    rec.onerror = ()=>{ res.textContent = Z("没听清，再试一次"); }; rec.start(); };
+  const rp = box.querySelector("[data-tklsrep]"); if (rp) rp.onclick = ()=>{ sayLine({want: rp.dataset.tklsrep, out: box.querySelector("[data-tklsres]"), i: id, th: k0, from: "listen", onDone: ()=>tkSkMark(id, k0, "mouth")}); };
   const dp = box.querySelector("[data-tkdictplay]"); if (dp) dp.onclick = ()=>sayIt(dp.dataset.tkdictplay, LEARN_TTS, .8, {});
   const dk = box.querySelector("[data-tkdictok]"); if (dk) dk.onclick = ()=>{ const v = box.querySelector("[data-tkdict]").value.trim().toLowerCase(), w = dk.dataset.tkdictok.toLowerCase(), res = box.querySelector("[data-tkdictres]");
     if (!v) return; if (v === w){ S.dict = 1; res.textContent = "✓ " + dk.dataset.tkdictok; } else res.textContent = Z("差一点：") + dk.dataset.tkdictok; }; }
@@ -7054,11 +7077,8 @@ function tkDraw(){ const el = document.getElementById("talkScene"), {id, k} = tk
       setTimeout(()=>{ tkDraw(); setTimeout(()=>sayIt(bmT(tkKn.last), LEARN_TTS, .9, {}), 300); }, 900); });
     el.querySelectorAll("[data-tka]").forEach(b=>b.onclick = ()=>{ const a = K.ans[+b.dataset.tka]; tkKn.ans = +b.dataset.tka; pxAdd({k: "knowa", i: id, th: k, npc: g.npc, a: +b.dataset.tka, say: bmT(a)}); sayIt(bmT(a), LEARN_TTS, .9, {}); tkKn.last = a.back;
       setTimeout(()=>{ tkDraw(); setTimeout(()=>sayIt(bmT(a.back), LEARN_TTS, .9, {}), 300); }, 900); }); }
-  const mic = el.querySelector("[data-tkmic]"); if (mic) mic.onclick = ()=>{ const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!R){ mic.textContent = Z("这个浏览器不能听你说，先选一句吧"); return; }
-    const rec = new R(); rec.lang = LEARN_TTS; mic.textContent = "🎤 " + Z("在听……");
-    rec.onresult = e=>{ const said = e.results[0][0].transcript.toLowerCase(), sc = g.replies.map(o=>bmT(o.say).toLowerCase().split(/[^\p{L}']+/u).filter(t=>t && said.includes(t)).length); el.querySelector(`[data-tkr="${sc.indexOf(Math.max(...sc))}"]`).click(); };
-    rec.onerror = ()=>{ mic.textContent = "🎤 " + Z("没听清，再试一次"); }; rec.start(); }; }
+  const mic = el.querySelector("[data-tkmic]"); if (mic) mic.onclick = ()=>{ if (!(window.SpeechRecognition || window.webkitSpeechRecognition)){ mic.textContent = Z("这个浏览器不能听你说，先选一句吧"); return; }
+    sayFree({out: mic, onText: v=>{ const said = v.toLowerCase(), sc = g.replies.map(o=>bmT(o.say).toLowerCase().split(/[^\p{L}']+/u).filter(t=>t && said.includes(t)).length); el.querySelector(`[data-tkr="${sc.indexOf(Math.max(...sc))}"]`).click(); }}); }; }
 function tkHome(){ const el = document.getElementById("talkScene"); if (!tkCur) return; const {id, k} = tkCur; el.hidden = true; el.innerHTML = ""; tkCur = null; speechSynthesis && speechSynthesis.cancel();
   const d = clubPinData.find(x=>x.id === id); if (!d) return; boatDock(id);
   plIsle = id; plCur = k; openClubPin(d); }
@@ -7470,14 +7490,8 @@ const sayWords = t => String(t||"").split(/\s+/).filter(Boolean);
 const normW = w => w.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
 function shadowMarks(target, heard){ const hw = new Set(sayWords(heard).map(normW)); return sayWords(target).map(w=>{ const n = normW(w); return !n || hw.has(n) ? `<span style="color:#2b6a1f">${esc(w)}</span>` : `<span style="color:#c0392b;text-decoration:underline">${esc(w)}</span>`; }).join(" "); }
 function micCheck(b){
-  const out = b.nextElementSibling; if (!SR){ if (out) out.textContent = "这个浏览器不能听写"; return; }
-  const r = new SR(); r.lang = b.dataset.tts; r.interimResults = false; r.maxAlternatives = 3;
-  b.disabled = true; b.textContent = "🎙️"; if (out) out.textContent = " 请说……";
-  r.onresult = e => { const alts = [...e.results[0]].map(x=>x.transcript), best = alts.reduce((p, h)=>Math.max(p, simSay(h, b.dataset.mic)), 0);
-    if (out) out.textContent = best >= .8 ? " ✅ 很好！" : best >= .5 ? ` 👍 差不多。听到：${alts[0]}` : ` 🔁 再来一次。听到：${alts[0]}`; };
-  r.onerror = e => { if (out) out.textContent = e.error === "not-allowed" || e.error === "service-not-allowed" ? " 这里用不了麦克风，可以在 heyvoyo.com 上试" : e.error === "no-speech" ? " 没听到声音，再试一次" : " 没听清，再试一次"; };
-  r.onend = () => { b.disabled = false; b.textContent = "🎤"; };
-  try { r.start(); } catch(e){ b.disabled = false; b.textContent = "🎤"; }
+  const out = b.nextElementSibling; if (!out) return; if (SR){ b.disabled = true; b.textContent = "🎙️"; }
+  sayLine({want: b.dataset.mic, lang: b.dataset.tts, out, from: "sticker", onEnd: ()=>{ b.disabled = false; b.textContent = "🎤"; }});
 }
 document.addEventListener("click", e=>{
   const st = e.target.closest("[data-step]"), lb = card.querySelector(".loop-bar"), n = lb && lb.dataset.loop;
@@ -9612,9 +9626,12 @@ function bpSay(t, cb, o){ let fired = false; const go = () => { if (!fired && cb
 // 这一站能不能在船上练：复习、新的一站要有至少 2 样带句子的东西；港口要有船票
 function bpRunPlan(st){ const sh = a => a.map(x=>[Math.random(), x]).sort((p, q)=>p[0] - q[0]).map(x=>x[1]);
   if (st.k === "port"){ const [i, k] = st.key.split("|"), g = (tkOf(i, k) || {}).go; return g && g.replies && g.replies.length >= 2 ? {k: "port", isle: i, th: k, g, steps: [{t: "scene"}, {t: "talk"}, {t: "talk"}, {t: "end"}]} : null; }
-  if (st.k === "rv"){ const its = st.keys.flatMap(key=>bpTh(key).slice(0, 2)).slice(0, 6); if (its.length < 2) return null;
+  // 按一本账挑：复习先挑见过但还不牢的（0–2 格），新的一站先挑没见过的；已经说得出（3 格以上）的不再推，除非不够两样
+  const M = libM(), lv = it => (M[it.i + "|th." + it.x[0]] || {l: -1}).l, by = (A, f) => A.map(it=>[f(lv(it)), Math.random(), it]).sort((p, q)=>p[0] - q[0] || p[1] - q[1]).map(x=>x[2]);
+  const fresh = (A, f) => { const B = by(A, f), C = B.filter(it=>lv(it) < 3); return C.length >= 2 ? C : B; };
+  if (st.k === "rv"){ const its = st.keys.flatMap(key=>fresh(bpTh(key), l=>l < 0 ? 5 : l).slice(0, 2)).slice(0, 6); if (its.length < 2) return null;
     return {k: "rv", its, steps: [...its.map((it, j)=>({t: j % 2 ? "see" : "hear", it})), {t: "repeat", it: its[0]}, {t: "end"}]}; }
-  const its = bpTh(st.key).slice(0, 4); if (its.length < 2) return null;
+  const its = fresh(bpTh(st.key), l=>l).slice(0, 4); if (its.length < 2) return null;
   const Q = ["hear", "hearsent", "see", "hear"], bi = its.find(it=>{ const n = tkDrToks(bpSe(it.x)).length; return n >= 3 && n <= 10; });
   return {k: "st", isle: its[0].i, th: its[0].th, its, steps: [...its.map(it=>({t: "learn", it})), ...sh(its).map((it, j)=>({t: Q[j % 4], it})), ...(bi ? [{t: "build", it: bi}] : []), {t: "end"}]}; }
 function bpRun(n){ const R = typeof LIB !== "undefined" ? routeBuild() : [], st = bpPlan(R).stops[n]; if (!st) return false;
