@@ -7567,7 +7567,7 @@ function calcWire(d){ const C = calcOf(d.n), box = card.querySelector("[data-cal
   let me = null;
   const draw = () => { if (!bars) return; const rows = C.bars.rows.map(x=>x.slice()); if (me) rows.push(me); rows.sort((a, b)=>b[1] - a[1]); const mx = Math.max(...rows.map(x=>x[1])) || 1;
     bars.innerHTML = rows.map(x=>`<div class="cc-bar${x[2] ? " me" : ""}"><span>${esc(x[0])}</span><span class="cc-t"><i style="width:0"></i></span><span class="cc-x">${esc((C.bars.pre || "") + ccFmt(x[1], C.bars.dec) + (C.bars.suf || ""))}</span></div>`).join("");
-    requestAnimationFrame(()=>bars.querySelectorAll("i").forEach((i, k)=>i.style.width = Math.max(1, rows[k][1] / mx * 100) + "%")); };
+    const els = [...bars.querySelectorAll(".cc-t i")]; requestAnimationFrame(()=>els.forEach((i, k)=>i.style.width = Math.max(1, rows[k][1] / mx * 100) + "%")); };
   r.oninput = () => gn.textContent = r.value;
   const reveal = guess => { box.querySelector("[data-ccg]").hidden = true; const a = box.querySelector("[data-cca]"); a.hidden = false; const y = a.querySelector(".cc-you");
     if (guess != null){ const dd = guess - g.ans; y.hidden = false; const u = /^%/.test(g.unit) ? g.unit : " " + g.unit; y.textContent = Math.abs(dd) <= g.tol ? `${Z("你猜")} ${guess}${u}，${Z("几乎猜中！")}` : `${Z("你猜")} ${guess}${u}，${dd < 0 ? Z("少猜了") : Z("多猜了")} ${ccFmt(Math.abs(dd), g.step < 1 ? (g.step < 0.1 ? 2 : 1) : 0)}${u}`; }
