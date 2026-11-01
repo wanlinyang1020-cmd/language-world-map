@@ -132,6 +132,8 @@ document.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click", ()
   else if (learn === "en"){ store.set("hv.ui", "zh"); store.set("hv.learn", "en"); }
   store.set("hv.visited", "1");
 }));
+// 进地图用「替换」：首页不留在返回的路上，在地图里按返回就是离开网站，不会掉回首页（2026-11-02）
+document.querySelectorAll('a[href^="/map/"]').forEach(a=>a.addEventListener("click", e=>{ if (e.metaKey || e.ctrlKey || e.shiftKey || a.target === "_blank") return; e.preventDefault(); store.set("hv.visited", "1"); setTimeout(()=>location.replace(a.getAttribute("href")), 0); }));
 </script>
 </body>
 </html>
