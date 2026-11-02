@@ -577,6 +577,12 @@ body{margin:0;background:var(--sea);color:var(--ink);font-family:var(--f-body);o
 .bp-st.lock .bp-n{box-shadow:0 4px 0 #9aa5ad;cursor:default}.bp-st.lock .bp-n img{filter:grayscale(1);opacity:.55}.bp-n i.lk{background:#9aa5ad;font-size:10px}
 .bp-st b{font-size:13px;margin-top:6px;background:rgba(255,255,255,.85);border-radius:8px;padding:0 6px}.bp-st small{font-size:11.5px;color:#2f6b45;line-height:1.3;margin-top:2px}.bp-st.lock small,.bp-st.now small,.bp-st.open small{color:#4a5a66}.bp-st.lock b{color:#7d8a93}
 .bp-tag{font-size:11px;font-weight:700;color:#fff;background:#1c7ed6;border-radius:8px;padding:1px 8px;margin-bottom:4px}
+#fySheet{position:fixed;inset:0;z-index:50;background:#fffdf8;color:#24303a;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s ease;font-family:var(--f-body)}#fySheet[hidden]{display:none}#fySheet.on{transform:none}
+.fy-road canvas{display:block;width:100%;height:120px;margin-top:6px;border-radius:14px;background:linear-gradient(#fff7e6,#fffdf7)}.fy-syl{display:flex}.fy-syl div{flex:1;text-align:center;font-size:12px;color:#6d6a80}.fy-syl b{display:block;font-size:20px;color:#24303a;line-height:1.1}
+.fy-rec.on{background:#e0533d;border-color:#e0533d;color:#fff}.fy-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:10px}.fy-grid i{font-style:normal;text-align:center;font-size:11px;padding:3px 0;border-radius:6px;background:#efe9dc;color:#8d88a3}.fy-grid i.on{background:#2f9e5b;color:#fff}
+.fy-clip{margin:0 0 14px;border-radius:18px;overflow:hidden;border:1px solid #eee3cc;background:#fff}.fy-vid{position:relative}.fy-vid video{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#333}
+.fy-cap{position:absolute;inset:0;display:flex;align-items:flex-end;padding:10px 12px;background:linear-gradient(transparent 50%,rgba(0,0,0,.75));color:#fff;font-size:16px;line-height:1.9;pointer-events:none}.fy-cap rt{color:#fff;opacity:.85}
+.fy-say{padding:10px 12px 12px}.fy-tag{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#e0533d;border-radius:999px;padding:1px 8px}.fy-pk small{color:#6d6a80}.fy-pk.ok{border-color:#2f9e5b;background:#eaf7ef}.fy-pk.no{border-color:#d64545}
 #ziSheet{position:fixed;inset:0;z-index:50;background:#fffdf8;color:#24303a;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s ease;font-family:var(--f-body)}#ziSheet[hidden]{display:none}#ziSheet.on{transform:none}
 .zi-hd{display:flex;gap:14px;align-items:center}.zi-bd{width:150px;height:150px;flex:none;border-radius:14px;background:#fffaf0;border:1px dashed #d8c9a8;position:relative}.zi-bd svg.g{position:absolute;inset:0}
 .zi-bd .zi-ch{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:104px;line-height:1}.zi-py{font-size:26px;font-weight:800}.zi-en{color:#6d6a80;font-size:13px}
@@ -5073,6 +5079,7 @@ const WALLS = {
 if (typeof FASHION_WALL !== "undefined") WALLS.fashion_club = {e: "👟", t: "穿搭墙", note: FASHION_WALL.note, fw: FASHION_WALL};
 if (ZE) Object.assign(ZE, {"今天复习": "Review today", "个字，在没见过的短片里认": "characters, in clips you haven't seen", "认得的字过几天会在这儿复习": "Characters you know come back here for review", "在群岛看门头短片时，点字幕里的字": "In the island clips, tap characters in the captions", "复习认得的字": "Review characters", "复习完了": "Review done", "对了": "correct", "对的过几天再来，错的明天再来": "right ones return in a few days, missed ones tomorrow", "回到我的船": "Back to my boat", "这段短片里，哪个字放得进去？": "Which character fits this clip's sentence?", "是": "It's", "明天再复习一次": "You'll see it again tomorrow", "下一个": "Next", "看结果": "See result", "看字卡": "Open the card"});
 if (ZE) Object.assign(ZE, {"这个字在这些 HSK 词里": "HSK words with this character"});
+if (ZE) Object.assign(ZE, {"听": "Listen", "按住说": "Hold to say ", "两个三声连着，第一个读成二声": "Two 3rd tones in a row: say the first as a 2nd tone", "三声在别的声调前面：只往下压，不用再升上来": "A 3rd tone before another tone just dips — no rise", "这里用不了麦克风，可以先点「听」看球怎么走": "No microphone here — tap Listen to watch the ball", "在听……说完松开": "Listening… let go when done", "没听清，靠近一点再说一遍": "Didn't catch that — come closer and try again", "走对了": "on track", "要平平地停在高处": "keep it high and flat", "要往上走": "should rise", "要先压低": "go low first", "只要往下压，不用升": "just dip, don't rise", "要从高处往下滑": "should fall from high", "再试一次": "try again", "只是大概的提示，不打分": "just a rough hint, not a score", "两个字的声调": "Two-syllable tones", "看短片里那一句，跟着说；还有「听错了会出事」": "Say it after the clip — plus pairs that are easy to mix up", "练": "Practise", "这段短片里说的是哪个？": "Which one is said in this clip?", "听错了会出事": "Easy to mix up", "听这一句": "Hear the line", "跟着说": "Say it", "先点「听这一句」": "Tap 'Hear the line' first", "听对了": "You heard right", "听到的是": "It was", "声调：听一遍，再按住说": "Tones: listen, then hold and say it", "一声 · 平": "1st · flat", "二声 · 上坡": "2nd · rising", "三声 · 先下再上": "3rd · dip and rise", "三声 · 只往下": "3rd · dip only", "四声 · 下坡": "4th · falling", "轻声": "neutral"});
 if (ZE) Object.assign(ZE, {"听一听，是第几声？": "Listen — which tone is it?", "怎么来的": "Where it comes from", "管意思": "gives the meaning", "管读音": "gives the sound", "同一个部件的字，点一下看": "Characters with the same part — tap to see", "这个字在这些词块里": "Chunks with this character", "点一个词块，在门头短片里练": "Tap a chunk to practise it in the clips", "放回短片里的句子": "Put it back into the clip's sentence", "声调": "tone", "写": "write", "放回句子": "sentence", "认得的字": "Characters known", "看笔顺": "Stroke order", "自己写": "Write it", "写过了": "written", "认得了": "Known", "做完这几样就算认得": "Do these to know it", "也算进「我」页面": "counted on your Me page", "在格子里按笔顺写": "Write it in the box, stroke by stroke", "笔顺不对，再试一次（错 3 次会提示）": "Wrong stroke — try again (a hint shows after 3)", "写对了": "Correct", "错了": "mistakes", "一声平平的": "1st tone is flat", "二声往上扬": "2nd tone rises", "三声先降再升": "3rd tone dips then rises", "四声往下走": "4th tone falls", "，不是这个，再听一遍": " — not this one, listen again", "放进去不成词——想想这句在说什么": "That doesn't make a word here — think about what the sentence says", "点字看字卡": "tap a character", "在门头短片字幕里点字": "tap characters in clip captions", "画出来的字": "drawn as a picture", "几部分合起来表示意思": "parts combined for the meaning", "一边管意思，一边管读音": "one part for meaning, one for sound", "象形": "pictograph", "会意": "compound", "形声": "sound + meaning"});
 if (ZE) Object.assign(ZE, {"看完了 · 这段里有个你还没练的：": "Just watched · a chunk you haven't practised: ", "会了": "Know it", "练一下": "Practise", "这儿还会说": "People here also say", "句": "lines", "练": "Practise", "基础词块": "Core chunks", "今天复习": "Review today", "个，从没去过的地方带回来": "— brought back from places you haven't been", "练过的过几天会在这儿复习": "Chunks you practise come back here for review", "在群岛看门头短片时练：字幕里画淡线的就是": "Practise in the island clips: the dotted words in the subtitles", "复习": "Review", "① 听这句话，是在哪儿说的？": "① Listen: where is this said?", "② 跟着说一遍": "② Say it after me", "③ 看意思，拼出来": "③ Build it from the meaning", "③ 听中文，拼出来": "③ Build it from the Chinese", "说一遍": "Say it", "现在不方便说": "Can't speak right now", "点下面的词，按顺序拼": "Tap the pieces in order", "记进账本": "saved to your logbook", "还在这些地方": "is also said here", "换个地方，再听一遍、再说一遍；在两个地方说过就算「说得出」": "Hear and say it somewhere else; say it in two places and you've got it", "说过": "Said", "听过": "Heard", "换下一个地方": "Next place", "点一个地方开始": "Pick a place to start", "词块复习": "Chunk review", "复习完了": "Review done", "个一次说出来": "said first time", "说出来的往后推，想不起来的明天再来": "What you said comes back later; what you forgot comes back tomorrow", "回到我的船": "Back to my boat", "上次在别处练的，这次换一个地方": "You practised this somewhere else — here's a new place", "看着这个地方，用中文说这句": "Look at this place and say it in Chinese", "看着这个地方，用英语说这句": "Look at this place and say it in English", "用上「": "Use “", "」": "”", "说": "Say", "跳过": "Skip", "想不起来，听一下": "Can't remember — listen", "听完跟着说一遍，这次算「想不太起来」": "Listen and repeat — this counts as 'not quite'", "说得出": "can say", "在群岛看门头短片时练，我的船里复习": "Practise in the island clips, review on your boat", "关上": "Close", "见过": "Seen", "听懂": "Understood", "想得起来": "Can recall", "用过": "Used"});   // 🧱 基础词块的界面文字
 if (ZE) Object.assign(ZE, {"上次": "Last time", "不看字 · 从按下到开口算秒数": "No text · timed from tap to first word", "今天说了": "Said today", "再点一下，重新说": "Tap again to retry", "再说一次": "Say it again", "再说快一点": "say it faster", "去那儿": "Go there", "听一遍": "Listen", "听到的是": "I heard", "回到岛上": "Back to the island", "在别的岛也有人说": "people on other islands say it too", "在听……松开就结束": "Listening… release to stop", "在听……说完会自己停": "Listening… stops when you finish", "想不出来？给我点提示": "Stuck? Give me a hint", "打出来也行": "or type it", "换几个没去过的场景再说一次": "Say it again in places you haven't been", "最后一步": "Last step", "没听到声音，再按一下": "Didn't hear anything — press again", "没听到声音，再点一下试试": "Didn't hear anything — tap to try again", "没听清，再点一下": "Didn't catch that — tap again", "没有允许用麦克风。在浏览器设置里允许，再点一下。": "Microphone not allowed. Allow it in your browser settings, then tap again.", "灰色的再说一遍": "say the grey words again", "点一下或按住说": "Tap or hold to speak", "点一下或按住，再说一遍": "Tap or hold to say it again", "秒内": "seconds", "秒就开口了": "seconds to start speaking", "秒才说出来，今天试试": "seconds to get it out — today try under", "练完了": "Done", "说对了": "Got it", "说对了 · 往左划下一段": "Got it · swipe for the next one", "说我自己的": "Say my own", "跟着说": "Say it after", "跳过，回到岛上": "Skip, back to the island", "轮到你：说一句你自己的": "Your turn: say one of your own", "过两天「我的船」会拿新的场景再来一次。": "In a couple of days, My boat brings it back in new places.", "这个浏览器听不了你说，打出来也行：": "This browser can't hear you — type it instead:", "这次按下后": "This time", "这里用不了麦克风，打出来也行：": "No microphone here — type it instead:", "遍": "times"});   // 🗣️ 熟练三步的界面文字（学中文的外国人看英文）
@@ -7071,7 +7078,7 @@ function ckDraw(){ const sh = document.getElementById("ckSheet"); if (!sh || !CK
       <div class="ck-pics">${P.map(s=>{ const C = ckClip(s); return `<button class="ck-pic${S.pick === s ? (s === S.sid ? " ok" : " no") : ""}" data-ckpick="${s}"><img src="${esc(C.c.poster)}" alt="" loading="lazy"><span>${esc(ckWhere(s))}</span></button>`; }).join("")}</div>
       ${S.pick === S.sid ? `<p class="ck-ok">✓ ${esc(ch[0])} = <b>${esc(ch[1])}</b></p>` : ""}`; }
   else if (S.step === 1) body = `${dots}<div class="ck-k">${Z("② 跟着说一遍")}</div>${ckVid(S.sid)}<p class="ck-sent">${ckHl(x)} <button class="chip" data-cksay="${esc(x[1])}">🔊</button><small>${esc(x[2])}</small></p>
-      <div class="ck-mic"><button class="chip hot" data-ckmic="${esc(ch[0])}">🎤 ${Z("说一遍")}</button><span class="ck-out"></span><button class="ck-skip" data-cknext>${Z("现在不方便说")}</button></div>`;
+      <div class="ck-mic"><button class="chip hot" data-ckmic="${esc(ch[0])}">🎤 ${Z("说一遍")}</button><span class="ck-out"></span><button class="ck-skip" data-cknext>${Z("现在不方便说")}</button></div>${LEARN_ZH && fyOk(ch[0]) ? `<div class="ck-k">🗣️ ${Z("声调：听一遍，再按住说")}</div>` + fyRoadHtml(ch[0]) : ""}`;
   else if (S.step === 2){ const T = ckTiles(k), full = S.tiles.length === T.length, ok = full && S.tiles.join(" ") === T.join(" ");
     body = `${dots}<div class="ck-k">${LEARN_ZH ? Z("③ 看意思，拼出来") : Z("③ 听中文，拼出来")}</div><p class="ck-sent">${esc(ch[1])}</p>
       <div class="ck-built${full ? (ok ? " ok" : " no") : ""}">${S.tiles.length ? S.tiles.map(t=>`<span>${esc(t)}</span>`).join(" ") : `<i>${Z("点下面的词，按顺序拼")}</i>`}</div>
@@ -7083,7 +7090,7 @@ function ckDraw(){ const sh = document.getElementById("ckSheet"); if (!sh || !CK
       ${cur ? `<div class="ck-play">${ckVid(cur[0])}<p class="ck-sent">${ckHl(cur[1])} <button class="chip" data-cksay="${esc(cur[1][1])}">🔊</button><small>${esc(cur[1][2])}</small></p>
         <div class="ck-mic"><button class="chip hot" data-ckmic="${esc(ch[0])}">🎤 ${Z("说一遍")}</button><span class="ck-out"></span></div><button class="ck-skip" data-cknextsc>${Z("换下一个地方")} →</button></div>` : `<p class="ck-sub">${Z("点一个地方开始")}</p>`}` : ""}`; }
   const strip = sh.querySelector(".ck-strip"), left = strip ? strip.scrollLeft : 0, top = sh.querySelector(".ck-body") ? sh.querySelector(".ck-body").scrollTop : 0;
-  sh.innerHTML = `<div class="ck-top"><button class="ck-x" data-ckx aria-label="${Z("关上")}">✕</button><b>🧱 ${esc(ch[0])}</b><span>${Z("基础词块")} ${ckCount()}/${CKL.length}</span></div><div class="ck-body">${body}</div>`;
+  sh.innerHTML = `<div class="ck-top"><button class="ck-x" data-ckx aria-label="${Z("关上")}">✕</button><b>🧱 ${esc(ch[0])}</b><span>${Z("基础词块")} ${ckCount()}/${CKL.length}</span></div><div class="ck-body">${body}</div>`; if (LEARN_ZH) fyInit(sh);
   sh.querySelector(".ck-body").scrollTop = top;
   const st = sh.querySelector(".ck-strip"), cu = st && st.querySelector(".ck-sc.cur");
   if (st){ st.scrollLeft = left; if (cu){ const d = cu.getBoundingClientRect().left - st.getBoundingClientRect().left - (st.clientWidth - cu.clientWidth) / 2; st.scrollTo({left: st.scrollLeft + d, behavior: "smooth"}); } }
@@ -7214,6 +7221,100 @@ document.addEventListener("click", ev=>{
     if (d.ziblank === ch){ ziMark(ch, "b"); ziDraw(); bpSay(B[1]); }
     else { t.classList.add("no"); document.getElementById("ziBm").textContent = Z("放进去不成词——想想这句在说什么"); } return; }
 }, true);
+// 🗣️ 学中文的发音（用户 2026-11-02「可以发布」；样板 样板/中文发音样板.html）：声调画成一条路，点「听」紫色球沿标准的路走，
+// 按住说时红球跟着你声音的高低走（浏览器自己算音高，不上传），说完给一句提示、不打分。放在：练一下的「跟着说」、我的船的声调卡（16 种两字组合 + 听错了会出事）。
+// 账本 fyzh.v1：{c: {"31": 1 …} 说对过的组合, p: {对的序号: 1} 听对过的}
+const FY_KEY = "fyzh.v1";
+const fyGet = () => { try { return JSON.parse(localStorage.getItem(FY_KEY) || "{}"); } catch(e){ return {}; } };
+const fyPut = D => { try { localStorage.setItem(FY_KEY, JSON.stringify(D)); } catch(e){} };
+const FY_CHAO = {1: [5, 5], 2: [3, 5], 3: [2, 1, 4], h: [2, 1], 4: [5, 1], 0: [3, 3]};
+const FY_NAME = {1: "一声 · 平", 2: "二声 · 上坡", 3: "三声 · 先下再上", h: "三声 · 只往下", 4: "四声 · 下坡", 0: "轻声"};
+const FY_TONES = [["开车", "economy_club_fuel_4", "开车之前先看看油够不够。"], ["出门", "life_abroad_newcity_3", "到了新城市，我每天出门都练习说汉语。"], ["喝水", "eat_well_drink_4", "这周不喝汽水了——只喝水。"], ["车站", "see_world_hotel_3", "酒店离车站很近，走路五分钟。"],
+  ["回家", "first_money_split_2", "我给我妈打电话，说晚点回家。"], ["零钱", "see_world_streetfood_3", "现金也收，不过我没有零钱。"], ["还有", "see_world_train_3", "还有十分钟，来得及。"], ["排队", "eat_well_lunch_3", "中午人多，在这儿吃要排队。"],
+  ["打车", "dev_club_robotaxi_4", "下雨了，用手机打车最方便。"], ["起床", "body_mind_ward_4", "我七点起床煮咖啡——每天都一样。"], ["只有", "eat_well_out_4", "太好吃了——只有一点点辣。"], ["买菜", "eat_well_market_3", "本地人每天早上在街边摊买菜。"],
+  ["上车", "dev_club_robotaxi_4", "车到了，快上车！"], ["大学", "first_money_job_3", "店里做兼职的都是大学生。"], ["下雨", "economy_club_fuel_3", "下雨的晚上，路口特别堵。"], ["睡觉", "body_mind_bed_0", "十一点就睡觉，可是四点就醒了。"]];
+const FY_PAIRS = [{at: 2, a: ["买菜", "mǎi cài", "buy food"], b: ["卖菜", "mài cài", "sell food"], sid: "eat_well_market_0", line: "周六上午来市场买菜，人最多。", why: "买 mǎi 压低，卖 mài 往下走。说成卖菜，人家以为你是来摆摊的。"},
+  {at: 4, a: ["睡觉", "shuì jiào", "sleep"], b: ["水饺", "shuǐ jiǎo", "dumplings"], sid: "body_mind_phone_0", line: "睡觉前别看手机了。", why: "睡觉 4+4，水饺 3+3（读 shuí jiǎo）。字母一模一样，只差声调。"},
+  {at: 7, a: ["糖", "táng", "sugar"], b: ["汤", "tāng", "soup"], sid: "eat_well_drink_2", line: "大杯，带走——不加糖，我在控糖。", why: "糖 táng 往上扬，汤 tāng 平平的。点奶茶说「不加汤」，店员会愣一下。"},
+  {at: 9, a: ["上海", "Shànghǎi", "Shanghai"], b: ["伤害", "shānghài", "harm"], sid: "dev_club_code_1", line: "下周我要去上海出差。", why: "上海是 4+3，伤害是 1+4。说成「去伤害出差」，同事会吓一跳。"},
+  {at: 12, a: ["北京", "Běijīng", "Beijing"], b: ["背景", "bèijǐng", "background"], sid: "economy_club_bread_2", line: "在北京的超市看橘子多少钱。", why: "北京 3+1，背景 4+3。地名说错了，打车司机会听不懂。"},
+  {at: 15, a: ["四点", "sì diǎn", "four o'clock"], b: ["十点", "shí diǎn", "ten o'clock"], sid: "body_mind_bed_0", line: "十一点就睡觉，可是四点就醒了。", why: "四 sì 往下走，十 shí 往上扬，声母也不一样（s / sh）。约时间说错，差六个小时。"}];
+function fyTones(P, w){ const T = P.pinyin(w, {pattern: "num", type: "array"}).map(Number), S = T.map((t, i)=>i < T.length - 1 && t === 3 && T[i + 1] === 3 ? 2 : t);   // 3+3 → 2+3
+  return {T, S, keys: S.map((t, i)=>t === 3 && i < S.length - 1 ? "h" : String(t))}; }
+const fyOk = w => /^[一-鿿]{2,4}$/.test(w);
+function fyRoadHtml(w){ return `<div class="fy-road" data-fyw="${esc(w)}"><canvas width="660" height="230"></canvas><div class="fy-syl"></div><div class="zi-row"><button class="zi-b" data-fyhear>🔊 ${Z("听")}</button><button class="zi-b fy-rec" data-fyrec>🎙️ ${Z("按住说")}「${esc(w)}」</button></div><div class="zi-msg fy-fb"></div></div>`; }
+function fyInit(root){ const R = [...(root || document).querySelectorAll(".fy-road:not(.ok)")]; if (!R.length) return;
+  loadPinyin().then(P=>R.forEach(el=>{ el.classList.add("ok"); const w = el.dataset.fyw, t = fyTones(P, w); el._fy = t;
+    el.querySelector(".fy-syl").innerHTML = [...w].map((c, k)=>`<div><b>${esc(c)}</b>${Z(FY_NAME[t.keys[k]] || "")}</div>`).join("");
+    if (t.S.join() !== t.T.join()) el.querySelector(".fy-fb").textContent = Z("两个三声连着，第一个读成二声");
+    else if (t.keys[0] === "h") el.querySelector(".fy-fb").textContent = Z("三声在别的声调前面：只往下压，不用再升上来");
+    fyRoad(el); })).catch(()=>{}); }
+function fyRoad(el, user, ball){ const c = el.querySelector("canvas"), t = el._fy; if (!c || !t) return; const x = c.getContext("2d"), W = c.width, H = c.height, n = t.keys.length, pad = 26;
+  const Y = v => H - pad - (v - 1) / 4 * (H - 2 * pad), sw = W / n, X = (k, f) => k * sw + sw * .1 + sw * .8 * f; el._X = X; el._Y = Y;
+  x.clearRect(0, 0, W, H); x.fillStyle = "rgba(106,79,224,.06)"; for (let k = 0; k < n; k++) x.fillRect(k * sw + 4, 4, sw - 8, H - 8);
+  t.keys.forEach((key, k)=>{ const pts = FY_CHAO[key] || FY_CHAO[0]; x.strokeStyle = "#d9cfff"; x.lineWidth = 26; x.lineCap = "round"; x.lineJoin = "round"; x.beginPath();
+    pts.forEach((v, j)=>{ const px = X(k, j / (pts.length - 1)), py = Y(v); j ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); x.strokeStyle = "#fff"; x.lineWidth = 3; x.setLineDash([10, 12]); x.stroke(); x.setLineDash([]); });
+  if (user) user.forEach((seg, k)=>{ if (!seg.length) return; x.strokeStyle = "rgba(224,83,61,.6)"; x.lineWidth = 6; x.beginPath(); seg.forEach((v, j)=>{ const px = X(k, seg.length > 1 ? j / (seg.length - 1) : 0), py = Y(v); j ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke(); });
+  if (ball){ x.fillStyle = ball.c; x.beginPath(); x.arc(ball.x, ball.y, 14, 0, 7); x.fill(); x.fillStyle = "rgba(255,255,255,.8)"; x.beginPath(); x.arc(ball.x - 4, ball.y - 4, 4, 0, 7); x.fill(); } }
+function fyHear(el){ const t = el._fy; if (!t) return; bpSay(el.dataset.fyw); const n = t.keys.length, dur = 520 * n + 200, t0 = performance.now();   // 紫色的球沿标准的路走一遍
+  const step = now => { const f = Math.min(1, (now - t0 - 150) / (dur - 150)); if (f < 0){ requestAnimationFrame(step); return; }
+    const k = Math.min(n - 1, Math.floor(f * n)), lf = Math.min(1, f * n - k), pts = FY_CHAO[t.keys[k]] || FY_CHAO[0], sg = lf * (pts.length - 1), j = Math.min(pts.length - 2, Math.floor(sg)), v = pts[j] + (pts[j + 1] - pts[j]) * (sg - j);
+    fyRoad(el, null, {x: el._X(k, lf), y: el._Y(v), c: "#6a4fe0"}); if (f < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step); }
+function fyPitch(buf, sr){ let rms = 0; for (const v of buf) rms += v * v; rms = Math.sqrt(rms / buf.length); if (rms < .012) return null;   // 自相关，取最短的周期，免得跳到低八度
+  const minL = Math.floor(sr / 420), maxL = Math.floor(sr / 70), A = []; let best = -1;
+  for (let L = minL; L <= maxL; L++){ let s = 0, a = 0, b = 0; for (let i = 0; i + L < buf.length; i += 2){ s += buf[i] * buf[i + L]; a += buf[i] * buf[i]; b += buf[i + L] * buf[i + L]; } const r = s / Math.sqrt(a * b + 1e-9); A.push(r); if (r > best) best = r; }
+  if (best < .55) return null; for (let k = 1; k < A.length - 1; k++) if (A[k] >= .9 * best && A[k] >= A[k - 1] && A[k] >= A[k + 1]) return sr / (minL + k); return null; }
+let FYR = null;
+async function fyRec(el){ if (FYR || !el._fy) return; const fb = el.querySelector(".fy-fb"); let ctx, src, stream;
+  try { ctx = new (window.AudioContext || window.webkitAudioContext)(); stream = await navigator.mediaDevices.getUserMedia({audio: true}); src = ctx.createMediaStreamSource(stream); }
+  catch(e){ fb.textContent = Z("这里用不了麦克风，可以先点「听」看球怎么走"); return; }
+  const an = ctx.createAnalyser(); an.fftSize = 2048; src.connect(an); const buf = new Float32Array(an.fftSize), F = [], t0 = ctx.currentTime, n = el._fy.keys.length;
+  fb.textContent = "🎙️ " + Z("在听……说完松开");
+  FYR = {stop(){ clearInterval(this.iv); stream.getTracks().forEach(t=>t.stop()); ctx.close(); FYR = null; fyFinish(el, F); }};
+  FYR.iv = setInterval(()=>{ an.getFloatTimeDomainData(buf); const f = fyPitch(buf, ctx.sampleRate), tt = ctx.currentTime - t0; F.push([tt, f]);
+    const V = F.filter(x=>x[1]); if (V.length > 2){ const st = V.map(x=>12 * Math.log2(x[1])), m = st.slice().sort((a, b)=>a - b)[st.length >> 1];   // 红球实时跟着声音走
+      const ch = v => 1 + 4 * Math.min(1, Math.max(0, (v - m + 5) / 10)), f2 = Math.min(.999, (V[V.length - 1][0] - V[0][0]) / (.6 * n)), k = Math.floor(f2 * n);
+      fyRoad(el, null, {x: el._X(k, f2 * n - k), y: el._Y(ch(st[st.length - 1])), c: "#e0533d"}); }
+    if (tt > 3 && FYR) FYR.stop(); }, 20); }
+function fyFinish(el, F){ const fb = el.querySelector(".fy-fb"), t = el._fy, n = t.keys.length, V = F.filter(f=>f[1]), w = el.dataset.fyw;
+  if (V.length < 8){ fb.textContent = Z("没听清，靠近一点再说一遍"); fyRoad(el); return; }
+  const st = V.map(f=>12 * Math.log2(f[1])), so = [...st].sort((a, b)=>a - b), lo = so[Math.floor(so.length * .05)], hi = so[Math.floor(so.length * .95)], med = so[so.length >> 1], flat = hi - lo < 3;
+  const ch = s => flat ? Math.min(5, Math.max(1, 4.2 + (s - med) / 1.5)) : 1 + 4 * Math.min(1, Math.max(0, (s - lo) / (hi - lo)));   // 按你自己的音域换算；整句都很平就放在高处
+  let segs = [[]]; V.forEach((f, k)=>{ if (k && f[0] - V[k - 1][0] > .06) segs.push([]); segs[segs.length - 1].push(ch(12 * Math.log2(f[1]))); });
+  segs = segs.map((s, k)=>({s, k})).filter(x=>x.s.length >= 3).sort((a, b)=>b.s.length - a.s.length).slice(0, n).sort((a, b)=>a.k - b.k).map(x=>x.s);
+  if (segs.length < n){ const all = V.map(f=>ch(12 * Math.log2(f[1]))), m = Math.floor(all.length / n); segs = Array.from({length: n}, (_, k)=>all.slice(k * m, (k + 1) * m)); }   // 连着说没断开：平分
+  const U = segs.map(s=>s.map((v, k)=>{ const q = s.slice(Math.max(0, k - 2), k + 3).sort((a, b)=>a - b); return q[q.length >> 1]; })), last = U[n - 1];
+  fyRoad(el, U, {x: el._X(n - 1, 1), y: el._Y(last[last.length - 1] || 3), c: "#e0533d"});
+  const res = U.map((s, k)=>{ if (!s.length) return false; const q = Math.ceil(s.length / 3), a = s.slice(0, q).reduce((x, y)=>x + y, 0) / q, b = s.slice(-q).reduce((x, y)=>x + y, 0) / q, mn = Math.min(...s), mean = s.reduce((x, y)=>x + y, 0) / s.length, key = t.keys[k];
+    return key === "1" ? Math.abs(b - a) < 1.3 && mean >= 2.8 : key === "2" ? b - mn >= .7 && b > a : key === "3" ? mn <= 2.2 : key === "h" ? mn <= 2.4 && b <= a + .6 : key === "4" ? a - b >= 1.2 : true; });
+  const TIP = {1: "要平平地停在高处", 2: "要往上走", 3: "要先压低", h: "只要往下压，不用升", 4: "要从高处往下滑"};
+  fb.innerHTML = res.map((ok, k)=>ok ? `✓ 「${esc(w[k])}」${Z("走对了")}` : `↻ 「${esc(w[k])}」${Z(TIP[t.keys[k]] || "再试一次")}`).join("　") + `<br><small>${Z("只是大概的提示，不打分")}</small>`;
+  if (res.every(Boolean) && n === 2){ const D = fyGet(); (D.c || (D.c = {}))[t.T.join("")] = 1; fyPut(D); const g = document.querySelector(`#fySheet [data-fyg="${t.T.join("")}"]`); if (g) g.classList.add("on"); } }
+// 我的船：声调卡 → 声调页（16 种组合各一段短片 + 听错了会出事）
+function fyBoatHtml(){ if (!LEARN_ZH) return ""; const D = fyGet(), n = Object.keys(D.c || {}).length;
+  return `<div class="ck-boat"><div><b>🗣️ ${Z("两个字的声调")} ${n}/16</b><small>${Z("看短片里那一句，跟着说；还有「听错了会出事」")}</small></div><button class="chip hot" data-fyopen>${Z("练")}</button></div>`; }
+function fyOpen(){ let sh = document.getElementById("fySheet"); if (!sh){ sh = document.createElement("div"); sh.id = "fySheet"; sh.dataset.nopy = ""; document.body.appendChild(sh); }
+  const D = fyGet(), R2 = "https://img.heyvoyo.com/clips/", pair = (P, i)=>`<div class="fy-clip"><div class="fy-vid"><video muted loop playsinline preload="none" poster="${R2 + P.sid}.webp" data-src="${R2 + P.sid}.mp4"></video><div class="fy-cap"><b>👂 ${Z("这段短片里说的是哪个？")}</b></div></div>
+    <div class="fy-say"><span class="fy-tag">${Z("听错了会出事")}</span><div class="zi-row"><button class="zi-b" data-fyplay="${i}">🔊 ${Z("听这一句")}</button></div><div class="zi-row">${[P.a, P.b].map((x, j)=>`<button class="zi-b fy-pk" data-fypick="${i}" data-j="${j}"><b>${esc(x[0])}</b> ${esc(x[1])} <small>${esc(x[2])}</small></button>`).join("")}</div><div class="zi-msg" id="fyw${i}"></div></div></div>`;
+  sh.innerHTML = `<div class="ck-top"><button class="ck-x" data-fyx aria-label="${Z("关上")}">✕</button><b>🗣️ ${Z("两个字的声调")}</b><span id="fyCnt">${Object.keys(D.c || {}).length}/16</span></div><div class="ck-body">
+    <div class="fy-grid">${Array.from({length: 16}, (_, k)=>{ const g = `${(k >> 2) + 1}${(k & 3) + 1}`; return `<i data-fyg="${g}" class="${(D.c || {})[g] ? "on" : ""}">${g[0]}+${g[1]}</i>`; }).join("")}</div>
+    ${FY_TONES.map(([w, sid, line], i)=>{ const P = FY_PAIRS.find(p=>p.at === i); return (P ? pair(P, FY_PAIRS.indexOf(P)) : "") + `<div class="fy-clip"><div class="fy-vid"><video muted loop playsinline preload="none" poster="${R2 + sid}.webp" data-src="${R2 + sid}.mp4"></video><div class="fy-cap"><b class="py-on" data-py="${esc(line)}">${esc(line)}</b></div></div><div class="fy-say"><b>${Z("跟着说")}</b> ${fyRoadHtml(w)}</div></div>`; }).join("")}</div>`;
+  sh.hidden = false; sh.offsetWidth; sh.classList.add("on"); fyInit(sh); addPinyin(sh);
+  const body = sh.querySelector(".ck-body"), io = new IntersectionObserver(E=>E.forEach(e=>{ const v = e.target; if (e.isIntersecting){ if (!v.src) v.src = v.dataset.src; v.play().catch(()=>{}); } else v.pause(); }), {root: body, threshold: .6});
+  sh.querySelectorAll("video").forEach(v=>io.observe(v)); }
+let FYQ = [];
+document.addEventListener("click", ev=>{ const t = ev.target.closest("[data-fyopen],[data-fyx],[data-fyhear],[data-fyplay],[data-fypick]"); if (!t) return; const d = t.dataset;
+  if (d.fyopen != null) return fyOpen();
+  if (d.fyx != null){ const sh = document.getElementById("fySheet"); sh.querySelectorAll("video").forEach(v=>v.pause()); sh.classList.remove("on"); setTimeout(()=>{ if (!sh.classList.contains("on")) sh.hidden = true; }, 350); const b = document.getElementById("boatPg"); if (b && !b.hidden){ const y = b.scrollTop; b.innerHTML = bpHtml(); b.scrollTop = y; } return; }
+  if (d.fyhear != null) return fyHear(t.closest(".fy-road"));
+  if (d.fyplay != null){ const i = +d.fyplay, P = FY_PAIRS[i]; FYQ[i] = Math.random() < .5 ? 0 : 1; bpSay(FYQ[i] ? P.line.replace(P.a[0], P.b[0]) : P.line); document.getElementById("fyw" + i).textContent = ""; t.closest(".fy-say").querySelectorAll(".fy-pk").forEach(b=>b.classList.remove("ok", "no")); return; }
+  if (d.fypick != null){ const i = +d.fypick, P = FY_PAIRS[i], m = document.getElementById("fyw" + i); if (FYQ[i] == null){ m.textContent = Z("先点「听这一句」"); return; }
+    const ok = +d.j === FYQ[i], heard = FYQ[i] ? P.b : P.a; t.classList.add(ok ? "ok" : "no"); m.innerHTML = `${ok ? "✓ " + Z("听对了") : Z("听到的是")}：<b>${esc(heard[0])}</b> ${esc(heard[1])}<br>${esc(Z(P.why))}`; FYQ[i] = null;
+    if (ok){ const D = fyGet(); (D.p || (D.p = {}))[i] = 1; fyPut(D); } }
+});
+document.addEventListener("pointerdown", ev=>{ const t = ev.target.closest("[data-fyrec]"); if (!t) return; ev.preventDefault(); t.classList.add("on"); fyRec(t.closest(".fy-road")); });
+document.addEventListener("pointerup", ()=>{ document.querySelectorAll(".fy-rec.on").forEach(b=>b.classList.remove("on")); if (FYR) setTimeout(()=>FYR && FYR.stop(), 250); });
 function tkHeadHtml(id, k){ const L = tkClips(id, k); if (!L.length) return "";
   const sd = matchMedia("(max-width:700px)").matches;
   return `<div class="tk-head tk-heads"><div class="tk-hs">${L.map((c, i)=>{ const src = (sd && c.src_sd) || c.src, R = TK_ROLE[c.role];
@@ -10404,7 +10505,7 @@ setTimeout(twPinsDraw, 1500);
 function bpHtml(){ const R = typeof LIB !== "undefined" ? routeBuild() : [], L = blGet(), sk = bpStreak(), en = UI !== "zh", h = new Date().getHours();
   const hi = h < 11 ? Z("早上好") : h < 18 ? Z("下午好") : Z("晚上好"), walked = R.flatMap(s=>s.st).filter(x=>x.done).length;
   return `<div class="bp-wrap"><div class="bp-hello"><div><h2>${hi} 👋</h2><small>${Z("学")}${esc(LEARN_LANGS[LEARN] ? (en ? LEARN_LANGS[LEARN].name.en : LEARN_LANGS[LEARN].name.zh) : "")}</small></div>${sk ? `<span class="bp-streak">🔥 ${Z("连续出海")} ${sk} ${Z("天")}</span>` : ""}</div>
-    ${bpVoyage(R, L)}${bpPeople(R, L)}${ckBoatHtml()}${ziBoatHtml()}
+    ${bpVoyage(R, L)}${bpPeople(R, L)}${ckBoatHtml()}${ziBoatHtml()}${fyBoatHtml()}
     <div class="bp-seg"><button data-bpv="path"${bpView === "path" ? ' class="on"' : ""}>⛵ ${Z("我的航线")} · ${walked} ${Z("站")}</button><button data-bpv="hold"${bpView === "hold" ? ' class="on"' : ""}>🧳 ${Z("船舱和日志")}</button></div>
     ${bpView === "path" ? bpPath(R) : bpHold(R, L)}</div>`; }
 function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.getElementById("boatPg");
