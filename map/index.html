@@ -1,4 +1,4 @@
-<!doctype html><html><head><base href="/"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/app/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="/app/icon-192.png"><meta name="theme-color" content="#2179d2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HeyVoyo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><script>if("serviceWorker" in navigator) addEventListener("load", ()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><title>环球文化贴纸地图</title>
+<!doctype html><html><head><base href="/"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/app/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="/app/icon-192.png"><meta name="theme-color" content="#2179d2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HeyVoyo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><script>if("serviceWorker" in navigator) addEventListener("load", ()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script><script>if(location.protocol==="capacitor:")addEventListener("error",function(e){var t=e.target,o=location.origin+"/",a=t&&t.getAttribute&&(t.src||"");if(!a||a.indexOf(o)||t.dataset.hvNet)return;t.dataset.hvNet=1;t.src="https://heyvoyo.com/"+a.slice(o.length);if(t.tagName==="SOURCE"&&t.parentNode)t.parentNode.load()},true);</script><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><title>环球文化贴纸地图</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'"><!-- 字体拉不到（大陆常见）也不卡页面，先用系统字体 -->
 <style>
@@ -692,6 +692,11 @@ figcaption b ruby{cursor:pointer}figcaption .zi-tip{font-style:normal;font-size:
   #isleFest .e{font-size:28px}#isleFest .t{flex:1;min-width:0}#isleFest b{display:block;font-size:14.5px}#isleFest small{display:block;opacity:.9;font-size:12px;line-height:1.35}#isleFest .g{background:#fff;color:#6a3bd6;border-radius:999px;padding:2px 10px;font-weight:800;font-size:12px;white-space:nowrap}
   body.isle-big #isleStageToday{order:4;margin:0 12px 8px;width:auto;max-height:none;overflow:visible;flex:none}
   body.isle-big #isleStage #card{order:5;margin:0 8px 8px;width:auto;height:auto;max-height:none;overflow:visible;flex:none}
+  /* 手机屏幕小：岛和主题页贴边，门头短片左右铺满（用户 2026-11-03：白边浪费，字幕和拼音要看得清） */
+  body.isle-big #isleStage{left:0;right:0;top:0;border-radius:0}
+  body.isle-big #isleStage #card{margin:0 0 8px;padding:14px 12px 12px;border-radius:22px 22px 0 0}
+  body.isle-big #plDetail .tk-heads{margin-left:-12px;margin-right:-12px}
+  body.isle-big #plDetail .tk-hs{border-radius:0}
   body.isle-big #isleStage>#isleStageBar{order:6;margin:0 10px 96px;flex:none;justify-content:center}
   body.isle-big #isleStageMap,body.isle-big #isleBoardX,body.isle-big #isleStageN{display:none!important}
   body.isle-big #isleMoreM{position:fixed;right:20px;bottom:150px}
