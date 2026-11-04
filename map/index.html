@@ -20540,11 +20540,14 @@ function bpAct(e){ const t = e.target.closest("[data-a]"); if (!t || t.disabled 
 const galPhone = () => window.matchMedia && window.matchMedia("(max-width: 700px)").matches;
 // 手机上：语言卡片关了以后，先看到群岛；底部三个按钮切换群岛 / 地图 / 我的船
 let galQuiet = 0;   // 卡片（比如第一次的语言卡片）连续两次检查都关着，才打开群岛，免得盖住它
+// 打开网页时的地址：等语言卡片的时候，点「完成」会把地址改成 #map，不能拿那个当成用户要去地图（2026-11-04：第一次打开关掉卡片后底部按钮不见了）
+const galH0 = decodeURIComponent(location.hash.slice(1));
 function galBoot(){ if (!galPhone() && typeof ISLE_TALK !== "undefined" && !document.getElementById("galTabs")) galTabs("map");   // 电脑上：地图先开，下面一样有三个按钮
-  const h0 = decodeURIComponent(location.hash.slice(1));
+  const h0 = galH0;
   if (!galPhone() || typeof ISLE_TALK === "undefined" || /[?&]go=/.test(location.search)){ if (h0 && h0 !== "map" && typeof ISLE_TALK !== "undefined" && card.hidden) rtGo(h0); setTimeout(rtSync, 800); return; }
   galQuiet = card.hidden ? galQuiet + 1 : 0; if (galQuiet < 2){ setTimeout(galBoot, 900); return; }
-  if (h0 && h0 !== "map") rtGo(h0); else if (!h0) bpOpen(); setTimeout(rtSync, 900); }
+  if (h0 && h0 !== "map") rtGo(h0); else if (!h0) bpOpen(); else galTabs("map");   // 打开的就是 #map：留在地图，底部按钮也要有
+  setTimeout(rtSync, 900); }
 setTimeout(galBoot, 2500);
 // 📱 手机上的地图像 Google 地图：贴纸卡片变成底部抽屉（露一小条 / 一半 / 全屏，拖把手或点一下换），
 // 没打开卡片时，抽屉是「这一片有什么」——屏幕里的贴纸排成列表，滑地图跟着换，手指不用点准小图标；右下 📍 回到自己的城市
