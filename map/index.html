@@ -14188,6 +14188,7 @@ async function hvInit(){
   return true;
 }
 
+function hvBlocked(){ try { return new Set(JSON.parse(localStorage.getItem("soc.block.v1") || "[]")); } catch(e){ return new Set(); } }
 // ---- 文档数据库：模仿 claude.ai 的 collection / doc / onSnapshot 接口，背后是一张 docs 表
 function hvDb(){
   const sb = HV.sb, uid = () => HV.session && HV.session.user.id;
@@ -14213,12 +14214,14 @@ function hvDb(){
       orderBy: (f, dir) => query(coll, {...opts, order: [f, dir || "asc"]}),
       limit: n => query(coll, {...opts, limit: n}),
       async get(){
-        let r = sb.from("docs").select("id,data").eq("coll", coll);
+        let r = sb.from("docs").select("id,data,owner").eq("coll", coll);
         (opts.where || []).forEach(([f, op, v])=>{ if (op === "==") r = r.eq(field(f), String(v)); else if (op === "in") r = r.in(field(f), v.map(String)); });
         if (opts.order){ const f = opts.order[0], num = f === "ts"; r = r.order(num ? "created_at" : field(f), {ascending: opts.order[1] !== "desc"}); }
         if (opts.limit) r = r.limit(opts.limit);
         const res = await r; if (res.error) throw res.error;
         let rows = res.data || [];
+        // 屏蔽的人：他发的东西（照片、回复、帖子、评论、私信……）一律不显示（名单在「我 → 屏蔽名单」，存 soc.block.v1）
+        const bl = hvBlocked(); if (bl.size && coll !== "profiles") rows = rows.filter(row=>{ const d = row.data || {}; return !(bl.has(row.owner) || bl.has(d.by) || bl.has(d.author) || bl.has(d.from) || bl.has(d.uid)); });
         if (opts.order && opts.order[0] === "ts") rows.sort((a, b)=>((a.data.ts || 0) - (b.data.ts || 0)) * (opts.order[1] === "desc" ? -1 : 1));
         const docs = rows.map(snapDoc);
         return {docs, size: docs.length, empty: !docs.length, docChanges: ()=>[], metadata: {fromCache: false, hasPendingWrites: false}};
@@ -16513,7 +16516,7 @@ function tkSelfHtml(id, k){ const X = tkOf(id, k); if (!X || !(X.self || X.chat)
     <div class="tk-post-l">${esc(line)}</div>${gloss ? `<small class="note">${esc(gloss)}</small>` : ""}<div class="tk-post-a"><button class="chip" data-say="${esc(line)}" data-tts="${LEARN_TTS}" data-rate=".9">🔊</button>${act || `<button class="chip" data-tkcopy="${esc(line)}">✏️ ${Z("照着写")}</button>`}</div></div></div>`;
   return `<div class="tk-self">${tkAskYouHtml(id, k) || `<p class="tk-self-t">${esc(bmU(S.t))}</p>`}
     <div class="tk-posts">${(X.posts || []).map(q=>{ const n = npcAny(q.npc) || {}; return post(q.img, `<span class="tk-post-av">${npcAv(n, 26)}</span><b>${esc(n.name || "")}</b> <span class="tk-role">🎭 ${Z("角色")}</span>`, q.t, bmT(q.line), bmG(q.line), "", q.img ? `<small class="tk-cr2">${Z("图：Pexels 示意图，不是")} ${esc(n.name || "")} ${Z("拍的")}</small>` : ""); }).join("")}
-      ${fr.map(m=>post(m.img, `<b>${esc(socName(m.author) || Z("一位伙伴"))}</b>`, day(m), m.text, "", `<button class="chip" data-tkcopy="${esc(m.text)}">✏️ ${Z("照着写")}</button><button class="chip" data-tkrep="${esc(m.docId)}" title="${Z("举报")}">⚑</button>`)).join("")}
+      ${fr.map(m=>post(m.img, `<b>${esc(socName(m.author) || Z("一位伙伴"))}</b>`, day(m), m.text, "", `<button class="chip" data-tkcopy="${esc(m.text)}">✏️ ${Z("照着写")}</button><button class="chip" data-tkrep="${esc(m.docId)}" title="${Z("举报")}">⚑</button>${m.author && m.author !== SOC.uid ? `<button class="chip" data-blk="${esc(m.author)}">🚫 ${(UI === "zh" ? "屏蔽" : "Block")}</button>` : ""}`)).join("")}
       ${mine.map(m=>post(m.img, `<b>${Z("我")}</b>${m.privacy === "mutual" ? ` <small>👥</small>` : ` <small>🔒</small>`}`, day(m), m.text, "", `<span class="tk-me">${Z("我的")}</span><button class="chip" data-tkdel="${esc(m.docId || "")}" data-tkts="${m.ts || ""}" title="${Z("删掉")}">🗑</button></div><div class="tk-tags">🏝️ ${(m.tags || [id]).map(t=>`<span class="tk-tag">${esc(isleNm(t))}<button data-tktagx="${esc(t)}" data-tkts="${m.ts || ""}" data-tkdoc="${esc(m.docId || "")}" aria-label="${Z("去掉")}">✕</button></span>`).join("")}<select data-tktaga data-tkts="${m.ts || ""}" data-tkdoc="${esc(m.docId || "")}" aria-label="${Z("放到另一座岛")}"><option value="">＋</option>${Object.keys(CPIN.clubs || {}).filter(c=>!(m.tags || [id]).includes(c)).map(c=>`<option value="${c}">${esc(isleNm(c))}</option>`).join("")}</select>`)).join("")}</div>
     <div class="tk-compose"><label class="tk-pick"><input type="file" accept="image/*" data-tkfile hidden><span data-tkpick>${tkPhoto ? `<img src="${tkPhoto}" alt="">` : `📷 ${Z("跟一张：选一张你现在的照片")}`}</span></label>
       <textarea rows="2" data-tkself placeholder="${esc(bmT((X.posts || [])[0] ? X.posts[0].line : S.lines[0]))}"></textarea>
@@ -16642,7 +16645,7 @@ function ttHtml(id, k){ if (!TT_ON(id, k)) return ""; const key = id + ":" + k, 
       <div class="chips tt-acts">${mine ? (mt.length ? `<span class="note">🙋 ${mt.length}</span>` : "") : `<button class="chip${mt.some(x=>x.author === me) ? " on" : ""}" data-ttmetoo="${esc(p.id)}">🙋 ${Z("我也是")}${mt.length ? " · " + mt.length : ""}</button>`}
         ${!mine && p.l !== UI && !showM && !tr ? `<button class="chip" data-tttr="${esc(p.id)}">🌐 ${Z("翻译")}</button>` : tr && tr.link ? `<a class="chip" href="${esc(tr.link)}" target="_blank" rel="noopener">🌐 ${Z("在谷歌翻译里看")} ↗</a>` : ""}
         ${canFix ? `<button class="chip" data-ttfix="${esc(p.id)}">✏️ ${Z("改一个词")}</button>` : ""}${canAns ? `<button class="chip" data-ttfix="${esc(p.id)}">💬 ${Z("回答")}</button>` : ""}
-        ${!mine && me ? `<button class="chip tt-rep" data-ttrep="${esc(p.id)}" title="${Z("举报")}">⚑</button>` : ""}${mine ? `<button class="chip tt-rep" data-ttdel="${esc(p.id)}">🗑</button>` : ""}</div>
+        ${!mine && me ? `<button class="chip tt-rep" data-ttrep="${esc(p.id)}" title="${Z("举报")}">⚑</button>${p.author ? `<button class="chip tt-rep" data-blk="${esc(p.author)}" title="${(UI === "zh" ? "屏蔽" : "Block")}">🚫</button>` : ""}` : ""}${mine ? `<button class="chip tt-rep" data-ttdel="${esc(p.id)}">🗑</button>` : ""}</div>
       ${TT_FX[p.id] ? `<div class="tt-fixbox"><textarea rows="2" data-ttfixt="${esc(p.id)}">${p.ask ? "" : esc(p.t)}</textarea><input data-ttfixw="${esc(p.id)}" placeholder="${p.ask ? Z("（可以不写）") : Z("为什么这样改？（可以不写）")}"><button class="chip hot" data-ttfixgo="${esc(p.id)}">${p.ask ? Z("发出去") : Z("改好了")}</button></div>` : ""}
       ${fx.map(x=>{ const thx = X.some(y=>y.kind === "thx" && y.p === p.id && y.t === x.id);
         return `<div class="tt-fix">${x.kind === "fix" ? "✏️" : "💬"} <b>${x.author === me ? Z("我") : esc(x.nm || Z("一位伙伴"))}</b> ${x.kind === "fix" ? Z("改了一下") : ""}<div data-ttsayt="${esc(x.t)}" data-ttl="${esc(x.kind === "fix" ? p.l : "")}">${esc(x.t)}</div>${x.why ? `<small class="note">${esc(x.why)}</small>` : ""}
@@ -19636,6 +19639,12 @@ const isBot = id => !!(SOC.profiles[id] && SOC.profiles[id].bot);
 const socName = id => id === SOC.uid ? "我" : (isBot(id) ? (SOC.profiles[id].name || "测试伙伴") : (SOC.names[id] || ""));
 const SOC_BLOCK_KEY = "soc.block.v1";
 const socBlocked = () => { try { return JSON.parse(localStorage.getItem(SOC_BLOCK_KEY) || "[]"); } catch(e){ return []; } };
+// 屏蔽这个人（苹果审核 1.2 要求）：名单存 soc.block.v1、跟账号同步；数据层（backend_shim 的 hvBlocked）把他发的所有东西都滤掉
+function blockUser(uid){ if (!uid || uid === SOC.uid) return; const zh = UI === "zh";
+  if (!confirm(zh ? "屏蔽以后，你不会再看到这个人发的照片、回复、帖子和私信。可以在「我 → 屏蔽名单」里取消。" : "You won't see this person's photos, replies, posts or messages any more. You can undo this in Me → Blocked people.")) return;
+  const l = socBlocked(); if (!l.includes(uid)) l.push(uid); try { localStorage.setItem(SOC_BLOCK_KEY, JSON.stringify(l)); } catch(e){} if (typeof syncMark === "function") syncMark(SOC_BLOCK_KEY); location.reload(); }
+function unblockUser(uid){ const l = socBlocked().filter(x=>x !== uid); try { localStorage.setItem(SOC_BLOCK_KEY, JSON.stringify(l)); } catch(e){} if (typeof syncMark === "function") syncMark(SOC_BLOCK_KEY); }
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-blk]"); if (!b) return; e.preventDefault(); e.stopPropagation(); blockUser(b.dataset.blk); }, true);
 const follows = (a, b) => (typeof isBot === "function" && isBot(a) && b === SOC.uid) || SOC.follows.some(f=>f.from===a && f.to===b);
 const mutual = (a, b) => follows(a, b) && follows(b, a);
 const pairKey = (a, b) => [a, b].sort().join("__");
@@ -21375,7 +21384,7 @@ function htItemHtml(h){ const mine = htMine(h), n = HT_THX[h.id] || 0, home = !h
   return `<div class="ht-post"><div class="ht-av">${h.vid ? "🎬" : h.audio ? "🎧" : "📷"}</div><div>
     <div class="ht-h"><b>${esc(h.name || Z("一位旅人"))}</b>${home ? `<small>${Z("来自")} ${esc(home.city)}</small>` : h.stk ? "" : `<small>${esc(h.city)}</small>`}${lang === LEARN ? `<span class="ht-b lang">${Z("你在学的")}</span>` : ""}${Date.now() - (h.ts || 0) < HT_NEW ? `<span class="ht-b new">${Z("新")}</span>` : ""}<span class="ht-b">${kind}</span>${mine ? `<span class="ht-b">${Z("我的")}</span>` : ""}</div>
     ${htCardHtml(h)}
-    <div class="chips" style="margin-top:2px">${mine ? `<button class="chip" data-htedit="${esc(h.stk || "")}">✏️ ${Z("改")}</button><button class="chip" data-htdel="${esc(h.id)}">🗑 ${Z("删掉")}</button>${n ? `<span class="note">🙏 ${n}</span>` : ""}` : `<button class="chip" data-htthx="${esc(h.id)}"${HT_MYTHX.has(h.id) ? " disabled" : ""}>🙏 ${HT_MYTHX.has(h.id) ? Z("谢谢过了") : Z("谢谢")} · ${n}</button><button class="chip" data-htrep="${esc(h.id)}">⚑ ${Z("举报")}</button>`}</div></div></div>`; }
+    <div class="chips" style="margin-top:2px">${mine ? `<button class="chip" data-htedit="${esc(h.stk || "")}">✏️ ${Z("改")}</button><button class="chip" data-htdel="${esc(h.id)}">🗑 ${Z("删掉")}</button>${n ? `<span class="note">🙏 ${n}</span>` : ""}` : `<button class="chip" data-htthx="${esc(h.id)}"${HT_MYTHX.has(h.id) ? " disabled" : ""}>🙏 ${HT_MYTHX.has(h.id) ? Z("谢谢过了") : Z("谢谢")} · ${n}</button><button class="chip" data-htrep="${esc(h.id)}">⚑ ${Z("举报")}</button>${SOC.uid ? `<button class="chip" data-blk="${esc(h.id)}">🚫 ${(UI === "zh" ? "屏蔽" : "Block")}</button>` : ""}`}</div></div></div>`; }
 // 「大家说」：前 3 条，其余点「看全部」
 function htSaysHtml(G, all){ const L = [...G.items].sort((a, b)=>htScore(b) - htScore(a)), show = all ? L : L.slice(0, 3);
   return `<section class="ht-says" data-htg="${esc(G.key)}">${G.stk ? `<h3>👥 ${Z("大家说")} · ${L.length}</h3>` : ""}${show.map(htItemHtml).join("")}
@@ -21832,7 +21841,7 @@ ${me.chat.slice(-12).map(m=>(m.from === "me" ? "用户：" : c.name + "：") + m
 }
 // ===== 🔄 登录同步：心情、船舱、插旗、今天的航线、准备册、小帆船、圈子……存在一份只有你自己能读的文档里（data/users/<你>/sync），换一台设备登录也还在 =====
 // 每个键记一个修改时间，谁新用谁；这台设备从没同步过时，把两边合在一起（列表取并集），谁的东西都不丢
-const SYNC_KEYS = ["ptab.v1", ...["london", "manchester", "dublin", "new_york", "san_francisco", "toronto", "sydney", "singapore"].map(c=>"hv.people." + c), ...["shanghai", "beijing", "chengdu", "guangzhou"].map(c=>"hv.peoplezh." + c), "boatlog.v1", "libm.v1", "myisles.v1", "voyplan.v1", "cultrip.v2", "voyage.v2", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1", "practice.v1", "myasks.v1", "myints.v1", "localsays.v1",
+const SYNC_KEYS = ["ptab.v1", "soc.block.v1", ...["london", "manchester", "dublin", "new_york", "san_francisco", "toronto", "sydney", "singapore"].map(c=>"hv.people." + c), ...["shanghai", "beijing", "chengdu", "guangzhou"].map(c=>"hv.peoplezh." + c), "boatlog.v1", "libm.v1", "myisles.v1", "voyplan.v1", "cultrip.v2", "voyage.v2", "talk.body_mind", "talk.eat_well", "talk.pet_club", "talk.life_abroad", "talk.first_money", "talk.fun_club", "talk.dev_club", "talk.trends_now", "talk.fashion_club", "talk.see_world", "talk.economy_club", "talk.social_money", "talk.people_values", "talk.life_questions", "talk.med_club", "talk.growth_club", "express.v1", "flags.v1", "voyage.v1", "skill.keep", "prep.v1", "boat.at", "boat.visits", "cpin.follow", "cpin.seen", "hv.city", "mychars.v1", "practice.v1", "myasks.v1", "myints.v1", "localsays.v1",
   ...["eat_well", "pet_club", "body_mind", "life_abroad", "first_money", "dev_club", "trends_now", "fashion_club", "see_world", "economy_club", "social_money", "people_values", "life_questions", "med_club", "growth_club", "fun_club"].map(c=>"wb." + c)];   // 每座岛的词汇本
 const syncTs = () => cpLS("sync.ts") || {};
 let syncT = null, syncPulled = false;
@@ -22215,6 +22224,8 @@ function openMe(){
     ${SOC.site ? row("meLb","🛟","我的救生圈",`<span id="meLbN">…</span> · 用 AI 帮忙、拍照认东西时用`) : ""}
     ${SOC.site ? row("mePw","🔑","设置 / 修改密码","设了以后可以直接用邮箱 + 密码登录") : ""}
     ${SOC.site ? `<div class="soc-form" id="pwForm" hidden><label for="pw1">新密码（至少 8 位）</label><input id="pw1" type="password" autocomplete="new-password"><label for="pw2">再输一次</label><input id="pw2" type="password" autocomplete="new-password"><button class="chip hot" id="pwSave">保存密码</button><span class="note" id="pwNote"></span></div>` : ""}
+    ${socBlocked().length ? row("meBlk","🚫",UI === "zh" ? "屏蔽名单" : "Blocked people", socBlocked().length + (UI === "zh" ? " 个人" : "")) : ""}
+    <div class="soc-form" id="blkForm" hidden>${socBlocked().map(u=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="flex:1">${esc((SOC.profiles[u] || {}).name || (UI === "zh" ? "一位用户" : "A user"))}</span><button class="chip" data-unblk="${esc(u)}">${UI === "zh" ? "取消屏蔽" : "Unblock"}</button></div>`).join("")}</div>
     ${SOC.site ? row("meOut","↩️","退出登录","") : ""}
     ${SOC.site ? row("meDel","🗑️",UI === "zh" ? "删除账号" : "Delete account",UI === "zh" ? "永久删掉账号和存在账号里的东西" : "Permanently delete your account and what's saved in it") : ""}
     ${SOC.site ? `<div class="soc-form" id="delForm" hidden><p class="note">${UI === "zh" ? "删除以后：账号、昵称、存在账号里的学习记录、照片、家乡贴纸、救生圈都会永久删掉，找不回来。这台手机上的学习进度会留着。" : "This permanently deletes your account, name, synced progress, photos, hometown stickers and lifebuoys. It can't be undone. Progress saved on this phone stays."}</p><button class="chip" id="delYes" style="background:#c0392b;color:#fff;border-color:#c0392b">${UI === "zh" ? "永久删除我的账号" : "Delete my account forever"}</button> <button class="chip" id="delNo">${UI === "zh" ? "算了" : "Cancel"}</button><span class="note" id="delNote"></span></div>` : ""}`;
@@ -22230,6 +22241,8 @@ function openMe(){
   go("#meLearn", ()=>{ openSoc(); const h = [...card.querySelectorAll("h3")].find(x=>x.textContent.includes("跟读本")); if (h) h.scrollIntoView(); });
   go("#meReview", ()=>openReview());
   go("#meOut", ()=>hvSignOut());
+  go("#meBlk", ()=>{ const f = card.querySelector("#blkForm"); f.hidden = !f.hidden; });
+  card.querySelectorAll("[data-unblk]").forEach(b=>b.onclick = ()=>{ unblockUser(b.dataset.unblk); b.closest("div").remove(); });
   go("#meDel", ()=>{ const f = card.querySelector("#delForm"); f.hidden = !f.hidden; if (!f.hidden) f.scrollIntoView({block: "nearest"}); });
   go("#delNo", ()=>{ card.querySelector("#delForm").hidden = true; });
   go("#delYes", async ()=>{ const b = card.querySelector("#delYes"), n = card.querySelector("#delNote"); b.disabled = true; n.textContent = UI === "zh" ? " 正在删除…" : " Deleting…";
@@ -22250,12 +22263,12 @@ async function lbOpen(empty){
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#f08c00">🛟</div><div><h2>我的救生圈</h2><span class="c-cat" style="background:#f08c00">读取中…</span></div></div>`;
   card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard;
   const [n, packs, led] = await Promise.all([hvLifebuoys(), hvLbPacks(), hvLbLedger(10)]);
-  const gbp = p => "£" + (p / 100).toFixed(2);
+  const gbp = p => "£" + (p / 100).toFixed(2), lbShop = !(typeof hvInApp === "function" && hvInApp());   // iPhone App 里先不卖（苹果规定数字商品只能用 App 内购买，接好之前不显示价格）
   card.innerHTML = `<button class="x" aria-label="关闭">✕</button><div class="c-top"><div class="c-emo" style="border-color:#f08c00">🛟</div><div><h2>我的救生圈</h2><span class="c-cat" style="background:#f08c00">还有 ${n ?? 0} 个</span></div></div>
-    ${empty ? `<p class="lb-warn">救生圈用完了。买一包就能继续用 AI。</p>` : ""}
+    ${empty ? `<p class="lb-warn">${lbShop ? "救生圈用完了。买一包就能继续用 AI。" : "救生圈用完了。帮别人回答问题、被谢谢时会得到新的救生圈。"}</p>` : ""}
     <p class="note">让 AI 帮你改句子、陪你练对话、拍照认东西，每次用 1 个 🛟（复杂的用 2 个）。出错没回答时会退回。岛上的词、句子、常识、听力一直免费。</p>
-    <h3>买救生圈</h3>
-    <div class="lb-packs">${packs.map(p=>`<button class="lb-pack" data-pack="${esc(p.id)}"><b>${p.lifebuoys} 🛟</b><span>${esc(p.label_zh)}</span><em>${gbp(p.price_pence)}</em><small>${(p.price_pence / p.lifebuoys).toFixed(1)}p / 个</small></button>`).join("")}</div>
+    ${lbShop ? `<h3>买救生圈</h3>
+    <div class="lb-packs">${packs.map(p=>`<button class="lb-pack" data-pack="${esc(p.id)}"><b>${p.lifebuoys} 🛟</b><span>${esc(p.label_zh)}</span><em>${gbp(p.price_pence)}</em><small>${(p.price_pence / p.lifebuoys).toFixed(1)}p / 个</small></button>`).join("")}</div>` : ""}
     <p class="note" id="lbNote"></p>
     <h3>最近的进出</h3>
     ${led.length ? `<ul class="lb-led">${led.map(l=>`<li><span>${esc(LB_REASON[l.reason] || (l.reason.startsWith("purchase") ? "购买" : l.reason.startsWith("gift") ? "赠送" : l.reason))}</span><b class="${l.delta > 0 ? "up" : "down"}">${l.delta > 0 ? "+" : ""}${l.delta}</b><small>${new Date(l.created_at).toLocaleDateString()}</small></li>`).join("")}</ul>` : `<p class="note">还没有记录。</p>`}`;
