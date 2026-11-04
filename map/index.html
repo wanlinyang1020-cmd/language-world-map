@@ -14016,13 +14016,14 @@ const CSS = `#ppPg,#ppPerson{position:fixed;inset:0;z-index:40;overflow-y:auto;b
 //   🌍 今日世界的新一期（TODAY_WORLD）· 👋「人」里有人那天发了新动态（PTAB）· ☕ 熟客在等你（window.PR.due()）；哪种那天没有就换下一种。
 // 今天的今日世界做完了，今天就不再提今日世界。每次打开 App、从后台回来、做完今日世界都重新排一遍（内容跟着日历走）。
 // 点通知 → 打开对应那一栏（今日世界 / 人 / 我的船）。
+// 「跟着我的习惯」（2026-11-05，默认）：记下每天第一次打开 App 的时间（hv.appnotify.seen，留 14 天），取最近 5 天的中间值当提醒时间；当天已经用过就不提醒。存 {t:"auto"}。
 // 什么时候问：做完今日世界的结果页（原来放网页提醒的那块）；第一次在「人」里回了一句，弹一次小卡。存：hv.appnotify = {t:"HH:MM"}，hv.appnotify.asked。
 // 对外：window.HVN = {app, hook, html, wire, ask, schedule}；主程序（template2）把打开各栏的函数交给 hook。
 (function(){
 const Cap = () => window.Capacitor;
 const app = () => { try { return !!(Cap() && Cap().isNativePlatform && Cap().isNativePlatform() && Cap().Plugins && Cap().Plugins.LocalNotifications); } catch(e){ return false; } };
 const LN = () => Cap().Plugins.LocalNotifications;
-const KEY = "hv.appnotify", ASKED = "hv.appnotify.asked", ID0 = 7000, DAYS = 14;
+const KEY = "hv.appnotify", ASKED = "hv.appnotify.asked", SEEN = "hv.appnotify.seen", ID0 = 7000, DAYS = 14;
 const lsg = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const lss = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} };
 const get = () => { try { return JSON.parse(lsg(KEY) || "null"); } catch(e){ return null; } };
@@ -14034,7 +14035,18 @@ const learn = () => { const l = lsg("hv.learn"); return l && !(l === "zh" && ui(
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const cut = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 const SLOTS = ["08:30", "12:30", "20:00"];
-const lbl = s => ({"08:30": T("早上 8:30", "8:30 am"), "12:30": T("中午 12:30", "12:30 pm"), "20:00": T("晚上 8:00", "8:00 pm")})[s] || s;
+// ── 你的习惯：每天第一次打开的时间 ──
+const hm = d => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+const seenGet = () => { try { return JSON.parse(lsg(SEEN) || "{}"); } catch(e){ return {}; } };
+function markUse(){ const now = new Date(), k = ymd(now), m = seenGet(); if (m[k]) return; m[k] = hm(now);
+  const keep = Object.keys(m).sort().slice(-14), out = {}; keep.forEach(x => { out[x] = m[x]; }); lss(SEEN, JSON.stringify(out)); }
+const usedToday = () => !!seenGet()[ymd(new Date())];
+function habit(){   // 最近 5 天第一次打开时间的中间值；还没记录就用现在
+  const v = Object.keys(seenGet()).sort().slice(-5).map(k => seenGet()[k]).map(t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; }).sort((a, b) => a - b);
+  if (!v.length) return hm(new Date()); const x = v[Math.floor((v.length - 1) / 2)]; return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0"); }
+const when = t => t === "auto" ? habit() : t;
+const clock = t => { const [h, m] = t.split(":").map(Number), pm = h >= 12; return ui() === "zh" ? `${h < 6 ? "凌晨" : h < 12 ? "早上" : h < 14 ? "中午" : h < 18 ? "下午" : "晚上"} ${h > 12 ? h - 12 : h}:${String(m).padStart(2, "0")}` : `${h % 12 || 12}:${String(m).padStart(2, "0")} ${pm ? "pm" : "am"}`; };
+const lbl = s => s === "auto" ? T("跟着我的习惯", "Around my usual time") : ({"08:30": T("早上 8:30", "8:30 am"), "12:30": T("中午 12:30", "12:30 pm"), "20:00": T("晚上 8:00", "8:00 pm")})[s] || s;
 
 // ── 那天的提醒写什么 ──
 function kToday(d){
@@ -14072,8 +14084,8 @@ async function schedule(){
     const ids = Array.from({length: DAYS}, (_, i) => ({id: ID0 + i}));
     try { await LN().cancel({notifications: ids}); } catch(e){}
     const S = get(); if (!S || !S.t) return;
-    const [hh, mm] = S.t.split(":").map(Number), now = Date.now(), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })(), N = [];
-    for (let i = 0; i < DAYS; i++){ const d = new Date(); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); if (d.getTime() < now + 20e3) continue;
+    const auto = S.t === "auto", [hh, mm] = when(S.t).split(":").map(Number), now = Date.now(), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })(), N = [];
+    for (let i = 0; i < DAYS; i++){ const d = new Date(); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); if (d.getTime() < now + 20e3) continue; if (auto && i === 0 && usedToday()) continue;   // 跟着习惯：今天已经来过，就不叫了
       const c = contentFor(d, i, i === 0 && done); if (!c) continue;
       N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d)}}); }
     if (N.length) await LN().schedule({notifications: N});
@@ -14088,15 +14100,16 @@ async function turnOn(t){
 async function turnOff(){ lss(KEY, null); await schedule(); }
 
 // ── 选时间那一块（样子跟今日世界结果页原来的网页提醒一样，多一个「自己定」） ──
-let pick = "20:00", msg = "", own = "";
+let pick = "auto", msg = "", own = "";
 function html(){
   if (!app()) return "";
-  const S = get(), on = S && S.t, cur = on || pick, isOwn = !SLOTS.includes(cur);
+  const S = get(), on = S && S.t, cur = on || pick, isOwn = cur !== "auto" && !SLOTS.includes(cur);
   setTimeout(schedule, 0);   // 结果页 = 今天做完了，顺手重排（今天就不再提今日世界）
-  return `<div class="tw-push hvn-box"><b>🔔 ${on ? T("每天", "Every day at") + " " + esc(lbl(on)) + " " + T("叫你", "") : T("每天准时叫你一声？", "Want a nudge every day?")}</b>
+  return `<div class="tw-push hvn-box"><b>🔔 ${on ? (on === "auto" ? T(`每天在你常来的时间叫你（现在大约${clock(habit())}）`, `Every day around your usual time (now about ${clock(habit())})`) : T("每天", "Every day at") + " " + esc(lbl(on)) + " " + T("叫你", "")) : T("每天准时叫你一声？", "Want a nudge every day?")}</b>
     <small>${on ? T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。点别的时间就换。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Tap another time to change.")
                 : T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。随时能关。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Turn it off any time.")}</small>
-    <div class="tw-pt">${SLOTS.map(s => `<button data-hvnt="${s}"${s === cur ? ' class="on"' : ""}>${esc(lbl(s))}</button>`).join("")}<label class="hvn-own${isOwn ? " on" : ""}">${T("自己定", "Pick a time")} <input type="time" data-hvnown value="${esc(isOwn ? cur : own)}"></label></div>
+    <div class="tw-pt">${["auto", ...SLOTS].map(s => `<button data-hvnt="${s}"${s === cur ? ' class="on"' : ""}>${esc(lbl(s))}</button>`).join("")}<label class="hvn-own${isOwn ? " on" : ""}">${T("自己定", "Pick a time")} <input type="time" data-hvnown value="${esc(isOwn ? cur : own)}"></label></div>
+    ${cur === "auto" ? `<small>${T(`「跟着我的习惯」：按你最近几天第一次打开的时间（现在大约${clock(habit())}），每天自己调；那天已经来过就不叫你。`, `"Around my usual time": based on when you first opened the app over the last few days (now about ${clock(habit())}). It adjusts itself, and skips days you've already been here.`)}</small>` : ""}
     ${on ? `<button class="tw-poff" data-hvnoff>${T("关掉提醒", "Turn off reminders")}</button>` : `<button class="tw-pon" data-hvnon>${T("好，每天叫我", "Yes, remind me daily")}</button>`}
     ${msg ? `<small class="tw-pmsg">${esc(msg)}</small>` : ""}</div>`;
 }
@@ -14129,7 +14142,8 @@ function hook(h){
   H = h || {}; if (!app()) return;
   try { LN().addListener("localNotificationActionPerformed", e => { const x = (e && e.notification && e.notification.extra) || {}, f = H.open && H.open[x.tab];
     if (f) setTimeout(() => { try { f(); } catch(err){} }, 1200); }); } catch(e){}
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) schedule(); });
+  markUse();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden){ markUse(); schedule(); } });
   setTimeout(schedule, 2500);
 }
 const css = `.hvn-own{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:2px solid rgba(0,0,0,.12);font-size:14px}
