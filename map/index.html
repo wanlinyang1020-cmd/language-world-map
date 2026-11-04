@@ -12538,7 +12538,23 @@ function advance(){ step++; if (STEPS[step] === dub && shaky.size && !detoured){
 const ready = () => { const g = $("#prGo"); if (g && g.disabled){ g.disabled = false; g.classList.add("pop"); } };
 const bump = () => { said++; const c = $(".cnt"); if (!c) return; c.textContent = "🗣️ " + said; c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop"); };
 
-// 跟读卡：🔊 听 → 🎤 说。不打叉；没对上的词标出来，再来一次
+// 跟读卡：🔊 听 → 🎤 说。开口就算，马上往下走（用户 2026-11-04：重要的不是说对，是多去说）；
+// 没听清的 1～2 个关键词顺手带一下：🛟 多扶一点 = 词 + 跟我读一次，⛵ 正常 = 只标出来点了能听，🚀 放手 = 不提示。从不让你重说同一句
+const STOP = new Set("a an the i you he she it we they me my your his her our their to of in on at for and or but is are was were be been am do does did have has had can could will would should not no yes so just very really that this there here what when where who how with from by as up out if then than too also oh hey hi okay ok please thanks thank much many these those which one ones some any them him us its into over about after before get got like want need make take go going come".split(" "));
+// 说完以后：没听清的关键词（不挑 the、a 这种），最多两个，顺手带一下，不挡住往下走
+function wordFix(el, miss){
+  if (lv === 2) return;
+  const pick = [...new Set(miss)].filter(w => GL[w] || (w.length > 3 && !STOP.has(w))).sort((a, b) => !!GL[b] - !!GL[a]).slice(0, 2);
+  if (!pick.length) return;
+  const d = document.createElement("div"); d.className = "wfix";
+  d.innerHTML = `<span class="note">${lv === 0 ? "顺手读一下这个词：" : "这个词可以多听听："}</span>${pick.map(w => `<button class="ib lt" data-fw="${esc(w)}">🔊 ${esc((GL[w] && GL[w][2]) || w)}</button>`).join("")}${lv === 0 ? `<button class="ib lt" data-fsay>🎤 跟我读</button>` : ""}`;
+  (el.isConnected ? el : $("#prChat") || el).appendChild(d);   // 熟客里说完那张卡会换成气泡，就放到对话最后
+  d.querySelectorAll("[data-fw]").forEach(b => b.onclick = () => speak(b.dataset.fw, .6));
+  const fs = d.querySelector("[data-fsay]");
+  if (fs) fs.onclick = () => { const R = window.SpeechRecognition || window.webkitSpeechRecognition; speak(pick.join(", "), .6);
+    const ok = () => { fs.textContent = "✓ 读过了"; fs.disabled = true; };
+    if (!R) return ok(); setTimeout(() => { try { const r = new R(); r.lang = "en-GB"; fs.textContent = "● 在听…"; r.onend = ok; r.start(); } catch(e){ ok(); } }, 400 + pick.join(" ").length * 90); };
+}
 function sayCard(el, en, zh, onOk, opt = {}){
   el.className = "say cur"; el.dataset.en = en;
   el.innerHTML = `${opt.tag ? `<div class="note" style="font-size:12px;font-weight:700;margin-bottom:2px">${opt.tag}</div>` : ""}<div class="en">${opt.hide ? `<span class="hint">${esc(opt.hide)}</span>` : wr(en)}</div><div class="zh">${lv === 2 && !opt.hide ? `<span class="zhh">点看意思</span>` : esc(zh)}</div>
@@ -12558,8 +12574,9 @@ function sayCard(el, en, zh, onOk, opt = {}){
     const r = new R(); r.lang = "en-GB"; r.interimResults = true; let got = "";
     mic.classList.add("on"); mic.textContent = "● 在听…说完会自己停";
     r.onresult = e => { got = [...e.results].map(x => x[0].transcript).join(" "); const g = new Set(words(got)); heard.innerHTML = words(en).map(w => g.has(w) ? `<b>${w}</b>` : w).join(" "); };
-    r.onend = () => { mic.classList.remove("on"); const want = words(en), g = new Set(words(got)); if (got && want.filter(w => g.has(w)).length >= want.length * .6) return ok2(true);
-      if (!blocked){ struggled = true; addShaky(en, want.filter(w => !g.has(w))); heard.innerHTML += got ? "　· 绿的说对了，再听一遍？" : "没听到声音"; }
+    r.onend = () => { mic.classList.remove("on"); const want = words(en), g = new Set(words(got));
+      if (got){ const miss = want.filter(w => !g.has(w)); if (miss.length > want.length * .4){ struggled = true; addShaky(en, miss); } ok2(true); return wordFix(el, miss); }
+      if (!blocked) heard.innerHTML = "没听到声音";
       mic.textContent = "🎤 再说一次"; if (!el.querySelector("[data-a=done]")){ const b = document.createElement("button"); b.className = "ib lt"; b.dataset.a = "done"; b.textContent = "我说了"; b.onclick = ok2; el.querySelector(".row").appendChild(b); } };
     r.onerror = e => { if (/not-allowed|service|audio/.test(e.error)){ blocked = true; got = ""; heard.textContent = "麦克风用不了——大声说一遍，点「我说了」"; } }; r.start();
   };
@@ -12744,7 +12761,22 @@ function revisit(pk, force){
     d.innerHTML = `<p class="note" style="margin:0 0 2px">${m.lv === "own" ? "说你自己的 · 照着改也行" : "你会怎么回？"}</p><div class="tiles">${m.opts.map((o, i) => `<button class="tile" data-i="${i}">${esc(o[0])}<small>${esc(o[1])}</small></button>`).join("")}</div>${m.lv === "own" ? `<div class="row" style="margin-top:0"><input class="rv-in" placeholder="或者写你自己的（英文）"><button class="ib lt" data-mine>用这句</button></div>` : ""}`;
     setTimeout(() => d.scrollIntoView({behavior: "smooth", block: "center"}), 60);
     const go = (en, zh) => { d.remove(); say(en, zh, {}, then); };
-    d.querySelectorAll(".tile").forEach(b => b.onclick = () => { const o = m.opts[+b.dataset.i]; go(o[0], o[1]); });
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // 不用先挑（用户 2026-11-04：多去说，少动脑子挑）：点一句只是听一听，然后直接开口；说中哪句就记哪句，都不像就记你自己的话
+    if (SR){
+      const p = d.querySelector("p.note"); if (p) p.textContent = m.lv === "own" ? "说你自己的 · 点一句先听听也行" : "点一句先听听，然后直接说";
+      d.querySelectorAll(".tile").forEach(b => b.onclick = () => speak(m.opts[+b.dataset.i][0], .95));
+      const mb2 = document.createElement("button"); mb2.className = "ib mic"; mb2.textContent = "🎤 说你的回答"; mb2.style.marginTop = "8px"; d.appendChild(mb2);
+      const hd = document.createElement("div"); hd.className = "heard"; d.appendChild(hd);
+      mb2.onclick = () => { const r = new SR(); r.lang = "en-GB"; r.interimResults = true; let t = "";
+        mb2.classList.add("on"); mb2.textContent = "● 在听…说完会自己停";
+        r.onresult = e => { t = [...e.results].map(x => x[0].transcript).join(" "); hd.textContent = t; };
+        r.onend = () => { mb2.classList.remove("on"); if (!t){ mb2.textContent = "🎤 再说一次"; hd.textContent = "没听到声音"; return; }
+          const g = new Set(words(t)), best = m.opts.map(o => { const w = words(o[0]); return [o, w.filter(x => g.has(x)).length / Math.max(1, w.length)]; }).sort((a, b) => b[1] - a[1])[0];
+          const [en2, zh2] = best && best[1] >= .5 ? best[0] : [t, "（你自己的话）"];
+          d.remove(); ding(); bump(); got.push([en2, zh2]); said1(en2, zh2, then); };
+        r.onerror = () => {}; try { r.start(); } catch(e){ mb2.classList.remove("on"); } };
+    } else d.querySelectorAll(".tile").forEach(b => b.onclick = () => { const o = m.opts[+b.dataset.i]; go(o[0], o[1]); });
     const mb = d.querySelector("[data-mine]"); if (mb) mb.onclick = () => { const t = d.querySelector(".rv-in").value.trim(); if (t) go(t, "（你自己的话）"); else toast("先写一句，或者点上面的"); };
   };
   const finish = () => {
@@ -12832,6 +12864,7 @@ body.pr-open{overflow:hidden}
 #prX .ib.mic.on{background:#d9534f;box-shadow:0 3px 0 #a33}
 #prX .ib:active{transform:translateY(3px);box-shadow:none}
 #prX .heard{font-size:13.5px;color:var(--soft);margin-top:6px;min-height:20px}
+#prX .wfix{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,0,0,.12)}#prX .wfix .ib{font-size:13px;padding:5px 10px}
 #prX .heard b{color:var(--ok)}
 #prX .tick{color:var(--ok);font-weight:900;margin-left:6px}
 #prX .hint{color:var(--soft);letter-spacing:.02em}
@@ -12902,6 +12935,243 @@ window.PR = {
   due, revisit,
   count: () => Object.values(book()).filter(p => p && p.t).length
 };
+})();
+window.PEOPLE = {"london":{"zh":"伦敦","en":"London","ll":[-0.1276,51.5072],"r_km":45,"start":["precious","fatima"],"order":["precious","tom","kofi","dave","holly","poppy","oliver","harriet","ella","fatima"],"people":{"precious":{"nm":"Precious","av":"👩🏾‍⚕️","job":"NHS 内科病房的夜班护士 · 35 岁","x":60,"y":60,"now":[["Four nights done. Just got the bus home. I'm sleeping all day!","连上四个夜班，总算完了。刚坐上回家的公交，今天要睡一整天！"]],"story":"在伦敦当了八年护士。最会在病人情况变差之前看出苗头。夜班下了，最想吃的是一碗妈妈做的 jollof 饭。","ties":{"tom":"同一个病房，常一起上夜班","ella":"Ella 的妈妈是她以前的同事"},"next":"tom","chat":[{"npc":["Hi! Sorry, I'm half asleep. I've just finished a night shift.","嗨！不好意思，我半睡半醒的，刚下夜班。"]},{"me":[["Oh, you must be exhausted. Are you a nurse?","哦，你一定累坏了。你是护士吗？"],["No worries. What do you do?","没事。你是做什么的？"]]},{"npc":["Yeah, on a medical ward. Last night we had three new patients after midnight. Honestly, the coffee machine kept me alive.","对，内科病房。昨晚半夜之后来了三个新病人。说真的，全靠咖啡机撑着。"]},{"me":[["How do you sleep during the day?","你白天怎么睡觉？"],["Do you like working nights?","你喜欢上夜班吗？"]]},{"npc":["Blackout curtains and earplugs! Hey, if you want to know what a junior doctor's life is like, talk to Tom. He's even more tired than me.","遮光窗帘加耳塞！对了，你要是想知道年轻医生过的什么日子，去找 Tom 聊聊。他比我还累。"]}],"npc":"precious","clip":{"src":"https://img.heyvoyo.com/clips/body_mind_ward_2.mp4","poster":"https://img.heyvoyo.com/clips/body_mind_ward_2.webp","where":"伦敦 · 早上的双层公交","why":"她下了夜班，坐的就是这样的早班双层公交","by":"George Morina","url":"https://www.pexels.com/video/29554601/"}},"tom":{"nm":"Tom","av":"🧑🏻‍⚕️","job":"NHS 的第三年住院医师 · 28 岁","x":150,"y":40,"now":[["Back on the wards on Monday. Four nights in a row again.","周一又回病房了，又是连上四个夜班。"]],"story":"常常连上四个夜班。参加过医生罢工，跟家里人还为这事吵过。觉得医学英语最难的，是怎么把坏消息说得温柔。","ties":{"precious":"同一个病房的护士","kofi":"周日社区足球队的队友"},"next":"kofi","chat":[{"npc":["Hey! Precious said you'd come and say hi. She says I look tired. She's right.","嘿！Precious 说你会来打招呼。她说我看起来很累，她说得对。"]},{"me":[["Nice to meet you! Busy week?","很高兴认识你！这周很忙吗？"],["Hi Tom. Is being a doctor as hard as people say?","嗨 Tom。当医生真有大家说的那么难吗？"]]},{"npc":["Pretty hard. The worst part isn't the hours, though. It's telling a family bad news. You never get used to it.","挺难的。不过最难的不是时间长，是要告诉家属坏消息。永远习惯不了。"]},{"me":[["What do you do to relax?","你怎么放松？"],["That sounds really tough.","听起来真不容易。"]]},{"npc":["Football! Every Sunday in Peckham. Our captain is Kofi, the barber. Go and get a haircut there, he'll tell you everything about the team.","踢足球！每周日在佩卡姆。我们队长是理发师 Kofi。去他那儿剪个头，他会把球队的事全告诉你。"]}],"npc":"tomo","clip":{"src":"https://img.heyvoyo.com/clips/med_club_gp_0.mp4","poster":"https://img.heyvoyo.com/clips/med_club_gp_0.webp","where":"伦敦 · 圣托马斯医院（NHS）门口，白天","why":"他上班的那家医院门口","by":"Eren Cebeci","url":"https://www.pexels.com/video/18166293/"}},"kofi":{"nm":"Kofi","av":"👨🏿","job":"佩卡姆的理发师，足球队长 · 38 岁","x":250,"y":60,"now":[["Saturday afternoon, and the shop's packed. Everyone wants a fresh cut before the weekend.","周六下午，店里挤满了人，人人都想周末前剪个头。"]],"story":"加纳裔，十八岁开始剪头发。店里永远放着足球和非洲节拍。他说：先聊天，再动剪刀。","ties":{"tom":"足球队的队员","dave":"Dave 在他这儿剪了十年头"},"next":"dave","chat":[{"npc":["Come in, come in! Take a seat. First time here?","进来进来！坐。第一次来？"]},{"me":[["Yes, Tom told me about you.","对，Tom 跟我说起过你。"],["Yeah. Just a trim, please.","对。修一下就好。"]]},{"npc":["Ah, Tom! Did he tell you he missed a penalty on Sunday? No? Typical.","啊，Tom！他有没有跟你说他周日罚丢了点球？没说？就知道。"]},{"me":[["How long have you been cutting hair?","你剪头发多久了？"],["Is this shop always this busy?","店里一直这么忙吗？"]]},{"npc":["Twenty years. Some customers I've had since they were kids. Like Dave, the taxi driver. Ten years in this chair! He knows every street in London.","二十年了。有的客人从小孩剪到现在。比如开出租车的 Dave，在这张椅子上剪了十年！伦敦每条街他都认识。"]}],"npc":"kofi","clip":{"src":"https://img.heyvoyo.com/clips/fashion_club_haircut_0.mp4","poster":"https://img.heyvoyo.com/clips/fashion_club_haircut_0.webp","where":"伦敦 · 布里克斯顿（佩卡姆隔壁）· 下午","why":"他的理发店就在这一带","by":"Eren Cebeci","url":"https://www.pexels.com/video/18212946/"}},"dave":{"nm":"Dave","av":"🧔🏻","job":"开了三十年黑色出租车 · 61 岁","x":300,"y":150,"now":[["The roads are a nightmare this week. Roadworks everywhere.","这周路况简直是噩梦，到处在修路。"]],"story":"为了开黑色出租车，花了三年骑着摩托背下整个伦敦的路，那个考试叫 The Knowledge。侄女 Holly 在电影院打工，他最骄傲的就是她。","ties":{"kofi":"他的理发师","holly":"他的侄女"},"next":"holly","chat":[{"npc":["Hiya! Kofi sent you, did he? Hop in.","你好！Kofi 让你来的吧？上车。"]},{"me":[["Yes! He said you know every street in London.","是的！他说你认识伦敦每一条街。"],["Could you take me to Leicester Square?","能送我去莱斯特广场吗？"]]},{"npc":["Every single one. I studied for three years for The Knowledge. Rode around on a little motorbike in the rain.","每一条。为了考 The Knowledge 学了三年，骑个小摩托在雨里到处转。"]},{"me":[["Three years? That's amazing.","三年？太厉害了。"],["Do you still enjoy driving?","你现在还喜欢开车吗？"]]},{"npc":["Love it. Here, if you're going to Leicester Square, say hi to my niece Holly at the cinema. She'll get you the best seat.","喜欢得很。对了，你要去莱斯特广场的话，去电影院跟我侄女 Holly 打个招呼，她能给你挑最好的位子。"]}],"clip":{"src":"https://img.heyvoyo.com/clips/dev_club_robotaxi_2.mp4","poster":"https://img.heyvoyo.com/clips/dev_club_robotaxi_2.webp","where":"伦敦 · 街上的黑色出租车","why":"伦敦的黑色出租车，Dave 开的就是这种","by":"Eren Cebeci","url":"https://www.pexels.com/video/18212684/"}},"holly":{"nm":"Holly","av":"👩🏼","job":"电影院售票员，电影专业学生 · 22 岁","x":290,"y":255,"now":[["Friday night at the cinema. The queue went all the way round the corner!","周五晚上的电影院，排队排到街角去了！"]],"story":"白天上电影课，晚上在莱斯特广场的电影院卖票、做爆米花。短片里的戏服全是在 Poppy 的古着摊淘的。","ties":{"dave":"她的叔叔","poppy":"她的戏服都在 Poppy 那儿淘"},"next":"poppy","chat":[{"npc":["Hi! What can I get you? Oh wait, are you the one Uncle Dave told me about?","嗨！要买什么？等等，你就是 Dave 叔叔说的那个人？"]},{"me":[["That's me! He said you'd find me a good seat.","就是我！他说你能给我找个好位子。"],["Yes! Two tickets for the eight o'clock, please.","是的！两张八点的票，谢谢。"]]},{"npc":["Row F, right in the middle. Best seats in the house. I'm a film student, so I take this very seriously.","F 排正中间，全场最好的位子。我学电影的，对这个很认真。"]},{"me":[["What kind of films do you make?","你拍什么样的片子？"],["What's your favourite film?","你最喜欢哪部电影？"]]},{"npc":["Short ones, with no money! All my costumes come from Poppy's vintage stall on Brick Lane. You should go, she's brilliant.","短的，没钱的！我所有的戏服都是在红砖巷 Poppy 的古着摊淘的。你该去看看，她太厉害了。"]}],"npc":"holly_cine","clip":{"src":"https://img.heyvoyo.com/clips/fun_club_cinema_0.mp4","poster":"https://img.heyvoyo.com/clips/fun_club_cinema_0.webp","where":"伦敦 · 莱斯特广场的电影院，晚上","why":"她打工的莱斯特广场，晚上七点","by":"George Morina","url":"https://www.pexels.com/video/2112832/"}},"poppy":{"nm":"Poppy","av":"👩🏻‍🦰","job":"红砖巷市集的古着摊主 · 29 岁","x":190,"y":290,"now":[["Sunday on Brick Lane. I got here at seven to set up the stall.","周日的红砖巷，我七点就来摆摊了。"]],"story":"每周去欧洲各地的二手仓库挑衣服，上周刚从比利时淘回四十件牛仔外套，最懂七八十年代的牛仔。跟三个室友合租，其中一个是记者 Oliver，房子是中介 Fatima 帮他们找的。","ties":{"holly":"Holly 的短片戏服都从她这儿来","oliver":"室友","fatima":"帮她们找到现在这套房子"},"next":"oliver","chat":[{"npc":["Hiya! Have a look around. Everything's one of a kind.","嗨！随便看看，每件都是独一份的。"]},{"me":[["Holly said you have the best jackets.","Holly 说你这儿的外套最好。"],["How much is this denim jacket?","这件牛仔外套多少钱？"]]},{"npc":["Ha, Holly! That one's from the seventies. Thirty-five pounds. They don't make them like this anymore.","哈，Holly！那件是七十年代的，三十五镑。现在没人这么做衣服了。"]},{"me":[["Where do you find all these clothes?","这些衣服你都是从哪儿找的？"],["Do you live near here?","你住这附近吗？"]]},{"npc":["Warehouses all over Europe. I live nearby with three flatmates. One of them, Oliver, writes about money for a living, but he's always broke!","欧洲各地的仓库。我跟三个室友住附近。其中一个叫 Oliver，靠写钱的事吃饭，自己却老是没钱！"]}],"npc":"poppy","clip":{"src":"https://img.heyvoyo.com/clips/trends_now_vintage_0.mp4","poster":"https://img.heyvoyo.com/clips/trends_now_vintage_0.webp","where":"伦敦 · 红砖巷街角，上午","why":"她摆摊的红砖巷，周日上午","by":"Airam Dato-on","url":"https://www.pexels.com/video/34394920/"}},"oliver":{"nm":"Oliver","av":"👨🏼","job":"财经新闻网站的记者 · 26 岁","x":95,"y":255,"now":[["Interest rates again this week. I've written three stories about mortgages.","这周又是利率，我已经写了三篇房贷的稿子。"]],"story":"大学学历史，阴差阳错进了财经新闻，每天把利率、通胀讲给普通人听。每个月去 Harriet 的书店参加读书会。","ties":{"poppy":"室友","harriet":"读书会的常客","fatima":"帮他们找的房子"},"next":"harriet","chat":[{"npc":["Oh hi, you must be Poppy's friend. Sorry, the flat's a mess.","哦嗨，你一定是 Poppy 的朋友。不好意思，屋里乱糟糟的。"]},{"me":[["No problem. Poppy says you're a journalist?","没关系。Poppy 说你是记者？"],["Hi! Nice to meet you.","嗨！很高兴认识你。"]]},{"npc":["I write about the economy. Basically I explain why everything is getting more expensive.","我写经济新闻。基本上就是解释为什么什么都越来越贵。"]},{"me":[["Is rent very expensive in London?","伦敦的房租很贵吗？"],["What do you do in your free time?","你空闲时做什么？"]]},{"npc":["Very! I spend my free time at a book club, actually. Harriet runs it at a little bookshop. First Thursday of every month. Come along!","非常贵！其实我空闲时去一个读书会，是 Harriet 在一家小书店办的，每个月第一个周四，一起来吧！"]}],"npc":"oliver","clip":{"src":"https://img.heyvoyo.com/clips/first_money_credit_2.mp4","poster":"https://img.heyvoyo.com/clips/first_money_credit_2.webp","where":"伦敦 · 汇丰银行门口","why":"他天天写的银行和利率，就在这样的街上","by":"George Morina","url":"https://www.pexels.com/video/5228150/"}},"harriet":{"nm":"Harriet","av":"👩🏻‍🦳","job":"独立书店店员，读书会主持人 · 52 岁","x":30,"y":170,"now":[["This month's book club: a novel set in Lagos. Precious recommended it!","这个月读书会读一本以拉各斯为背景的小说，是 Precious 推荐的！"]],"story":"在一家小书店工作了十五年，每月第一个周四晚上在店里办读书会，大家带酒带饼干来。她说：读书不是比谁读得多，是找到想聊的人。","ties":{"oliver":"读书会常客","ella":"读书会里最年轻的","precious":"推荐了这个月的书"},"next":"ella","chat":[{"npc":["Welcome! Grab a biscuit. Are you here for the book club?","欢迎！拿块饼干。你是来参加读书会的吗？"]},{"me":[["Yes, Oliver invited me.","是的，Oliver 邀请我来的。"],["I'd love to join, but I haven't read the book.","我很想参加，但我还没读那本书。"]]},{"npc":["Don't worry, half of us never finish it. We mostly talk about life.","别担心，我们一半人都没读完。我们主要是聊生活。"]},{"me":[["How long have you worked here?","你在这儿工作多久了？"],["What kind of books do you like?","你喜欢什么样的书？"]]},{"npc":["Fifteen years. Oh, and you should meet Ella. She's our youngest member, and she always organises the pub afterwards.","十五年了。对了，你该认识一下 Ella。她是我们最年轻的成员，散了以后去酒馆都是她张罗。"]}],"npc":"harriet","clip":{"src":"https://img.heyvoyo.com/clips/growth_club_bookclub_0.mp4","poster":"https://img.heyvoyo.com/clips/growth_club_bookclub_0.webp","where":"伦敦 · 晚上的 Foyles 书店门口（查令十字街，离考文特花园很近）","why":"晚上的书店门口，读书会就在这附近","by":"Dominik Gryzbon","url":"https://www.pexels.com/video/35222110/"}},"ella":{"nm":"Ella","av":"👱🏻‍♀️","job":"出版社编辑助理，朋友圈里的「记账人」 · 25 岁","x":120,"y":150,"now":[["Pub after book club as usual. I've already made the group chat.","读书会完照旧去酒馆，群我已经建好了。"]],"story":"刚工作两年。每次和朋友出去，都是她打开手机算账。她说：钱算清楚，朋友才做得久。她妈妈以前和 Precious 在同一家医院。","ties":{"harriet":"读书会","precious":"妈妈以前的同事"},"next":"precious","chat":[{"npc":["Hey! Harriet said you're new. Coming to the pub with us after?","嘿！Harriet 说你是新来的。待会儿跟我们去酒馆吗？"]},{"me":[["Sure, I'd love to!","好啊，很想去！"],["Maybe just for one drink.","也许就喝一杯。"]]},{"npc":["Great. Just so you know, we usually split the bill. I'll sort it out on my phone.","太好了。先说一声，我们一般平摊，我用手机算。"]},{"me":[["How do you know everyone here?","你怎么认识这里每个人的？"],["Do you work near here?","你在这附近上班吗？"]]},{"npc":["Mostly through books! And funny thing, my mum used to work with Precious, the nurse. London's a big city, but it's really a small world.","大多是因为书！说来好笑，我妈以前跟护士 Precious 是同事。伦敦是大城市，其实圈子很小。"]}],"npc":"ella_pub","clip":{"src":"https://img.heyvoyo.com/clips/first_money_split_0.mp4","poster":"https://img.heyvoyo.com/clips/first_money_split_0.webp","where":"伦敦 · 老酒馆招牌","why":"读书会散了，大家常去的那种老酒馆","by":"Dominik Gryzbon","url":"https://www.pexels.com/video/35330803/"}},"fatima":{"nm":"Fatima","av":"🧕🏽","job":"哈克尼的房屋中介 · 34 岁","x":215,"y":160,"now":[["Twenty-five viewings this week. Everyone wants a flat before Christmas.","这周带了二十五次看房。人人都想在圣诞前找到房子。"]],"story":"在伦敦东边做租房中介八年，很多客户是刚来英国的留学生。她总提醒：问清楚押金放在哪个保护计划里、账单包不包。","ties":{"poppy":"给她和室友找的房子","oliver":"同上"},"next":"poppy","chat":[{"npc":["Hi there! Are you here for the viewing at two?","你好！你是来看两点那套房的吗？"]},{"me":[["Yes, I'm looking for a room near here.","对，我在找这附近的房间。"],["Yes. Are bills included?","是的。账单包含在房租里吗？"]]},{"npc":["Good question. Always ask that! And always ask where your deposit is protected.","问得好，一定要问这个！还要问清楚押金放在哪个保护计划里。"]},{"me":[["How long have you been an estate agent?","你做中介多久了？"],["Is it hard to find a flat in London?","在伦敦找房子难吗？"]]},{"npc":["Eight years. It's tough, but not impossible. I found a flat for Poppy and Oliver last year. They still send me photos of their cat!","八年了。难，但不是不可能。去年我给 Poppy 和 Oliver 找了房子，他们到现在还给我发他们家猫的照片！"]}],"npc":"fatima_ag","clip":{"src":"https://img.heyvoyo.com/clips/social_money_rentcap_2.mp4","poster":"https://img.heyvoyo.com/clips/social_money_rentcap_2.webp","where":"英国 · 一排排连栋房子","why":"她每周带人看的，就是这种连栋房子","by":"Altaf Shah","url":"https://www.pexels.com/video/35745979/"}}},"clip":{"src":"https://img.heyvoyo.com/clips/life_abroad_newcity_0.mp4","poster":"https://img.heyvoyo.com/clips/life_abroad_newcity_0.webp","where":"伦敦 · 地铁站的 UNDERGROUND 标牌（样板）","by":"Videogrammer .com","url":"https://www.pexels.com/video/5814581/"}}};
+// 👥 认识这座城市的人（2026-11-04，样板 样板/认识伦敦的人.html；用户：「学语言不是背句子，是了解世界、了解人」）
+// 一座城的人互相认识（ties）。地图上点这座城附近的贴纸，卡片里有「👥 认识伦敦的人」；打开是关系网 + 每个人的这周近况，
+// 点一个人：故事（聊过才解锁）、TA 认识谁、跟 TA 打个招呼（对方的话先只放声音，听完才露出字；你说什么都算）。
+// 聊完 TA 把下一个人介绍给你，网上那个人出现蓝色虚线圈 —— 认识一个，顺着认识整座城。内容在 PEOPLE（content-skeleton/people/*.json）。
+// 主程序在另一个闭包里，这里自己读界面语言；对外只有 window.PP = {open, row}，地图贴纸卡调用 window.PEOPLE_ROW(d)。
+(function(){
+const lsRaw = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } };
+// 意思行都是中文：只给中文界面、学英语的人（跟练一轮一样）
+const ok = () => (lsRaw("hv.ui") || "zh") === "zh" && (lsRaw("hv.learn") || "en") !== "zh";
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const C = window.PEOPLE || {};
+let root = null, city = "", cur = null, heard = 0, said = 0, waiting = null, rec = null;
+const $ = s => root && root.querySelector(s);
+const st = c => { const s = ls("hv.people." + c) || {}; return {met: new Set(s.met || []), intro: new Set([...(C[c].start || []), ...(s.intro || [])])}; };
+const save = (c, s) => ls("hv.people." + c, {met: [...s.met], intro: [...s.intro]});
+// 这周近况：按周轮换（同一周大家看到的一样）
+const now = p => p.now[Math.floor(Date.now() / (7 * 864e5)) % p.now.length];
+// TA 那个地方的真实短片（门头短片库里在这座城拍的）。放不了（claude.ai 版、没网）就整块拿掉
+const where = s => String(s || "").replace(/（[^）]*）/g, "");
+const media = (c, why) => `<figure class="pp-fig"><video autoplay muted loop playsinline preload="metadata" poster="${esc(c.poster)}" src="${esc(c.src)}" onerror="this.closest('figure').remove()"></video>
+  <figcaption><b>📍 ${esc(where(c.where))}</b>${why ? `<span>${esc(why)}</span>` : ""}</figcaption>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">🎬 ${esc(c.by)} · Pexels</a>` : ""}</figure>`;
+// 离贴纸最近、在 r_km 以内的城
+function cityNear(lon, lat){
+  const R = 6371, rad = x => x * Math.PI / 180; let best = null, bd = 1e9;
+  for (const [k, c] of Object.entries(C)){
+    const dLat = rad(lat - c.ll[1]), dLon = rad(lon - c.ll[0]);
+    const d = 2 * R * Math.asin(Math.sqrt(Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(c.ll[1])) * Math.sin(dLon / 2) ** 2));
+    if (d <= c.r_km && d < bd){ bd = d; best = k; }
+  }
+  return best;
+}
+function row(d){
+  if (!ok() || !d || d.lon == null) return "";
+  const k = cityNear(d.lon, d.lat); if (!k) return "";
+  const c = C[k], s = st(k);
+  return `<button class="pp-row" data-ppcity="${k}"><span class="pp-row-e">👥</span><span><b>认识${esc(c.zh)}的人</b> · ${s.met.size ? `认识了 ${s.met.size} / ${c.order.length}` : `${c.order.length} 个人`}<br><small>他们互相认识，认识一个，会介绍下一个给你</small></span></button>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-ppcity]"); if (b){ e.preventDefault(); e.stopPropagation(); open(b.dataset.ppcity); } }, true);
+
+// ───── 整屏一层 ─────
+function mount(){
+  if (root) return;
+  root = document.createElement("div"); root.id = "ppX"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true");
+  root.innerHTML = `<div class="pp-scroll"><main class="pp-app"></main></div>
+    <div class="pp-dock" hidden><div class="pp-in"><div class="pp-live"></div><div class="pp-note"></div><button class="pp-mic" aria-label="按一下或按住说话" disabled>🎤</button><div class="pp-sp"></div>
+      <div class="pp-type"><input placeholder="这台设备不能语音，打字也行" autocomplete="off"><button class="pp-sm">发送</button></div></div></div>`;
+  document.body.appendChild(root); document.body.classList.add("pp-open");
+  wireMic();
+}
+function close(){ try { speechSynthesis.cancel(); } catch(e){} if (rec) try { rec.abort(); } catch(e){} rec = null; waiting = null; if (root){ root.remove(); root = null; } document.body.classList.remove("pp-open"); }
+const app = () => $(".pp-app");
+const dock = on => { const d = $(".pp-dock"); if (d) d.hidden = !on; };
+const setMic = (on, note) => { const m = $(".pp-mic"); if (m) m.disabled = !on; const n = $(".pp-note"); if (n) n.textContent = note || ""; };
+
+function open(k){
+  if (!C[k]) return; city = k; mount(); dock(false); cur = null; waiting = null; try { speechSynthesis.cancel(); } catch(e){}
+  const c = C[k], s = st(k), P = c.people, seen = new Set(), L = [];
+  c.order.forEach(a => Object.keys(P[a].ties).forEach(b => { const id = [a, b].sort().join("-"); if (P[b] && !seen.has(id)){ seen.add(id); L.push([a, b]); } }));
+  app().innerHTML = `<div class="pp-head"><a href="#" class="pp-x" data-ppclose>✕ 回到地图</a></div>
+    ${c.clip ? media(c.clip, "") : ""}
+    <h1>认识${esc(c.zh)}的人</h1>
+    <p class="pp-mut">他们互相认识。认识一个，TA 会介绍下一个给你。聊过的会亮起来，过几天他们的生活也会往前走。都是 🎭 角色。</p>
+    <div class="pp-prog"><span>认识了 ${s.met.size} / ${c.order.length} 人</span><div class="pp-bar"><i style="width:${s.met.size / c.order.length * 100}%"></i></div></div>
+    <svg class="pp-web" viewBox="0 0 360 330" aria-label="${esc(c.zh)}这些人之间的关系">${L.map(([a, b]) => `<line x1="${P[a].x}" y1="${P[a].y}" x2="${P[b].x}" y2="${P[b].y}"/>`).join("")}
+      ${c.order.map(id => { const p = P[id], cl = s.met.has(id) ? "met" : s.intro.has(id) ? "next" : "";
+        return `<g class="pp-p ${cl}" data-pp="${id}"><circle cx="${p.x}" cy="${p.y}" r="22"/><text x="${p.x}" y="${p.y}">${p.av}</text><text class="nm" x="${p.x}" y="${p.y + 33}">${esc(p.nm)}${s.met.has(id) ? " ✓" : ""}</text></g>`; }).join("")}</svg>
+    <p class="pp-mut">实线：他们认识。蓝色虚线圈：有人把 TA 介绍给你了。</p>
+    <div class="pp-cards">${c.order.map(id => { const p = P[id];
+      return `<button class="pp-card ${s.met.has(id) ? "met" : ""}" data-pp="${id}"><span class="pp-av">${p.av}</span><span><b>${esc(p.nm)}</b>${s.met.has(id) ? '<i class="pp-st">✓ 认识了</i>' : s.intro.has(id) ? '<i class="pp-st pp-st2">有人介绍你去认识</i>' : ""}
+        <span class="pp-mut pp-blk">${esc(p.job)}</span><span class="pp-nw">这周：${esc(now(p)[1])}</span></span>${p.clip ? `<img class="pp-th" src="${esc(p.clip.poster)}" alt="" loading="lazy" onerror="this.remove()">` : ""}</button>`; }).join("")}</div>`;
+  root.querySelectorAll("[data-pp]").forEach(b => b.onclick = () => person(b.dataset.pp));
+  wireClose(); root.querySelector(".pp-scroll").scrollTo(0, 0);
+}
+function wireClose(){ root.querySelectorAll("[data-ppclose]").forEach(a => a.onclick = e => { e.preventDefault(); close(); }); }
+
+function person(id){
+  try { speechSynthesis.cancel(); } catch(e){}
+  const c = C[city], p = c.people[id], s = st(city), nw = now(p); cur = id; heard = 0; said = 0; waiting = null;
+  app().innerHTML = `<div class="pp-top"><a href="#" class="pp-x" data-ppback>← 回到${esc(c.zh)}</a>
+      <div class="pp-who"><span class="pp-av pp-av2">${p.av}</span><div><b>${esc(p.nm)}</b><span class="pp-tag">🎭 角色</span><div class="pp-mut">${esc(c.zh)} · ${esc(p.job)}</div></div>
+      <div class="pp-cnt">👂 <b class="pp-nh">0</b><br>🗣️ <b class="pp-ns">0</b></div></div></div>
+    ${p.clip ? media(p.clip, p.clip.why) : ""}
+    <div class="pp-box"><h3>这周</h3><div class="pp-txt">${esc(nw[0])}</div><div class="pp-zh">${esc(nw[1])}</div><div class="pp-tools"><button class="pp-sm" data-a="now">🔊 听 TA 说</button></div></div>
+    <div class="pp-box"><h3>TA 的故事</h3><div class="pp-story">${s.met.has(id) ? esc(p.story) : '<span class="pp-mut">🔒 跟 TA 聊过以后才知道</span>'}</div></div>
+    <div class="pp-box"><h3>TA 认识的人</h3><div class="pp-ties">${Object.entries(p.ties).filter(([o]) => c.people[o]).map(([o, why]) => `<button data-pp="${o}">${c.people[o].av} ${esc(c.people[o].nm)}${s.met.has(o) ? " ✓" : ""}<br><small>${esc(why)}</small></button>`).join("")}</div></div>
+    <button class="pp-big">👋 ${s.met.has(id) ? "再聊一次" : "跟 TA 打个招呼"}</button>
+    <div class="pp-chat"></div>`;
+  root.querySelector('[data-a="now"]').onclick = () => say(nw[0], 1);
+  root.querySelectorAll(".pp-ties [data-pp]").forEach(b => b.onclick = () => person(b.dataset.pp));
+  root.querySelector("[data-ppback]").onclick = e => { e.preventDefault(); open(city); };
+  root.querySelector(".pp-big").onclick = e => { e.currentTarget.remove(); dock(true); try { speechSynthesis.getVoices(); } catch(x){} run(0); };
+  root.querySelector(".pp-scroll").scrollTo(0, 0);
+}
+function voice(){ try { const v = speechSynthesis.getVoices(); return v.find(x => x.lang === "en-GB") || v.find(x => /^en/.test(x.lang)); } catch(e){ return null; } }
+function say(text, rate, wave, done){
+  try { speechSynthesis.cancel(); } catch(e){}
+  let fin = false; const end = () => { if (fin) return; fin = true; if (wave) wave.classList.remove("on"); heard++; const n = $(".pp-nh"); if (n) n.textContent = heard; done && done(); };
+  try { const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.rate = rate || 1; const v = voice(); if (v) u.voice = v; u.onend = end; u.onerror = end; speechSynthesis.speak(u); } catch(e){ return end(); }
+  if (wave) wave.classList.add("on");
+  setTimeout(end, 1200 + text.length * 75 / (rate || 1));  // 有的浏览器不报 onend
+}
+const chatBox = () => $(".pp-chat");
+const scrollEnd = el => { try { el.scrollIntoView({behavior: "smooth", block: "end"}); } catch(e){} };
+function run(i){
+  if (!root || !cur) return;
+  const p = C[city].people[cur], L = p.chat; if (i >= L.length) return finish();
+  const l = L[i], box = chatBox();
+  if (l.npc){
+    const [en, zh] = l.npc, el = document.createElement("div"); el.className = "pp-msg pp-npc pp-hide";
+    el.innerHTML = `<div class="pp-wave">${"<i></i>".repeat(14)}</div><div class="pp-txt">${esc(en)}</div><div class="pp-zh">${esc(zh)}</div>
+      <div class="pp-tools"><button class="pp-sm" data-a="again">🔊 再听</button><button class="pp-sm" data-a="slow">🐢 慢一点</button><button class="pp-sm" data-a="show">看字</button></div>`;
+    box.appendChild(el); scrollEnd(el);
+    const wave = el.querySelector(".pp-wave");
+    el.querySelector('[data-a="again"]').onclick = () => say(en, 1, wave);
+    el.querySelector('[data-a="slow"]').onclick = () => say(en, .75, wave);
+    el.querySelector('[data-a="show"]').onclick = () => el.classList.remove("pp-hide");
+    setMic(false, "先听 " + p.nm + " 说");
+    return say(en, 1, wave, () => { setTimeout(() => el.classList.remove("pp-hide"), 1000); run(i + 1); });
+  }
+  const h = document.createElement("div"); h.className = "pp-help";
+  h.innerHTML = `<small>${i === 1 ? "点一句先听，再自己说（可以换成你自己的话）" : "问问 TA，TA 就会多说一点"}</small><div class="pp-chips">${l.me.map(([en, zh]) => `<button data-en="${esc(en)}">${esc(en)}<br><small>${esc(zh)}</small></button>`).join("")}</div>`;
+  box.appendChild(h); scrollEnd(h);
+  h.querySelectorAll("button").forEach(x => x.onclick = () => say(x.dataset.en, .95));
+  setMic(true, "轮到你");
+  waiting = text => { h.remove(); const el = document.createElement("div"); el.className = "pp-msg pp-me"; el.innerHTML = `<div class="pp-txt">${esc(text)}</div>`;
+    box.appendChild(el); said++; const n = $(".pp-ns"); if (n) n.textContent = said; const lv = $(".pp-live"); if (lv) lv.textContent = ""; waiting = null; setMic(false, ""); setTimeout(() => run(i + 1), 600); };
+}
+function finish(){
+  const c = C[city], p = c.people[cur], n = c.people[p.next], s = st(city);
+  s.met.add(cur); if (n) s.intro.add(p.next); save(city, s);
+  const so = $(".pp-story"); if (so) so.textContent = p.story;
+  setMic(false, "聊完了");
+  const e = document.createElement("div"); e.className = "pp-nextp";
+  e.innerHTML = `<div>✓ 认识了 <b>${esc(p.nm)}</b>　👂 ${heard} 句 · 🗣️ ${said} 句</div><div class="pp-mut" style="margin-top:4px">TA 的故事解锁了（往上翻）。${n ? `${esc(p.nm)} 把 <b>${esc(n.nm)}</b> 介绍给你：${esc(n.job)}` : ""}</div>
+    <div class="pp-tools">${n ? `<button class="pp-sm" data-go="next">${n.av} 去认识 ${esc(n.nm)} →</button>` : ""}<button class="pp-sm" data-go="city">回到${esc(c.zh)}</button></div>`;
+  setTimeout(() => { if (!root) return; chatBox().appendChild(e); scrollEnd(e); dock(false);
+    e.querySelectorAll("[data-go]").forEach(b => b.onclick = () => b.dataset.go === "next" ? person(p.next) : open(city)); }, 1300);
+  try { window.dispatchEvent(new CustomEvent("pp-change")); } catch(x){}
+}
+// 🎤 按一下：说完自己停；按住：松开就停。说的时候字一边出来
+function wireMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, mic = $(".pp-mic");
+  if (!SR){ $(".pp-type").style.display = "flex"; mic.style.display = "none"; $(".pp-note").style.display = "none"; $(".pp-sp").style.display = "none"; }
+  let holdT = 0, held = false, text = "";
+  const start = () => {
+    if (rec || mic.disabled) return; text = ""; rec = new SR(); rec.lang = "en-GB"; rec.interimResults = true;
+    rec.onresult = ev => { text = [...ev.results].map(r => r[0].transcript).join(" "); const lv = $(".pp-live"); if (lv) lv.textContent = text; };
+    rec.onend = () => { mic.classList.remove("rec"); rec = null; if (text && waiting) waiting(text); else if (!text){ const lv = $(".pp-live"); if (lv) lv.textContent = "没听清，再说一次？"; } };
+    rec.onerror = () => {};
+    mic.classList.add("rec"); const lv = $(".pp-live"); if (lv) lv.textContent = "在听…"; try { speechSynthesis.cancel(); rec.start(); } catch(e){ rec = null; mic.classList.remove("rec"); }
+  };
+  const stop = () => { if (rec) try { rec.stop(); } catch(e){} };
+  mic.addEventListener("pointerdown", () => { held = false; holdT = setTimeout(() => { held = true; start(); }, 250); });
+  mic.addEventListener("pointerup", () => { clearTimeout(holdT); if (held) stop(); else rec ? stop() : start(); });
+  mic.addEventListener("pointerleave", () => { clearTimeout(holdT); if (held) stop(); });
+  const inp = $(".pp-type input"), go = () => { const v = inp.value.trim(); if (v && waiting){ waiting(v); inp.value = ""; } };
+  $(".pp-type button").onclick = go; inp.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+}
+window.PP = {open, row};
+window.PEOPLE_ROW = row;
+
+// ───── 样式（只管 #ppX 这一层，和贴纸卡里那一行）─────
+const css = document.createElement("style");
+css.textContent = `
+.pp-row{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:1.5px solid #c9d9ef;background:#eef5fd;color:#14365e;border-radius:14px;padding:9px 12px;margin:8px 0 2px;font:inherit;font-size:14px;cursor:pointer}
+.pp-row small{color:#4d6a8c;font-size:12px}.pp-row-e{font-size:24px}
+body.pp-open{overflow:hidden}
+#ppX{--bg:#f6f3ec;--card:#fff;--fg:#1f2230;--mut:#6f6b78;--line:#e7e1d4;--acc:#2179d2;--me:#e8f1fc;--chip:#f1ede4;--met:#2f9e5b;--tie:#c9bfa8;position:fixed;inset:0;z-index:9000;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,"PingFang SC","Helvetica Neue",sans-serif}
+@media (prefers-color-scheme:dark){#ppX{--bg:#15171c;--card:#1f2229;--fg:#eceaf2;--mut:#9a96a6;--line:#30333c;--acc:#6cb0ff;--me:#1d2b3d;--chip:#2a2d35;--tie:#4a4a55}}
+#ppX .pp-scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#ppX .pp-app{max-width:560px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 16px 170px}
+#ppX h1{font-size:22px;margin:6px 0 2px}#ppX h3{margin:0 0 6px;font-size:14px;color:var(--mut)}
+#ppX .pp-mut{font-size:13px;color:var(--mut)}#ppX .pp-blk{display:block}
+#ppX .pp-x{color:var(--acc);text-decoration:none;font-size:15px}
+#ppX .pp-prog{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:14px}
+#ppX .pp-bar{flex:1;height:8px;background:var(--chip);border-radius:9px;overflow:hidden}#ppX .pp-bar i{display:block;height:100%;background:var(--met)}
+#ppX .pp-web{width:100%;height:auto;display:block;margin:6px 0 2px}
+#ppX .pp-web line{stroke:var(--tie);stroke-width:2}
+#ppX .pp-p circle{fill:var(--card);stroke:var(--line);stroke-width:2.5;cursor:pointer}
+#ppX .pp-p.met circle{stroke:var(--met);stroke-width:3.5}
+#ppX .pp-p.next circle{stroke:var(--acc);stroke-width:3.5;stroke-dasharray:5 4}
+#ppX .pp-p text{font-size:22px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+#ppX .pp-p .nm{font-size:11.5px;fill:var(--fg);font-weight:700}
+#ppX .pp-cards{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+#ppX .pp-card{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;text-align:left;color:var(--fg);font:inherit;width:100%;cursor:pointer}
+#ppX .pp-av{width:46px;height:46px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:24px;flex:none;border:2.5px solid var(--line)}
+#ppX .pp-card.met .pp-av{border-color:var(--met)}
+#ppX .pp-st{font-style:normal;font-size:12px;color:var(--met);font-weight:700;margin-left:6px}#ppX .pp-st2{color:var(--acc)}
+#ppX .pp-nw{display:block;font-size:13px;color:var(--mut);margin-top:2px}
+#ppX .pp-card>span:nth-child(2){flex:1;min-width:0}
+#ppX .pp-th{width:76px;height:58px;border-radius:10px;object-fit:cover;flex:none;background:var(--chip)}
+#ppX .pp-fig{position:relative;margin:10px -16px 0;aspect-ratio:16/9;background:#20232a;overflow:hidden}
+@media (min-width:600px){#ppX .pp-fig{margin:10px 0 0;border-radius:18px}}
+#ppX .pp-fig video{width:100%;height:100%;object-fit:cover;display:block}
+#ppX .pp-fig figcaption{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 10px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:14px}
+#ppX .pp-fig figcaption span{display:block;font-size:13px;opacity:.92}
+#ppX .pp-fig a{position:absolute;right:8px;top:8px;font-size:11px;color:#fff;background:rgba(0,0,0,.4);border-radius:999px;padding:1px 8px;text-decoration:none}
+#ppX .pp-top{position:sticky;top:0;background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);z-index:2}
+#ppX .pp-who{display:flex;gap:12px;align-items:center;margin-top:6px}#ppX .pp-who b{font-size:18px}
+#ppX .pp-av2{width:54px;height:54px;font-size:28px}
+#ppX .pp-tag{font-size:11px;background:#efe4fb;color:#6a3bd6;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:2px}
+#ppX .pp-cnt{margin-left:auto;text-align:right;font-size:13px;color:var(--mut);white-space:nowrap}#ppX .pp-cnt b{color:var(--fg);font-size:17px}
+#ppX .pp-box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:12px}
+#ppX .pp-ties{display:flex;flex-wrap:wrap;gap:8px}
+#ppX .pp-ties button{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:14px;padding:6px 12px;font:inherit;font-size:14px;min-height:36px;cursor:pointer;text-align:left}
+#ppX .pp-ties small{color:var(--mut)}
+#ppX .pp-big{display:block;width:100%;margin-top:12px;border:0;background:var(--acc);color:#fff;border-radius:14px;padding:12px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+#ppX .pp-chat{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+#ppX .pp-msg{max-width:90%;border-radius:18px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#ppX .pp-npc{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:6px}
+#ppX .pp-me{background:var(--me);align-self:flex-end;border-bottom-right-radius:6px}
+#ppX .pp-wave{display:flex;gap:3px;align-items:center;height:26px;margin:2px 0 6px}
+#ppX .pp-wave i{width:4px;border-radius:2px;background:var(--acc);height:8px;opacity:.5}
+#ppX .pp-wave.on i{animation:ppw .9s ease-in-out infinite;opacity:1}
+#ppX .pp-wave i:nth-child(2n){animation-delay:.15s}#ppX .pp-wave i:nth-child(3n){animation-delay:.3s}
+@keyframes ppw{50%{height:24px}}
+#ppX .pp-txt{font-size:17px}#ppX .pp-zh{font-size:14px;color:var(--mut);margin-top:2px}
+#ppX .pp-hide .pp-txt,#ppX .pp-hide .pp-zh{display:none}
+#ppX .pp-tools{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+#ppX .pp-sm{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;min-height:36px;cursor:pointer}
+#ppX .pp-help{align-self:stretch;background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:10px 12px}
+#ppX .pp-chips{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+#ppX .pp-chips button{text-align:left;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:12px;padding:8px 12px;min-height:44px;font:inherit;cursor:pointer}
+#ppX .pp-help small,#ppX .pp-chips small{color:var(--mut)}
+#ppX .pp-nextp{align-self:stretch;background:var(--card);border:2px solid var(--acc);border-radius:16px;padding:12px 14px}
+#ppX .pp-dock{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+#ppX .pp-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px;justify-content:center;position:relative}
+#ppX .pp-live{position:absolute;left:0;right:0;top:-28px;text-align:center;font-size:15px;color:var(--acc)}
+#ppX .pp-mic{width:66px;height:66px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:28px;box-shadow:0 4px 14px rgba(33,121,210,.35);touch-action:none;flex:none;cursor:pointer}
+#ppX .pp-mic.rec{background:#e03131;box-shadow:0 0 0 8px rgba(224,49,49,.18)}#ppX .pp-mic:disabled{opacity:.35}
+#ppX .pp-note{font-size:13px;color:var(--mut);width:110px;text-align:right}#ppX .pp-sp{width:110px}
+#ppX .pp-type{display:none;gap:8px;flex:1}#ppX .pp-type input{flex:1;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+`;
+document.head.appendChild(css);
 })();
 
 const LABELS = [
@@ -13006,7 +13276,7 @@ function hvSample(){
   async function call(input, opts){
     const messages = typeof input === "string" ? [{role: "user", content: input}] : input;
     const r = await fetch(HV_CONFIG.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey},
-      body: JSON.stringify({messages, tier: (opts && opts.modelTier) || "default"})});
+      body: JSON.stringify({messages, tier: (opts && opts.modelTier) || "default", system: opts && opts.system})});
     const j = await r.json().catch(()=>({}));
     if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys;
     if (r.status === 402 && typeof lbOpen === "function") setTimeout(()=>lbOpen(true), 0);  // 🛟 不够：弹出买救生圈
@@ -13782,7 +14052,7 @@ function openCard(d){
     <button class="x" aria-label="关闭">✕</button>${calcPhotoHtml(d.n) || stkHeadHtml(d.n) || photoHtml(d.n)}${musicHtml(d.n)}
     <div class="c-top"><div class="c-emo${d.sym?" sym":""}" style="border-color:${c.color}${d.sym?`;font-size:${parseFloat(symSize(d.e))*1.5}px`:""}">${kindOf(d.n) ? signSvg(kindOf(d.n), 56) : logoOf(d.n) ? `<img src="${logoOf(d.n).u}" alt="" style="width:78%;height:78%;object-fit:contain">` : esc(d.e)}</div>
       <div><h2>${esc(mapN(d.n))}</h2>${MEN && mapN(d.n) !== d.n ? `<div class="note">${esc(d.n)}</div>` : ""}<div class="c-region">📍 ${esc(mapR(d.r))}</div><span class="c-cat" style="background:${c.color}">${c.icon} ${c.name}</span> <span class="c-cat" style="background:var(--muted)">${TIER_NAME[d.t]}</span></div></div>
-        ${stkWordHtml(d)}
+        ${stkWordHtml(d)}${window.PEOPLE_ROW ? window.PEOPLE_ROW(d) : ""}
         ${REC.why[d.id] ? `<p class="note" style="color:#1c5fa8">✨ 为你推荐：${esc(REC.why[d.id].join(" · "))}</p>` : ""}
     <div class="ctabs" role="tablist">__TABS__</div>
     <div class="cpane on" data-cpane="a">
