@@ -13921,7 +13921,7 @@ function wire(el){
               : `<div class="pt-wait">${esc(p.nm)} ${T("明天会回你", "will reply tomorrow")}</div>`);
       mineEl.querySelectorAll(".pt-hide").forEach(z => z.onclick = () => z.classList.remove("pt-hide"));
     };
-    const post = t => { if (!t) return; const o = ST(); o.r[key] = {text: t, day: dayN(), ts: Date.now()}; SAVE(o); inp.value = ""; drawMine(); };
+    const post = t => { if (!t) return; const o = ST(); o.r[key] = {text: t, day: dayN(), ts: Date.now()}; SAVE(o); inp.value = ""; drawMine(); try { window.HVN && window.HVN.ask(); } catch(e){} };
     po.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { stop(); say(b.dataset.r, p.lang, "you"); inp.value = b.dataset.r; });
     po.querySelector("[data-send]").onclick = () => post(inp.value.trim());
     po.querySelector("[data-mic]").onclick = () => { const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR){ inp.placeholder = T("这个浏览器听不了，打字也行", "This browser can't listen — typing works too"); return; }
@@ -14010,6 +14010,136 @@ const CSS = `#ppPg,#ppPerson{position:fixed;inset:0;z-index:40;overflow-y:auto;b
 .pt-hero{text-align:center;padding:4px 16px 8px}.pt-hero img{width:110px;height:110px;border-radius:50%}.pt-hero h1{margin:6px 0 0;font-size:24px}.pt-hero .pt-j{font-size:14px;display:block}
 .pt-story{margin:8px 16px;background:#fff;border-radius:14px;padding:10px 12px;font-size:14px}.pt-acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 16px}
 .pt-x{border:0;background:#f3efe7;color:#24303a;border-radius:999px;width:36px;height:36px;font-size:20px;cursor:pointer}`;
+})();
+// 📱 App 里的「每天准时提醒」（2026-11-05）：只在 iPhone App（Capacitor）里用，网页版照旧走原来的网页推送（template2 里的 twp*）。
+// 用本地通知（@capacitor/local-notifications），不用推送服务器：选好时间后，一次排好往后 14 天，每天一条，三种轮着：
+//   🌍 今日世界的新一期（TODAY_WORLD）· 👋「人」里有人那天发了新动态（PTAB）· ☕ 熟客在等你（window.PR.due()）；哪种那天没有就换下一种。
+// 今天的今日世界做完了，今天就不再提今日世界。每次打开 App、从后台回来、做完今日世界都重新排一遍（内容跟着日历走）。
+// 点通知 → 打开对应那一栏（今日世界 / 人 / 我的船）。
+// 什么时候问：做完今日世界的结果页（原来放网页提醒的那块）；第一次在「人」里回了一句，弹一次小卡。存：hv.appnotify = {t:"HH:MM"}，hv.appnotify.asked。
+// 对外：window.HVN = {app, hook, html, wire, ask, schedule}；主程序（template2）把打开各栏的函数交给 hook。
+(function(){
+const Cap = () => window.Capacitor;
+const app = () => { try { return !!(Cap() && Cap().isNativePlatform && Cap().isNativePlatform() && Cap().Plugins && Cap().Plugins.LocalNotifications); } catch(e){ return false; } };
+const LN = () => Cap().Plugins.LocalNotifications;
+const KEY = "hv.appnotify", ASKED = "hv.appnotify.asked", ID0 = 7000, DAYS = 14;
+const lsg = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lss = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch(e){} };
+const get = () => { try { return JSON.parse(lsg(KEY) || "null"); } catch(e){ return null; } };
+let H = {};   // 主程序给的：UI、open.{today,people,boat}、todayDone()
+const ui = () => (H.UI || document.documentElement.lang || lsg("hv.ui") || "zh").slice(0, 2);
+const T = (zh, en) => ui() === "zh" ? zh : en;
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const learn = () => { const l = lsg("hv.learn"); return l && !(l === "zh" && ui() === "zh") ? l : ui() === "en" ? "zh" : "en"; };   // 跟 people_tab.js 一样
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const cut = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+const SLOTS = ["08:30", "12:30", "20:00"];
+const lbl = s => ({"08:30": T("早上 8:30", "8:30 am"), "12:30": T("中午 12:30", "12:30 pm"), "20:00": T("晚上 8:00", "8:00 pm")})[s] || s;
+
+// ── 那天的提醒写什么 ──
+function kToday(d){
+  if (typeof TODAY_WORLD === "undefined") return null; const L = TODAY_WORLD.days[ymd(d)]; if (!L || !L.length) return null;
+  const n = Math.round((new Date(ymd(d)) - new Date(TODAY_WORLD.start)) / 864e5) + 1;
+  return {tab: "today", title: T(`🌍 今日世界 #${n}：新的 3 张来了`, `🌍 Today's World #${n}: 3 new stickers`), body: cut(L[0].q, 90) || T("今天跨 3 个大洲，猜猜是哪儿。", "Three places, three continents. Can you guess them?")};
+}
+const ZH_C = ["shanghai", "beijing", "chengdu", "guangzhou"];
+function pName(id){ const D = window.PTAB || {}, x = (D.people || {})[id] || {}; if (x.nm) return x.nm; const [c, k] = id.split(".");
+  const C = (ZH_C.includes(c) ? window.PEOPLE_ZH : window.PEOPLE) || {}; return (C[c] && C[c].people && C[c].people[k] && C[c].people[k].nm) || ""; }
+function pLearn(id){ const D = window.PTAB || {}, x = (D.people || {})[id] || {}; if (x.learn) return x.learn; return ZH_C.includes(id.split(".")[0]) ? "zh" : "en"; }
+function kPeople(d, i){
+  const D = window.PTAB; if (!D || !D.posts) return null; const day = ymd(d), zh = learn() === "zh";
+  let fol = []; try { fol = (JSON.parse(lsg("ptab.v1") || "{}").fol) || []; } catch(e){}
+  const C = Object.keys(D.posts).filter(id => (pLearn(id) === "zh") === zh && pName(id)).map(id => [id, D.posts[id].find(p => p[12] === day)]).filter(z => z[1])
+    .sort((a, b) => (fol.includes(b[0]) ? 1 : 0) - (fol.includes(a[0]) ? 1 : 0));
+  if (!C.length) return null; const top = C.filter(z => fol.includes(z[0])), pick = (top.length ? top : C)[i % (top.length || C.length)], nm = pName(pick[0]);
+  return {tab: "people", title: T(`👋 ${nm} 发了新动态`, `👋 ${nm} posted something new`), body: cut(pick[1][4], 90)};
+}
+function kBoat(){
+  let L = []; try { L = window.PR && window.PR.due ? window.PR.due() : []; } catch(e){} if (!L.length) return null; const x = L[0];
+  return {tab: "boat", title: T(`☕ ${x.npc} 在等你`, `☕ ${x.npc} is waiting for you`), body: x.where ? T(`熟客：${cut(x.where, 40)}，再去聊两句。`, `Your regular spot: ${cut(x.where, 40)}. Drop by for a quick chat.`) : T("老地方，再去聊两句。", "Same place as last time. Drop by for a quick chat.")};
+}
+function contentFor(d, i, skipToday){
+  const dn = Math.floor((d.getTime() - d.getTimezoneOffset() * 6e4) / 864e5), K = [kToday, kPeople, kBoat];
+  for (let j = 0; j < 3; j++){ const f = K[(dn + j) % 3]; if (skipToday && f === kToday) continue; const c = f(d, i); if (c) return c; }
+  return null;
+}
+
+// ── 排通知 ──
+let busy = null;
+async function schedule(){
+  if (!app()) return; if (busy) return busy;
+  busy = (async () => { try {
+    const ids = Array.from({length: DAYS}, (_, i) => ({id: ID0 + i}));
+    try { await LN().cancel({notifications: ids}); } catch(e){}
+    const S = get(); if (!S || !S.t) return;
+    const [hh, mm] = S.t.split(":").map(Number), now = Date.now(), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })(), N = [];
+    for (let i = 0; i < DAYS; i++){ const d = new Date(); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); if (d.getTime() < now + 20e3) continue;
+      const c = contentFor(d, i, i === 0 && done); if (!c) continue;
+      N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d)}}); }
+    if (N.length) await LN().schedule({notifications: N});
+  } catch(e){ try { console.warn("提醒排不上", e); } catch(_){} } finally { busy = null; } })();
+  return busy;
+}
+async function turnOn(t){
+  let p = await LN().checkPermissions(); if (p.display !== "granted") p = await LN().requestPermissions();
+  if (p.display !== "granted") throw new Error("denied");
+  lss(KEY, JSON.stringify({t})); lss(ASKED, "1"); await schedule();
+}
+async function turnOff(){ lss(KEY, null); await schedule(); }
+
+// ── 选时间那一块（样子跟今日世界结果页原来的网页提醒一样，多一个「自己定」） ──
+let pick = "20:00", msg = "", own = "";
+function html(){
+  if (!app()) return "";
+  const S = get(), on = S && S.t, cur = on || pick, isOwn = !SLOTS.includes(cur);
+  setTimeout(schedule, 0);   // 结果页 = 今天做完了，顺手重排（今天就不再提今日世界）
+  return `<div class="tw-push hvn-box"><b>🔔 ${on ? T("每天", "Every day at") + " " + esc(lbl(on)) + " " + T("叫你", "") : T("每天准时叫你一声？", "Want a nudge every day?")}</b>
+    <small>${on ? T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。点别的时间就换。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Tap another time to change.")
+                : T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。随时能关。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Turn it off any time.")}</small>
+    <div class="tw-pt">${SLOTS.map(s => `<button data-hvnt="${s}"${s === cur ? ' class="on"' : ""}>${esc(lbl(s))}</button>`).join("")}<label class="hvn-own${isOwn ? " on" : ""}">${T("自己定", "Pick a time")} <input type="time" data-hvnown value="${esc(isOwn ? cur : own)}"></label></div>
+    ${on ? `<button class="tw-poff" data-hvnoff>${T("关掉提醒", "Turn off reminders")}</button>` : `<button class="tw-pon" data-hvnon>${T("好，每天叫我", "Yes, remind me daily")}</button>`}
+    ${msg ? `<small class="tw-pmsg">${esc(msg)}</small>` : ""}</div>`;
+}
+function wire(root, after){
+  const box = root.querySelector(".hvn-box"); if (!box) return;
+  const redo = () => { const b = root.querySelector(".hvn-box"); if (b){ b.outerHTML = html(); wire(root, after); } };
+  const go = async t => { msg = T("正在打开…", "Turning on…"); redo();
+    try { await turnOn(t); msg = T("好了，到时候叫你。", "Done. See you then."); setTimeout(() => { msg = ""; }, 3000); if (after) after(true); }
+    catch(e){ msg = e && e.message === "denied" ? T("手机没允许通知：去「设置 → 通知 → HeyVoyo」打开。", "Notifications are off: open Settings → Notifications → HeyVoyo.") : T("现在开不了提醒，晚点再试。", "Couldn't turn on reminders. Try again later."); }
+    redo(); };
+  box.querySelectorAll("[data-hvnt]").forEach(b => b.onclick = () => { if (get()) go(b.dataset.hvnt); else { pick = b.dataset.hvnt; msg = ""; redo(); } });
+  const inp = box.querySelector("[data-hvnown]");
+  if (inp) inp.onchange = () => { const v = inp.value; if (!/^\d\d:\d\d$/.test(v)) return; own = v; if (get()) go(v); else { pick = v; msg = ""; redo(); } };
+  const on = box.querySelector("[data-hvnon]"); if (on) on.onclick = () => go(pick);
+  const off = box.querySelector("[data-hvnoff]"); if (off) off.onclick = async () => { await turnOff(); msg = ""; redo(); };
+}
+// 第一次在「人」里回了一句：弹一次小卡（只问一次；已经开了就不问）
+function ask(){
+  if (!app() || get() || lsg(ASKED)) return; lss(ASKED, "1");
+  setTimeout(() => {
+    const w = document.createElement("div"); w.id = "hvnAsk";
+    w.innerHTML = `<div class="hvn-card"><h3>${T("TA 明天会回你", "They'll reply tomorrow")}</h3><p>${T("要不要每天准时叫你一声？回你的话、新动态、今日世界，到时候就知道。", "Want a daily nudge so you don't miss their reply, new posts or Today's World?")}</p>${html()}<button class="hvn-later" data-hvnlater>${T("先不用", "Not now")}</button></div>`;
+    document.body.appendChild(w); const close = () => w.remove();
+    w.onclick = e => { if (e.target === w) close(); }; w.querySelector("[data-hvnlater]").onclick = close;
+    wire(w, ok => { if (ok) setTimeout(close, 1200); });
+  }, 900);
+}
+// 主程序交给我们打开各栏的办法；点通知时用
+function hook(h){
+  H = h || {}; if (!app()) return;
+  try { LN().addListener("localNotificationActionPerformed", e => { const x = (e && e.notification && e.notification.extra) || {}, f = H.open && H.open[x.tab];
+    if (f) setTimeout(() => { try { f(); } catch(err){} }, 1200); }); } catch(e){}
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) schedule(); });
+  setTimeout(schedule, 2500);
+}
+const css = `.hvn-own{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:2px solid rgba(0,0,0,.12);font-size:14px}
+.hvn-own.on{border-color:#c25a2c;color:#c25a2c;font-weight:700}.hvn-own input{font:inherit;border:0;background:transparent;color:inherit;min-width:84px}
+#hvnAsk{position:fixed;inset:0;z-index:99990;background:rgba(10,20,40,.45);display:flex;align-items:flex-end;justify-content:center}
+#hvnAsk .hvn-card{background:#fbf3df;color:#22223a;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+#hvnAsk h3{margin:0 0 6px;font-size:19px}#hvnAsk p{margin:0 0 10px;font-size:15px;line-height:1.5}
+#hvnAsk .hvn-later{display:block;margin:10px auto 0;background:none;border:0;color:#6b6b80;font:inherit;font-size:15px;padding:8px 14px}`;
+try { const st = document.createElement("style"); st.textContent = css; (document.head || document.documentElement).appendChild(st); } catch(e){}
+window.HVN = {app, hook, html, wire, ask, schedule};
 })();
 
 const LABELS = [
@@ -14144,9 +14274,20 @@ async function hvLbPacks(){
 
 var HV_BOOT = hvInit().catch(e=>{ console.warn('后台没连上', e); return false; });
 
+// ---- 邮件里的链接点回来去哪：网页版回到当前页；在 App 里（capacitor://localhost）邮件链接打不开 App，就去 heyvoyo.com 网页版（在那里设好密码，回 App 用邮箱 + 密码登录）
+function hvInApp(){ try { return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); } catch(e){ return false; } }
+function hvBackUrl(){ return hvInApp() || !/^https?:$/.test(location.protocol) ? "https://heyvoyo.com/map/" : location.origin + location.pathname; }
+// ---- 删除我的账号（苹果要求 App 里能自己删）：先删自己存的家乡视频，再让后台删账号（后台/delete_account.sql），然后退出
+async function hvDeleteAccount(){
+  const uid = HV.session && HV.session.user && HV.session.user.id; if (!uid) throw {message: "not signed in"};
+  try { const l = await HV.sb.storage.from("hometown").list(uid, {limit: 100}); const names = (l.data || []).map(f=>uid + "/" + f.name); if (names.length) await HV.sb.storage.from("hometown").remove(names); } catch(e){}
+  const r = await HV.sb.rpc("hv_delete_me"); if (r.error) throw r.error;
+  try { await HV.sb.auth.signOut({scope: "local"}); } catch(e){}
+  location.reload();
+}
 // ---- 登录界面：邮箱里点一下链接就登录
 async function hvSignIn(email){
-  const r = await HV.sb.auth.signInWithOtp({email, options: {emailRedirectTo: location.origin + location.pathname}});
+  const r = await HV.sb.auth.signInWithOtp({email, options: {emailRedirectTo: hvBackUrl()}});
   if (r.error) throw r.error;
 }
 async function hvSignOut(){ await HV.sb.auth.signOut(); }
@@ -14157,18 +14298,18 @@ async function hvSignInPassword(email, password){
 }
 // ---- 注册（邮箱 + 密码 + 昵称）：Supabase 会发一封确认邮件，点了才算注册完
 async function hvSignUp(email, password, name){
-  const r = await HV.sb.auth.signUp({email, password, options: {data: {name}, emailRedirectTo: location.origin + location.pathname}});
+  const r = await HV.sb.auth.signUp({email, password, options: {data: {name}, emailRedirectTo: hvBackUrl()}});
   if (r.error) throw r.error;
   if (r.data && r.data.user && Array.isArray(r.data.user.identities) && !r.data.user.identities.length) throw {code: "exists", message: "already registered"};   // 邮箱已经注册过
 }
 // ---- 忘记密码：发一封重设邮件，点回来以后打开「设新密码」
 async function hvResetPassword(email){
-  const r = await HV.sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname});
+  const r = await HV.sb.auth.resetPasswordForEmail(email, {redirectTo: hvBackUrl()});
   if (r.error) throw r.error;
 }
 // ---- 重新发送确认邮件
 async function hvResendSignup(email){
-  const r = await HV.sb.auth.resend({type: "signup", email, options: {emailRedirectTo: location.origin + location.pathname}});
+  const r = await HV.sb.auth.resend({type: "signup", email, options: {emailRedirectTo: hvBackUrl()}});
   if (r.error) throw r.error;
 }
 async function hvSetPassword(password){
@@ -20361,6 +20502,7 @@ const twpIos = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !(navigator
 const twpLbl = s => Z({"08:30": "早上 8:30", "12:30": "中午 12:30", "20:00": "晚上 8:00"}[s] || s);
 let twpPick = "12:30", twpMsg = "";
 function twpHtml(){
+  if (window.HVN && HVN.app()) return HVN.html();   // 📱 App 里用本地提醒（app_notify.js），网页照旧
   if (twpIos() && typeof HV !== "undefined" && HV.sb) return `<div class="tw-push"><b>🔔 ${Z("明天的 3 张，要我叫你吗？")}</b><small>${Z("先把 HeyVoyo 添加到主屏幕：点下面的分享 ⬆️ →「添加到主屏幕」，再从桌面打开，这里就能开提醒。")}</small></div>`;
   if (!twpCan() || Notification.permission === "denied") return "";
   const on = twpGet(), cur = on || twpPick;
@@ -20379,11 +20521,12 @@ async function twpSub(slot){
   if (r.error) throw r.error; twpSet(slot); }
 async function twpOff(){ try { const reg = await navigator.serviceWorker.getRegistration(), sub = reg && await reg.pushManager.getSubscription();
   if (sub){ await HV.sb.rpc("push_remove", {p_endpoint: sub.endpoint}); await sub.unsubscribe(); } } catch(e){} twpSet(""); }
-function twpWire(sh){ const box = sh.querySelector(".tw-push"); if (!box) return; const redo = () => { const b = sh.querySelector(".tw-push"); if (b){ b.outerHTML = twpHtml(); twpWire(sh); } };
+function twpWire(sh){ if (window.HVN && HVN.app()) return HVN.wire(sh); const box = sh.querySelector(".tw-push"); if (!box) return; const redo = () => { const b = sh.querySelector(".tw-push"); if (b){ b.outerHTML = twpHtml(); twpWire(sh); } };
   const go = async slot => { twpMsg = Z("正在打开…"); redo(); try { await twpSub(slot); twpMsg = ""; } catch(e){ twpMsg = e && e.message === "denied" ? Z("手机没允许通知，可以在浏览器的网站设置里打开。") : Z("这台手机现在开不了提醒，晚点再试。"); } redo(); };
   box.querySelectorAll("[data-twpt]").forEach(b=>b.onclick = () => { if (twpGet()) go(b.dataset.twpt); else { twpPick = b.dataset.twpt; redo(); } });
   if (box.querySelector("[data-twpon]")) box.querySelector("[data-twpon]").onclick = () => go(twpPick);
   if (box.querySelector("[data-twpoff]")) box.querySelector("[data-twpoff]").onclick = async () => { await twpOff(); twpMsg = ""; redo(); }; }
+if (window.HVN) HVN.hook({UI, open: {today: ()=>{ galClose(); twOpen(); }, people: ()=>ptOpen(), boat: ()=>bpOpen()}, todayDone: ()=>!!twToday() && twDone(twMine())});   // 📱 点 App 提醒打开对的那一栏
 // 从提醒点进来（/map/?today=1）：直接打开今日世界
 if (/[?&]today=1/.test(location.search)) setTimeout(()=>{ try { twOpen(); } catch(e){} }, 1200);
 function twRoute(sh, T, m){ const box = sh.querySelector(".tw-route"); if (!box || typeof WORLD === "undefined") return; const sv = box.querySelector("svg"), W = box.clientWidth, H = box.clientHeight;
@@ -22072,7 +22215,9 @@ function openMe(){
     ${SOC.site ? row("meLb","🛟","我的救生圈",`<span id="meLbN">…</span> · 用 AI 帮忙、拍照认东西时用`) : ""}
     ${SOC.site ? row("mePw","🔑","设置 / 修改密码","设了以后可以直接用邮箱 + 密码登录") : ""}
     ${SOC.site ? `<div class="soc-form" id="pwForm" hidden><label for="pw1">新密码（至少 8 位）</label><input id="pw1" type="password" autocomplete="new-password"><label for="pw2">再输一次</label><input id="pw2" type="password" autocomplete="new-password"><button class="chip hot" id="pwSave">保存密码</button><span class="note" id="pwNote"></span></div>` : ""}
-    ${SOC.site ? row("meOut","↩️","退出登录","") : ""}`;
+    ${SOC.site ? row("meOut","↩️","退出登录","") : ""}
+    ${SOC.site ? row("meDel","🗑️",UI === "zh" ? "删除账号" : "Delete account",UI === "zh" ? "永久删掉账号和存在账号里的东西" : "Permanently delete your account and what's saved in it") : ""}
+    ${SOC.site ? `<div class="soc-form" id="delForm" hidden><p class="note">${UI === "zh" ? "删除以后：账号、昵称、存在账号里的学习记录、照片、家乡贴纸、救生圈都会永久删掉，找不回来。这台手机上的学习进度会留着。" : "This permanently deletes your account, name, synced progress, photos, hometown stickers and lifebuoys. It can't be undone. Progress saved on this phone stays."}</p><button class="chip" id="delYes" style="background:#c0392b;color:#fff;border-color:#c0392b">${UI === "zh" ? "永久删除我的账号" : "Delete my account forever"}</button> <button class="chip" id="delNo">${UI === "zh" ? "算了" : "Cancel"}</button><span class="note" id="delNote"></span></div>` : ""}`;
   card.hidden = false; card.scrollTop = 0; card.querySelector(".x").onclick = closeCard;
   const go = (sel, fn) => { const x = card.querySelector(sel); if (x) x.onclick = fn; };
   go("#meHome", ()=>{ const h = HT.find(x=>x.id === SOC.uid); if (h) openHometown(h.id); else openHometownMake(); });
@@ -22085,6 +22230,10 @@ function openMe(){
   go("#meLearn", ()=>{ openSoc(); const h = [...card.querySelectorAll("h3")].find(x=>x.textContent.includes("跟读本")); if (h) h.scrollIntoView(); });
   go("#meReview", ()=>openReview());
   go("#meOut", ()=>hvSignOut());
+  go("#meDel", ()=>{ const f = card.querySelector("#delForm"); f.hidden = !f.hidden; if (!f.hidden) f.scrollIntoView({block: "nearest"}); });
+  go("#delNo", ()=>{ card.querySelector("#delForm").hidden = true; });
+  go("#delYes", async ()=>{ const b = card.querySelector("#delYes"), n = card.querySelector("#delNote"); b.disabled = true; n.textContent = UI === "zh" ? " 正在删除…" : " Deleting…";
+    try { await hvDeleteAccount(); } catch(e){ b.disabled = false; n.textContent = (UI === "zh" ? " 没删成：" : " Couldn't delete: ") + (e && e.message || (UI === "zh" ? "请稍后再试，或写信到 hello@heyvoyo.com" : "please try again, or email hello@heyvoyo.com")); } });
   go("#mePrefs", ()=>openPrefs(false));
   go("#meLb", ()=>lbOpen());
   if (SOC.site) hvLifebuoys().then(n=>{ const x = card.querySelector("#meLbN"); if (!x) return; if (n === null) card.querySelector("#meLb").remove(); else x.textContent = `${n} 个`; });
