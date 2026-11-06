@@ -722,6 +722,15 @@ figcaption b ruby{cursor:pointer}figcaption .zi-tip{font-style:normal;font-size:
 @media (prefers-reduced-motion:reduce){
   #sea{animation:none}.st .bob{animation:none}.st .pop,.st .off{transition:none}#card{animation:none}
 }
+body.me-page #card,body.me-page #card.msheet{position:fixed!important;inset:0!important;width:auto!important;height:auto!important;max-height:none!important;z-index:41;margin:0;border:0!important;border-radius:0!important;box-shadow:none!important;animation:none!important;overflow-y:auto;background:#fbf8f0;color:#24303a;padding:calc(30px + env(safe-area-inset-top,0px)) 18px calc(110px + env(safe-area-inset-bottom,0px));align-content:start;gap:8px}
+body.me-page #card>*{width:100%;max-width:560px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+body.me-page #card>.sh-grab,body.me-page #card>.x[data-mehome]{display:none!important}
+body.me-page #card>.x{position:static;justify-self:start;width:auto;max-width:560px;height:auto;border:0;background:none;box-shadow:none;padding:4px 0;color:#14305c;cursor:pointer;font:500 15px/1 var(--f-body);letter-spacing:.06em}
+body.me-page #card .c-top{margin-bottom:10px}
+body.me-page #card .c-top .c-emo{width:60px;height:60px;font-size:30px}
+body.me-page #card .c-top h2{font-size:26px;letter-spacing:.02em}
+body.me-page #card .chip[style*="width:100%"]{background:#fff;border:0;border-radius:14px;box-shadow:0 1px 2px rgba(20,48,92,.08);padding:13px 14px!important;margin:3px auto!important}
+body.me-page #galTabs{display:flex!important}
 #card .chip[style*="width:100%"]{white-space:normal;min-width:0;box-sizing:border-box}   /* 整行的按钮：手机上字多时换行，不撑出卡片 */
 .cradial text{paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round}   /* 船菜单的字描白边，压在地图上也看得清 */
 .mn-tray{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.mn-tray .chip{padding:2px 4px 2px 10px}.mn-tw,.mn-tx{all:unset;cursor:pointer}.mn-tx{padding:0 6px;color:#868e96}   /* 拍照标词：照片下面的词卡 */
@@ -66860,6 +66869,7 @@ function factHtml(n){
     <p class="note">📎 数据来源：${esc(f.src)}</p>`;
 }
 function closeCard(){
+  if (document.body.classList.contains("me-page")){ if (!card.hidden && !card.querySelector(":scope > .x[data-mehome]")){ openMe(); card.scrollTop = 0; return; } document.body.classList.remove("me-page", "gal-on"); galTabs("map"); }
   if (!selected && card.hidden) return;
   if (selected) selected.el.classList.remove("sel");
   selected = null; card.hidden = true; galBack = false; if (!focus) setHL(null); showSpread(null); { const b = document.getElementById("spBack"); if (b) b.hidden = true; } render();
@@ -68802,7 +68812,7 @@ function hvTop(){ const tk = document.getElementById("talkScene");
   if (!card.hidden){ const st = document.getElementById("isleStage"); return st && !st.hidden ? ()=>isleBack() : ()=>closeCard(); }
   if (document.body.classList.contains("gal-on")) return ()=>galClose();
   return null; }
-// 🔗 每个页面一个地址（用户 2026-11-02：点浏览器返回就退到介绍页）：#boat 我的船 · #isles 群岛 · #map 地图 · #isle/岛/主题 · …/practice 在练 · …/talk 开船去说 · #map/card 卡片
+// 🔗 每个页面一个地址（用户 2026-11-02：点浏览器返回就退到介绍页）：#boat 我的船 · #isles 群岛 · #me 我 · #map 地图 · #isle/岛/主题 · …/practice 在练 · …/talk 开船去说 · #map/card 卡片
 // 点了什么、页面变了，就在浏览器历史里记一步；返回键 = 回到上一个地址（先关最上面那一层，关不到就直接打开那一页）；刷新、分享链接都停在原来的地方
 let rtBusy = 0, rtStarted = false;
 try { localStorage.setItem("hv.visited", "1"); } catch(e){}   // 来过地图：下次打开 heyvoyo.com 直接进来
@@ -68810,17 +68820,17 @@ const rtVis = id => { const e = document.getElementById(id); return !!(e && !e.h
 const rtOvl = () => ["ppX", "pzX", "suX"].some(id=>document.getElementById(id));   // 盖在最上面的聊聊 / 开放麦：地址多一层「/x」，返回键先关它
 function rtNow(){ const r = rtNow0(); return rtOvl() && !r.endsWith("/x") ? r + "/x" : r; }
 function rtNow0(){ const tk = rtVis("talkScene"), st = rtVis("isleStage") && !card.hidden;
-  if (document.body.classList.contains("gal-on")) return rtVis("boatPg") ? "boat" : rtVis("ppPg") ? (rtVis("ppPerson") ? "people/p" : "people") : "isles";   // 我的船、群岛盖在最上面
+  if (document.body.classList.contains("gal-on")) return document.body.classList.contains("me-page") ? "me" : rtVis("boatPg") ? "boat" : rtVis("ppPg") ? (rtVis("ppPerson") ? "people/p" : "people") : "isles";   // 我的船、群岛盖在最上面
   if (st && plIsle){ const b = "isle/" + plIsle + (plCur ? "/" + plCur : ""); return document.body.classList.contains("isle-prac") ? b + "/practice" : tk ? b + "/talk" : b; }
   if (tk) return "talk";
-  if (document.body.classList.contains("gal-on")) return rtVis("boatPg") ? "boat" : rtVis("ppPg") ? (rtVis("ppPerson") ? "people/p" : "people") : "isles";
+  if (document.body.classList.contains("gal-on")) return document.body.classList.contains("me-page") ? "me" : rtVis("boatPg") ? "boat" : rtVis("ppPg") ? (rtVis("ppPerson") ? "people/p" : "people") : "isles";
   if (!card.hidden) return selected && selected.n ? "map/s/" + encodeURIComponent(selected.n) : "map/card";
   return "map"; }
 function rtSync(){ if (rtBusy) return; const h = rtNow(), cur = decodeURIComponent(location.hash.slice(1)); if (decodeURIComponent(h) === cur) return;
   try { if (rtStarted) history.pushState({rt: 1}, "", "#" + h); else history.replaceState({rt: 1}, "", "#" + h); } catch(e){} rtStarted = true; }
 function rtOpen(h){ h = h.replace(/\/x$/, ""); const P = h.split("/");
   { const tk = document.getElementById("talkScene"); if (tk && !tk.hidden && !/talk$/.test(h)){ try { speechSynthesis.cancel(); } catch(e){} tk.hidden = true; } }   // 返回键离开船票场景：先把场景收掉（体检 2026-11-05：返回后伦敦场景还盖在最上面）
-  if (h === "boat") bpOpen(); else if (h === "isles") galOpen(); else if (h === "people" || h.startsWith("people/")) ptOpen();
+  if (h === "boat") bpOpen(); else if (h === "me") meOpen(); else if (h === "isles") galOpen(); else if (h === "people" || h.startsWith("people/")) ptOpen();
   else if (h === "map"){ galClose(); if (!card.hidden) closeCard(); }
   else if (P[0] === "isle" && P[1]){ galClose(); if (plIsle !== P[1] || !rtVis("isleStage") || card.hidden) blGo(P[1], P[2] || null); else if (P[2] && plCur !== P[2]) islePick(P[2]);
     if (P[3] === "practice") setTimeout(()=>{ const b = document.getElementById("isleStart"); if (b && !document.body.classList.contains("isle-prac")) b.click(); }, 500);
@@ -68842,7 +68852,7 @@ function galTabs(on){ let t = document.getElementById("galTabs");
       people: TI('<circle cx="9" cy="8" r="3.2"/><path d="M3 19.5a6 6 0 0 1 12 0"/><circle cx="16.5" cy="9" r="2.6"/><path d="M15.5 14.2a5 5 0 0 1 6 5.3"/>'),
       me: TI('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')};
     t.innerHTML = [["boat", Z("我的船")], ["home", Z("群岛")], ["people", ({zh: "人", en: "People", pt: "Pessoas", es: "Personas", ja: "人", ar: "الناس"})[UI] || "People"], ["map", Z("地图")], ["me", Z("我")]].map(([k, n])=>`<button data-galtab="${k}"><b>${TAB_I[k]}</b>${esc(n)}</button>`).join(""); document.body.appendChild(t);
-    t.querySelectorAll("[data-galtab]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.galtab; if (k === "home") galOpen(); else if (k === "boat") bpOpen(); else if (k === "people") ptOpen(); else if (k === "me"){ galClose(); openMe(); meExtras(); } else { galClose(); const st = document.getElementById("isleStage"); if (st && !st.hidden && !card.hidden) closeCard(); } }); }
+    t.querySelectorAll("[data-galtab]").forEach(b=>b.onclick = ()=>{ const k = b.dataset.galtab; if (k !== "me" && document.body.classList.contains("me-page")){ document.body.classList.remove("me-page"); closeCard(); } if (k === "home") galOpen(); else if (k === "boat") bpOpen(); else if (k === "people") ptOpen(); else if (k === "me") meOpen(); else { galClose(); const st = document.getElementById("isleStage"); if (st && !st.hidden && !card.hidden) closeCard(); } }); }
   t.querySelectorAll("[data-galtab]").forEach(b=>b.classList.toggle("on", b.dataset.galtab === on)); }
 // ⛵ 我的船整页（手机上打开软件先看到的）：最上面「今天的航程」（船开过三站：复习 → 航线下一站 → 港口），下面切换「⛵ 我的航线」（学过的岛自己长出来，最近的在上面）和「🧳 船舱和日志」
 let bpView = "path", bpPick = null; const bpFold = {};
@@ -70778,6 +70788,11 @@ async function lbOpen(empty){
   card.querySelectorAll(".lb-pack").forEach(b=>b.onclick = ()=>{ card.querySelector("#lbNote").textContent = "付款功能马上就来，现在还不能买。"; });
 }
 // 「我自己的」：伙伴、声音、显示样式也在「👤 我」里（原来在右边和右上角）
+// 👤「我」= 底部第五栏自己的一整屏（2026-11-06 用户：「我的界面还插在地图里面呢，愚蠢啊」）。内容还是 openMe 画的那些，只是整屏铺开、地图藏在后面；
+// 从「我」点进去的页面（身份、圈子、跟读本……）左上角是「‹ 我」，回到「我」；点底部别的栏才离开。
+function meOpen(){ galClose(); document.body.classList.add("me-page", "gal-on"); openMe(); galTabs("me"); card.scrollTop = 0; }
+new MutationObserver(()=>{ if (!document.body.classList.contains("me-page")) return; const x = card.querySelector(":scope > .x"); if (x && !x.dataset.mehome && x.textContent !== "‹ " + Z("我")) x.textContent = "‹ " + Z("我"); }).observe(card, {childList: true});
+{ const o = openMe; openMe = function(){ const r = o.apply(this, arguments); if (document.body.classList.contains("me-page")){ const x = card.querySelector(":scope > .x"); if (x) x.dataset.mehome = ""; meExtras(); } return r; }; }
 function meExtras(){ if (card.hidden || card.querySelector(".me-x")) return; const x = document.createElement("div"); x.className = "me-x";
   x.innerHTML = `${ckOn() ? `<div class="ck-me">🧱 ${Z("基础词块")} <b>${ckCount()}/${CKL.length}</b> · ${Z("说得出")} ${ckCount(4)}${ckHskHtml()}${LEARN_ZH && typeof ZI !== "undefined" ? `<br><button class="chip" data-zilist>🀄 ${Z("认得的字")} <b>${ziCount()}/${ZI_ALL}</b> · ${Z("全部字卡")} ›</button>` : ""}<br><button class="chip" ${LEARN_ZH ? "data-fyopen" : "data-epopen"}>🗣️ ${LEARN_ZH ? Z("两个字的声调") : Z("发音 · 按你的母语排")} ›</button><small>${Z("在群岛看门头短片时练，我的船里复习")}</small></div>` : ""}<div class="chips"><button class="chip" data-mex="socBtn">🤝 ${Z("伙伴")}</button><button class="chip" data-mex="soundBtn">${SOUND.on ? "🔊 " + Z("声音：开") : "🔇 " + Z("声音：关")}</button><button class="chip" data-mex="styleBtn">🗺️ ${Z("换一种贴纸样子")}</button></div>`;
   x.querySelectorAll("[data-mex]").forEach(b=>b.onclick = ()=>{ document.getElementById(b.dataset.mex).click(); if (b.dataset.mex === "soundBtn") b.textContent = SOUND.on ? "🔊 " + Z("声音：开") : "🔇 " + Z("声音：关"); });
