@@ -1,4 +1,4 @@
-<!doctype html><html><head><base href="/"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/app/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="/app/icon-192.png"><meta name="theme-color" content="#2179d2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HeyVoyo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><script>if("serviceWorker" in navigator) addEventListener("load", ()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script><script>if(location.protocol==="capacitor:")addEventListener("error",function(e){var t=e.target,o=location.origin+"/",a=t&&t.getAttribute&&(t.src||"");if(!a||a.indexOf(o)||t.dataset.hvNet)return;t.dataset.hvNet=1;t.src="https://heyvoyo.com/"+a.slice(o.length);if(t.tagName==="SOURCE"&&t.parentNode)t.parentNode.load()},true);</script><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><title>环球文化贴纸地图</title>
+<!doctype html><html><head><base href="/"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/app/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="/app/icon-192.png"><meta name="theme-color" content="#2179d2"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HeyVoyo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><script>if("serviceWorker" in navigator) addEventListener("load", ()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));</script><script>if(location.protocol==="capacitor:")addEventListener("error",function(e){var t=e.target,o=location.origin+"/",a=t&&t.getAttribute&&(t.src||"");if(!a||a.indexOf(o)||t.dataset.hvNet)return;t.dataset.hvNet=1;t.src="https://heyvoyo.com/"+a.slice(o.length);if(t.tagName==="SOURCE"&&t.parentNode)t.parentNode.load()},true);</script><script>/*hvToApp*/if(/^https?:$/.test(location.protocol)&&location.pathname.indexOf("/map")===0)location.replace("/app/"+location.search+location.hash);</script><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'><title>环球文化贴纸地图</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" media="print" onload="this.media='all'"><!-- 字体拉不到（大陆常见）也不卡页面，先用系统字体 -->
 <style>
@@ -66340,7 +66340,7 @@ let shr = null, shrLibs = null;
 function shrBeen(id, k){ const L = blGet(), out = [], seen = new Set([id + "|" + k]), cut = Date.now() - 7 * 864e5;
   Object.keys(L.days || {}).sort().reverse().forEach(day=>Object.entries(L.days[day]).forEach(([key, e])=>{ if (!e.go || e.t < cut || seen.has(key)) return; seen.add(key); const [i, kk] = key.split("|"), X = tkOf(i, kk); if (X && X.go && !out.some(o=>o.city.en === X.go.city.en)) out.push(X.go); }));
   return out.filter(g=>cityL(g.city) !== tkOf(id, k).go.city.en).slice(0, 3); }
-const shrLink = (id, k) => "https://heyvoyo.com/map/?go=" + encodeURIComponent(id + "|" + k);
+const shrLink = (id, k) => "https://heyvoyo.com/app/?go=" + encodeURIComponent(id + "|" + k);
 function shrCaption(id, k, ri){ const g = tkOf(id, k).go, r = g.replies[ri], n = npcAny(g.npc) || {name: ""}, been = shrBeen(id, k).map(x=>bmU(x.city)), spot = bmU(g.spot).split(" · ")[0];
   return UI === "zh" ? `今天开船到了${g.flag} ${g.city.zh}，在${spot}跟 ${n.name} 说上话了 ⛵\n\n${n.name}："${bmT(g.hello)}"\n我："${bmT(r.say)}"\n\n${been.length ? `这周还去了${been.join("、")}。` : ""}你也来试试这一关 👇\n${shrLink(id, k)}\n\n#HeyVoyo #${LEARN_ZH ? "学中文" : "学英语"} #${cityL(g.city).replace(/\W/g, "")}`
     : `Sailed to ${g.flag} ${cityL(g.city)} today and chatted with ${n.name} at ${spot} ⛵\n\n${n.name}: "${bmT(g.hello)}"\nMe: "${bmT(r.say)}"\n\n${been.length ? `Also this week: ${been.join(", ")}. ` : ""}Try this stop yourself 👇\n${shrLink(id, k)}\n\n#HeyVoyo #${LEARN_ZH ? "learnchinese" : "learnenglish"} #${cityL(g.city).replace(/\W/g, "")}`; }
@@ -68826,8 +68826,9 @@ function rtNow0(){ const tk = rtVis("talkScene"), st = rtVis("isleStage") && !ca
   if (document.body.classList.contains("gal-on")) return document.body.classList.contains("me-page") ? "me" : rtVis("boatPg") ? "boat" : rtVis("ppPg") ? (rtVis("ppPerson") ? "people/p" : "people") : "isles";
   if (!card.hidden) return selected && selected.n ? "map/s/" + encodeURIComponent(selected.n) : "map/card";
   return "map"; }
+const rtUrl = h => location.pathname + location.search + "#" + h;   // 地址里一直留着 /map/（2026-11-06：从主页进「人」后地址变成 heyvoyo.com/#people）
 function rtSync(){ if (rtBusy) return; const h = rtNow(), cur = decodeURIComponent(location.hash.slice(1)); if (decodeURIComponent(h) === cur) return;
-  try { if (rtStarted) history.pushState({rt: 1}, "", "#" + h); else history.replaceState({rt: 1}, "", "#" + h); } catch(e){} rtStarted = true; }
+  try { if (rtStarted) history.pushState({rt: 1}, "", rtUrl(h)); else history.replaceState({rt: 1}, "", rtUrl(h)); } catch(e){} rtStarted = true; }
 function rtOpen(h){ h = h.replace(/\/x$/, ""); const P = h.split("/");
   { const tk = document.getElementById("talkScene"); if (tk && !tk.hidden && !/talk$/.test(h)){ try { speechSynthesis.cancel(); } catch(e){} tk.hidden = true; } }   // 返回键离开船票场景：先把场景收掉（体检 2026-11-05：返回后伦敦场景还盖在最上面）
   if (h === "boat") bpOpen(); else if (h === "me") meOpen(); else if (h === "isles") galOpen(); else if (h === "people" || h.startsWith("people/")) ptOpen();
@@ -68835,11 +68836,12 @@ function rtOpen(h){ h = h.replace(/\/x$/, ""); const P = h.split("/");
   else if (P[0] === "isle" && P[1]){ galClose(); if (plIsle !== P[1] || !rtVis("isleStage") || card.hidden) blGo(P[1], P[2] || null); else if (P[2] && plCur !== P[2]) islePick(P[2]);
     if (P[3] === "practice") setTimeout(()=>{ const b = document.getElementById("isleStart"); if (b && !document.body.classList.contains("isle-prac")) b.click(); }, 500);
     else if (document.body.classList.contains("isle-prac")) islePracEnd(false); }
-  else if (P[0] === "map" && P[1] === "s" && P[2]){ galClose(); try { const d = data.find(x=>x.n === decodeURIComponent(P[2])); if (d) boatToSticker(d.n); } catch(e){} } }
+  else if (P[0] === "map" && P[1] === "s" && P[2]){ galClose(); try { const d = data.find(x=>x.n === decodeURIComponent(P[2])); if (d) boatToSticker(d.n); } catch(e){} }
+  if (window.rtCoverOff) setTimeout(window.rtCoverOff, 300); }
 function rtGo(h){ rtBusy++; try { for (let n = 0; n < 6; n++){ const c = rtNow(); if (c === h) break;
       if (c.startsWith(h + "/") || (c.startsWith("map/") && h === "map")){ const f = hvTop(); if (!f) break; f(); continue; }   // 往回：一层一层关
       rtOpen(h); break; } }
-  finally { setTimeout(()=>{ rtBusy--; const c = rtNow(); try { history.replaceState({rt: 1}, "", "#" + c); } catch(e){} }, 700); } }
+  finally { setTimeout(()=>{ rtBusy--; const c = rtNow(); try { history.replaceState({rt: 1}, "", rtUrl(c)); } catch(e){} }, 700); } }
 addEventListener("popstate", ()=>{ const h = decodeURIComponent(location.hash.slice(1)) || "map"; rtGo(h); });
 document.addEventListener("click", ()=>setTimeout(rtSync, 450), true);
 function galClose(){ bpClose(); const box = document.getElementById("gal"); if (!box){ document.body.classList.remove("gal-on"); galTabs("map"); return; } box.hidden = true; box.querySelectorAll("video").forEach(v=>v.pause()); galCur = null; document.body.classList.remove("gal-on"); galTabs("map"); if (typeof mapIntroGo === "function") setTimeout(mapIntroGo, 200); }
@@ -69229,13 +69231,18 @@ const galPhone = () => window.matchMedia && window.matchMedia("(max-width: 700px
 let galQuiet = 0;   // 卡片（比如第一次的语言卡片）连续两次检查都关着，才打开群岛，免得盖住它
 // 打开网页时的地址：等语言卡片的时候，点「完成」会把地址改成 #map，不能拿那个当成用户要去地图（2026-11-04：第一次打开关掉卡片后底部按钮不见了）
 const galH0 = decodeURIComponent(location.hash.slice(1));
+if (/^(boat|people|me|isles|isle\/)/.test(galH0)){ const cv = document.createElement("div"); cv.id = "rtCover";
+  cv.style.cssText = "position:fixed;inset:0;z-index:9999;background:#fbf8f0;display:grid;place-items:center;font:600 12px/1 'Cormorant Garamond',serif;letter-spacing:.5em;color:#8f7a4c;transition:opacity .4s";
+  cv.textContent = "HEYVOYO"; document.body.appendChild(cv);
+  const off = () => { if (!cv.isConnected) return; cv.style.opacity = 0; setTimeout(()=>cv.remove(), 450); }; window.rtCoverOff = off; setTimeout(off, 7000);
+  const iv = setInterval(()=>{ if (!cv.isConnected) return clearInterval(iv); if (!card.hidden && !document.body.classList.contains("me-page")){ off(); clearInterval(iv); } }, 300); }   // 弹出了要回答的卡片（比如第一次选语言）就别挡着
 function galBoot(){ if (!galPhone() && typeof ISLE_TALK !== "undefined" && !document.getElementById("galTabs")) galTabs("map");   // 电脑上：地图先开，下面一样有三个按钮
   const h0 = galH0;
   if (!galPhone() || typeof ISLE_TALK === "undefined" || /[?&]go=/.test(location.search)){ if (h0 && h0 !== "map" && typeof ISLE_TALK !== "undefined" && card.hidden) rtGo(h0); setTimeout(rtSync, 800); return; }
   galQuiet = card.hidden ? galQuiet + 1 : 0; if (galQuiet < 2){ setTimeout(galBoot, 900); return; }
   if (h0 && h0 !== "map") rtGo(h0); else if (!h0) bpOpen(); else galTabs("map");   // 打开的就是 #map：留在地图，底部按钮也要有
   setTimeout(rtSync, 900); }
-setTimeout(galBoot, 2500);
+setTimeout(galBoot, galH0 && galH0 !== "map" ? 700 : 2500);   // 地址里写着要去哪一页：早点去
 // 📱 手机上的地图像 Google 地图：贴纸卡片变成底部抽屉（露一小条 / 一半 / 全屏，拖把手或点一下换），
 // 没打开卡片时，抽屉是「这一片有什么」——屏幕里的贴纸排成列表，滑地图跟着换，手指不用点准小图标；右下 📍 回到自己的城市
 const mPhone = () => galPhone() && !document.body.classList.contains("gal-on");

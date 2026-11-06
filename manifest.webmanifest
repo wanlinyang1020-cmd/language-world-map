@@ -3,7 +3,7 @@
   "short_name": "HeyVoyo",
   "description": "一张学语言、认识世界的地图：岛上学，开船去真实的地方说。",
   "lang": "zh-CN",
-  "start_url": "/map/?app=1",
+  "start_url": "/app/?app=1",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

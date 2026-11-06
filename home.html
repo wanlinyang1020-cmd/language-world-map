@@ -278,7 +278,7 @@ footer nav{display:flex;gap:16px}
     <h1>One more word,<br>one more <em>world</em>.</h1>
     <p class="cine-zh" data-l="zh">多会一句话，世界就大一点。</p>
     <p class="cine-lead"><span data-l="zh">每天三站真实的地方，一段真实的短片，一句你真的会说的话。</span><span data-l="en">Three real places a day, a real short clip, one line you'd actually say.</span></p>
-    <div class="cta"><a class="btn pri" href="/map/#people" data-go="zh"><span data-l="zh">学中文</span><span data-l="en">Learn Chinese</span></a><a class="btn sec" href="/map/#people" data-go="en"><span data-l="zh">学英语</span><span data-l="en">Learn English</span></a></div>
+    <div class="cta"><a class="btn pri" href="/app/#people" data-go="zh"><span data-l="zh">学中文</span><span data-l="en">Learn Chinese</span></a><a class="btn sec" href="/app/#people" data-go="en"><span data-l="zh">学英语</span><span data-l="en">Learn English</span></a></div>
     <div class="free"><span data-l="zh">免费 · 不用注册就能开始</span><span data-l="en">Free · no sign-up needed to start</span></div>
   </div>
   <div class="cine-cap" id="cineCap">Seoul · Gwanghwamun, noon</div>
@@ -348,8 +348,8 @@ footer nav{display:flex;gap:16px}
   <p><span data-l="zh">同一句话，听英国人说，也听法国人、印度人、中国人说。真实的世界里，大部分对话本来就发生在不同口音之间。</span><span data-l="en">Hear the same line from a Londoner, and from French, Indian and Chinese speakers too. In the real world, most conversations happen between accents.</span></p>
   <div class="voices"><span class="v"><i style="background:#2d5a46">T</i><span>Tom<small>English · native</small></span></span><span class="v"><i style="background:#3a4f8a">L</i><span>Léa<small>French speaker</small></span></span><span class="v"><i style="background:#b5523b">A</i><span>Arjun<small>Hindi speaker</small></span></span><span class="v"><i style="background:#8a2f22">林</i><span>小林<small>Chinese speaker</small></span></span><span class="v"><i style="background:#c9a45c">?</i><span><span data-l="zh">你</span><span data-l="en">You</span><small><span data-l="zh">下一个</span><span data-l="en">next</span></small></span></span></div>
   <div class="cta">
-    <a class="btn pri" href="/map/#people" data-go="zh"><span data-l="zh">学中文</span><span data-l="en">Learn Chinese</span></a>
-    <a class="btn sec" href="/map/#people" data-go="en"><span data-l="zh">学英语</span><span data-l="en">Learn English</span></a>
+    <a class="btn pri" href="/app/#people" data-go="zh"><span data-l="zh">学中文</span><span data-l="en">Learn Chinese</span></a>
+    <a class="btn sec" href="/app/#people" data-go="en"><span data-l="zh">学英语</span><span data-l="en">Learn English</span></a>
   </div>
   <div class="ftr-line">One more word, one more world</div>
 </section>
@@ -362,7 +362,7 @@ footer nav{display:flex;gap:16px}
 
 <script>
 // 来过地图的人再打开 heyvoyo.com 直接进地图；从站内点回首页（/?home 或从地图点过来）就留在首页
-try { if (localStorage.getItem("hv.visited") && !/[?&]home/.test(location.search) && !document.referrer.startsWith(location.origin)) location.replace("/map/"); } catch(e){}
+try { if (localStorage.getItem("hv.visited") && !/[?&]home/.test(location.search) && !document.referrer.startsWith(location.origin)) location.replace("/app/"); } catch(e){}
 const store = { get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch(e){} } };
 let lang = store.get("hv.home") || (/^zh/i.test(navigator.language) ? "zh" : "en");
 const show = l => { lang = l; document.documentElement.lang = l; document.querySelectorAll(".lang button").forEach(b=>b.classList.toggle("on", b.dataset.set === l)); };
@@ -378,7 +378,7 @@ document.querySelectorAll("[data-go]").forEach(a=>a.addEventListener("click", ()
   else if (learn === "en"){ store.set("hv.ui", "zh"); store.set("hv.learn", "en"); }
   store.set("hv.visited", "1");
 }));
-document.querySelectorAll('a[href^="/map/"]').forEach(a=>a.addEventListener("click", e=>{ if (e.metaKey || e.ctrlKey || e.shiftKey || a.target === "_blank") return; e.preventDefault(); store.set("hv.visited", "1"); setTimeout(()=>location.replace(a.getAttribute("href")), 0); }));
+document.querySelectorAll('a[href^="/app/"]').forEach(a=>a.addEventListener("click", e=>{ if (e.metaKey || e.ctrlKey || e.shiftKey || a.target === "_blank") return; e.preventDefault(); store.set("hv.visited", "1"); setTimeout(()=>location.replace(a.getAttribute("href")), 0); }));
 // 今日世界在地图上：今天三张钉在真实的位置，亮着；点一颗，左下角的卡显示这一张的问题，再点「看答案」
 // 先用页面里写好的一期（11 月 6 日），再去读当天的 today.json（deploy.sh 生成，带照片和经纬度）
 let TW = [{"n": "排灯节", "country": "印度", "q": "印度今天开始过的是什么节？", "ans": "排灯节", "say": "We light lamps and share sweets with our neighbours.", "zh": "我们点灯，跟邻居分甜点。", "img": "https://img.heyvoyo.com/ind_007.jpg", "lon": 77.2, "lat": 28.65, "en": {"country": "India", "q": "Which festival begins in India today?", "ans": "Diwali"}}, {"n": "柏林墙", "country": "德国", "q": "柏林这段画满涂鸦的是什么？", "ans": "柏林墙", "say": "The wall came down in November 1989.", "zh": "这堵墙是 1989 年 11 月倒的。", "img": "https://img.heyvoyo.com/deu_008.jpg", "lon": 13.44, "lat": 52.5, "en": {"country": "Germany", "q": "What is this graffiti-covered stretch in Berlin?", "ans": "Berlin Wall"}}, {"n": "富士山", "country": "日本", "q": "这座山顶已经白了的山是？", "ans": "富士山", "say": "The maple leaves are red and Mount Fuji has snow on top.", "zh": "枫叶红了，富士山顶上有雪了。", "img": "https://img.heyvoyo.com/jpn_001.jpg", "lon": 138.73, "lat": 35.36, "en": {"country": "Japan", "q": "Which mountain already has a white top?", "ans": "Mount Fuji"}}], TWD = new Date(2026, 10, 6), twCur = 0;
