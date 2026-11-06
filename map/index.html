@@ -62254,6 +62254,277 @@ async function readPhoto(f){ const pg = document.getElementById("entPage"), img 
 dict();
 window.ENT = {open, close, sounds, camera, ipa: ipaOf, lang(l){ LGFIX = true; LG = l === "zh" ? "zh" : "en"; }};
 })();
+// 📔 我的船 · 航海手帐（2026-11-06，样板：样板/我的船旅行手帐样板.html，用户说「可以，放进去」；替换原来的「黄昏的海」）
+// 包装像 Dior 日历的精致、内容像旅行手帐：
+// · 开屏：一天第一次打开「我的船」是一张象牙色礼物卡（TO the world / FROM you · 送给世界的，是你说出的一句话），有出场动画，点一下两扇纸门打开；
+// · 手帐一页：日期、三站的细线航线（小圆点跟着三站一个一个出来）、每一站写清楚主题（中英标题）、门头短片的封面做成宝丽来、今天的词做成标签机标签、要说的那一句；
+//   开船去城市那站多一张登机牌（去哪、谁在等）；说完盖邮戳 SENT TO THE WORLD；
+// · 点照片或那一句：穿过照片进全屏短片（字幕在短片上），听、说；说完就算走过这一站，「再练一会儿」才进原来的船上练习。
+// 文字里不写「今晚」这类时间。名字（bsInit / bsHtml / bsAfter / bsEnter / bsOpenPlace、data-bsw）跟黄昏的海一样，template2.html 不用改。
+// 依赖 template2.html 递过来的：npcAny、bpPlan、bpDone、bpStopInfo、bpImg、galPh、blDay、blIsleName、blPlace、tkOf、bmU、Z、esc、UI、tkClips、capNat、LEARN_ZH、micListen、boatLog、blGet、blSet、bpRun、bpOpen。
+(function(){
+const css = `
+.bj{--ink:#14305c;--ink2:#2b3f63;--paper:#f6efe1;--ivory:#fbf7ee;--hot:#e2552f;--gold:#c9a45c;--gold2:#e8cf96;--soft:#6b7488;position:relative;margin:-16px -14px 10px;padding:calc(26px + env(safe-area-inset-top)) 22px 8px;color:var(--ink);
+  background:radial-gradient(rgba(20,48,92,.13) .9px,transparent 1.1px) 0 0/18px 18px,var(--paper);font:15px/1.55 "Noto Sans SC","PingFang SC",sans-serif}
+@media (min-width:701px){.bj{margin:0 0 10px;border-radius:28px;padding-top:30px}}
+.bj *{box-sizing:border-box}
+.bj-sc{font:600 10.5px/1 "Cormorant Garamond",serif;letter-spacing:.32em;text-transform:uppercase;color:var(--gold)}
+.bj-hd{display:flex;justify-content:space-between;align-items:flex-start}
+.bj-hd .d{font:500 34px/1 "Noto Serif SC",serif;letter-spacing:.02em;margin-top:10px}
+.bj-hd .w{font:italic 500 17px/1 "Cormorant Garamond",serif;color:var(--ink2);margin-top:8px}
+.bj-seal{width:62px;height:62px;flex:none;transform:rotate(-8deg);opacity:.9}
+.bj-route{position:relative;margin:18px 0 4px;height:62px}
+.bj-route svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.bj-route .dot{position:absolute;top:14px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--ivory);border:1.5px solid var(--ink)}
+.bj-route .dot.on{background:var(--hot);border-color:var(--hot)}
+.bj-route .lb{position:absolute;top:36px;transform:translateX(-50%);text-align:center;font:500 11.5px/1.3 "Noto Serif SC",serif;color:var(--ink2);white-space:nowrap;max-width:34%;overflow:hidden;text-overflow:ellipsis}
+.bj-route .lb i{display:block;font:italic 500 11px/1.1 "Cormorant Garamond",serif;color:var(--soft);overflow:hidden;text-overflow:ellipsis}
+.bj-intro{font:500 15px/1.6 "Noto Serif SC",serif;color:var(--ink2);margin:16px 0 4px}
+.bj-rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold) 80%,transparent);margin:18px 0 6px;position:relative}
+.bj-rule::after{content:"";position:absolute;left:50%;top:-3px;width:7px;height:7px;margin-left:-3.5px;background:var(--paper);border:1px solid var(--gold);transform:rotate(45deg)}
+.bj-e{position:relative;margin:26px 0 34px}
+.bj-e .no{display:flex;align-items:center;gap:8px}
+.bj-e .no b{font:600 12px/1 "Cormorant Garamond",serif;letter-spacing:.2em;color:var(--hot)}
+.bj-e .no span{font:500 11.5px/1 "Noto Serif SC",serif;color:var(--soft);letter-spacing:.1em}
+.bj-body{display:grid;grid-template-columns:142px minmax(0,1fr);gap:16px;margin-top:12px}
+.bj-e.flip .bj-body{grid-template-columns:minmax(0,1fr) 142px}.bj-e.flip .bj-pol{order:2}
+.bj-pol{all:unset;cursor:pointer;position:relative;display:block;align-self:start;background:#fff;padding:8px 8px 30px;box-shadow:0 1px 1px rgba(0,0,0,.08),0 8px 18px rgba(40,30,10,.18);transform:rotate(-3deg);transition:transform .3s}
+.bj-e.flip .bj-pol{transform:rotate(2.5deg)}
+.bj-pol:active{transform:rotate(0) scale(.97)}
+.bj-pol img{display:block;width:100%;aspect-ratio:4/4.6;object-fit:cover;filter:saturate(.92) contrast(1.02);background:#e9e2d2}
+.bj-pol figcaption{position:absolute;left:4px;right:4px;bottom:7px;text-align:center;font:600 15px/1 "Caveat","Noto Serif SC",cursive;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bj-pol .play{position:absolute;right:14px;bottom:40px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.bj-tape{position:absolute;width:64px;height:20px;top:-10px;left:50%;margin-left:-32px;transform:rotate(-4deg);background:repeating-linear-gradient(45deg,#f2c9a0 0 6px,#f7dcc0 6px 12px);opacity:.85;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.bj-e.flip .bj-tape{background:repeating-linear-gradient(-45deg,#b9d7e6 0 6px,#d3e6ef 6px 12px);transform:rotate(5deg)}
+.bj-pm{position:absolute;right:-14px;top:-16px;width:78px;height:78px;opacity:0;transform:rotate(-14deg) scale(1.4);transition:all .5s cubic-bezier(.3,1.6,.5,1);pointer-events:none}
+.bj-e.done .bj-pm{opacity:.85;transform:rotate(-14deg) scale(1)}
+.bj-e.stamp .bj-pm{animation:bjStamp .7s cubic-bezier(.3,1.6,.5,1) .5s both}
+@keyframes bjStamp{0%{opacity:0;transform:rotate(-14deg) scale(1.6)}100%{opacity:.85;transform:rotate(-14deg) scale(1)}}
+.bj-tt{font:600 21px/1.25 "Noto Serif SC",serif;margin:0;word-break:break-word}
+.bj-te{font:italic 500 16px/1.2 "Cormorant Garamond",serif;color:var(--soft);margin-top:3px}
+.bj-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.bj-dymo{font:700 11.5px/1 "Courier Prime",monospace;letter-spacing:.06em;color:#fff;background:var(--ink);padding:6px 8px 5px;border-radius:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.25);text-transform:uppercase}
+.bj-dymo:nth-child(3n+2){background:#8a2f22}.bj-dymo:nth-child(3n){background:#2d5a46}
+.bj-say{all:unset;cursor:pointer;display:block;margin-top:14px;position:relative;padding:6px 0 0 18px}
+.bj-say::before{content:"“";position:absolute;left:0;top:-8px;font:500 40px/1 "Cormorant Garamond",serif;color:var(--gold)}
+.bj-say b{display:block;font:600 22px/1.15 "Caveat",cursive;color:var(--ink)}
+.bj-say.zh b{font:500 19px/1.4 "Noto Serif SC",serif}
+.bj-say small{display:block;font:400 12.5px/1.5 "Noto Sans SC",sans-serif;color:var(--soft);margin-top:3px}
+.bj-pass{position:relative;margin-top:14px;background:var(--ivory);border:1px solid rgba(20,48,92,.18);border-radius:10px;display:grid;grid-template-columns:minmax(0,1fr) 70px;box-shadow:0 6px 14px rgba(40,30,10,.12);overflow:hidden}
+.bj-pass .m{padding:10px 12px;min-width:0}
+.bj-pass .r{border-left:1.5px dashed rgba(20,48,92,.3);padding:10px 8px;text-align:center;position:relative}
+.bj-pass .r::before,.bj-pass .r::after{content:"";position:absolute;left:-8px;width:14px;height:14px;border-radius:50%;background:var(--paper);border:1px solid rgba(20,48,92,.18)}
+.bj-pass .r::before{top:-8px}.bj-pass .r::after{bottom:-8px}
+.bj-pass .k{font:600 9.5px/1 "Cormorant Garamond",serif;letter-spacing:.24em;color:var(--soft);text-transform:uppercase}
+.bj-pass .v{font:600 14px/1.35 "Noto Serif SC",serif;margin-top:4px}
+.bj-pass .rt{display:flex;align-items:center;gap:8px;font:600 17px/1 "Cormorant Garamond",serif;letter-spacing:.06em;margin-top:6px;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.bj-pass .big{font:600 26px/1 "Cormorant Garamond",serif;margin-top:6px}
+.bj-who{margin-top:8px;font:500 12.5px/1.4 "Noto Serif SC",serif;color:var(--ink2)}
+.bj-who small{display:block;color:var(--soft);font-size:11.5px;font-weight:400}
+.bj-past h3{font:600 12px/1 "Cormorant Garamond",serif;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin:6px 0 12px}
+.bj-pst{display:flex;gap:4px;overflow-x:auto;padding:6px 4px 14px;scrollbar-width:none}
+.bj-pst::-webkit-scrollbar{display:none}
+.bj-mini{flex:none;width:72px;background:#fff;padding:4px 4px 16px;box-shadow:0 4px 10px rgba(40,30,10,.16);transform:rotate(var(--r));position:relative;margin-right:2px}
+.bj-mini img{display:block;width:100%;aspect-ratio:1;object-fit:cover;background:#e9e2d2}
+.bj-mini span{position:absolute;left:0;right:0;bottom:2px;text-align:center;font:600 12px/1 "Caveat","Noto Serif SC",cursive;color:var(--ink2)}
+.bj-ftr{margin:28px 0 22px;text-align:center;font:italic 500 17px/1.2 "Cormorant Garamond",serif;color:#8f7a4c}
+.bj-ftr span{display:block;margin-top:7px;font:400 11.5px/1 "Noto Serif SC",serif;font-style:normal;letter-spacing:.24em;color:#a39675}
+/* 三站一张一张落下，航线上的小圆点跟着出来 */
+.bj.drop .bj-e,.bj.drop .bj-rule.r2,.bj.drop .bj-past,.bj.drop .bj-ftr{opacity:0}
+.bj.drop .bj-route svg{clip-path:inset(0 84% 0 16%)}
+.bj.drop .bj-route .dot{transform:scale(0)}
+.bj.drop .bj-route .lb{opacity:0}
+.bj.drop.go .bj-e{animation:bjDrop .9s cubic-bezier(.2,.9,.25,1.08) both}
+.bj.drop.go .bj-e:nth-of-type(1){animation-delay:.25s}
+.bj.drop.go .bj-e:nth-of-type(2){animation-delay:1.05s}
+.bj.drop.go .bj-e:nth-of-type(3){animation-delay:1.85s}
+.bj.drop.go .bj-rule.r2{animation:bjFade .6s ease 2.6s both}
+.bj.drop.go .bj-past,.bj.drop.go .bj-ftr{animation:bjFade .8s ease 2.8s both}
+.bj.drop.go .bj-route svg{animation:bjDraw 1.9s ease-in-out .35s both}
+.bj.drop.go .bj-route .dot{animation:bjDot .7s cubic-bezier(.3,1.6,.5,1) both}
+.bj.drop.go .bj-route .lb{animation:bjFade .6s ease both}
+.bj.drop.go .bj-route .dot:nth-of-type(1),.bj.drop.go .bj-route .lb:nth-of-type(1){animation-delay:.35s}
+.bj.drop.go .bj-route .dot:nth-of-type(2),.bj.drop.go .bj-route .lb:nth-of-type(2){animation-delay:1.15s}
+.bj.drop.go .bj-route .dot:nth-of-type(3),.bj.drop.go .bj-route .lb:nth-of-type(3){animation-delay:1.95s}
+@keyframes bjDraw{0%{clip-path:inset(0 84% 0 16%)}100%{clip-path:inset(0 16% 0 16%)}}
+@keyframes bjDot{0%{transform:scale(0);box-shadow:0 0 0 0 rgba(201,164,92,.55)}55%{transform:scale(1.35)}100%{transform:scale(1);box-shadow:0 0 0 9px rgba(201,164,92,0)}}
+@keyframes bjDrop{0%{opacity:0;transform:translateY(-46px) rotate(-2.5deg) scale(1.03)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes bjFade{from{opacity:0}to{opacity:1}}
+/* 开屏：象牙色礼物卡 */
+#bjCover{position:fixed;inset:0;z-index:9500;perspective:1400px;--ink:#14305c;--ivory:#fbf7ee;--gold:#c9a45c}
+#bjCover .half{position:absolute;top:0;bottom:0;width:calc(50% + .6px);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform 1.8s cubic-bezier(.65,0,.2,1) .35s,opacity .5s ease 1.6s;cursor:pointer}
+#bjCover .half.l{left:0;transform-origin:0 50%;box-shadow:inset -1px 0 0 rgba(143,122,76,.18)}
+#bjCover .half.r{right:0;transform-origin:100% 50%;box-shadow:inset 1px 0 0 rgba(143,122,76,.18)}
+#bjCover.open{pointer-events:none}#bjCover.open .half{opacity:0}#bjCover.open .half.l{transform:rotateY(96deg)}#bjCover.open .half.r{transform:rotateY(-96deg)}
+#bjCover .cov{position:absolute;top:0;height:100%;width:100vw;background:var(--ivory);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--ink)}
+#bjCover .half.l .cov{left:0}#bjCover .half.r .cov{right:0}
+#bjCover .cov::before{content:"";position:absolute;inset:0;opacity:.5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .3 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E")}
+#bjCover .cov::after{content:"";position:absolute;inset:16px;border:1px solid var(--gold);border-radius:4px;box-shadow:inset 0 0 0 3px var(--ivory),inset 0 0 0 4px rgba(201,164,92,.35);pointer-events:none;animation:bjFrame 1.4s cubic-bezier(.2,.7,.2,1) .15s both}
+#bjCover .cov>*{position:relative}
+#bjCover .br{position:absolute;top:calc(50px + env(safe-area-inset-top));font:600 12px/1 "Cormorant Garamond",serif;letter-spacing:.5em;text-indent:.5em;color:#8f7a4c;animation:bjUp 1s ease .5s both}
+#bjCover .emb{width:170px;height:170px;filter:drop-shadow(-1.5px -1.5px 1px #fff) drop-shadow(2px 2.5px 2.5px rgba(110,90,50,.42));animation:bjPress 1.6s cubic-bezier(.3,.6,.2,1) .7s both}
+#bjCover .emb .bt{transform-origin:85px 110px;animation:bjBob 5.5s ease-in-out 2.6s infinite}
+#bjCover .emb .wv{animation:bjWave 5.5s ease-in-out 2.6s infinite}
+#bjCover .ttl{font:600 13px/1 "Cormorant Garamond",serif;letter-spacing:.46em;text-indent:.46em;color:var(--gold);margin-top:26px;animation:bjSpread 1.4s cubic-bezier(.2,.7,.2,1) 1.35s both}
+#bjCover .d1{font:500 26px/1 "Noto Serif SC",serif;letter-spacing:.28em;text-indent:.28em;margin-top:18px;animation:bjUp 1s ease 1.75s both}
+#bjCover .tf{margin-top:30px;display:flex;flex-direction:column;align-items:center;animation:bjUp 1s ease 2.05s both}
+#bjCover .tf p{display:flex;align-items:baseline;gap:14px;margin:0 0 6px;transform:translateX(-14px)}
+#bjCover .tf b{width:44px;text-align:right;font:600 10.5px/1 "Cormorant Garamond",serif;letter-spacing:.32em;color:#b0914f}
+#bjCover .tf i{font:italic 500 23px/1.15 "Cormorant Garamond",serif;color:var(--ink);min-width:96px;text-align:left;border-bottom:1px solid rgba(201,164,92,.45);padding:0 4px 3px}
+#bjCover .tf span{margin-top:14px;font:400 12.5px/1.4 "Noto Serif SC",serif;letter-spacing:.24em;text-indent:.24em;color:#8f7a4c;padding:0 30px}
+#bjCover .hint{position:absolute;bottom:calc(50px + env(safe-area-inset-bottom));font:400 11.5px/1 "Noto Serif SC",serif;letter-spacing:.4em;text-indent:.4em;color:#a39675;animation:bjUp .9s ease 2.6s both,bjBr 3.2s ease-in-out 3.5s infinite}
+#bjCover .sheen{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2}
+#bjCover .sheen::before{content:"";position:absolute;top:-20%;bottom:-20%;left:-90%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45) 50%,transparent);transform:skewX(-14deg);animation:bjSheen 7s ease-in-out 2.2s infinite}
+@keyframes bjFrame{0%{opacity:0;transform:scale(1.035)}100%{opacity:1;transform:none}}
+@keyframes bjUp{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@keyframes bjSpread{0%{opacity:0;letter-spacing:.9em;text-indent:.9em}100%{opacity:1;letter-spacing:.46em;text-indent:.46em}}
+@keyframes bjPress{0%{opacity:0;transform:scale(1.06);filter:drop-shadow(0 0 0 #fff) drop-shadow(0 0 0 rgba(110,90,50,0))}45%{opacity:1}100%{opacity:1;transform:none;filter:drop-shadow(-1.5px -1.5px 1px #fff) drop-shadow(2px 2.5px 2.5px rgba(110,90,50,.42))}}
+@keyframes bjBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2.5px) rotate(-1.2deg)}}
+@keyframes bjWave{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+@keyframes bjSheen{0%{left:-90%}30%,100%{left:150%}}
+@keyframes bjBr{50%{opacity:.35}}
+/* 穿过照片：全屏短片 */
+.bj-portal{position:fixed;z-index:9600;overflow:hidden;background:#000 center/cover;transition:all .9s cubic-bezier(.6,0,.2,1)}
+#bsPlace{position:fixed;inset:0;z-index:9700;background:#000;color:#fff;opacity:0;pointer-events:none;transition:opacity .45s;--gold2:#e8cf96}
+#bsPlace:empty{display:none}
+#bsPlace.on{opacity:1;pointer-events:auto}
+#bsPlace .bg,#bsPlace video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#bsPlace .bg{animation:bjKen 26s ease-in-out infinite alternate}
+@keyframes bjKen{to{transform:scale(1.12) translate(-1.5%,-1%)}}
+#bsPlace .shade{position:absolute;inset:0;background:linear-gradient(rgba(10,14,36,.5) 0,transparent 22%,transparent 36%,rgba(10,14,36,.9) 100%)}
+#bsPlace .back{all:unset;cursor:pointer;position:absolute;left:18px;top:calc(20px + env(safe-area-inset-top));font:400 13.5px/1 "Noto Serif SC",serif;letter-spacing:.16em;padding:8px 4px;color:#f4efe4}
+#bsPlace .back.ready{color:var(--gold2)}
+#bsPlace .where{position:absolute;right:20px;top:calc(28px + env(safe-area-inset-top));text-align:right;font:400 12px/1.5 "Noto Serif SC",serif;opacity:.85;max-width:58%}
+#bsPlace .words{position:absolute;left:24px;right:24px;bottom:calc(150px + env(safe-area-inset-bottom));max-width:620px}
+#bsPlace .tp{font:600 10.5px/1 "Cormorant Garamond",serif;letter-spacing:.3em;color:var(--gold2);text-transform:uppercase}
+#bsPlace .ti{font:500 15px/1.3 "Noto Serif SC",serif;margin:6px 0 14px;opacity:.9}
+#bsPlace .say{margin:0;font:500 30px/1.2 "Cormorant Garamond",serif}
+#bsPlace .say.zh{font:500 25px/1.4 "Noto Serif SC",serif}
+#bsPlace .nat{font:400 14px/1.6 "Noto Serif SC",serif;opacity:.82;margin-top:8px}
+#bsPlace .tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+#bsPlace .tg span{font:700 11px/1 "Courier Prime",monospace;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(232,207,150,.6);color:var(--gold2);padding:5px 7px 4px;border-radius:2px}
+#bsPlace .heard{margin-top:12px;font:400 14px/1.6 "Noto Serif SC",serif;color:var(--gold2);min-height:1em}
+#bsPlace .ctl{position:absolute;left:0;right:0;bottom:calc(44px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;gap:26px}
+#bsPlace .rnd{all:unset;cursor:pointer;width:46px;height:46px;border-radius:50%;border:1px solid rgba(244,239,228,.6);display:grid;place-items:center;color:#f4efe4}
+#bsPlace .mic{width:72px;height:72px;border:1.5px solid #f4efe4;position:relative}
+#bsPlace .mic::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:1px solid rgba(244,239,228,.35)}
+#bsPlace .mic.done{border-color:var(--gold2);color:var(--gold2)}
+#bsPlace .more{all:unset;cursor:pointer;font:400 12.5px/1 "Noto Serif SC",serif;letter-spacing:.1em;color:#f4efe4;opacity:.85;width:46px;text-align:center;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.bj *,#bjCover *,#bsPlace *{animation:none!important;transition-duration:.01s!important}}
+`;
+let A = {};
+// 「我的船」每次画的时候把要用的东西递过来（template2.html 里的代码在自己的范围里，外面拿不到）
+window.bsInit = api => { A = api; if (!A.zeDone && A.ZE){ try { Object.assign(A.ZE, ZEX); } catch(e){} } };
+const ZEX = {"航海手帐": "Voyage Journal", "开船去说一句": "Sail there, say one line", "复习": "Review", "学": "Learn", "个词": "words", "在等你": "is waiting for you", "前几天": "Earlier pages", "轻点打开": "Tap to open", "回到手帐": "Back to the journal", "再练": "More", "听到了：": "Heard:", "✓ 说出来了": "✓ Said it", "跟着说一遍就好": "Just say it after the clip", "送给世界的，是你说出的一句话": "Your words, a gift to the world", "航线还在准备，先去群岛逛逛。": "Your route is still being drawn — have a look around the islands."};
+let st = null;
+const ensure = () => { if (st) return; st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  const ln = document.createElement("link"); ln.rel = "stylesheet"; ln.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+SC:wght@400;500;600&family=Caveat:wght@600&family=Courier+Prime:wght@700&display=swap"; document.head.appendChild(ln); };
+const MON = ["January","February","March","April","May","June","July","August","September","October","November","December"], WK = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const COVER_KEY = "bj.cover.v1", SEEN_KEY = "bj.done.v1";
+let dropped = false, coverOn = false;
+const photo = key => { const [i, k] = key.split("|"); let P = null; try { P = A.galPh ? A.galPh(i, k) : null; } catch(e){} return (P && P.h && P.h.poster) || A.bpImg(i, k) || ""; };
+const placeRaw = (i, k) => { try { return ((typeof ISLE_PLACES !== "undefined" && ISLE_PLACES[i] && ISLE_PLACES[i].places) || []).find(p=>p.k === k) || {}; } catch(e){ return {}; } };
+const clipOf = (i, k) => { try { return (A.tkClips ? A.tkClips(i, k) : [])[0] || null; } catch(e){ return null; } };
+const tgtOf = c => c && c.cap ? (A.LEARN_ZH ? c.cap.zh : c.cap.en) : "";
+// 每一站要显示的东西
+function stopData(s, n){ const {bpStopInfo, blIsleName, blPlace, tkOf, bmU, Z, UI} = A, zh = UI === "zh";
+  const key = s.k === "rv" ? s.keys[0] : s.key, [i, k] = key.split("|"), I = bpStopInfo(s) || {}, c = clipOf(i, k), R = placeRaw(i, k);
+  const d = {n, key, i, k, kind: s.k, isle: blIsleName(i), img: (c && c.poster) || photo(key), W: (I.W || []).map(x=>x && (x.w || x)).filter(Boolean).slice(0, 4), say: tgtOf(c), nat: c && c.cap && A.capNat ? A.capNat(c.cap) : "", where: c && c.where ? (zh ? c.where.zh : c.where.en) || "" : ""};
+  const T = zh ? (R.zh || blPlace(i, k).n) : (R.en || R.zh || blPlace(i, k).n), T2 = zh ? (R.en || "") : (A.LEARN_ZH ? (R.zh || "") : "");
+  if (s.k === "rv"){ d.t = Z("复习"); d.te = s.keys.map(x=>{ const [a, b] = x.split("|"); return blPlace(a, b).n; }).join(" · "); d.lb = Z("复习"); d.lbi = d.isle; }
+  else { d.t = T; d.te = T2 !== T ? T2 : ""; d.lb = d.isle; d.lbi = R.en || T; }
+  if (s.k === "port"){ const g = ((tkOf ? tkOf(i, k) : null) || {}).go || {}; d.city = bmU(g.city || ""); d.spot = bmU(g.spot || ""); d.npc = I.npc || ""; d.lb = d.city || d.isle; d.lbi = d.npc || T;
+    let job = ""; try { const nn = A.npcAny ? A.npcAny(g.npc) : null; job = nn && zh ? (nn.job || "") : ""; } catch(e){} d.job = job; }
+  return d; }
+const seal = `<svg class="bj-seal" viewBox="0 0 62 62" aria-hidden="true"><circle cx="31" cy="31" r="28" fill="none" stroke="#c9a45c" stroke-width="1"/><circle cx="31" cy="31" r="24.5" fill="none" stroke="#c9a45c" stroke-width=".7" stroke-dasharray="1.5 2.5"/><path d="M32 16c6 4 9 10 10 17H32z" fill="#c9a45c" opacity=".85"/><path d="M30 20v13H21c1-6 4-10 9-13z" fill="#c9a45c" opacity=".55"/><path d="M18 36h26c-1 4-4 7-9 7h-8c-5 0-8-3-9-7z" fill="#14305c"/></svg>`;
+const postmark = (txt, n) => { const t = new Date(); return `<svg class="bj-pm" viewBox="0 0 80 80" aria-hidden="true"><defs><path id="bjpp${n}" d="M40 40m-27 0a27 27 0 1 1 54 0a27 27 0 1 1-54 0"/></defs><g fill="none" stroke="#e2552f" stroke-width="1.6"><circle cx="40" cy="40" r="35"/><circle cx="40" cy="40" r="21"/></g><text font-family="Courier Prime,monospace" font-size="8" font-weight="700" fill="#e2552f" letter-spacing="1.4"><textPath href="#bjpp${n}">SENT TO THE WORLD · SENT ·</textPath></text><text x="40" y="38" text-anchor="middle" font-family="Courier Prime,monospace" font-size="9" font-weight="700" fill="#e2552f">${t.getDate()} ${MON[t.getMonth()].slice(0, 3).toUpperCase()}</text><text x="40" y="49" text-anchor="middle" font-family="Courier Prime,monospace" font-size="7" font-weight="700" fill="#e2552f">${txt}</text></svg>`; };
+const play = `<span class="play"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M3 1.5l7 4.5-7 4.5z" fill="#14305c"/></svg></span>`;
+function entry(d, done, stamp){ const {Z, esc} = A, flip = d.n % 2 === 1;
+  const head = `<div class="no"><b>NO.${d.n + 1}</b><span>${d.kind === "port" ? Z("开船去说一句") : d.kind === "rv" ? esc(d.isle) + " · " + Z("复习") : esc(d.isle) + (d.W.length ? ` · ${Z("学")} ${d.W.length} ${Z("个词")}` : "")}</span></div>`;
+  const pol = `<button class="bj-pol" data-bsw="${d.n}"><i class="bj-tape"></i>${d.img ? `<img src="${esc(d.img)}" alt="" loading="lazy">` : `<img alt="">`}${play}<figcaption>${esc(d.where || d.t)}</figcaption>${postmark(d.kind === "port" ? "PORT" : d.kind === "rv" ? "REVIEW" : "ISLE", d.n)}</button>`;
+  const tags = d.W.length ? `<div class="bj-tags">${d.W.map(w=>`<span class="bj-dymo">${esc(w)}</span>`).join("")}</div>` : "";
+  const txt = `<div class="txt"><p class="bj-tt">${esc(d.t)}</p>${d.te ? `<div class="bj-te">${esc(d.te)}</div>` : ""}${tags}</div>`;
+  const pass = d.kind === "port" ? `<div class="bj-pass"><div class="m"><div class="k">Boarding pass · HeyVoyo</div><div class="rt">MY BOAT <svg width="30" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M0 5h30M26 1l5 4-5 4" fill="none" stroke="#14305c" stroke-width="1.2"/></svg> ${esc(d.city)}</div>${d.spot ? `<div class="v">${esc(d.spot)}</div>` : ""}${d.npc ? `<div class="bj-who"><b>${esc(d.npc)} ${Z("在等你")}</b>${d.job ? `<small>${esc(d.job)}</small>` : ""}</div>` : ""}</div><div class="r"><div class="k">Stop</div><div class="big">0${d.n + 1}</div></div></div>` : "";
+  const say = d.say ? `<button class="bj-say${A.LEARN_ZH ? " zh" : ""}" data-bsw="${d.n}"><b>${esc(d.say)}</b>${d.nat ? `<small>${esc(d.nat)}</small>` : ""}</button>` : "";
+  return `<article class="bj-e${flip ? " flip" : ""}${done ? " done" : ""}${stamp ? " stamp" : ""}">${head}<div class="bj-body">${pol}${txt}</div>${pass}${say}</article>`; }
+// 手帐那一页
+window.bsHtml = function(R, L){ ensure(); const {bpPlan, bpDone, blDay, Z, esc, UI} = A, zh = UI === "zh", now = new Date(), S = (bpPlan(R).stops || []).slice(0, 3);
+  const D = S.map(stopData), done = S.map(s=>bpDone(s, R, L)), nd = done.filter(Boolean).length, left = S.length - nd;
+  let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch(e){} if (seen.day !== blDay()) seen = {day: blDay(), n: []};
+  const fresh = D.map((d, n)=>done[n] && !seen.n.includes(n));
+  const xs = S.length === 1 ? [50] : S.length === 2 ? [25, 75] : [16, 50, 84];
+  const path = S.length === 3 ? "M16 20 C 30 6, 38 6, 50 20 S 70 34, 84 20" : S.length === 2 ? "M25 20 C 40 4, 60 4, 75 20" : "";
+  const route = S.length ? `<div class="bj-route">${path ? `<svg viewBox="0 0 100 62" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="none" stroke="#c9a45c" stroke-width=".6" stroke-dasharray="1.6 1.6" vector-effect="non-scaling-stroke"/></svg>` : ""}${xs.map((x, n)=>`<span class="dot${done[n] ? " on" : ""}" style="left:${x}%"></span>`).join("")}${D.map((d, n)=>`<div class="lb" style="left:${xs[n]}%">${esc(d.lb)}<i>${esc(d.lbi || "")}</i></div>`).join("")}</div>` : "";
+  const intro = !S.length ? Z("航线还在准备，先去群岛逛逛。")
+    : !left ? (zh ? "今天的站都走过了，你的话已经送给世界。明天船会带你去新的地方。" : "Every stop is done — your words are out in the world. Tomorrow the boat takes you somewhere new.")
+    : nd ? (zh ? `已经送出 ${nd} 句，还剩 ${left} 站。` : `${nd} sent, ${left} to go.`)
+    : (zh ? `今天 ${S.length} 站。点照片走进去，说一句。` : `${S.length} stops today. Tap a photo, step in, say one line.`);
+  // 前几天：航海日志里走过的地方
+  const OLD = []; for (let dd = 1; dd <= 7 && OLD.length < 8; dd++){ const dk = blDay(Date.now() - dd * 864e5), ks = Object.keys((L.days || {})[dk] || {}).filter(x=>x.includes("|") && !x.endsWith("|_prac")).slice(0, 2); ks.forEach(x=>OLD.push({key: x, d: dd})); }
+  const dlab = dd => { const t = new Date(Date.now() - dd * 864e5); return zh ? `${t.getMonth() + 1}月${t.getDate()}日` : MON[t.getMonth()].slice(0, 3) + " " + t.getDate(); };
+  const past = OLD.length ? `<div class="bj-rule"></div><section class="bj-past"><h3>Earlier pages${zh ? " · 前几天" : ""}</h3><div class="bj-pst">${OLD.map((o, j)=>`<div class="bj-mini" style="--r:${[-4, 3, -2, 4, -3][j % 5]}deg">${photo(o.key) ? `<img src="${esc(photo(o.key))}" alt="" loading="lazy">` : "<img alt=\"\">"}<span>${dlab(o.d)}</span></div>`).join("")}</div></section>` : "";
+  return `<section class="bj" id="bsBox">
+    <div class="bj-hd"><div><div class="bj-sc">HeyVoyo · ${zh ? "航海手帐" : "Voyage Journal"}</div><div class="d">${zh ? `${now.getMonth() + 1}月${now.getDate()}日` : `${now.getDate()} ${MON[now.getMonth()]}`}</div><div class="w">${WK[now.getDay()]}${zh ? `, ${now.getDate()} ${MON[now.getMonth()]}` : ""}</div></div>${seal}</div>
+    ${route}<p class="bj-intro">${intro}</p><div class="bj-rule"></div>
+    ${D.map((d, n)=>entry(d, done[n], fresh[n])).join('<div class="bj-rule r2"></div>')}
+    ${past}<p class="bj-ftr">One more word, one more world${zh ? "<span>多会一句话，世界就大一点</span>" : ""}</p>
+  </section>`; };
+// 开屏礼物卡
+function coverHtml(){ const {Z, UI} = A, zh = UI === "zh", now = new Date();
+  const art = `<div class="sheen"></div><div class="br">HEYVOYO</div><svg class="emb" viewBox="0 0 170 170" aria-hidden="true"><g fill="#fbf7ee"><path fill-rule="evenodd" d="M85 6a79 79 0 110 158A79 79 0 0185 6zm0 5a74 74 0 100 148A74 74 0 0085 11z"/><g class="bt"><path d="M88 34c22 14 34 36 36 62H88z"/><path d="M82 46v50H50c4-20 15-37 32-50z"/><path d="M40 104h90c-4 14-14 24-28 26H68c-14-2-24-12-28-26z"/></g><path class="wv" d="M34 140c8-5 16-5 24 0s16 5 24 0 16-5 24 0 16 5 24 0v6c-8 5-16 5-24 0s-16-5-24 0-16 5-24 0-16-5-24 0z"/></g></svg>
+    <div class="ttl">VOYAGE JOURNAL</div><div class="d1">${zh ? `${now.getMonth() + 1}月${now.getDate()}日` : `${now.getDate()} ${MON[now.getMonth()]}`}</div><div class="tf"><p><b>TO</b><i>the world</i></p><p><b>FROM</b><i>you</i></p><span>${Z("送给世界的，是你说出的一句话")}</span></div><div class="hint">${Z("轻点打开")}</div>`;
+  return `<div class="half l"><div class="cov">${art}</div></div><div class="half r"><div class="cov">${art}</div></div>`; }
+function dropIn(B){ if (!B || matchMedia("(prefers-reduced-motion:reduce)").matches) return; B.classList.add("drop"); B.classList.remove("go"); void B.offsetWidth; B.classList.add("go"); setTimeout(()=>B.classList.remove("drop", "go"), 3800); }
+// 画完以后：开屏、三站落下、刚做完的站盖邮戳
+window.bsAfter = function(box, R, L){ const {bpPlan, bpDone, blDay} = A, B = box.querySelector("#bsBox"); if (!B) return;
+  let opened = true; try { opened = localStorage.getItem(COVER_KEY) === blDay(); } catch(e){}
+  if (!opened && !coverOn){ coverOn = true; B.classList.add("drop"); let C = document.getElementById("bjCover"); if (!C){ C = document.createElement("div"); C.id = "bjCover"; document.body.appendChild(C); }
+    C.className = ""; C.innerHTML = coverHtml();
+    C.onclick = () => { if (C.classList.contains("open")) return; C.classList.add("open"); try { localStorage.setItem(COVER_KEY, blDay()); } catch(e){} dropped = true;
+      setTimeout(()=>dropIn(document.getElementById("bsBox")), 1500); setTimeout(()=>{ C.remove(); coverOn = false; }, 2300); }; }
+  else if (!coverOn && !dropped){ dropped = true; dropIn(B); }
+  else if (coverOn) B.classList.add("drop");
+  const S = (bpPlan(R).stops || []).slice(0, 3);
+  let seen = {}; try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) || "{}"); } catch(e){} if (seen.day !== blDay()) seen = {day: blDay(), n: []};
+  S.forEach((s, n)=>{ if (bpDone(s, R, L) && !seen.n.includes(n)) seen.n.push(n); });
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch(e){} };
+// 穿过照片以后：全屏短片（这一站的门头短片），字幕在短片上，听、说；说完这一站就算走过，回到手帐盖上邮戳
+let CUR = null;
+window.bsOpenPlace = function(n, R){ const {bpPlan, Z, esc, LEARN_ZH} = A, S = bpPlan(R).stops || [], s = S[n]; if (!s) return false;
+  const d = stopData(s, n), c = clipOf(d.i, d.k); if (!c || !c.src || !d.say) return false;   // 没有短片或字幕的站，照原来的走
+  CUR = {n, st: s, i: d.i, k: d.k, tgt: d.say};
+  let P = document.getElementById("bsPlace"); if (!P){ P = document.createElement("div"); P.id = "bsPlace"; P.dataset.nopy = ""; document.body.appendChild(P); }
+  const top = d.kind === "port" ? (d.city || "") + (d.npc ? " · " + d.npc + " " + Z("在等你") : "") : d.kind === "rv" ? Z("复习") + " · " + d.te : d.isle + " · " + d.t;
+  P.className = ""; P.innerHTML = `<img class="bg" src="${esc(c.poster || d.img || "")}" alt=""><video src="${esc(c.src)}" poster="${esc(c.poster || "")}" muted loop playsinline autoplay></video><div class="shade"></div>
+    <button class="back" data-bsback>‹ ${Z("回到手帐")}</button><div class="where">${esc(d.where)}</div>
+    <div class="words"><div class="tp">NO.${n + 1}${d.te && d.kind !== "rv" ? " · " + esc(d.te) : ""}</div><div class="ti">${esc(top)}</div><p class="say${LEARN_ZH ? " zh" : ""}">${esc(d.say)}</p>${d.nat ? `<div class="nat">${esc(d.nat)}</div>` : ""}${d.W.length ? `<div class="tg">${d.W.map(w=>`<span>${esc(w)}</span>`).join("")}</div>` : ""}<div class="heard" id="bsHeard"></div></div>
+    <div class="ctl"><button class="rnd" data-bslisten aria-label="listen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg></button>
+      <button class="rnd mic" id="bsMic" data-bsmic aria-label="say"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0013 0M12 18v3"/></svg></button>
+      <button class="more" data-bsmore>${Z("再练")} ›</button></div>`;
+  requestAnimationFrame(()=>P.classList.add("on")); return true; };
+const ttsSay = t => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = A.LEARN_ZH ? "zh-CN" : "en-US"; u.rate = .88; speechSynthesis.speak(u); } catch(e){} };
+function said(heard){ const P = document.getElementById("bsPlace"); if (!P || !CUR) return; const {Z, esc, blGet, blSet, blDay, boatLog} = A, h = document.getElementById("bsHeard");
+  h.innerHTML = heard ? `${Z("听到了：")}${esc(heard)}` : Z("✓ 说出来了"); h.classList.add("on");
+  document.getElementById("bsMic").classList.add("done"); P.querySelector("[data-bsback]").classList.add("ready");
+  const {st, i, k, tgt} = CUR;
+  try { if (st.k === "rv"){ const L = blGet(), d = blDay(); L.rev = L.rev || {}; st.keys.forEach(x=>{ L.rev[x] = d; }); blSet(L); }
+    else boatLog(i, k, e=>{ e.bps = (e.bps || []).concat(tgt).slice(-5); if (st.k === "port") e.go = 1; }); } catch(e){} }
+function closePlace(then){ const P = document.getElementById("bsPlace"); try { speechSynthesis.cancel(); } catch(e){} if (P){ P.classList.remove("on"); setTimeout(()=>{ if (!P.classList.contains("on")) P.innerHTML = ""; }, 500); } CUR = null; if (then) then(); }
+document.addEventListener("click", e=>{ const P = document.getElementById("bsPlace"); if (!P || !P.contains(e.target) || !CUR) return;
+  if (e.target.closest("[data-bsback]")){ closePlace(()=>A.bpOpen && A.bpOpen()); return; }
+  if (e.target.closest("[data-bslisten]")){ ttsSay(CUR.tgt); return; }
+  if (e.target.closest("[data-bsmore]")){ const n = CUR.n; closePlace(()=>{ A.bpOpen && A.bpOpen(); A.bpRun && A.bpRun(n); }); return; }
+  if (e.target.closest("[data-bsmic]")){ const h = document.getElementById("bsHeard"); if (document.getElementById("bsMic").classList.contains("done")) return;
+    const ok = A.micListen && A.micListen({lang: A.LEARN_ZH ? "zh-CN" : "en-US", out: h, onFinal: alts=>{ said(alts[0]); }, onError: ()=>{}, onEnd: ()=>{}});
+    if (!ok){ h.textContent = A.Z("跟着说一遍就好"); said(""); } } });
+// 点照片或那一句：画面从照片里放大成全屏，再做这一站要做的事
+window.bsEnter = function(btn, then){ const e = btn.closest(".bj-e"), img = (e && e.querySelector(".bj-pol img")) || btn.querySelector("img");
+  if (!img || !img.src || matchMedia("(prefers-reduced-motion:reduce)").matches){ then(); return; }
+  const r = img.getBoundingClientRect(), p = document.createElement("div"); p.className = "bj-portal"; p.style.backgroundImage = `url("${img.src}")`;
+  Object.assign(p.style, {left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px"}); document.body.appendChild(p); p.getBoundingClientRect();
+  requestAnimationFrame(()=>Object.assign(p.style, {left: 0, top: 0, width: "100vw", height: "100vh"}));
+  setTimeout(()=>{ then(); setTimeout(()=>{ p.style.opacity = 0; setTimeout(()=>p.remove(), 450); }, 300); }, 900); };
+})();
 
 const LABELS = [
 ["中 国",104,35.5,1],["俄 罗 斯",95,62,1],["美 国",-99,40,1],["加 拿 大",-105,58,1],["巴 西",-52,-11,1],["澳 大 利 亚",134,-24,1],
@@ -68697,13 +68968,16 @@ function twPlace(t){ twG.selectAll("g.tw-p").attr("transform", d=>{ const [x, y]
 setTimeout(twPinsDraw, 1500);
 function bpHtml(){ const R = typeof LIB !== "undefined" ? routeBuild() : [], L = blGet(), sk = bpStreak(), en = UI !== "zh", h = new Date().getHours();
   const hi = h < 11 ? Z("早上好") : h < 18 ? Z("下午好") : Z("晚上好"), walked = R.flatMap(s=>s.st).filter(x=>x.done).length;
-  return `<div class="bp-wrap"><div class="bp-hello"><div><h2>${hi} 👋</h2><small>${Z("学")}${UI === "zh" ? "" : " "}${esc(LEARN_LANGS[LEARN] ? (LEARN_LANGS[LEARN].name[UI] || (en ? LEARN_LANGS[LEARN].name.en : LEARN_LANGS[LEARN].name.zh)) : "")}</small></div>${sk ? `<span class="bp-streak">🔥 ${Z("连续出海")} ${sk} ${Z("天")}</span>` : ""}</div>
-    ${bpVoyage(R, L)}${bpPeople()}${ckBoatHtml()}${ziBoatHtml()}${fyBoatHtml()}${epBoatHtml()}
+  if (window.bsInit) bsInit({bpPlan, bpDone, bpStopInfo, bpImg, galPh: typeof galPh === "function" ? galPh : null, blDay, blIsleName, blPlace, tkOf: typeof tkOf === "function" ? tkOf : null, bmU, Z, esc, UI, ZE: typeof ZE !== "undefined" ? ZE : null, tkClips, capNat, LEARN_ZH, micListen, boatLog, blGet, blSet, bpRun, npcAny: typeof npcAny === "function" ? npcAny : null, bpOpen: ()=>bpOpen()});
+  const hv = `<div class="bp-hello"><div><h2>${hi} 👋</h2><small>${Z("学")}${UI === "zh" ? "" : " "}${esc(LEARN_LANGS[LEARN] ? (LEARN_LANGS[LEARN].name[UI] || (en ? LEARN_LANGS[LEARN].name.en : LEARN_LANGS[LEARN].name.zh)) : "")}</small></div>${sk ? `<span class="bp-streak">🔥 ${Z("连续出海")} ${sk} ${Z("天")}</span>` : ""}</div>
+    ${bpVoyage(R, L)}`;
+  return `<div class="bp-wrap">${window.bsHtml ? bsHtml(R, L) + flBoatHtml() : hv}${bpPeople()}${ckBoatHtml()}${ziBoatHtml()}${fyBoatHtml()}${epBoatHtml()}
     <div class="bp-seg"><button data-bpv="path"${bpView === "path" ? ' class="on"' : ""}>⛵ ${Z("我的航线")} · ${walked} ${Z("站")}</button><button data-bpv="hold"${bpView === "hold" ? ' class="on"' : ""}>🧳 ${Z("船舱和日志")}</button></div>
     ${bpView === "path" ? bpPath(R) : bpHold(R, L)}</div>`; }
 function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.getElementById("boatPg");
   if (!box){ box = document.createElement("div"); box.id = "boatPg"; document.body.appendChild(box); }
   const y = box.hidden ? 0 : box.scrollTop; box.innerHTML = bpHtml(); box.hidden = false; box.scrollTop = y; document.body.classList.add("gal-on"); galTabs("boat");
+  if (window.bsAfter) bsAfter(box, typeof LIB !== "undefined" ? routeBuild() : [], blGet());   // 🌅 封面和黄昏的海（boat_sea.js）
   const go = f => { galClose(); f(); }, R = () => typeof LIB !== "undefined" ? routeBuild() : [];
   box.querySelectorAll("[data-bpv]").forEach(b=>b.onclick = ()=>{ bpView = b.dataset.bpv; bpOpen(); });
   box.querySelectorAll("[data-prbookhome]").forEach(b=>b.onclick = ()=>window.PR.booklet());
@@ -68713,6 +68987,8 @@ function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.g
   box.querySelectorAll("[data-bpdo]").forEach(b=>b.onclick = ()=>{ const st = bpPlan(R()).stops[+b.dataset.bpdo]; if (!st) return;
     if (bpRun(+b.dataset.bpdo)) return;   // 能在船上练的，就在船上练
     go(()=>{ if (st.k === "rv") routeGo(st.keys[0], "drill"); else routeGo(st.key, st.k === "port" ? "port" : st.type); if (st.k !== "port") galTabs("home"); }); });   // 复习在船上练不了时，去那座岛那一站练，不再弹旧版「我的船」卡片（体检 2026-11-05）
+  box.querySelectorAll("[data-bsw]").forEach(b=>b.onclick = ()=>{ const n = +b.dataset.bsw, st = bpPlan(R()).stops[n]; if (!st) return;   // 🌅 点海上的窗：穿过窗框，再做这一站
+    bsEnter(b, ()=>{ if (window.bsOpenPlace && bsOpenPlace(n, R())) return; if (bpRun(n)) return; go(()=>{ if (st.k === "rv") routeGo(st.keys[0], "drill"); else routeGo(st.key, st.k === "port" ? "port" : st.type); if (st.k !== "port") galTabs("home"); }); }); });
   box.querySelectorAll("[data-bprt]").forEach(b=>b.onclick = ()=>{ const [i, k, t] = b.dataset.bprt.split("|"); go(()=>routeGo(i + "|" + k, t)); });
   box.querySelectorAll("[data-bptab]").forEach(b=>b.onclick = ()=>go(()=>{ blStop = -1; openMyBoat(b.dataset.bptab); }));
   box.querySelectorAll("[data-bpgo]").forEach(b=>b.onclick = ()=>{ const a = b.dataset.bpgo; if (a === "gal") galOpen(); else if (a === "map") galClose(); else go(()=>openVoyage()); }); }
