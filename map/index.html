@@ -62410,12 +62410,52 @@ const css = `
 #bsPlace .mic::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:1px solid rgba(244,239,228,.35)}
 #bsPlace .mic.done{border-color:var(--gold2);color:var(--gold2)}
 #bsPlace .more{all:unset;cursor:pointer;font:400 12.5px/1 "Noto Serif SC",serif;letter-spacing:.1em;color:#f4efe4;opacity:.85;width:46px;text-align:center;white-space:nowrap}
+#bsPlace .words{bottom:calc(236px + env(safe-area-inset-bottom))}
+#bsPlace .others{position:absolute;left:0;right:0;bottom:calc(128px + env(safe-area-inset-bottom));padding:0 24px;max-width:668px}
+#bsPlace .others h4{margin:0 0 9px;font:600 10.5px/1 "Cormorant Garamond",serif;letter-spacing:.3em;color:var(--gold2);text-transform:uppercase;display:flex;justify-content:space-between;gap:10px}
+#bsPlace .others h4 span{font:400 11.5px/1 "Noto Serif SC",serif;letter-spacing:.1em;text-transform:none;color:rgba(244,239,228,.7)}
+#bsPlace .row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;min-height:44px;align-items:center}
+#bsPlace .row::-webkit-scrollbar{display:none}
+#bsPlace .vnone{font:400 12.5px/1.5 "Noto Serif SC",serif;color:rgba(244,239,228,.72)}
+#bsPlace .vc{flex:none;display:flex;align-items:center;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(244,239,228,.22);backdrop-filter:blur(6px)}
+#bsPlace .vc.me{border-style:dashed;border-color:var(--gold2)}
+#bsPlace .vc.new{animation:bjPop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bjPop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+#bsPlace .v{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 4px 6px 6px;color:#fff}
+#bsPlace .v .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px/1 "Noto Serif SC",serif;flex:none;position:relative}
+#bsPlace .v b{display:block;font:500 12.5px/1.15 "Noto Sans SC",sans-serif;white-space:nowrap}
+#bsPlace .v small{display:block;font:400 10.5px/1.2 "Noto Sans SC",sans-serif;opacity:.7;white-space:nowrap}
+#bsPlace .vc.play .av::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--gold2);animation:bjRing 1s ease-out infinite}
+@keyframes bjRing{from{opacity:1;transform:scale(.9)}to{opacity:0;transform:scale(1.35)}}
+#bsPlace .vx{all:unset;cursor:pointer;color:rgba(244,239,228,.6);padding:6px 10px 6px 4px;font-size:13px}
+#bsPlace .va{display:none}#bsPlace .vc.menu .va{display:flex}#bsPlace .vc.menu .vx{display:none}
+#bsPlace .va button{all:unset;cursor:pointer;font:400 12px/1 "Noto Sans SC",sans-serif;color:var(--gold2);padding:6px 10px;border-left:1px solid rgba(244,239,228,.2)}
+#bsPlace .mic.on::after{border-color:var(--gold2);animation:bjRing 1s ease-out infinite}
+#bsPlace .sheet{position:absolute;left:0;right:0;bottom:0;z-index:5;background:#fbf7ee;color:#14305c;border-radius:22px 22px 0 0;padding:22px 24px calc(26px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 30px rgba(0,0,0,.25);max-width:700px;margin:0 auto}
+#bsPlace .sheet.on{transform:none}
+#bsPlace .sheet .k{font:600 10.5px/1 "Cormorant Garamond",serif;letter-spacing:.3em;color:#c9a45c;text-transform:uppercase}
+#bsPlace .sheet h3{margin:8px 0 4px;font:600 20px/1.35 "Noto Serif SC",serif}
+#bsPlace .sheet p{margin:0;color:#6b7488;font-size:13px;line-height:1.6}
+#bsPlace .sheet .line{margin:14px 0 4px;padding:12px 14px;border:1px dashed rgba(20,48,92,.25);border-radius:10px;font:500 18px/1.5 "Noto Serif SC",serif;background:#fff}
+#bsPlace .sheet .live{min-height:1.4em;margin-top:6px;font-size:13px;color:#8f7a4c}
+#bsPlace .sheet .acts{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+#bsPlace .sheet .smic{all:unset;cursor:pointer;width:62px;height:62px;border-radius:50%;background:#14305c;color:#fff;display:grid;place-items:center;position:relative}
+#bsPlace .sheet .smic.on::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid #c9a45c;animation:bjRing 1s ease-out infinite}
+#bsPlace .sheet .skip{all:unset;cursor:pointer;color:#6b7488;font-size:13px;padding:8px;min-width:60px}
+#bsPlace .sheet .btn{all:unset;cursor:pointer;flex:1;text-align:center;padding:13px 10px;border-radius:12px;font:500 14.5px/1 "Noto Sans SC",sans-serif}
+#bsPlace .sheet .btn.pri{background:#14305c;color:#fff}
+#bsPlace .sheet .btn.pri[disabled]{opacity:.45;pointer-events:none}
+#bsPlace .sheet .btn.sec{color:#14305c;border:1px solid rgba(20,48,92,.25)}
+#bsPlace .sheet .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:14px}
+#bsPlace .sheet .mine{all:unset;box-sizing:border-box;display:block;min-width:0;cursor:pointer;background:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#6b7488;border:1px solid rgba(20,48,92,.1)}
+#bsPlace .sheet .mine b{display:block;color:#14305c;font:500 14px/1.4 "Noto Serif SC",serif;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bsPlace .sheet .note{margin-top:10px;font-size:12px;color:#8f7a4c}
 @media (prefers-reduced-motion:reduce){.bj *,#bjCover *,#bsPlace *{animation:none!important;transition-duration:.01s!important}}
 `;
 let A = {};
 // 「我的船」每次画的时候把要用的东西递过来（template2.html 里的代码在自己的范围里，外面拿不到）
 window.bsInit = api => { A = api; if (!A.zeDone && A.ZE){ try { Object.assign(A.ZE, ZEX); } catch(e){} } };
-const ZEX = {"航海手帐": "Voyage Journal", "开船去说一句": "Sail there, say one line", "复习": "Review", "学": "Learn", "个词": "words", "在等你": "is waiting for you", "前几天": "Earlier pages", "轻点打开": "Tap to open", "回到手帐": "Back to the journal", "再练": "More", "听到了：": "Heard:", "✓ 说出来了": "✓ Said it", "跟着说一遍就好": "Just say it after the clip", "送给世界的，是你说出的一句话": "Your words, a gift to the world", "航线还在准备，先去群岛逛逛。": "Your route is still being drawn — have a look around the islands."};
+const ZEX = {"航海手帐": "Voyage Journal", "开船去说一句": "Sail there, say one line", "复习": "Review", "学": "Learn", "个词": "words", "在等你": "is waiting for you", "前几天": "Earlier pages", "轻点打开": "Tap to open", "回到手帐": "Back to the journal", "再练": "More", "听到了：": "Heard:", "✓ 说出来了": "✓ Said it", "跟着说一遍就好": "Just say it after the clip", "同一句，别人怎么说": "Same line, other voices", "还没有人送出这一句，你可以做第一个。": "No one has sent this line yet — you could be the first.", "你": "You", "删除": "Delete", "举报": "Report", "在听……说完再点一下": "Listening… tap again when you're done", "用你的母语，说这一句": "Say it in your own language", "这次不用": "Not this time", "这两句，送给世界吗？": "Send these to the world?", "这一句，送给世界吗？": "Send this to the world?", "先存在你的手帐里。公开以后，学这句话的人能听到；随时可以删，只有声音，不露脸。": "It stays in your journal first. Once public, people learning this line can hear it; delete any time — voice only, no face.", "送给世界": "Send to the world", "只留给自己": "Keep it for myself", "登录以后才能送给世界。": "Log in to send it to the world.", "你说的": "You said", "✓ 已经送给世界": "✓ Sent to the world", "✓ 存在你的手帐里了": "✓ Kept in your journal", "没录上，再点一下试试": "Didn't catch that — tap to try again", "用你平时会说的话就好，不用照着念。": "Say it the way you normally would — no need to read it word for word.", "开口说一句，就是给世界的一份礼物": "Say one line — that is your gift to the world", "航线还在准备，先去群岛逛逛。": "Your route is still being drawn — have a look around the islands."};
 let st = null;
 const ensure = () => { if (st) return; st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
   const ln = document.createElement("link"); ln.rel = "stylesheet"; ln.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+SC:wght@400;500;600&family=Caveat:wght@600&family=Courier+Prime:wght@700&display=swap"; document.head.appendChild(ln); };
@@ -62472,7 +62512,7 @@ window.bsHtml = function(R, L){ ensure(); const {bpPlan, bpDone, blDay, Z, esc, 
 // 开屏礼物卡
 function coverHtml(){ const {Z, UI} = A, zh = UI === "zh", now = new Date();
   const art = `<div class="sheen"></div><div class="br">HEYVOYO</div><svg class="emb" viewBox="0 0 170 170" aria-hidden="true"><g fill="#fbf7ee"><path fill-rule="evenodd" d="M85 6a79 79 0 110 158A79 79 0 0185 6zm0 5a74 74 0 100 148A74 74 0 0085 11z"/><g class="bt"><path d="M88 34c22 14 34 36 36 62H88z"/><path d="M82 46v50H50c4-20 15-37 32-50z"/><path d="M40 104h90c-4 14-14 24-28 26H68c-14-2-24-12-28-26z"/></g><path class="wv" d="M34 140c8-5 16-5 24 0s16 5 24 0 16-5 24 0 16 5 24 0v6c-8 5-16 5-24 0s-16-5-24 0-16 5-24 0-16-5-24 0z"/></g></svg>
-    <div class="ttl">VOYAGE JOURNAL</div><div class="d1">${zh ? `${now.getMonth() + 1}月${now.getDate()}日` : `${now.getDate()} ${MON[now.getMonth()]}`}</div><div class="tf"><p><b>TO</b><i>the world</i></p><p><b>FROM</b><i>you</i></p><span>${Z("送给世界的，是你说出的一句话")}</span></div><div class="hint">${Z("轻点打开")}</div>`;
+    <div class="ttl">VOYAGE JOURNAL</div><div class="d1">${zh ? `${now.getMonth() + 1}月${now.getDate()}日` : `${now.getDate()} ${MON[now.getMonth()]}`}</div><div class="tf"><p><b>TO</b><i>the world</i></p><p><b>FROM</b><i>you</i></p><span>${Z("开口说一句，就是给世界的一份礼物")}</span></div><div class="hint">${Z("轻点打开")}</div>`;
   return `<div class="half l"><div class="cov">${art}</div></div><div class="half r"><div class="cov">${art}</div></div>`; }
 function dropIn(B){ if (!B || matchMedia("(prefers-reduced-motion:reduce)").matches) return; B.classList.add("drop"); B.classList.remove("go"); void B.offsetWidth; B.classList.add("go"); setTimeout(()=>B.classList.remove("drop", "go"), 3800); }
 // 画完以后：开屏、三站落下、刚做完的站盖邮戳
@@ -62500,8 +62540,64 @@ window.bsOpenPlace = function(n, R){ const {bpPlan, Z, esc, LEARN_ZH} = A, S = b
     <div class="words"><div class="tp">NO.${n + 1}${d.te && d.kind !== "rv" ? " · " + esc(d.te) : ""}</div><div class="ti">${esc(top)}</div><p class="say${LEARN_ZH ? " zh" : ""}">${esc(d.say)}</p>${d.nat ? `<div class="nat">${esc(d.nat)}</div>` : ""}${d.W.length ? `<div class="tg">${d.W.map(w=>`<span>${esc(w)}</span>`).join("")}</div>` : ""}<div class="heard" id="bsHeard"></div></div>
     <div class="ctl"><button class="rnd" data-bslisten aria-label="listen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg></button>
       <button class="rnd mic" id="bsMic" data-bsmic aria-label="say"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0013 0M12 18v3"/></svg></button>
-      <button class="more" data-bsmore>${Z("再练")} ›</button></div>`;
-  requestAnimationFrame(()=>P.classList.add("on")); return true; };
+      <button class="more" data-bsmore>${Z("再练")} ›</button></div>
+    <div class="others" id="bsOthers"></div><div class="sheet" id="bsSheet"></div>`;
+  CUR.d = d; requestAnimationFrame(()=>P.classList.add("on")); loadVoices(d); return true; };
+// 🎙️ 别人怎么说（2026-11-06，样板：样板/别人怎么说样板.html；后台：后台/linevoices.sql）
+// 同一个主题、同一种语言的真人声音排成一排：母语的、各国口音的（法国人的英语、印度人的英语……）。没有就老实说「还没有人送出」，不造假。
+// 说完在学的语言那一句（同时录下来），再请你用母语说一遍；最后自己选「送给世界」（存进 docs 的 linevoices）或「只留给自己」（只存在这台手机上）。
+const LNAME = {zh: ["中文", "Chinese"], en: ["英语", "English"], es: ["西班牙语", "Spanish"], ja: ["日语", "Japanese"], ar: ["阿拉伯语", "Arabic"], fr: ["法语", "French"]};
+const LOC = {zh: "zh-CN", en: "en-US", es: "es-ES", ja: "ja-JP", ar: "ar-SA", fr: "fr-FR"};
+const lname = c => (LNAME[c] || [c, c])[A.UI === "zh" ? 0 : 1];
+const tgtL = () => A.LEARN_ZH ? "zh" : (A.LEARN || "en"), natL = () => A.UI;   // 界面语言当作母语
+const logged = () => { try { return !!(A.tkLogged && A.tkLogged()); } catch(e){ return false; } };
+const myId = () => (A.SOC && A.SOC.uid) || "";
+const VC = {}, COLS = ["#2d5a46", "#3a4f8a", "#b5523b", "#8a2f22", "#6b5a2e", "#3d6a7a"];
+const repGet = () => { try { return JSON.parse(localStorage.getItem("bj.vrep") || "[]"); } catch(e){ return []; } };
+const vLabel = v => v.nat === v.l ? (A.UI === "zh" ? lname(v.l) + "母语" : "Native " + lname(v.l)) : (A.UI === "zh" ? lname(v.nat) + "母语的人" : lname(v.nat) + " speaker");
+async function loadVoices(d){ const key = d.i + "|" + d.k;
+  if (!VC[key]){ let L = []; try { const sb = A.hv && A.hv.sb; if (sb){ const r = await sb.from("docs").select("id,owner,data").eq("coll", "linevoices").eq("data->>i", d.i).eq("data->>k", d.k).order("created_at", {ascending: false}).limit(60); L = (r.data || []).filter(x=>x.data && x.data.hid !== true).map(x=>({id: x.id, owner: x.owner, ...x.data})); } } catch(e){} VC[key] = L; }
+  drawVoices(d); }
+function drawVoices(d, fresh){ const box = document.getElementById("bsOthers"); if (!box || !CUR) return; const {Z, esc} = A, key = d.i + "|" + d.k, l = tgtL(), me = myId(), hid = repGet();
+  const L = (VC[key] || []).filter(v=>v.l === l && !hid.includes(v.id)).slice(0, 12);
+  const chips = L.map((v, j)=>{ const mine = me && (v.owner === me || v.author === me); return `<span class="vc${mine ? " me" : ""}${fresh === v.id ? " new" : ""}"><button class="v" data-bsv="${esc(v.id)}"><span class="av" style="background:${mine ? "#c9a45c" : COLS[j % COLS.length]}">${esc((mine ? Z("你") : (v.nm || "?")).slice(0, 1))}</span><span><b>${esc(mine ? Z("你") : (v.nm || "?"))}</b><small>${esc(vLabel(v))}</small></span></button><button class="vx" data-bsvx aria-label="more">⋯</button><span class="va">${mine ? `<button data-bsvdel="${esc(v.id)}">${Z("删除")}</button>` : `<button data-bsvrep="${esc(v.id)}">${Z("举报")}</button>`}</span></span>`; }).join("");
+  box.innerHTML = `<h4>Other voices<span>${Z("同一句，别人怎么说")}</span></h4><div class="row">${chips || `<span class="vnone">${Z("还没有人送出这一句，你可以做第一个。")}</span>`}</div>`;
+  if (fresh){ const r = box.querySelector(".row"); if (r) r.scrollLeft = 0; } }
+const b64url = v => { if (v._u) return v._u; try { const b = atob(v.a), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); v._u = URL.createObjectURL(new Blob([u], {type: v.mime || "audio/webm"})); } catch(e){ v._u = ""; } return v._u; };
+let AUD = null;
+function playUrl(u, el){ try { if (AUD){ AUD.pause(); AUD = null; } document.querySelectorAll("#bsPlace .vc.play").forEach(x=>x.classList.remove("play")); if (!u) return; AUD = new Audio(u); if (el) el.classList.add("play"); AUD.onended = AUD.onerror = () => el && el.classList.remove("play"); AUD.play().catch(()=>el && el.classList.remove("play")); } catch(e){} }
+const toB64 = b => new Promise((ok, no)=>{ const f = new FileReader(); f.onload = ()=>ok(String(f.result).split(",")[1] || ""); f.onerror = no; f.readAsDataURL(b); });
+// 录一段：点一下开始，再点一下结束；说完停 1.6 秒或到 12 秒自己停
+let REC = null;
+async function recOnce(lang, onText, onDone){ if (!A.canRec || !A.recStart) return false; let tm = null, auto = null, done = false;
+  const fin = v => { if (done) return; done = true; clearTimeout(tm); clearTimeout(auto); REC = null; onDone(v); };
+  REC = await A.recStart({lang: LOC[lang] || lang, onText: t=>{ onText(t); clearTimeout(tm); if (t) tm = setTimeout(()=>REC && REC.stop(), 1600); }, onDone: v=>fin(v), onError: ()=>fin(null)});
+  if (!REC){ fin(null); return false; } auto = setTimeout(()=>REC && REC.stop(), 12000); return true; }
+const sheet = () => document.getElementById("bsSheet");
+const micSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0013 0M12 18v3"/></svg>`;
+function askNative(){ const S = sheet(); if (!S || !CUR) return; const {Z, esc} = A, d = CUR.d, zh = A.UI === "zh";
+  if (natL() === tgtL() || !d.nat){ askSend(); return; }
+  S.innerHTML = `<div class="k">Say it in your language</div><h3>${Z("用你的母语，说这一句")}</h3><p>${zh ? `学${lname(natL())}的人会听到你的声音。` : `People learning ${lname(natL())} will hear your voice. `}${Z("用你平时会说的话就好，不用照着念。")}</p>
+    <div class="line">${esc(d.nat)}</div><div class="live" id="bsLive"></div>
+    <div class="acts"><button class="skip" data-bsskip>${Z("这次不用")}</button><button class="smic" id="bsSmic" data-bssmic aria-label="say">${micSvg}</button><span style="min-width:60px"></span></div>`;
+  S.classList.add("on"); }
+function askSend(){ const S = sheet(); if (!S || !CUR) return; const {Z, esc} = A, d = CUR.d, both = CUR.tv && CUR.nv;
+  if (!CUR.tv && !CUR.nv){ S.classList.remove("on"); return; }
+  const item = (v, lab, txt, n) => v ? `<button class="mine" data-bsmine="${n}">${lab}<b>${esc(txt)}</b></button>` : "";
+  S.innerHTML = `<div class="k">Before you send</div><h3>${both ? Z("这两句，送给世界吗？") : Z("这一句，送给世界吗？")}</h3><p>${Z("先存在你的手帐里。公开以后，学这句话的人能听到；随时可以删，只有声音，不露脸。")}</p>
+    <div class="two">${item(CUR.tv, Z("你说的") + " · " + lname(tgtL()), CUR.tv && (CUR.tv.text || d.say), "t")}${item(CUR.nv, Z("你说的") + " · " + lname(natL()), CUR.nv && (CUR.nv.text || d.nat), "n")}</div>
+    ${logged() ? "" : `<div class="note">${Z("登录以后才能送给世界。")}</div>`}
+    <div class="acts"><button class="btn pri" data-bssend${logged() ? "" : " disabled"}>${Z("送给世界")}</button><button class="btn sec" data-bskeep>${Z("只留给自己")}</button></div>`;
+  S.classList.add("on"); }
+async function sendVoices(){ const S = sheet(); if (!CUR || !logged()) return; const {Z} = A, d = CUR.d, key = d.i + "|" + d.k, h = document.getElementById("bsHeard"); let last = null;
+  const one = async (v, kind, l, txt) => { if (!v || !v.blob) return; const a = await toB64(v.blob); if (a.length > 140000) return;
+    const doc = {author: myId(), nm: (A.myName && A.myName()) || "", i: d.i, k: d.k, kind, l, nat: natL(), t: (txt || "").slice(0, 300), heard: (v.text || "").slice(0, 300), mime: v.blob.type || "audio/webm", dur: v.dur || 0, a, ts: Date.now()};
+    const ref = A.SOC.db.collection("linevoices").doc(); await ref.set(doc); last = ref.id; (VC[key] || (VC[key] = [])).unshift({id: ref.id, owner: myId(), ...doc, _u: v.url}); };
+  try { await one(CUR.tv, "t", tgtL(), d.say); await one(CUR.nv, "n", natL(), d.nat); } catch(e){}
+  if (S) S.classList.remove("on"); if (h) h.textContent = last ? Z("✓ 已经送给世界") : Z("没录上，再点一下试试"); drawVoices(d, last); }
+function keepVoices(){ const S = sheet(); if (!CUR) return; const d = CUR.d, h = document.getElementById("bsHeard");
+  (async () => { try { const L = JSON.parse(localStorage.getItem("bj.myvoices") || "[]"); for (const [v, kind, l] of [[CUR.tv, "t", tgtL()], [CUR.nv, "n", natL()]]) if (v && v.blob){ const a = await toB64(v.blob); L.push({i: d.i, k: d.k, kind, l, t: v.text || "", mime: v.blob.type, a, ts: Date.now()}); } localStorage.setItem("bj.myvoices", JSON.stringify(L.slice(-10))); } catch(e){} })();
+  if (S) S.classList.remove("on"); if (h) h.textContent = A.Z("✓ 存在你的手帐里了"); }
 const ttsSay = t => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = A.LEARN_ZH ? "zh-CN" : "en-US"; u.rate = .88; speechSynthesis.speak(u); } catch(e){} };
 function said(heard){ const P = document.getElementById("bsPlace"); if (!P || !CUR) return; const {Z, esc, blGet, blSet, blDay, boatLog} = A, h = document.getElementById("bsHeard");
   h.innerHTML = heard ? `${Z("听到了：")}${esc(heard)}` : Z("✓ 说出来了"); h.classList.add("on");
@@ -62509,14 +62605,26 @@ function said(heard){ const P = document.getElementById("bsPlace"); if (!P || !C
   const {st, i, k, tgt} = CUR;
   try { if (st.k === "rv"){ const L = blGet(), d = blDay(); L.rev = L.rev || {}; st.keys.forEach(x=>{ L.rev[x] = d; }); blSet(L); }
     else boatLog(i, k, e=>{ e.bps = (e.bps || []).concat(tgt).slice(-5); if (st.k === "port") e.go = 1; }); } catch(e){} }
-function closePlace(then){ const P = document.getElementById("bsPlace"); try { speechSynthesis.cancel(); } catch(e){} if (P){ P.classList.remove("on"); setTimeout(()=>{ if (!P.classList.contains("on")) P.innerHTML = ""; }, 500); } CUR = null; if (then) then(); }
+function closePlace(then){ const P = document.getElementById("bsPlace"); try { speechSynthesis.cancel(); } catch(e){} try { if (REC) REC.stop(); } catch(e){} playUrl(""); if (P){ P.classList.remove("on"); setTimeout(()=>{ if (!P.classList.contains("on")) P.innerHTML = ""; }, 500); } CUR = null; if (then) then(); }
 document.addEventListener("click", e=>{ const P = document.getElementById("bsPlace"); if (!P || !P.contains(e.target) || !CUR) return;
   if (e.target.closest("[data-bsback]")){ closePlace(()=>A.bpOpen && A.bpOpen()); return; }
   if (e.target.closest("[data-bslisten]")){ ttsSay(CUR.tgt); return; }
   if (e.target.closest("[data-bsmore]")){ const n = CUR.n; closePlace(()=>{ A.bpOpen && A.bpOpen(); A.bpRun && A.bpRun(n); }); return; }
-  if (e.target.closest("[data-bsmic]")){ const h = document.getElementById("bsHeard"); if (document.getElementById("bsMic").classList.contains("done")) return;
-    const ok = A.micListen && A.micListen({lang: A.LEARN_ZH ? "zh-CN" : "en-US", out: h, onFinal: alts=>{ said(alts[0]); }, onError: ()=>{}, onEnd: ()=>{}});
-    if (!ok){ h.textContent = A.Z("跟着说一遍就好"); said(""); } } });
+  const vb = e.target.closest("[data-bsv]"); if (vb){ const d = CUR.d, v = (VC[d.i + "|" + d.k] || []).find(x=>x.id === vb.dataset.bsv); if (v) playUrl(b64url(v), vb.closest(".vc")); return; }
+  if (e.target.closest("[data-bsvx]")){ document.querySelectorAll("#bsPlace .vc.menu").forEach(x=>x.classList.remove("menu")); e.target.closest(".vc").classList.add("menu"); return; }
+  const rp = e.target.closest("[data-bsvrep]"); if (rp){ const id = rp.dataset.bsvrep; try { const L = repGet(); L.push(id); localStorage.setItem("bj.vrep", JSON.stringify(L)); } catch(e){} try { if (logged()) A.SOC.db.collection("reports").add({by: myId(), target: "linevoices/" + id, ts: Date.now()}); } catch(e){} drawVoices(CUR.d); return; }
+  const dl = e.target.closest("[data-bsvdel]"); if (dl){ const id = dl.dataset.bsvdel, d = CUR.d, key = d.i + "|" + d.k; (async () => { try { await A.SOC.db.doc("linevoices/" + id).delete(); VC[key] = (VC[key] || []).filter(x=>x.id !== id); } catch(e){} drawVoices(d); })(); return; }
+  if (e.target.closest("[data-bsskip]")){ askSend(); return; }
+  if (e.target.closest("[data-bssend]")){ sendVoices(); return; }
+  if (e.target.closest("[data-bskeep]")){ keepVoices(); return; }
+  const mn = e.target.closest("[data-bsmine]"); if (mn){ const v = mn.dataset.bsmine === "t" ? CUR.tv : CUR.nv; if (v) playUrl(v.url, null); return; }
+  if (e.target.closest("[data-bssmic]")){ const m = document.getElementById("bsSmic"), lv = document.getElementById("bsLive"); if (REC){ REC.stop(); return; } if (m.classList.contains("on")) return; m.classList.add("on"); lv.textContent = A.Z("在听……说完再点一下");
+    recOnce(natL(), t=>{ lv.textContent = t; }, v=>{ m.classList.remove("on"); if (!v){ lv.textContent = A.Z("没录上，再点一下试试"); return; } CUR.nv = v; askSend(); }).then(ok=>{ if (!ok){ m.classList.remove("on"); askSend(); } }); return; }
+  if (e.target.closest("[data-bsmic]")){ const h = document.getElementById("bsHeard"), m = document.getElementById("bsMic"); if (REC){ REC.stop(); return; } if (m.classList.contains("done") || m.classList.contains("on")) return;
+    const old = () => { const ok = A.micListen && A.micListen({lang: LOC[tgtL()], out: h, onFinal: alts=>{ said(alts[0]); setTimeout(askNative, 1100); }, onError: ()=>{}, onEnd: ()=>{}}); if (!ok){ h.textContent = A.Z("跟着说一遍就好"); said(""); } };
+    if (!A.canRec){ old(); return; }
+    m.classList.add("on"); h.textContent = A.Z("在听……说完再点一下");
+    recOnce(tgtL(), t=>{ h.textContent = t; }, v=>{ m.classList.remove("on"); if (!v){ h.textContent = A.Z("没录上，再点一下试试"); return; } CUR.tv = v; said(v.text); setTimeout(askNative, 1100); }).then(ok=>{ if (!ok){ m.classList.remove("on"); old(); } }); } });
 // 点照片或那一句：画面从照片里放大成全屏，再做这一站要做的事
 window.bsEnter = function(btn, then){ const e = btn.closest(".bj-e"), img = (e && e.querySelector(".bj-pol img")) || btn.querySelector("img");
   if (!img || !img.src || matchMedia("(prefers-reduced-motion:reduce)").matches){ then(); return; }
@@ -68968,7 +69076,7 @@ function twPlace(t){ twG.selectAll("g.tw-p").attr("transform", d=>{ const [x, y]
 setTimeout(twPinsDraw, 1500);
 function bpHtml(){ const R = typeof LIB !== "undefined" ? routeBuild() : [], L = blGet(), sk = bpStreak(), en = UI !== "zh", h = new Date().getHours();
   const hi = h < 11 ? Z("早上好") : h < 18 ? Z("下午好") : Z("晚上好"), walked = R.flatMap(s=>s.st).filter(x=>x.done).length;
-  if (window.bsInit) bsInit({bpPlan, bpDone, bpStopInfo, bpImg, galPh: typeof galPh === "function" ? galPh : null, blDay, blIsleName, blPlace, tkOf: typeof tkOf === "function" ? tkOf : null, bmU, Z, esc, UI, ZE: typeof ZE !== "undefined" ? ZE : null, tkClips, capNat, LEARN_ZH, micListen, boatLog, blGet, blSet, bpRun, npcAny: typeof npcAny === "function" ? npcAny : null, bpOpen: ()=>bpOpen()});
+  if (window.bsInit) bsInit({bpPlan, bpDone, bpStopInfo, bpImg, galPh: typeof galPh === "function" ? galPh : null, blDay, blIsleName, blPlace, tkOf: typeof tkOf === "function" ? tkOf : null, bmU, Z, esc, UI, ZE: typeof ZE !== "undefined" ? ZE : null, tkClips, capNat, LEARN_ZH, micListen, boatLog, blGet, blSet, bpRun, npcAny: typeof npcAny === "function" ? npcAny : null, SOC, recStart, canRec: CAN_REC, tkLogged, myName: typeof ttMyName === "function" ? ttMyName : null, hv: typeof HV !== "undefined" ? HV : null, LEARN, bpOpen: ()=>bpOpen()});
   const hv = `<div class="bp-hello"><div><h2>${hi} 👋</h2><small>${Z("学")}${UI === "zh" ? "" : " "}${esc(LEARN_LANGS[LEARN] ? (LEARN_LANGS[LEARN].name[UI] || (en ? LEARN_LANGS[LEARN].name.en : LEARN_LANGS[LEARN].name.zh)) : "")}</small></div>${sk ? `<span class="bp-streak">🔥 ${Z("连续出海")} ${sk} ${Z("天")}</span>` : ""}</div>
     ${bpVoyage(R, L)}`;
   return `<div class="bp-wrap">${window.bsHtml ? bsHtml(R, L) + flBoatHtml() : hv}${bpPeople()}${ckBoatHtml()}${ziBoatHtml()}${fyBoatHtml()}${epBoatHtml()}
