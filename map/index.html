@@ -63226,7 +63226,8 @@ const RX = w => String(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const pt = e => e && e.clientX != null ? {x: e.clientX, y: e.clientY} : null;
 
 /* ── 样式 ── */
-const CSS = `#tfX{position:fixed;inset:0;z-index:9000;background:#111;color:#fff;font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+const CSS = `@media (min-width:701px){#tfX{left:50%!important;right:auto!important;width:430px;transform:translateX(-50%);box-shadow:0 0 0 100vmax rgba(0,0,0,.72)}}
+#tfX{position:fixed;inset:0;z-index:9000;background:#111;color:#fff;font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
 #tfX *{box-sizing:border-box}#tfX button{font:inherit}
 #tfX .tf-feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}#tfX .tf-feed::-webkit-scrollbar{display:none}
 #tfX .sc{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;display:flex;flex-direction:column;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 96px) 64px 64px 16px;background:#1b1b1b}
@@ -63599,10 +63600,11 @@ function close(keepTopic){ if (!box) return; try { speechSynthesis.cancel(); } c
 addEventListener("popstate", () => { if (box) close(true); });
 
 /* ── 接到软件里：手机上打开话题 → 竖着刷 ── */
-const elig = (id, k) => phone() && !LS("tf.off") && has(id, k);
+const elig = (id, k) => !LS("tf.off") && has(id, k);   // 2026-11-08 用户找不到入口：手机、电脑都直接进竖着刷（电脑上是中间一条手机宽的屏）
 // 打开话题：主程序的 blGo 里会叫 TFEED.want / TFEED.open；岛上地图里点地方也接上
 document.addEventListener("click", e => { if (!e.isTrusted || Date.now() < quiet) return; const b = e.target.closest && e.target.closest("[data-plp]"); if (!b || box) return; const k = b.dataset.plp; setTimeout(() => { const i = H() && H().plIsle; if (i && k && k !== "plaza" && elig(i, k)) open(i, k); }, 150); }, true);
-window.TFEED = {open, close, want: (id, k) => elig(id, k), _dbg: () => ({S, curI})};
+try { const st0 = document.createElement("style"); st0.textContent = ".tf-entry{background:#e8673f!important;color:#fff!important;border-color:#e8673f!important}.tf-entry small{color:#ffe6d8!important}"; document.head.append(st0); } catch(e){}
+window.TFEED = {open, close, has: (id, k) => has(id, k), want: (id, k) => elig(id, k), _dbg: () => ({S, curI})};
 })();
 
 const LABELS = [
@@ -65390,6 +65392,7 @@ const tkOf = (id, k) => (typeof ISLE_TALK !== "undefined" && ISLE_TALK[id] && (I
 const tkGet = id => { try { return JSON.parse(localStorage.getItem("talk." + id) || "{}"); } catch(e){ return {}; } };   // {w:{en:{p,said}}, done:{k:日期}}
 const tkSet = (id, s) => { const prev = tkGet(id); try { localStorage.setItem("talk." + id, JSON.stringify(s)); } catch(e){} if (syncMark) syncMark("talk." + id); try { blDiff(id, prev, s); } catch(e){} };
 window.hvTalk = {get: tkGet, set: tkSet};
+document.addEventListener("click", e=>{ const b = e.target.closest("[data-tfopen]"); if (!b || !window.TFEED) return; const [i, k] = b.dataset.tfopen.split("|"); try { localStorage.removeItem("tf.off"); } catch(x){} window.TFEED.open(i, k); });   // 📱 话题页上的「竖着刷这个话题」
 document.addEventListener("click", e=>{ const b = e.target.closest("[data-tyopen]"); if (!b || !window.TYOU) return; const [i, k] = b.dataset.tyopen.split("|"); window.TYOU.open(i, k, prTitle(i, k)); });   // 给主程序外面的「聊聊你自己」（talk_you.js）存词、说过的句子、做完了
 const tkWord = (id, en) => Object.values(ISLE_TALK[id].places).flatMap(x=>x.words).find(w=>w.en === en);
 function tkSave(id, k, en, said){ const s = tkGet(id), W = s.w || (s.w = {}), o = W[en] || (W[en] = {p: k}); if (said) o.said = (o.said || 0) + 1; o.t = Date.now(); tkSet(id, s); }
@@ -66839,7 +66842,7 @@ if (tkSayIO) new MutationObserver(()=>document.querySelectorAll(".tk-h[data-say]
 function tkModesHtml(id, k){ const m = tkModeOf(id, k), st = tkStreak(id, k);   // 🎬 门头：先看到这个主题活的场景（先用大脑），再往下是照片、群聊、听一听
   const ty = window.TYOU && window.TYOU.has(id, k) ? window.TALK_YOU[id + "|" + k].qs[0].q : null;   // 💬 电脑上：门头下面就是「聊聊你自己」（手机上是岛页里的 #islePr）
   const tl = ty && window.TYOU.label(id, k);
-  return `${tkHeadHtml(id, k)}${ty ? `<button class="ty-entry" data-tyopen="${id}|${k}">${esc(tl.t)}<small>${esc(tl.s)}</small></button>` : ""}<div class="tk-modes" role="tablist">${TK_MODES.map(([key, e, zh])=>`<button class="tk-mode${m === key ? " on" : ""}" role="tab" aria-selected="${m === key}" data-tkmode="${key}">${e} ${Z(zh)}${key === "photo" && st ? ` <small>${Z("连续")} ${st} ${UI === "zh" ? "天" : (ZL && ZL["天"]) || "days"}</small>` : ""}</button>`).join("")}</div>
+  return `${tkHeadHtml(id, k)}${window.TFEED && window.TFEED.has(id, k) ? `<button class="ty-entry tf-entry" data-tfopen="${id}|${k}">${UI === "zh" ? "📱 竖着刷这个话题" : "📱 Swipe through this topic"}<small>${UI === "zh" ? "一屏一样，往上划，每段盖章" : "One thing per screen — swipe up, collect stamps"}</small></button>` : ""}${ty ? `<button class="ty-entry" data-tyopen="${id}|${k}">${esc(tl.t)}<small>${esc(tl.s)}</small></button>` : ""}<div class="tk-modes" role="tablist">${TK_MODES.map(([key, e, zh])=>`<button class="tk-mode${m === key ? " on" : ""}" role="tab" aria-selected="${m === key}" data-tkmode="${key}">${e} ${Z(zh)}${key === "photo" && st ? ` <small>${Z("连续")} ${st} ${UI === "zh" ? "天" : (ZL && ZL["天"]) || "days"}</small>` : ""}</button>`).join("")}</div>
     ${m === "drill" ? (window.PR && window.PR.has(id, k) ? prEntryHtml(id, k) : tkDrillHtml(id, k)) : m === "listen" ? tkListenHtml(id, k) : m === "photo" ? tkSelfHtml(id, k) : tkChatHtml(id, k)}`; }
 // 🎧 听一听：从这个主题的群聊里挑 5 句，听一句，选它的意思；答完看原句（词照样能点、能存）
 function tkListenRounds(id, k){ const X = tkChatOf(id, k), M = X.chat.msgs.filter(m=>m[2]), seed = Math.floor(Date.now() / 864e5) + k.length;
