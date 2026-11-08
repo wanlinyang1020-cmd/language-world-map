@@ -63986,7 +63986,7 @@ addEventListener("keydown", e => { if (e.key === "Escape" && artBox) artClose();
 const cardEl = () => document.getElementById("card");
 function magOn(){ const c = cardEl(); if (!c || !wide() || c.hidden || document.body.classList.contains("me-page")) return false; const st = document.getElementById("isleStage"); if (st && !st.hidden) return false;
   return !!(c.querySelector(":scope > .c-top") && c.querySelector(":scope > .ctabs")); }
-function magApply(){ const c = cardEl(); if (!c) return; const want = magOn();
+function magApply(){ const c = cardEl(); if (!c) return; if (c.classList.contains("npcpage") && !c.querySelector(":scope > .np-cover")) c.classList.remove("npcpage"); const want = magOn();
   if (!want){ if (c.classList.contains("mag")){ c.classList.remove("mag", "mag-nohero"); document.body.classList.remove("stk-mag"); } return; }
   if (c.dataset.magFor === (X.selected && X.selected.n) && c.querySelector(":scope > .mag-side")) return;
   const d = X.selected; if (!d) return; c.dataset.magFor = d.n; c.classList.add("mag"); document.body.classList.add("stk-mag"); c.scrollTop = 0;
@@ -64145,6 +64145,37 @@ body:has(#galTabs) #head,body:has(#galTabs) #card,body:has(#galTabs) #mHere{marg
 #card.mag .mag-side .g{display:grid;grid-template-columns:1fr 1fr;gap:12px}#card.mag .mag-side a{cursor:pointer;display:block}#card.mag .mag-side a i{display:block;aspect-ratio:4/3;border-radius:12px;background:#ddd center/cover;margin-bottom:5px;transition:transform .3s}#card.mag .mag-side a:hover i{transform:scale(1.03)}
 #card.mag .mag-side b{font:900 15px "Noto Serif SC","Songti SC",serif}#card.mag .mag-side small{display:block;color:#7a705e;font-size:12px}
 body.stk-mag #head,body.stk-mag #ctrl,body.stk-mag #bottom{visibility:hidden}
+}
+@media (min-width:701px){
+#card.npcpage{position:fixed!important;left:84px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;max-height:none!important;margin-left:0!important;border-radius:0!important;box-shadow:none!important;background:#f5efe3!important;padding:0 0 70px!important;z-index:44;display:block!important;overflow-y:auto;color:#1d2730;font-size:16px;line-height:1.65}
+#card.npcpage .np-x{all:unset;position:fixed;left:108px;top:18px;z-index:50;cursor:pointer;background:rgba(20,30,45,.55);color:#fff;border-radius:99px;padding:8px 16px;font-weight:700;font-size:14px;backdrop-filter:blur(8px)}
+#card.npcpage .np-map{all:unset;position:fixed;right:28px;top:20px;z-index:50;cursor:pointer;display:flex;align-items:center;gap:8px;background:rgba(255,253,248,.96);border-radius:99px;padding:6px 16px 6px 6px;font-weight:800;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.25)}#card.npcpage .np-map i{font-style:normal;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#d9ecf5 0 42%,#9fcde4 43%);display:grid;place-items:center}
+#card.npcpage .np-cover{height:360px;background:#2a3d55 center 40%/cover;position:relative}
+#card.npcpage .np-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 40%,rgba(0,0,0,.25))}
+#card.npcpage .np-cover small{position:absolute;right:24px;bottom:14px;z-index:2;color:rgba(255,255,255,.8);font-size:12.5px}
+#card.npcpage .np-head{max-width:1180px;margin:-86px auto 0;padding:0 48px;display:flex;gap:30px;align-items:flex-end;position:relative;z-index:3}
+#card.npcpage .np-av{flex:0 0 180px;height:180px;border-radius:50%;border:7px solid #f5efe3;background:radial-gradient(circle at 50% 35%,#fde7c9,#f3c9a0);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden}
+#card.npcpage .np-av svg{width:70%;height:90%;margin-top:18%}
+#card.npcpage .np-who{flex:1;padding-bottom:12px}#card.npcpage .np-who h2{font:900 60px/1 "Noto Serif SC","Songti SC",serif;margin:0}
+#card.npcpage .np-meta{color:#7a705e;margin-top:10px;font-size:15px}#card.npcpage .np-badge{display:inline-block;background:#e0603a;color:#fff;border-radius:99px;padding:3px 12px;font-size:13px;font-weight:800;margin-right:8px}
+#card.npcpage .np-acts{padding-bottom:16px}#card.npcpage .np-btn{all:unset;cursor:pointer;border-radius:99px;padding:11px 20px;font-weight:800;font-size:15px;background:#e0603a;color:#fff}
+#card.npcpage .np-bio{max-width:1180px;margin:22px auto 0;padding:0 48px 26px;display:grid;grid-template-columns:1fr 340px;gap:56px;border-bottom:3px double #1d2730}
+#card.npcpage .np-bio p{font:600 21px/1.6 "Noto Serif SC","Songti SC",serif;margin:0}
+#card.npcpage .np-knows{font-size:14.5px;color:#4a4436}#card.npcpage .np-knows b{display:block;font-size:12px;letter-spacing:.18em;color:#e0603a;margin-bottom:6px}
+#card.npcpage .np-main{max-width:1180px;margin:0 auto;padding:30px 48px 40px;display:grid;grid-template-columns:1fr 340px;gap:56px}
+#card.npcpage h3{font-size:12px;font-weight:800;letter-spacing:.2em;color:#e0603a;margin:0 0 14px}
+#card.npcpage .np-stop{display:grid;grid-template-columns:84px 1fr;gap:18px;margin-bottom:24px}
+#card.npcpage .np-tm{font:700 28px/1 "Cormorant Garamond",Georgia,serif;color:#14305c;padding-top:10px}
+#card.npcpage .np-sc{background:#fffdf8;border-radius:20px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);display:grid;grid-template-columns:240px 1fr}#card.npcpage .np-sc.noph{grid-template-columns:1fr}
+#card.npcpage .np-ph{background:#ddd center/cover;min-height:200px;position:relative}#card.npcpage .np-ph .chip{position:absolute;left:12px;bottom:10px;background:rgba(255,253,248,.95)}
+#card.npcpage .np-tx{padding:18px 22px}#card.npcpage .np-what{font-size:15px;color:#4a4436;margin-bottom:8px}
+#card.npcpage .np-tx q{display:block;font:900 22px/1.45 "Noto Serif SC","Songti SC",serif;quotes:"“" "”";color:#14305c}
+#card.npcpage .np-py{color:#7a705e;font-size:14px;margin-top:6px}
+#card.npcpage .np-say{all:unset;cursor:pointer;display:inline-block;margin-top:12px;background:#14305c;color:#fff;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:700}
+#card.npcpage .np-side{position:sticky;top:76px;align-self:start}
+#card.npcpage .np-box{background:#fffdf8;border-radius:18px;padding:18px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+#card.npcpage .np-fr{display:flex!important;gap:10px;align-items:center;width:100%;text-align:left;margin:0 0 8px!important;border-radius:14px!important;padding:8px 10px!important}#card.npcpage .np-fr span{font-size:26px}#card.npcpage .np-fr b{font:900 16px "Noto Serif SC",serif}#card.npcpage .np-fr small{display:block;color:#7a705e;font-size:12.5px;margin-left:auto;max-width:60%}
+#card.npcpage .np-ask{background:#14305c!important;color:#fff}#card.npcpage .np-ask h3{color:#ffb08f}#card.npcpage .np-ask p{font:900 18px/1.45 "Noto Serif SC",serif;margin:0 0 10px}#card.npcpage .np-ask small{display:block;font:500 13px sans-serif;opacity:.7}
 }
 @media (min-width:701px) and (max-width:1150px){#card.mag{grid-template-columns:28px minmax(0,1fr) 28px;column-gap:0}#card.mag>.mag-side{grid-column:2;grid-row:auto;position:static}#card.mag>.c-top h2{font-size:60px}}
 @media (max-width:1150px){.dm-a,.dm-c{grid-template-columns:1fr}.dm-globe{height:380px}.dm-live{height:auto;max-height:520px}}
@@ -69217,10 +69248,31 @@ function helloHtml(kind, id){
 // 人物路线上那句话的解释：英文界面用对话的英文翻译（找同一句），没有就用原来的中文
 const lineGloss = (n, i, line) => { if (UI !== "zh" && line.cnT && line.cnT !== line.cn) return line.cnT; const ev = UI !== "zh" && typeof EVENTS !== "undefined" && EVENTS[n.id + "." + i];
   if (ev && ev.en){ const j = ev.lines.findIndex(l=>l[1] === line.text); if (j >= 0 && ev.en.lines[j]) return ev.en.lines[j]; } return line.cn; };
+// 👤 电脑上点一个人 = 精致的个人主页（2026-11-08，样板 样板/人物主页样板.html；用户「像 facebook 主页……精致一些」）：封面是 TA 常在的地方，大头像压在封面上，
+// 名字、角色、跟着走一天；左边「TA 的一天」每站一张带照片的卡（那时说的一句做大字、能听），右边认识的人、TA 会问你、跟着 TA 能学会。按钮和原来卡片同名，下面的点击照旧
+const npcWide = () => window.matchMedia && matchMedia("(min-width:701px)").matches;
+const npcPh = st => { const p = st && typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[st.n]; return p && CAN_EMBED ? p.r2 || p.src : ""; };
+function npcPageHtml(n){ const stops = n.stops, cov = stops.map(r=>r.s).find(st=>npcPh(st)), city = esc(mapL(String(n.city || ""))), zh = UI === "zh";
+  const dayT = zh ? esc(n.name) + "的一天" : npcT("{n}的一天", {n: n.name});
+  return `<button class="x np-x" aria-label="${Z("关闭")}">← ${zh ? "回去" : "Back"}</button><button class="np-map" id="npcMap"><i>🌍</i>${zh ? "在地图上看" + city : "See " + city + " on the map"}</button>
+    <div class="np-cover"${cov ? ` style="background-image:url('${esc(npcPh(cov))}')"` : ""}>${cov ? `<small>${esc(cov.e || "")} ${esc(mapN(cov.n))}</small>` : ""}</div>
+    <div class="np-head"><div class="np-av"><svg viewBox="-22 -64 44 68" aria-hidden="true">${figMarkup(n, true)}</svg></div>
+      <div class="np-who"><h2>${esc(n.name)}</h2><div class="np-meta"><span class="np-badge">🎭 ${zh ? "角色" : "Character"} · ${esc(n.type)}</span>📍 ${city} · ${esc(n.langs)}</div></div>
+      <div class="np-acts"><button class="np-btn p" id="npcWalk">👣 ${UI === "zh" ? `跟着${esc(n.name)}走一天` : UI === "es" ? `Pasa un día con ${esc(n.name)}` : UI === "ar" ? `يوم مع ${esc(n.name)}` : UI === "ja" ? `${esc(n.name)} と 1 日いっしょに` : `Spend a day with ${esc(n.name)}`}</button></div></div>
+    <div class="np-bio"><p>${esc(n.life)}</p>${n.teaches ? `<div class="np-knows"><b>${Z("跟着 TA 能学会")}</b>${esc(n.teaches)}</div>` : ""}</div>
+    <div class="np-main"><section class="np-day"><h3>☀️ ${dayT}</h3>${stops.map((r, i)=>{ const ph = npcPh(r.s);
+        return `<div class="np-stop"><div class="np-tm">${esc(r.time)}</div><div class="np-sc${ph ? "" : " noph"}">${ph ? `<div class="np-ph" style="background-image:url('${esc(ph)}')">${r.s ? `<button class="chip" data-stop="${i}">${esc(r.s.e)} ${esc(mapN(r.s.n))}</button>` : ""}</div>` : ""}<div class="np-tx">${!ph && r.s ? `<button class="chip" data-stop="${i}">${esc(r.s.e)} ${esc(mapN(r.s.n))}</button>` : ""}<div class="np-what">${esc(r.what)}</div>
+          ${r.line ? `<q>${esc(r.line.text)}</q><div class="np-py">${[r.line.say, lineGloss(n, i, r.line)].filter(Boolean).map(esc).join(" · ")}</div><button class="np-say" data-say="${esc(r.line.text)}" data-npc="${esc(n.id)}">🔊 ${zh ? "听 TA 说" : "Listen"}</button>` : ""}${evHtml(n, i)}</div></div></div>`; }).join("")}</section>
+      <aside class="np-side">${helloHtml("map", n.id) ? `<div class="np-box">${helloHtml("map", n.id)}</div>` : ""}
+        ${n.rel.length ? `<div class="np-box"><h3>👥 ${Z("认识的人")}</h3>${n.rel.map(r=>{ const o = npcById(r.id); return o ? `<button class="chip np-fr" data-npc="${o.id}"><span>${o.icon}</span><b>${esc(o.name)}</b><small>${esc(r.how)}</small></button>` : ""; }).join("")}</div>` : ""}
+        ${n.asks.length ? `<div class="np-box np-ask"><h3>${Z("💬 TA 会问你")}</h3>${n.asks.map((q, i)=>`<p>${LEARN_ZH && n.zhAsks ? `${esc(n.zhAsks[i])}<small>${esc(q)}</small>` : esc(q)}</p>`).join("")}</div>` : ""}
+        ${n.scenes.length ? `<div class="np-box"><h3>${Z("和 TA 一起练")}</h3><div class="chips">${n.scenes.map(k=>SCENES[k] ? `<a class="chip" href="${SCENES[k].url}" target="_blank" rel="noopener">${SCENES[k].e} ${esc(SCENES[k].t)} ↗</a>` : "").join("")}</div></div>` : ""}
+        <p class="note">📎 ${UI === "zh" ? `${esc(n.name)}是虚构的 NPC 人物${n.from ? `，来自“${esc(n.from)}”` : ""}。说法是仿真脚本，待当地人核对。` : esc(npcT("{n}是虚构的 NPC 人物。路线上的地点是真实的；说法是仿真脚本，待当地人核对。", {n: n.name}))}</p></aside></div>`; }
 function openNpc(n){
   if (selected) selected.el.classList.remove("sel"); selected = null;
   const stops = n.stops;
-  card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
+  card.classList.toggle("npcpage", npcWide());
+  if (npcWide()) card.innerHTML = npcPageHtml(n); else card.innerHTML = `<button class="x" aria-label="关闭">✕</button>
     <div class="c-top"><div class="c-emo figbox" style="border-color:#e8322f"><svg viewBox="-22 -64 44 68" width="46" height="64" aria-hidden="true">${figMarkup(n)}</svg></div>
       <div><h2>${esc(n.name)}</h2><div class="c-region">📍 ${esc(mapL(String(n.city || "")))} · ${esc(n.langs)}</div><span class="c-cat" style="background:#e8322f">👥 NPC · ${esc(n.type)}</span></div></div>
     ${helloHtml("map", n.id)}
@@ -69237,7 +69289,8 @@ function openNpc(n){
   card.querySelector(".x").onclick = closeCard;
   card.querySelectorAll(".chip[data-stop]").forEach(b=>b.onclick=()=>flyTo(stops[+b.dataset.stop].s));
   card.querySelectorAll(".chip[data-npc]").forEach(b=>b.onclick=()=>openNpc(npcById(b.dataset.npc)));
-  card.querySelector("#npcWalk").onclick = ()=>{ const list = stops.map(r=>r.s).filter(Boolean); if (!list.length) return;
+  { const mb = card.querySelector("#npcMap"); if (mb) mb.onclick = ()=>{ const st = stops.map(r=>r.s).filter(Boolean)[0]; closeCard(); if (st) setTimeout(()=>flyTo(st), 120); }; }
+  card.querySelector("#npcWalk").onclick = ()=>{ const list = stops.map(r=>r.s).filter(Boolean); if (!list.length) return; if (card.classList.contains("npcpage")) card.hidden = true;   // 电脑上整页的主页：先收起来，让地图上的一天露出来
     if (peopleOnly || npcOnly || mineOnly || liveOnly) setPersonMode(null);
     setFocus(npcT("{n}的一天", {n: n.name}), list); svg.transition().duration(1400).ease(d3.easeCubicInOut).call(zoom.transform, fitGroup(list)); };
 }
@@ -70865,7 +70918,7 @@ function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.g
   box.querySelectorAll("[data-bprt]").forEach(b=>b.onclick = ()=>{ const [i, k, t] = b.dataset.bprt.split("|"); go(()=>routeGo(i + "|" + k, t)); });
   box.querySelectorAll("[data-bptab]").forEach(b=>b.onclick = ()=>go(()=>{ blStop = -1; openMyBoat(b.dataset.bptab); }));
   box.querySelectorAll("[data-bpgo]").forEach(b=>b.onclick = ()=>{ const a = b.dataset.bpgo; if (a === "gal") galOpen(); else if (a === "map") galClose(); else go(()=>openVoyage()); }); }
-window.DESK_ENV = {get selected(){ return selected; }, get UI(){ return typeof UI === "undefined" ? undefined : UI; },get ZL(){ return typeof ZL === "undefined" ? undefined : ZL; },get LEARN_ZH(){ return typeof LEARN_ZH === "undefined" ? undefined : LEARN_ZH; },get LEARN_TTS(){ return typeof LEARN_TTS === "undefined" ? undefined : LEARN_TTS; },get twToday(){ return typeof twToday === "undefined" ? undefined : twToday; },get twNo(){ return typeof twNo === "undefined" ? undefined : twNo; },get twOpen(){ return typeof twOpen === "undefined" ? undefined : twOpen; },get data(){ return typeof data === "undefined" ? undefined : data; },get mapR(){ return typeof mapR === "undefined" ? undefined : mapR; },get mapN(){ return typeof mapN === "undefined" ? undefined : mapN; },get tkClips(){ return typeof tkClips === "undefined" ? undefined : tkClips; },get tkOf(){ return typeof tkOf === "undefined" ? undefined : tkOf; },get blPlace(){ return typeof blPlace === "undefined" ? undefined : blPlace; },get blIsleE(){ return typeof blIsleE === "undefined" ? undefined : blIsleE; },get blIsleName(){ return typeof blIsleName === "undefined" ? undefined : blIsleName; },get galCap(){ return typeof galCap === "undefined" ? undefined : galCap; },get galRecs(){ return typeof galRecs === "undefined" ? undefined : galRecs; },get pxGet(){ return typeof pxGet === "undefined" ? undefined : pxGet; },get SAY_K(){ return typeof SAY_K === "undefined" ? undefined : SAY_K; },get pxWho(){ return typeof pxWho === "undefined" ? undefined : pxWho; },get bpStreak(){ return typeof bpStreak === "undefined" ? undefined : bpStreak; },get bpTodayItems(){ return typeof bpTodayItems === "undefined" ? undefined : bpTodayItems; },get meWho(){ return typeof meWho === "undefined" ? undefined : meWho; },get meStampRow(){ return typeof meStampRow === "undefined" ? undefined : meStampRow; },get CAN_EMBED(){ return typeof CAN_EMBED === "undefined" ? undefined : CAN_EMBED; },get galClose(){ return typeof galClose === "undefined" ? undefined : galClose; },get blGo(){ return typeof blGo === "undefined" ? undefined : blGo; },get ptOpen(){ return typeof ptOpen === "undefined" ? undefined : ptOpen; },get meOpen(){ return typeof meOpen === "undefined" ? undefined : meOpen; },get galOpen(){ return typeof galOpen === "undefined" ? undefined : galOpen; },get bpOpen(){ return typeof bpOpen === "undefined" ? undefined : bpOpen; },get WORLD(){ return typeof WORLD === "undefined" ? undefined : WORLD; }};   // 🖥️ 电脑版杂志头版（desk_mag.js）要用的
+window.DESK_ENV = {get selected(){ return selected; }, get openNpc(){ return openNpc; }, get npcById(){ return npcById; }, get UI(){ return typeof UI === "undefined" ? undefined : UI; },get ZL(){ return typeof ZL === "undefined" ? undefined : ZL; },get LEARN_ZH(){ return typeof LEARN_ZH === "undefined" ? undefined : LEARN_ZH; },get LEARN_TTS(){ return typeof LEARN_TTS === "undefined" ? undefined : LEARN_TTS; },get twToday(){ return typeof twToday === "undefined" ? undefined : twToday; },get twNo(){ return typeof twNo === "undefined" ? undefined : twNo; },get twOpen(){ return typeof twOpen === "undefined" ? undefined : twOpen; },get data(){ return typeof data === "undefined" ? undefined : data; },get mapR(){ return typeof mapR === "undefined" ? undefined : mapR; },get mapN(){ return typeof mapN === "undefined" ? undefined : mapN; },get tkClips(){ return typeof tkClips === "undefined" ? undefined : tkClips; },get tkOf(){ return typeof tkOf === "undefined" ? undefined : tkOf; },get blPlace(){ return typeof blPlace === "undefined" ? undefined : blPlace; },get blIsleE(){ return typeof blIsleE === "undefined" ? undefined : blIsleE; },get blIsleName(){ return typeof blIsleName === "undefined" ? undefined : blIsleName; },get galCap(){ return typeof galCap === "undefined" ? undefined : galCap; },get galRecs(){ return typeof galRecs === "undefined" ? undefined : galRecs; },get pxGet(){ return typeof pxGet === "undefined" ? undefined : pxGet; },get SAY_K(){ return typeof SAY_K === "undefined" ? undefined : SAY_K; },get pxWho(){ return typeof pxWho === "undefined" ? undefined : pxWho; },get bpStreak(){ return typeof bpStreak === "undefined" ? undefined : bpStreak; },get bpTodayItems(){ return typeof bpTodayItems === "undefined" ? undefined : bpTodayItems; },get meWho(){ return typeof meWho === "undefined" ? undefined : meWho; },get meStampRow(){ return typeof meStampRow === "undefined" ? undefined : meStampRow; },get CAN_EMBED(){ return typeof CAN_EMBED === "undefined" ? undefined : CAN_EMBED; },get galClose(){ return typeof galClose === "undefined" ? undefined : galClose; },get blGo(){ return typeof blGo === "undefined" ? undefined : blGo; },get ptOpen(){ return typeof ptOpen === "undefined" ? undefined : ptOpen; },get meOpen(){ return typeof meOpen === "undefined" ? undefined : meOpen; },get galOpen(){ return typeof galOpen === "undefined" ? undefined : galOpen; },get bpOpen(){ return typeof bpOpen === "undefined" ? undefined : bpOpen; },get WORLD(){ return typeof WORLD === "undefined" ? undefined : WORLD; }};   // 🖥️ 电脑版杂志头版（desk_mag.js）要用的
 function bpClose(){ const box = document.getElementById("boatPg"); if (box) box.hidden = true; if (window.PTAB_CLOSE) window.PTAB_CLOSE(); }
 // 👋 底部第三栏「人」（people_tab.js，2026-11-04）：认识的人 · 今天的动态 · 还可以认识
 function ptOpen(){ if (!window.PTAB_OPEN) return; galClose(); window.PTAB_OPEN(); document.body.classList.add("gal-on"); galTabs("people"); }
