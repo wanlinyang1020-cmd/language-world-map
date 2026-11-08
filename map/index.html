@@ -14065,7 +14065,10 @@ function festHtml(){ const X = fest(); if (!X) return ""; const F = X.F, q = F.p
     <div class="pt-fest-who">${(F.posts || []).slice(0, 4).map(p => `<span>${esc(String(p.who || "?")[0])}</span>`).join("")}<em>${T("岛上的人说了", "Islanders shared")}</em><button class="pt-fest-go">🎙️ ${T("我来说说", "Your turn")}</button></div></div></div>`; }
 // 🧭 在聊你聊过的（2026-11-08）：动态的话题你在「话题」里走过（足迹 practice.v1 / 话题五步 ty.v1），就标一下
 const myTopics = () => { const S = new Set(); try { (ls("practice.v1") || []).forEach(e => { if (e && e.i && e.th) S.add(e.i + "|" + e.th); }); Object.keys(ls("ty.v1") || {}).forEach(k => S.add(k)); } catch(e){} return S; };
-let MYT = null; const topicTag = x => x[13] && MYT && MYT.has(x[13]) ? `<span class="pt-tag pt-ytag">🧭 ${T("你也聊过这个话题", "You talked about this too")}</span>` : "";
+// 动态上的话题：点了进那个话题（朋友 → 话题，2026-11-08）；你聊过的写「你也聊过」
+const topicName = key => { try { const h = window.HVI, [i, k] = key.split("|"), P = (h.plOf(i) || {places: []}).places.find(q => q.k === k); return P ? ((P.e || "") + " " + h.bmU(P)).trim() : ""; } catch(e){ return ""; } };
+let MYT = null; const topicTag = x => { if (!x[13]) return ""; const nm = topicName(x[13]); if (!nm) return ""; const mine = MYT && MYT.has(x[13]);
+  return `<span class="pt-tag pt-ytag" data-tyopen="${esc(x[13])}" style="cursor:pointer">${mine ? "🧭 " + T("你也聊过", "You talked about") : "💬 " + T("话题", "Topic")} · ${esc(nm)} ›</span>`; };
 const festTag = x => { const X = fest(); return X && String(x[13] || "").startsWith(X.F.club + "|") ? `<span class="pt-tag pt-ftag" data-festgo="${esc(X.F.club)}">${esc(X.F.icon)} ${esc(ZHUI() ? X.F.name : X.F.en)}</span>` : ""; };
 function render(){
   mount(); stop();
@@ -14118,7 +14121,7 @@ function render(){
   for (const k in o.seenP) if (now - o.seenP[k] > 12 * 864e5) delete o.seenP[k];
   SAVE(o);
   wire(box);
-  box.querySelectorAll("[data-tyopen]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); const [i, k] = b.dataset.tyopen.split("|"); try { if (window.TFEED && window.TFEED.has(i, k)) window.TFEED.open(i, k); } catch(x){} });
+  box.querySelectorAll("[data-tyopen]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); const [i, k] = b.dataset.tyopen.split("|"); try { if (window.TFEED && window.TFEED.has(i, k)) window.TFEED.open(i, k); else if (window.HVI && window.HVI.blGo){ window.PTAB_CLOSE && window.PTAB_CLOSE(); window.HVI.blGo(i, k); } } catch(x){} });
   box.querySelectorAll("[data-fest],[data-festgo]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); if (window.hvFestOpen) window.hvFestOpen(b.dataset.fest || b.dataset.festgo); });
 }
 function person(id){
@@ -63455,7 +63458,7 @@ function build(id, k){ const h = H(), key = id + "|" + k, X = h.tkChatOf(id, k),
       init: (el, sc) => { const c = el.querySelector("[data-a=rd]"); c.onclick = e => { const b = c.querySelector("[data-body]"); if (!b.dataset.open){ b.dataset.open = 1; try { b.innerHTML = `<div class="pl-body">${h.plItemBody(id, it)}</div>`; } catch(x){ b.textContent = ""; } } give(sc, "read:" + i, hd[1].slice(0, 18), "读一读", pt(e)); }; } }); });
   // 👂 听别人
   const M = C.msgs || [];
-  if (M.length) add({sec: 1, bg: 1, pre: M.map(m => TG(plain(m[1]), m[2])), html: `${secT(1, (C.t && C.t.zh) || "岛上的人在聊")}<div class="chat"></div><div class="mh" style="margin-top:8px">黄色的词点一下收进口袋</div>`,
+  if (M.length) add({sec: 1, bg: 1, pre: M.map(m => TG(plain(m[1]), m[2])), html: `${secT(1, (H().UI !== "zh" && C.t && C.t.en) || (C.t && C.t.zh) || "岛上的人在聊")}<div class="chat"></div><div class="mh" style="margin-top:8px">黄色的词点一下收进口袋</div>`,
     show: async (el, sc) => { if (el.dataset.run) return; el.dataset.run = 1; const bx = el.querySelector(".chat");
       for (const m of M){ const t = document.createElement("div"); t.className = "who"; t.innerHTML = `<div class="av">${av(m[0], 32)}</div><div class="bub typing"><i></i><i></i><i></i></div>`; bx.append(t); await wait(450); t.remove();
         bx.insertAdjacentHTML("beforeend", bub(m[0], LZ() ? E(plain(m[1])) : hlw(m[1]), m[2])); bx.lastElementChild.querySelectorAll("w").forEach(w => w.onclick = e => { give(sc, "w:" + w.textContent.toLowerCase(), w.textContent, "词", pt(e)); }); bx.scrollTop = 1e6; say(TG(plain(m[1]), m[2]), m[0]); await wait(900 + TG(plain(m[1]), m[2]).length * (LZ() ? 200 : 62)); }
@@ -63989,7 +63992,10 @@ function stdHtml(d){ const S = STK_STD[d.n], L = k => stkL("s|" + d.n + "|" + k)
     ${S.quote ? `<div class="std-b std-q"><i>🗣️ ${Z("TA 说过的一句")}</i>${biHtml(S.quote.zh, S.quote.en, L("quote"))}<small>${esc(UI === "zh" ? S.quote.where : L("where") || S.quote.where_en || S.quote.where)}</small></div>` : ""}
     <div class="std-b std-say"><i>💬 ${P ? Z("聊到 TA 时说一句") : Z("到了那儿说一句")}</i><b>${esc(tgt)}</b> <button class="chip" data-say="${esc(tgt)}" data-tts="${LEARN_TTS}" data-rate=".9" aria-label="${esc(tgt)}">🔊</button>${mean ? `<small>${esc(mean)}</small>` : ""}</div></div>`; }
 let pyLib = null;
-const loadPinyin = () => pyLib || (pyLib = new Promise((ok, bad)=>{ const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"; sc.onload = ()=>ok(window.pinyinPro); sc.onerror = bad; document.head.appendChild(sc); }));
+const loadPinyin = () => pyLib || (pyLib = new Promise((ok, bad)=>{ const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"; sc.onload = ()=>{ try { window.pinyinPro.customPinyin(PY_FIX); } catch(e){} ok(window.pinyinPro); }; sc.onerror = bad; document.head.appendChild(sc); }));
+// 拼音工具常读错的词（走查 2026-11-08：「闭着」读成 zhuó、「包子」读成 zǐ）：动词后面的「着」读轻声 zhe，名词后缀「子」读轻声 zi
+const PY_FIX = {"闭着": "bì zhe", "看着": "kàn zhe", "拿着": "ná zhe", "等着": "děng zhe", "坐着": "zuò zhe", "站着": "zhàn zhe", "躺着": "tǎng zhe", "笑着": "xiào zhe", "听着": "tīng zhe", "走着": "zǒu zhe", "开着": "kāi zhe", "穿着": "chuān zhe", "戴着": "dài zhe", "抱着": "bào zhe", "睡着了": "shuì zháo le",
+  "包子": "bāo zi", "饺子": "jiǎo zi", "桌子": "zhuō zi", "孩子": "hái zi", "儿子": "ér zi", "房子": "fáng zi", "椅子": "yǐ zi", "杯子": "bēi zi", "盒子": "hé zi", "鞋子": "xié zi", "日子": "rì zi", "样子": "yàng zi", "妻子": "qī zi", "箱子": "xiāng zi", "瓶子": "píng zi"};
 function addPinyin(root){
   const els = [...root.querySelectorAll(".zhread .zh:not(.done), .py-on:not(.done)")]; if (!els.length) return;
   loadPinyin().then(P=>els.forEach(el=>{ el.classList.add("done");   // 每个汉字上面一个拼音（按词连读的拼音只用来定读音）
@@ -67388,13 +67394,13 @@ if (ZE) Object.assign(ZE, {"问你 · 说说你那儿": "asks you · tell them a
 function tkSceneHtml(id, k){ const X = tkOf(id, k), g = X.go, n = npcAny(g.npc) || {name: "", icon: "🙂"}, r = tkPick != null ? g.replies[tkPick] : null, lp = lsPlaceOf(g.npc), lsk = !lp ? null : r ? "bye" : tkAsk ? "np" : "hi", line = tkAsk && !r ? tkAsk.back : r && tkKn && tkKn.last ? tkKn.last : r ? r.back : g.hello, W = tkGet(id).w || {};
   const mark = (s, use) => use.reduce((t, en)=>{ const w = tkWord(id, en), forms = [bmT(w), ...(w.alt || [])].map(f=>f.split(/\s+/).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+")); return t.replace(new RegExp(forms.join("|"), "i"), m=>`<mark>${m}</mark>`); }, esc(s));   // 词的变形（stayed up late）也标出来
   const isle = clubPinName(clubPinData.find(x=>x.id === id) || {id, name: ""});
-  return `<button class="chip tk-back" data-tkhome>⛵ ${Z("回到")}${esc(isle)}</button>
+  return `<button class="chip tk-back" data-tkhome>⛵ ${Z("回到")}${UI === "zh" ? "" : " "}${esc(isle)}</button>
     <div class="tk-where">${g.flag} ${esc(bmU(g.city))}<small>${esc(bmU(g.spot))}</small>${(cl=>cl ? `<small class="tk-cr"><a href="${esc(cl.url)}" target="_blank" rel="noopener">🎬 ${esc(cl.by)} · Pexels ↗</a></small>` : "")(tkClips(id, k).find(c=>c.role === "moment") || g.clip)}</div>
     <div class="tk-npc"><span class="tk-av">${npcAv(n, 76)}</span><b>${esc(n.name)}</b><small>${esc(n.age ? n.age + (UI === "zh" ? " 岁 · " : (ZL && ZL[" 岁 · "]) || " · ") : "")}${esc(mapL(String(n.city || "")))}${n.job ? " · " + esc(npcJob(n.job)) : ""}</small></div>
     <div class="tk-say">${lsk && lsk !== "bye" ? lsBtn(lp, lsk) + " " : ""}${esc(bmT(line))}${lsk === "bye" ? " " + lsBtn(lp, lsk) : ""}<span class="tk-tr" hidden>${esc(bmG(line))}</span><span class="chips" style="margin-top:6px"><button class="chip" data-tkagain>🔊 ${Z("再听一遍")}</button><button class="chip" data-tktr>${LEARN_ZH ? Z("看英文") : Z("看中文")}</button></span></div>
     <div class="tk-panel">${tkLs ? lsCardHtml(tkLs) : ""}${r ? `<p style="margin:0"><b style="color:#2f9e5b">✓ ${UI === "zh" ? `你在${esc(g.city.zh)}说了一句：` : UI === "es" ? `Lo dijiste en ${esc(cityL(g.city))}:` : UI === "ar" ? `قيلت في ${esc(cityL(g.city))}:` : UI === "ja" ? `${esc(cityL(g.city))} で言ったこと：` : `You said it in ${esc(cityL(g.city))}:`}</b> ${esc(bmT(r.say))} <button class="chip" data-say="${esc(bmT(r.say))}" data-tts="${LEARN_TTS}">🔊</button></p>
         <p class="note" style="margin:6px 0">${Z("用上了：")}${r.use.map(en=>`<b style="color:#2f6fe0">${esc(bmT(tkWord(id, en)))}</b>`).join(UI === "zh" ? "、" : ", ")} → ${Z("词汇本里记成「说过」")}</p>${tkKnowHtml(g, n)}
-        <div class="chips">${shrBtnHtml()}<button class="chip" data-tkother>${Z("换一句说")}</button><button class="chip hot" data-tkhome>⛵ ${Z("回到")}${esc(isle)} →</button></div>${tkSeeHtml(id, k)}${tkTutorHtml()}`
+        <div class="chips">${shrBtnHtml()}<button class="chip" data-tkother>${Z("换一句说")}</button><button class="chip hot" data-tkhome>⛵ ${Z("回到")}${UI === "zh" ? "" : " "}${esc(isle)} →</button></div>${tkSeeHtml(id, k)}${tkTutorHtml()}`
       : `${(()=>{ const m = pxGet().filter(e=>e.k === "npc" && e.npc === g.npc).pop(); return m ? `<p class="note" style="margin:0 0 6px">🧠 ${esc(n.name)} ${Z("记得你。上次你说：")}「${esc(m.say)}」 <button class="chip" data-say="${esc(m.say)}" data-tts="${LEARN_TTS}">🔊</button> · ${Z("这次换一句说？")}</p>` : ""; })()}${tkAskHtml(id, k, n)}<p class="note" style="margin:0 0 4px;color:#c25a2c;font-weight:700">🧳 ${Z("你在岛上学过的")}</p><div class="chips" style="margin-bottom:8px">${X.words.map(w=>`<button class="chip${W[w.en] && W[w.en].said ? " tk-used" : ""}" data-say="${esc(bmT(w))}" data-tts="${LEARN_TTS}">${W[w.en] ? (W[w.en].said ? "🗣️" : "✓") : "·"} ${esc(bmT(w))}</button>`).join("")}</div>
         <p class="note" style="margin:0 0 4px;color:#c25a2c;font-weight:700">💬 ${UI === "zh" ? `回 ${esc(n.name)} 一句` : UI === "es" ? `Responde a ${esc(n.name)}` : UI === "ar" ? `الرد على ${esc(n.name)}` : UI === "ja" ? `${esc(n.name)} に返事する` : `Reply to ${esc(n.name)}`} <span style="font-weight:400">· ${Z("蓝色是岛上学过的词")}</span></p>
         <div class="tk-opts">${(()=>{ const last = pxGet().filter(e=>e.k === "npc" && e.npc === g.npc).pop(); return g.replies.map((o, i)=>`<button class="tk-opt" data-tkr="${i}">${mark(bmT(o.say), o.use)}${last && last.r === i ? ` <span class="tk-me">${Z("上次说过")}</span>` : ""}<small>${esc(bmG(o.say))}</small></button>`).join(""); })()}</div>
@@ -70097,7 +70103,7 @@ function bpSecHtml(s, cur){ const d = s.st.filter(x=>x.done).length, all = d ===
   const id = s.isle || "bas-" + s.bas, autoOpen = s.isle ? recent : !all && !cur.hasIsles && !cur.basOpen, o = bpFold[id] !== undefined ? bpFold[id] : autoOpen;
   if (!s.isle && autoOpen) cur.basOpen = true;
   const fresh = s.isle && recent && d <= 1, when = s.isle ? bpAgo(s.last) : all ? "✓ " + Z("走完了") : Z("生活基础");
-  let h = `<div class="bp-isle"><div class="bp-ih" data-bpfold="${esc(id)}"><span class="bp-ie">${esc(s.t.split(" ")[0])}</span><div class="bp-in"><b>${esc(s.t.split(" ").slice(1).join(" "))}${fresh ? `<span class="bp-new">${Z("新长出来的")}</span>` : ""}</b><span>${when} · ${Z("走了")} ${d}/${s.st.length} ${Z("站")}</span></div><div class="bp-pb"><i style="width:${d / Math.max(1, s.st.length) * 100}%"></i></div><span class="bp-ar">${o ? "▾" : "▸"}</span></div>`;
+  let h = `<div class="bp-isle"><div class="bp-ih" data-bpfold="${esc(id)}"><span class="bp-ie">${esc(s.t.split(" ")[0])}</span><div class="bp-in"><b>${esc(s.t.split(" ").slice(1).join(" "))}${fresh ? ` <span class="bp-new">${Z("新长出来的")}</span>` : ""}</b><span>${when} · ${Z("走了")} ${d}/${s.st.length} ${Z("站")}</span></div><div class="bp-pb"><i style="width:${d / Math.max(1, s.st.length) * 100}%"></i></div><span class="bp-ar">${o ? "▾" : "▸"}</span></div>`;
   if (!o) return h + `</div>`;
   if (s.isle){ const said = [...new Set(pxGet().filter(e=>e.k === "npc" && e.i === s.isle && e.say).map(e=>e.say))].slice(-2);
     if (said.length) h += `<div class="bp-can"><b>🎉 ${Z("在这座岛上你已经会说：")}</b>${said.map(t=>`<q>🗣️ ${esc(t)}</q>`).join("")}</div>`; }
