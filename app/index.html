@@ -63907,10 +63907,10 @@ function after(box){ stopAll(); box.classList.add("dm-box"); const $ = s => box.
   const twShow = j => { if (!TW.length) return; twI = j; box.querySelectorAll(".dm-sl").forEach(s => s.classList.toggle("on", +s.dataset.j === j)); box.querySelectorAll(".dm-dots i").forEach(d => { d.classList.remove("on"); void d.offsetWidth; d.classList.toggle("on", +d.dataset.j === j); });
     const t = TW[j], x = t.x, ops = (x.l && x.l[X.UI] && x.l[X.UI].opts) || x.opts || [], ans = (x.l && x.l[X.UI] && x.l[X.UI].ans) || x.ans, q = (x.l && x.l[X.UI] && x.l[X.UI].q) || x.q;
     $("#dmTwK").textContent = L("第 " + (j + 1) + " 张", "No. " + (j + 1)) + " · " + t.where; $("#dmTwQ").textContent = q || ""; const W = $("#dmTwW"); W.classList.remove("on");
-    W.innerHTML = `${E((x.l && x.l[X.UI] && x.l[X.UI].why) || x.why || "")}${x.say ? `<br><b class="say">“${E(x.say)}”</b>` : ""}<div class="acts">${window.TFEED && TFEED.canFlow && TFEED.canFlow(x.n) ? `<button data-dmw="flow">▶ ${L("往下走：那儿的人怎么说", "Keep going: what people there say")}</button>` : ""}<button data-dmw="map">📍 ${L("在地图上看", "See it on the map")}</button><button data-dmw="tw">🛂 ${L("去盖章", "Get the stamp")}</button></div>`;
+    W.innerHTML = `${E((x.l && x.l[X.UI] && x.l[X.UI].why) || x.why || "")}${x.say ? `<br><b class="say">“${E(x.say)}”</b>` : ""}<div class="acts">${window.TFEED && TFEED.canFlow && TFEED.canFlow(x.n) ? `<button data-dmw="flow">▶ ${L("往下走：那儿的人怎么说", "Keep going: what people there say")}</button>` : ""}<button data-dmw="map">📰 ${L("读这一篇", "Read the story")}</button><button data-dmw="tw">🛂 ${L("去盖章", "Get the stamp")}</button></div>`;
     $("#dmTwO").innerHTML = ops.map(o => `<button>${E(o)}</button>`).join("");
     $("#dmTwO").querySelectorAll("button").forEach(b => b.onclick = () => { clearTimeout(twT); $("#dmTwO").querySelectorAll("button").forEach(c => c.classList.add(c.textContent === ans ? "ok" : "no")); W.classList.add("on"); if (x.say) sayEn(x.say); });
-    W.querySelectorAll("[data-dmw]").forEach(b => b.onclick = () => { const a = b.dataset.dmw; if (a === "flow"){ window.__tfStay = true; if (!TFEED.flow(x.n)) window.__tfStay = false; } else if (a === "tw"){ try { X.twOpen(j); } catch(e){} } else { X.galClose(); setTimeout(() => HVI.stkGo(x.n), 150); } });
+    W.querySelectorAll("[data-dmw]").forEach(b => b.onclick = () => { const a = b.dataset.dmw; if (a === "flow"){ window.__tfStay = true; if (!TFEED.flow(x.n)) window.__tfStay = false; } else if (a === "tw"){ try { X.twOpen(j); } catch(e){} } else article(x.n, "today"); });
     clearTimeout(twT); twT = setTimeout(() => { if (box.isConnected && !box.hidden && !W.classList.contains("on")) twShow((twI + 1) % TW.length); }, 8000); timers.push(twT); };
   box.querySelectorAll(".dm-dots i").forEach(d => d.onclick = () => twShow(+d.dataset.j)); twShow(0);
   // 话题：短片进到画面里才播；点了竖着刷从右边滑出来
@@ -63930,7 +63930,7 @@ function after(box){ stopAll(); box.classList.add("dm-box"); const $ = s => box.
   if (!X.LEARN_ZH){ for (let j = 0; j < 5; j++) liveAdd(); timers.push(setInterval(() => { if (box.isConnected && !box.hidden && !document.hidden) liveAdd(); }, 4500)); } else if (live) live.closest("section").hidden = true;
   // 地球：慢慢转；今日世界和今天话题的地方是点
   try { const svg = d3.select(box.querySelector("#dmGlobe")), proj = d3.geoOrthographic().scale(170).translate([200, 200]).clipAngle(90), path = d3.geoPath(proj);
-    const land = topojson.feature(X.WORLD, X.WORLD.objects.countries), PT = TW.filter(t => t.ll).map((t, j) => ({ll: t.ll, t: L("今日世界 · ", "Today · ") + X.mapN(t.x.n), go: () => { twShow(TW.indexOf(t)); }}));
+    const land = topojson.feature(X.WORLD, X.WORLD.objects.countries), PT = TW.filter(t => t.ll).map((t, j) => ({ll: t.ll, t: L("今日世界 · ", "Today · ") + X.mapN(t.x.n), go: () => article(t.x.n, "today")}));
     TP.forEach(t => { try { const tk = X.tkOf(t.i, t.k), c = tk && tk.go && tk.go.city; const cn = c && (typeof c === "object" ? c.zh : c), d = cn && X.data.find(s => s.area === cn || s.city === cn); if (d) PT.push({ll: [d.lon, d.lat], t: t.pl.n, f: 1, go: () => openTopic(t.key)}); } catch(e){} });
     svg.append("path").datum({type: "Sphere"}).attr("class", "sph"); svg.append("path").datum(d3.geoGraticule10()).attr("class", "grat"); svg.append("path").datum(land).attr("class", "lnd");
     const pins = svg.selectAll(".gp").data(PT).enter().append("circle").attr("class", d => "gp" + (d.f ? " f" : "")).attr("r", 6.5).style("cursor", "pointer").on("click", (e, d) => d.go()).on("mouseenter", (e, d) => { $("#dmGf").innerHTML = "<b>" + E(d.t) + "</b> · " + L("点一下打开", "click to open"); });
@@ -63938,7 +63938,76 @@ function after(box){ stopAll(); box.classList.add("dm-box"); const $ = s => box.
     gTimer = d3.timer(() => { if (!box.isConnected || box.hidden){ gTimer && gTimer.stop(); return; } rot += .1; proj.rotate([rot, -15]); svg.selectAll("path").attr("d", path);
       pins.attr("transform", d => { const p = proj(d.ll); return p ? `translate(${p})` : "translate(-99,-99)"; }).attr("opacity", d => d3.geoDistance(d.ll, [-rot, 15]) < 1.5 ? 1 : 0); }); } catch(e){}
 }
-window.DESK = {on, html, after, stop: stopAll};
+// 📰 一张贴纸 = 一篇杂志文章（2026-11-08，样板 样板/贴纸杂志页样板.html；用户「这排版也太好看了」）：电脑上从头版点进一张贴纸不再飞到满屏贴纸的地图，
+// 而是整屏短片（STK_HEAD_EXTRA）或照片 + 大标题，正文 = 为什么有名 · 今天为什么是它 · 你可能不知道（有出处）· 到了那儿你会说（STK_STD），右边 = 地图上的位置和附近；想看地图再点「在大地图上看」
+let artBox = null, artIo = null;
+function artClose(){ if (!artBox) return; artBox.querySelectorAll("video").forEach(v => v.pause()); artBox.remove(); artBox = null; document.body.classList.remove("dm-art-on"); try { speechSynthesis.cancel(); } catch(e){} }
+function artNear(d, n){ const pic = o => { const p = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[o.n]; return p && (p.r2 || p.src); };
+  return X.data.filter(o => o !== d && pic(o)).map(o => [o, d3.geoDistance([d.lon, d.lat], [o.lon, o.lat])]).sort((a, b) => a[1] - b[1]).slice(0, n).map(([o, g]) => ({o, km: Math.round(g * 6371), pic: pic(o)})); }
+function article(n, from){ const d = X.data.find(s => s.n === n); if (!d) return false; artClose();
+  const zh = X.UI === "zh", S = (typeof STK_STD !== "undefined" && STK_STD[n]) || {}, ph = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[n], img = ph && (ph.r2 || ph.src) || "", hv = typeof STK_HEAD_EXTRA !== "undefined" && STK_HEAD_EXTRA[n];
+  const nm = X.mapN(n), en = (typeof MAP_EN !== "undefined" && MAP_EN.names && MAP_EN.names[n]) || "", desc = zh ? (S.what || d.d || "") : (S.what_en || d.d || ""), descSub = zh ? "" : "";
+  const fame = zh ? S.fame : S.fame_en, fameEn = zh ? S.fame_en : "", fact = zh ? S.fact : S.fact_en, say = S.say;
+  let TW = []; try { TW = X.twToday() || []; } catch(e){} const tj = TW.findIndex(x => x.n === n), tw = tj >= 0 ? TW[tj] : null, twWhy = tw ? ((tw.l && tw.l[X.UI] && tw.l[X.UI].why) || tw.why) : "";
+  const near = artNear(d, 4), nxt = tw && TW[tj + 1] ? X.data.find(s => s.n === TW[tj + 1].n) : null, far = artNear(d, 12).find(x => x.o.t === 1 && x.o.n !== (nxt && nxt.n));
+  const pp = o => { const p = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[o.n]; return p && (p.r2 || p.src) || ""; };
+  const kick = (tw ? L("今日世界 · 第 " + (tj + 1) + " 张 · ", "Today's world · No. " + (tj + 1) + " · ") : "") + X.mapR(d.r);
+  artBox = document.createElement("div"); artBox.id = "dmArt";
+  artBox.innerHTML = `<div class="ab" id="dmArtBar"><button data-art="x">← ${from === "today" ? L("回到今天", "Back to Today") : L("回去", "Back")}</button><span class="t">${E(nm)}${en && en !== nm ? " · " + E(en) : ""}</span><div class="r">${window.TFEED && TFEED.canFlow && TFEED.canFlow(n) ? `<button data-art="flow" class="hot">▶ ${L("往下走：那儿的人怎么说", "Keep going: what people there say")}</button>` : ""}<button data-art="map" class="full"><i>🌍</i>${L("全地图", "Full map")}</button></div></div>
+    <section class="ah">${img ? `<div class="ph" style="background-image:url('${E(img)}')"></div>` : ""}${hv && hv.hd ? `<video muted loop autoplay playsinline poster="${E(hv.poster || img)}" src="${E(hv.hd)}"></video>` : ""}
+      <div class="tx"><div class="kick">${E(kick)}</div><h1>${E(nm)}</h1>${en && en !== nm ? `<div class="en">${E(en)} <button data-say="${E(en)}">🔊</button></div>` : ""}${desc ? `<div class="dek">${E(desc)}</div>` : ""}</div>
+      <div class="credit">${hv && hv.nm ? L("短片：", "Video: ") + E(hv.nm) + " / Pexels" : ph && ph.artist ? L("照片：", "Photo: ") + E(ph.artist) + (ph.license ? " · " + E(ph.license) : "") : ""}</div></section>
+    <div class="ab2"><article>${fame ? `<p class="lede up">${E(fame)}</p>` : `<p class="lede up">${E(d.d || "")}</p>`}${fameEn && !X.LEARN_ZH ? `<p class="en-p up">${E(fameEn)}</p>` : ""}
+      ${twWhy ? `<div class="today up"><div class="h" style="margin-top:0">📅 ${L("今天为什么是它", "Why it's today")}</div><q>${E(twWhy)}</q>${tw.say ? `<div class="sy">“${E(tw.say)}” <button class="sb" data-say="${E(tw.say)}">🔊</button></div>` : ""}</div>` : ""}
+      ${fact ? `<div class="h up">💡 ${L("你可能不知道", "Did you know?")}</div><div class="fact up">${E(fact)}${S.src ? `<small>${L("出处：", "Source: ")}${S.url ? `<a href="${E(S.url)}" target="_blank" rel="noopener">${E(S.src)}</a>` : E(S.src)}</small>` : ""}</div>` : ""}
+      ${say && say.en && !X.LEARN_ZH ? `<div class="speak up"><button class="mic" data-art="mic">🎙️</button><div><small>${L("到了那儿，你会说", "Once you're there, you'd say")}</small><b>${E(say.en)}</b><span id="dmArtHeard">${zh && say.zh ? E(say.zh) + "　" : ""}${L("点麦克风说一遍", "Tap the mic and say it")}</span></div><button class="sb lt" data-say="${E(say.en)}">🔊</button></div>` : ""}</article>
+      <aside><div class="loc"><svg id="dmArtLoc"></svg>${img ? `<div class="pin" id="dmArtPin" style="background-image:url('${E(img)}')"></div>` : ""}<button class="go" data-art="map">🗺️ ${L("在大地图上看周围", "See what's around on the map")} <span>→</span></button></div>
+        <div class="near"><h4>📍 ${L("附近还有", "Nearby")}</h4><div class="g">${near.map(x => `<a data-artgo="${E(x.o.n)}"><i style="background-image:url('${E(x.pic)}')"></i><b>${E(x.o.e || "")} ${E(X.mapN(x.o.n))}</b><small>${x.km ? x.km + L(" 公里 · ", " km · ") : ""}${E(((zh ? x.o.d : (typeof MAP_EN !== "undefined" && MAP_EN.desc && MAP_EN.desc[x.o.n]) || x.o.d) || "").slice(0, 34))}</small></a>`).join("")}</div></div></aside></div>
+    <div class="af">${[nxt ? [nxt, L("今日世界 · 下一张", "Today's world · next")] : null, far ? [far.o, L(far.km + " 公里外 · 有名的", "Famous · " + far.km + " km away")] : null].filter(Boolean).map(([o, k]) => `<a data-artgo="${E(o.n)}">${pp(o) ? `<i style="background-image:url('${E(pp(o))}')"></i>` : ""}<div><small>${E(k)}</small><b>${E(X.mapN(o.n))}</b></div></a>`).join("")}</div>`;
+  document.body.append(artBox); document.body.classList.add("dm-art-on"); artBox.scrollTop = 0;
+  try { HVI.stkSeen(n); } catch(e){}
+  const bar = artBox.querySelector("#dmArtBar"); artBox.addEventListener("scroll", () => bar.classList.toggle("solid", artBox.scrollTop > innerHeight * .65), {passive: true});
+  artIo = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in")), {root: artBox, threshold: .15}); artBox.querySelectorAll(".up").forEach(e => artIo.observe(e));
+  const v = artBox.querySelector(".ah video"); if (v) v.addEventListener("error", () => v.remove());
+  artBox.querySelectorAll("[data-say]").forEach(b => b.onclick = () => sayEn(b.dataset.say));
+  artBox.querySelectorAll("[data-artgo]").forEach(b => b.onclick = () => article(b.dataset.artgo, from));
+  artBox.querySelectorAll("[data-art]").forEach(b => b.onclick = () => { const a = b.dataset.art;
+    if (a === "x") artClose(); else if (a === "map"){ artClose(); X.galClose(); setTimeout(() => HVI.stkGo(n), 150); } else if (a === "flow"){ artClose(); window.__tfStay = true; if (!TFEED.flow(n)) window.__tfStay = false; }
+    else if (a === "mic"){ const R = window.SpeechRecognition || window.webkitSpeechRecognition, hd = artBox.querySelector("#dmArtHeard"); if (!R){ hd.textContent = L("这个浏览器听不了，跟着念一遍就好", "This browser can't listen — just say it out loud"); return; }
+      try { const r = new R(); r.lang = "en-GB"; r.interimResults = true; b.classList.add("rec"); r.onresult = ev => { hd.textContent = [...ev.results].map(x => x[0].transcript).join(" "); }; r.onend = () => { b.classList.remove("rec"); b.textContent = "✓"; try { window.hvPx && window.hvPx({k: "say", u: n + "|art", say: say.en, n, from: "art"}); } catch(e){} }; r.start(); setTimeout(() => { try { r.stop(); } catch(e){} }, 7000); } catch(e){} } });
+  // 地图上的位置：那一片的小地图
+  try { const loc = artBox.querySelector(".loc"), W = loc.clientWidth, H = loc.clientHeight, svg = d3.select(artBox.querySelector("#dmArtLoc")).attr("viewBox", `0 0 ${W} ${H}`), proj = d3.geoMercator().center([d.lon, d.lat]).scale(1100).translate([W / 2, H / 2 - 20]);
+    svg.append("path").attr("class", "lnd").attr("d", d3.geoPath(proj)(topojson.feature(X.WORLD, X.WORLD.objects.countries))); const p = artBox.querySelector("#dmArtPin"); if (p){ const [x, y] = proj([d.lon, d.lat]); p.style.left = x + "px"; p.style.top = y + "px"; } } catch(e){}
+  return true; }
+addEventListener("keydown", e => { if (e.key === "Escape" && artBox) artClose(); });
+
+// 🗞️ 地图上点贴纸（2026-11-08，用户：以前贴纸的内容挺好，但是排版丑死了）：内容和功能一样不动，电脑上把那张窄卡片排成整屏杂志页——
+// 短片 / 照片铺满做封面、名字大标题压在上面；标签页成了杂志的栏目条；正文加大加宽；右边一栏是那一片的小地图、附近（带照片）、往下走
+const cardEl = () => document.getElementById("card");
+function magOn(){ const c = cardEl(); if (!c || !wide() || c.hidden || document.body.classList.contains("me-page")) return false; const st = document.getElementById("isleStage"); if (st && !st.hidden) return false;
+  return !!(c.querySelector(":scope > .c-top") && c.querySelector(":scope > .ctabs")); }
+function magApply(){ const c = cardEl(); if (!c) return; const want = magOn();
+  if (!want){ if (c.classList.contains("mag")){ c.classList.remove("mag", "mag-nohero"); document.body.classList.remove("stk-mag"); } return; }
+  if (c.dataset.magFor === (X.selected && X.selected.n) && c.querySelector(":scope > .mag-side")) return;
+  const d = X.selected; if (!d) return; c.dataset.magFor = d.n; c.classList.add("mag"); document.body.classList.add("stk-mag"); c.scrollTop = 0;
+  const hero = c.querySelector(":scope > .ct-head, :scope > .ph"); c.classList.toggle("mag-nohero", !hero); if (hero) hero.classList.add("mag-hero");
+  const x = c.querySelector(":scope > .x"); if (x){ x.textContent = "← " + L("回去", "Back"); x.classList.add("mag-x"); }
+  c.querySelectorAll(":scope > .mag-full").forEach(e => e.remove()); const full = document.createElement("button"); full.className = "mag-full"; full.innerHTML = `<i>🌍</i><span>${L("全地图", "Full map")}</span>`; full.onclick = () => { if (x) x.click(); }; c.append(full);
+  if (!c.dataset.magScroll){ c.dataset.magScroll = 1; c.addEventListener("scroll", () => c.classList.toggle("mag-scrolled", c.scrollTop > innerHeight * .45), {passive: true}); } c.classList.remove("mag-scrolled");
+  const near = artNear(d, 4), img = (typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[d.n] && (STICKER_PHOTOS[d.n].r2 || STICKER_PHOTOS[d.n].src)) || "";
+  const side = document.createElement("aside"); side.className = "mag-side";
+  side.innerHTML = `<div class="loc"><svg></svg>${img ? `<div class="pin" style="background-image:url('${E(img)}')"></div>` : `<div class="pin em">${E(d.e)}</div>`}<button class="go" data-mag="map">🗺️ ${L("在大地图上看周围", "See what's around on the map")} <span>→</span></button></div>
+    ${!c.querySelector(".stk-flow") && window.TFEED && TFEED.canFlow && TFEED.canFlow(d.n) ? `<button class="flow" data-mag="flow">▶ ${L("往下走：住在这儿的人怎么说", "Keep going: what people here say")}</button>` : ""}
+    ${near.length ? `<h4>📍 ${L("附近还有", "Nearby")}</h4><div class="g">${near.map(x => `<a data-maggo="${E(x.o.n)}"><i style="background-image:url('${E(x.pic)}')"></i><b>${E(x.o.e || "")} ${E(X.mapN(x.o.n))}</b><small>${x.km ? x.km + L(" 公里", " km") : ""}</small></a>`).join("")}</div>` : ""}`;
+  c.querySelectorAll(":scope > .mag-side").forEach(e => e.remove()); c.append(side);
+  side.querySelectorAll("[data-mag]").forEach(b => b.onclick = () => { if (b.dataset.mag === "flow"){ window.__tfStay = false; TFEED.flow(d.n); } else if (x) x.click(); });
+  side.querySelectorAll("[data-maggo]").forEach(b => b.onclick = () => HVI.stkGo(b.dataset.maggo));
+  try { const loc = side.querySelector(".loc"), W = 340, H = 240, svg = d3.select(side.querySelector("svg")).attr("viewBox", `0 0 ${W} ${H}`), proj = d3.geoMercator().center([d.lon, d.lat]).scale(900).translate([W / 2, H / 2 - 16]);
+    svg.append("path").attr("class", "lnd").attr("d", d3.geoPath(proj)(topojson.feature(X.WORLD, X.WORLD.objects.countries))); const p = side.querySelector(".pin"), [px, py] = proj([d.lon, d.lat]); p.style.left = (px / W * 100) + "%"; p.style.top = (py / H * 100) + "%"; } catch(e){} }
+let magT = null; const magKick = () => { clearTimeout(magT); magT = setTimeout(magApply, 30); };
+const magObs = () => { const c = cardEl(); if (!c){ setTimeout(magObs, 500); return; } new MutationObserver(magKick).observe(c, {childList: true, attributes: true, attributeFilter: ["hidden"]}); new MutationObserver(magKick).observe(document.body, {attributes: true, attributeFilter: ["class"]}); };
+magObs(); addEventListener("resize", magKick);
+window.DESK = {on, html, after, stop: stopAll, article, close: artClose};
 
 // ── 样子 ──
 const CSS = `
@@ -63948,7 +64017,7 @@ const CSS = `
 #galTabs button{padding:9px 0!important;width:64px;margin:0 auto}
 
 #gal,#boatPg,#ppPg{padding-left:84px!important}
-body:has(#galTabs) #head,body:has(#galTabs) #card{margin-left:84px}
+body:has(#galTabs) #head,body:has(#galTabs) #card,body:has(#galTabs) #mHere{margin-left:84px}
 #boatPg.dm-box{background:#f5efe3}#boatPg.dm-box>.dm{max-width:1500px!important;margin:0 auto}
 }
 .dm{padding:0 34px 50px;color:#1d2730;font:15px/1.55 -apple-system,"PingFang SC",sans-serif}
@@ -63997,6 +64066,87 @@ body:has(#galTabs) #head,body:has(#galTabs) #card{margin-left:84px}
 .dm-me{background:#fffdf8;border-radius:16px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer}.dm-me .h{display:flex;gap:12px;align-items:center}.dm-me .av{width:50px;height:50px;border-radius:50%;background:#efe1c4;display:grid;place-items:center;font-size:24px}
 .dm-me .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 8px;text-align:center}.dm-me .nums div{background:#f6efe1;border-radius:10px;padding:8px 0}.dm-me .nums b{display:block;font:700 26px/1 "Cormorant Garamond",Georgia,serif;color:#14305c}.dm-me .nums small{font-size:11px;color:#7a705e}
 .dm-none{color:#7a705e}
+#dmArt{position:fixed;top:0;right:0;bottom:0;left:84px;z-index:60;overflow-y:auto;background:#f5efe3;color:#1d2730;font:16px/1.7 -apple-system,"PingFang SC",sans-serif;animation:dmArtIn .5s cubic-bezier(.2,.8,.2,1)}@keyframes dmArtIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@media (max-width:700px){#dmArt{left:0}}
+#dmArt button{font:inherit}
+#dmArt .ab{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:16px 36px;margin-bottom:-74px;color:#fff;transition:background .4s,color .4s}
+#dmArt .ab.solid{background:rgba(245,239,227,.95);color:#1d2730;box-shadow:0 1px 0 #ddd0b5;backdrop-filter:blur(8px)}
+#dmArt .ab button{all:unset;cursor:pointer;font-size:14px;font-weight:700;border:1.5px solid currentColor;border-radius:99px;padding:6px 14px}#dmArt .ab button.hot{background:#e0603a;border-color:#e0603a;color:#fff}
+#dmArt .ab button.full{display:flex;align-items:center;gap:8px;background:rgba(255,253,248,.96);color:#1d2730;border:0;padding:6px 16px 6px 6px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.25)}#dmArt .ab button.full i{font-style:normal;width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#d9ecf5 0 42%,#9fcde4 43%);display:grid;place-items:center;font-size:17px}
+#dmArt .ab .t{font:700 15px "Noto Serif SC","Songti SC",serif;opacity:0;transition:opacity .4s}#dmArt .ab.solid .t{opacity:1}#dmArt .ab .r{margin-left:auto;display:flex;gap:10px}
+#dmArt .ah{position:relative;height:88vh;min-height:520px;overflow:hidden;color:#fff;background:#222}
+#dmArt .ah video,#dmArt .ah .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:center/cover}#dmArt .ah .ph{animation:dmkb 14s ease-out forwards}
+#dmArt .ah::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,0) 25%,rgba(0,0,0,.1) 50%,rgba(0,0,0,.85));pointer-events:none}
+#dmArt .ah .tx{position:absolute;left:64px;right:64px;bottom:56px;z-index:2;max-width:1000px}
+#dmArt .kick{font-size:12.5px;font-weight:800;letter-spacing:.2em;color:#ffcf8a}
+#dmArt h1{font:900 104px/1.02 "Noto Serif SC","Songti SC",serif;margin:14px 0 6px}
+#dmArt .en{font:600 italic 40px/1.1 "Cormorant Garamond",Georgia,serif;display:flex;align-items:center;gap:14px}
+#dmArt .en button,#dmArt .sb{all:unset;cursor:pointer;width:42px;height:42px;border-radius:50%;border:1.5px solid currentColor;display:inline-grid;place-items:center;font-size:16px;font-style:normal;flex:none}
+#dmArt .dek{font-size:20px;max-width:760px;margin-top:16px;opacity:.95}
+#dmArt .credit{position:absolute;right:24px;bottom:18px;z-index:2;font-size:11.5px;opacity:.65}
+#dmArt .ab2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:64px;max-width:1280px;margin:0 auto;padding:64px 56px 70px}
+#dmArt .lede{font:600 23px/1.65 "Noto Serif SC","Songti SC",serif;margin:0 0 26px}#dmArt .lede::first-letter{float:left;font:900 78px/.85 "Noto Serif SC",serif;color:#e0603a;margin:8px 12px 0 0}
+#dmArt .en-p{font:600 italic 21px/1.5 "Cormorant Garamond",Georgia,serif;color:#4a5560;margin:-12px 0 30px}
+#dmArt .h{font-size:12px;font-weight:800;letter-spacing:.2em;color:#e0603a;margin:38px 0 10px}
+#dmArt .today{border-top:3px double #1d2730;border-bottom:3px double #1d2730;padding:26px 0;margin:36px 0}#dmArt .today q{display:block;font:900 28px/1.45 "Noto Serif SC",serif;quotes:"「" "」";color:#14305c}
+#dmArt .today .sy{font:600 italic 28px/1.3 "Cormorant Garamond",Georgia,serif;margin-top:14px;display:flex;align-items:center;gap:12px}
+#dmArt .fact{background:#fffdf8;border-left:4px solid #e0603a;padding:20px 24px;border-radius:0 12px 12px 0;font-size:17px}#dmArt .fact small{display:block;color:#7a705e;margin-top:8px;font-size:13px}#dmArt .fact a{color:#7a705e}
+#dmArt .speak{margin-top:34px;background:#14305c;color:#fff;border-radius:18px;padding:26px 28px;display:flex;align-items:center;gap:22px}
+#dmArt .speak .mic{all:unset;cursor:pointer;flex:none;width:72px;height:72px;border-radius:50%;background:#e0603a;display:grid;place-items:center;font-size:30px;box-shadow:0 0 0 10px rgba(224,96,58,.25)}#dmArt .speak .mic.rec{animation:pulse2 1s infinite}@keyframes pulse2{50%{box-shadow:0 0 0 18px rgba(224,96,58,.1)}}
+#dmArt .speak div{flex:1}#dmArt .speak small{display:block;font-size:12px;letter-spacing:.18em;color:#ffb08f;font-weight:800}#dmArt .speak b{display:block;font:600 italic 30px/1.2 "Cormorant Garamond",Georgia,serif;margin:4px 0}#dmArt .speak span{opacity:.8}#dmArt .sb.lt{color:#fff}
+#dmArt aside{position:sticky;top:90px;align-self:start}
+#dmArt .loc{border-radius:18px;overflow:hidden;background:#cfe2ec;position:relative;height:300px}#dmArt .loc svg{width:100%;height:100%}#dmArt .loc .lnd{fill:#f3ead2;stroke:#ddcda4;stroke-width:.5}
+#dmArt .loc .pin{position:absolute;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;border:3px solid #fff;background:center/cover;box-shadow:0 0 0 8px rgba(224,96,58,.35)}
+#dmArt .loc .go{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:14px;right:14px;bottom:14px;background:rgba(255,253,248,.95);border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px;display:flex;justify-content:space-between}
+#dmArt .near h4{font-size:12px;font-weight:800;letter-spacing:.2em;color:#e0603a;margin:26px 0 12px}#dmArt .near .g{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#dmArt .near a{display:block;cursor:pointer}#dmArt .near a i{display:block;aspect-ratio:4/3;border-radius:12px;background:#ddd center/cover;margin-bottom:6px;transition:transform .3s}#dmArt .near a:hover i{transform:scale(1.03)}
+#dmArt .near b{font:900 16px "Noto Serif SC","Songti SC",serif}#dmArt .near small{display:block;color:#7a705e;font-size:12.5px;line-height:1.45}
+#dmArt .af{max-width:1280px;margin:0 auto;padding:26px 56px 70px;display:grid;grid-template-columns:1fr 1fr;gap:20px;border-top:3px double #1d2730}
+#dmArt .af a{display:flex;gap:16px;align-items:center;background:#fffdf8;border-radius:16px;padding:14px;cursor:pointer}#dmArt .af a i{flex:0 0 120px;height:84px;border-radius:10px;background:center/cover}#dmArt .af small{display:block;font-size:11.5px;letter-spacing:.14em;font-weight:800;color:#e0603a}#dmArt .af b{font:900 19px "Noto Serif SC","Songti SC",serif}
+#dmArt .up{opacity:0;transform:translateY(24px);transition:opacity .8s,transform .8s}#dmArt .up.in{opacity:1;transform:none}
+@media (max-width:1000px){#dmArt .ab2{grid-template-columns:1fr}#dmArt h1{font-size:64px}}
+@media (min-width:701px){
+#card.mag{position:fixed!important;left:84px!important;right:0!important;top:0!important;bottom:0!important;width:auto!important;max-height:none!important;border-radius:0!important;box-shadow:none!important;background:#f5efe3!important;padding:0 0 80px!important;z-index:44;display:grid!important;grid-template-columns:1fr minmax(0,720px) 340px 1fr;column-gap:56px;align-content:start;overflow-y:auto;font-size:16.5px;line-height:1.7}
+#card.mag{margin-left:0!important}#card.mag>*{grid-column:2}
+#card.mag>.cpane,#card.mag>.stk-word,#card.mag>.pp-row{zoom:1.14}#card.mag>.ctabs{zoom:1.1}
+#card.mag>.mag-hero{grid-column:1/-1;grid-row:1;margin:0!important;height:72vh;min-height:460px;position:relative;border-radius:0!important;overflow:hidden;background:#222}
+#card.mag>.mag-hero video,#card.mag>.mag-hero img,#card.mag>.mag-hero .ph-i{position:absolute!important;inset:0;width:100%!important;height:100%!important;max-height:none!important;object-fit:cover;border-radius:0!important}
+#card.mag>.mag-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,0) 28%,rgba(0,0,0,0) 45%,rgba(0,0,0,.85));pointer-events:none}
+#card.mag>.mag-hero a,#card.mag>.mag-hero .ph-c,#card.mag>.mag-hero small{position:absolute;right:20px;bottom:14px;z-index:3;color:rgba(255,255,255,.7)!important;font-size:11.5px}
+#card.mag>.c-top{grid-row:1;align-self:end;position:relative;z-index:4;color:#fff;margin:0 0 54px;display:block}
+#card.mag-nohero>.c-top{grid-row:auto;color:#1d2730;margin:90px 0 10px}
+#card.mag>.c-top .c-emo{display:none}
+#card.mag>.c-top h2{font:900 92px/1.02 "Noto Serif SC","Songti SC",serif!important;margin:6px 0 10px!important;color:inherit;text-shadow:0 2px 20px rgba(0,0,0,.25)}
+#card.mag-nohero>.c-top h2{text-shadow:none}
+#card.mag>.c-top .note{color:inherit!important;opacity:.85;font:600 italic 26px "Cormorant Garamond",Georgia,serif}
+#card.mag>.c-top .c-region{color:inherit!important;font-size:13px;font-weight:800;letter-spacing:.16em;opacity:.9}
+#card.mag>.c-top .c-cat{font-size:12px;vertical-align:middle}
+#card.mag>.mag-x{all:unset;position:fixed;left:108px;top:18px;z-index:50;cursor:pointer;background:rgba(20,30,45,.55);color:#fff;border-radius:99px;padding:8px 16px;font-weight:700;font-size:14px;backdrop-filter:blur(8px)}
+#card.mag>.mag-x:hover{background:rgba(20,30,45,.8)}
+#card.mag>.mag-full{all:unset;position:fixed;right:28px;top:22px;z-index:50;cursor:pointer;display:flex;align-items:center;gap:10px;background:rgba(255,253,248,.96);color:#1d2730;border-radius:99px;padding:9px 20px 9px 9px;font-weight:800;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.28);transition:all .35s cubic-bezier(.2,.8,.2,1)}
+#card.mag>.mag-full i{font-style:normal;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 40% 38%,#d9ecf5 0 42%,#9fcde4 43%);display:grid;place-items:center;font-size:20px;transition:all .35s}
+#card.mag>.mag-full:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.32)}
+#card.mag.mag-scrolled>.mag-full{top:14px;right:20px;padding:5px 14px 5px 5px;font-size:13px;box-shadow:0 3px 10px rgba(0,0,0,.18)}#card.mag.mag-scrolled>.mag-full i{width:28px;height:28px;font-size:15px}
+#card.mag.mag-scrolled>.mag-x{top:14px}
+#card:not(.mag)>.mag-full{display:none}
+#card.mag>.stk-word{margin-top:34px;font-size:18px}
+#card.mag>.ctabs{position:sticky;top:0;z-index:6;background:rgba(245,239,227,.96);backdrop-filter:blur(8px);margin:22px 0 10px;padding:12px 0 0;border-bottom:3px double #1d2730}
+#card.mag>.ctabs button{font-size:15px!important;letter-spacing:.06em}
+#card.mag>.cpane{font-size:16.5px}
+#card.mag>.cpane .bi-p,#card.mag>.cpane p{font-size:17px;line-height:1.8}
+#card.mag>.cpane h3{font:900 24px/1.3 "Noto Serif SC","Songti SC",serif!important;margin:34px 0 12px!important;letter-spacing:0}
+#card.mag>.pp-row,#card.mag .pp-row{border-radius:14px!important}
+#card.mag>.mag-side{grid-column:3;grid-row:2/span 30;position:sticky;top:76px;align-self:start;margin-top:34px}
+#card.mag .mag-side .loc{position:relative;border-radius:18px;overflow:hidden;background:#cfe2ec;aspect-ratio:340/240}#card.mag .mag-side svg{width:100%;height:100%;display:block}#card.mag .mag-side .lnd{fill:#f3ead2;stroke:#ddcda4;stroke-width:.5}
+#card.mag .mag-side .pin{position:absolute;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;border:3px solid #fff;background:#fff center/cover;box-shadow:0 0 0 8px rgba(224,96,58,.35);display:grid;place-items:center;font-size:24px}
+#card.mag .mag-side .go{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:12px;right:12px;bottom:12px;background:rgba(255,253,248,.95);border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;display:flex;justify-content:space-between}
+#card.mag .mag-side .flow{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;margin-top:14px;background:#e0603a;color:#fff;border-radius:14px;padding:12px 16px;font-weight:800;font-size:14.5px}
+#card.mag .mag-side h4{font-size:12px;font-weight:800;letter-spacing:.2em;color:#e0603a;margin:24px 0 12px}
+#card.mag .mag-side .g{display:grid;grid-template-columns:1fr 1fr;gap:12px}#card.mag .mag-side a{cursor:pointer;display:block}#card.mag .mag-side a i{display:block;aspect-ratio:4/3;border-radius:12px;background:#ddd center/cover;margin-bottom:5px;transition:transform .3s}#card.mag .mag-side a:hover i{transform:scale(1.03)}
+#card.mag .mag-side b{font:900 15px "Noto Serif SC","Songti SC",serif}#card.mag .mag-side small{display:block;color:#7a705e;font-size:12px}
+body.stk-mag #head,body.stk-mag #ctrl,body.stk-mag #bottom{visibility:hidden}
+}
+@media (min-width:701px) and (max-width:1150px){#card.mag{grid-template-columns:28px minmax(0,1fr) 28px;column-gap:0}#card.mag>.mag-side{grid-column:2;grid-row:auto;position:static}#card.mag>.c-top h2{font-size:60px}}
 @media (max-width:1150px){.dm-a,.dm-c{grid-template-columns:1fr}.dm-globe{height:380px}.dm-live{height:auto;max-height:520px}}
 `;
 try { const st = document.createElement("style"); st.textContent = CSS; document.head.append(st); } catch(e){}
@@ -70715,7 +70865,7 @@ function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.g
   box.querySelectorAll("[data-bprt]").forEach(b=>b.onclick = ()=>{ const [i, k, t] = b.dataset.bprt.split("|"); go(()=>routeGo(i + "|" + k, t)); });
   box.querySelectorAll("[data-bptab]").forEach(b=>b.onclick = ()=>go(()=>{ blStop = -1; openMyBoat(b.dataset.bptab); }));
   box.querySelectorAll("[data-bpgo]").forEach(b=>b.onclick = ()=>{ const a = b.dataset.bpgo; if (a === "gal") galOpen(); else if (a === "map") galClose(); else go(()=>openVoyage()); }); }
-window.DESK_ENV = {get UI(){ return typeof UI === "undefined" ? undefined : UI; },get ZL(){ return typeof ZL === "undefined" ? undefined : ZL; },get LEARN_ZH(){ return typeof LEARN_ZH === "undefined" ? undefined : LEARN_ZH; },get LEARN_TTS(){ return typeof LEARN_TTS === "undefined" ? undefined : LEARN_TTS; },get twToday(){ return typeof twToday === "undefined" ? undefined : twToday; },get twNo(){ return typeof twNo === "undefined" ? undefined : twNo; },get twOpen(){ return typeof twOpen === "undefined" ? undefined : twOpen; },get data(){ return typeof data === "undefined" ? undefined : data; },get mapR(){ return typeof mapR === "undefined" ? undefined : mapR; },get mapN(){ return typeof mapN === "undefined" ? undefined : mapN; },get tkClips(){ return typeof tkClips === "undefined" ? undefined : tkClips; },get tkOf(){ return typeof tkOf === "undefined" ? undefined : tkOf; },get blPlace(){ return typeof blPlace === "undefined" ? undefined : blPlace; },get blIsleE(){ return typeof blIsleE === "undefined" ? undefined : blIsleE; },get blIsleName(){ return typeof blIsleName === "undefined" ? undefined : blIsleName; },get galCap(){ return typeof galCap === "undefined" ? undefined : galCap; },get galRecs(){ return typeof galRecs === "undefined" ? undefined : galRecs; },get pxGet(){ return typeof pxGet === "undefined" ? undefined : pxGet; },get SAY_K(){ return typeof SAY_K === "undefined" ? undefined : SAY_K; },get pxWho(){ return typeof pxWho === "undefined" ? undefined : pxWho; },get bpStreak(){ return typeof bpStreak === "undefined" ? undefined : bpStreak; },get bpTodayItems(){ return typeof bpTodayItems === "undefined" ? undefined : bpTodayItems; },get meWho(){ return typeof meWho === "undefined" ? undefined : meWho; },get meStampRow(){ return typeof meStampRow === "undefined" ? undefined : meStampRow; },get CAN_EMBED(){ return typeof CAN_EMBED === "undefined" ? undefined : CAN_EMBED; },get galClose(){ return typeof galClose === "undefined" ? undefined : galClose; },get blGo(){ return typeof blGo === "undefined" ? undefined : blGo; },get ptOpen(){ return typeof ptOpen === "undefined" ? undefined : ptOpen; },get meOpen(){ return typeof meOpen === "undefined" ? undefined : meOpen; },get galOpen(){ return typeof galOpen === "undefined" ? undefined : galOpen; },get bpOpen(){ return typeof bpOpen === "undefined" ? undefined : bpOpen; },get WORLD(){ return typeof WORLD === "undefined" ? undefined : WORLD; }};   // 🖥️ 电脑版杂志头版（desk_mag.js）要用的
+window.DESK_ENV = {get selected(){ return selected; }, get UI(){ return typeof UI === "undefined" ? undefined : UI; },get ZL(){ return typeof ZL === "undefined" ? undefined : ZL; },get LEARN_ZH(){ return typeof LEARN_ZH === "undefined" ? undefined : LEARN_ZH; },get LEARN_TTS(){ return typeof LEARN_TTS === "undefined" ? undefined : LEARN_TTS; },get twToday(){ return typeof twToday === "undefined" ? undefined : twToday; },get twNo(){ return typeof twNo === "undefined" ? undefined : twNo; },get twOpen(){ return typeof twOpen === "undefined" ? undefined : twOpen; },get data(){ return typeof data === "undefined" ? undefined : data; },get mapR(){ return typeof mapR === "undefined" ? undefined : mapR; },get mapN(){ return typeof mapN === "undefined" ? undefined : mapN; },get tkClips(){ return typeof tkClips === "undefined" ? undefined : tkClips; },get tkOf(){ return typeof tkOf === "undefined" ? undefined : tkOf; },get blPlace(){ return typeof blPlace === "undefined" ? undefined : blPlace; },get blIsleE(){ return typeof blIsleE === "undefined" ? undefined : blIsleE; },get blIsleName(){ return typeof blIsleName === "undefined" ? undefined : blIsleName; },get galCap(){ return typeof galCap === "undefined" ? undefined : galCap; },get galRecs(){ return typeof galRecs === "undefined" ? undefined : galRecs; },get pxGet(){ return typeof pxGet === "undefined" ? undefined : pxGet; },get SAY_K(){ return typeof SAY_K === "undefined" ? undefined : SAY_K; },get pxWho(){ return typeof pxWho === "undefined" ? undefined : pxWho; },get bpStreak(){ return typeof bpStreak === "undefined" ? undefined : bpStreak; },get bpTodayItems(){ return typeof bpTodayItems === "undefined" ? undefined : bpTodayItems; },get meWho(){ return typeof meWho === "undefined" ? undefined : meWho; },get meStampRow(){ return typeof meStampRow === "undefined" ? undefined : meStampRow; },get CAN_EMBED(){ return typeof CAN_EMBED === "undefined" ? undefined : CAN_EMBED; },get galClose(){ return typeof galClose === "undefined" ? undefined : galClose; },get blGo(){ return typeof blGo === "undefined" ? undefined : blGo; },get ptOpen(){ return typeof ptOpen === "undefined" ? undefined : ptOpen; },get meOpen(){ return typeof meOpen === "undefined" ? undefined : meOpen; },get galOpen(){ return typeof galOpen === "undefined" ? undefined : galOpen; },get bpOpen(){ return typeof bpOpen === "undefined" ? undefined : bpOpen; },get WORLD(){ return typeof WORLD === "undefined" ? undefined : WORLD; }};   // 🖥️ 电脑版杂志头版（desk_mag.js）要用的
 function bpClose(){ const box = document.getElementById("boatPg"); if (box) box.hidden = true; if (window.PTAB_CLOSE) window.PTAB_CLOSE(); }
 // 👋 底部第三栏「人」（people_tab.js，2026-11-04）：认识的人 · 今天的动态 · 还可以认识
 function ptOpen(){ if (!window.PTAB_OPEN) return; galClose(); window.PTAB_OPEN(); document.body.classList.add("gal-on"); galTabs("people"); }
