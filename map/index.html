@@ -63902,7 +63902,7 @@ try { const st1 = document.createElement("style"); st1.textContent = "#tfX .cast
 try { const st0 = document.createElement("style"); st0.textContent = ".tf-entry{background:#e8673f!important;color:#fff!important;border-color:#e8673f!important}.tf-entry small{color:#ffe6d8!important}"; document.head.append(st0); } catch(e){}
 window.TFEED = {open, close, flow, canFlow: n => false && !!flowKey(n), has: (id, k) => has(id, k), want: (id, k) => elig(id, k), _dbg: () => ({S, curI})};
 })();
-window.TALK_DEEP = {"economy_club|rent":{"title":["🏠","My home story","你的房子故事"],"npc":{"oliver":["Oliver","📰","伦敦"],"marcela":["Marcela","🔩","布宜诺斯艾利斯"],"chenjian":["陈建","📦","义乌"],"wanjiru":["Wanjiru","📱","内罗毕"]},"start":{"q":["Where do you live, and who with?","你现在住哪儿，跟谁住？"],"o":[{"id":"share","e":"👥","en":"I share a flat with friends.","zh":"跟朋友合租","path":"rent"},{"id":"dorm","e":"🏫","en":"I live in a school dorm.","zh":"住学校宿舍","path":"student"},{"id":"home","e":"🏡","en":"I live with my parents.","zh":"跟爸妈住","path":"home"},{"id":"paid","e":"💝","en":"I rent, but my parents pay.","zh":"在外面租，爸妈付房租","path":"student"},{"id":"own","e":"🔑","en":"I rent a place on my own.","zh":"一个人租房","path":"rent"},{"id":"mortgage","e":"🏦","en":"I'm paying off a mortgage.","zh":"在还房贷","path":"owner"}]},"slots":{"where":{"o":[["a big city","大城市"],["a small town","小城"],["the suburbs","郊区"],["the city centre","市中心"]]},"share":{"o":[["a quarter","四分之一"],["a third","三分之一"],["half","一半"],["more than half","一半以上"]]}},"l1":{"share":[{"en":"I share a flat with {who} in {where}.","zh":"我跟{who}在{where}合租。","s":{"who":{"o":[["a friend","一个朋友"],["two friends","两个朋友"],["three friends","三个朋友"],["people I found online","网上找的室友"]]}}},{"en":"Rent takes about {share} of my income.","zh":"房租大概占我收入的{share}。"},{"en":"It's {bad}, but it's {good}.","zh":"房子{bad}，不过{good}。","s":{"bad":{"o":[["small","有点小"],["old","有点旧"],["noisy","有点吵"],["far from work","离上班有点远"]]},"good":{"o":[["close to work","离上班近"],["cheap","便宜"],["bright","很亮堂"],["quiet","很安静"]]}}}],"own":[{"en":"I rent a small flat on my own in {where}.","zh":"我一个人在{where}租了个小房子。"},{"en":"Rent takes about {share} of my income.","zh":"房租大概占我收入的{share}。"},{"en":"I love {like}, but {hard}.","zh":"我喜欢{like}，不过{hard}。","s":{"like":{"o":[["having my own space","有自己的空间"],["cooking whatever I want","想做什么饭就做什么"],["the quiet","清净"]]},"hard":{"o":[["the rent is all on me","房租全得自己扛"],["it gets a bit lonely sometimes","有时候有点孤单"],["I have to fix everything myself","什么坏了都得自己修"]]}}}],"dorm":[{"en":"I live in a dorm with {who}.","zh":"我住宿舍，跟{who}一起住。","s":{"who":{"o":[["one roommate","一个室友"],["two roommates","两个室友"],["three roommates","三个室友"],["five roommates","五个室友"]]}}},{"en":"{pay}","zh":"{pay}","s":{"pay":{"o":[["My parents pay for it.","钱是爸妈付的。"],["I pay for it with a part-time job.","我打工自己付。"],["My scholarship covers it.","奖学金够付。"]]}}},{"en":"It's {bad}, but it's {good}.","zh":"宿舍{bad}，不过{good}。","s":{"bad":{"o":[["small","有点小"],["noisy","有点吵"],["crowded","有点挤"],["old","有点旧"]]},"good":{"o":[["cheap","便宜"],["close to my classes","离教室近"],["fun","热闹好玩"],["safe","安全"]]}}}],"paid":[{"en":"I rent a room near my {near}.","zh":"我在{near}附近租了个房间。","s":{"near":{"o":[["university","学校"],["language school","语言学校"],["internship","实习的地方"]]}}},{"en":"My parents pay the rent.","zh":"房租是爸妈付的。"},{"en":"So I try {try}.","zh":"所以我尽量{try}。","s":{"try":{"o":[["not to waste money","不乱花钱"],["to cook at home","在家做饭"],["to find a part-time job","找个兼职"]]}}}],"home":[{"en":"I live with my parents in {where}.","zh":"我跟爸妈住在{where}。"},{"en":"I don't pay rent, but I {help}.","zh":"我不交房租，不过我{help}。","s":{"help":{"o":[["help with the housework","帮着做家务"],["cook dinner sometimes","有时候做晚饭"],["buy food sometimes","有时候买菜"],["give my parents some money","给爸妈一点钱"]]}}},{"en":"The best part is {good}. The hard part is {bad}.","zh":"最好的是{good}，难的是{bad}。","s":{"good":{"o":[["the food","吃得好"],["saving money","省钱"],["never feeling lonely","从来不孤单"]]},"bad":{"o":[["having no privacy","没有自己的空间"],["all the questions","爸妈问东问西"],["coming home early","得早点回家"]]}}}],"mortgage":[{"en":"I bought a flat {when}.","zh":"我{when}买了房。","s":{"when":{"o":[["last year","去年"],["three years ago","三年前"],["five years ago","五年前"]]}}},{"en":"The mortgage takes about {share} of my income.","zh":"房贷大概占我收入的{share}。"},{"en":"It's {feel}.","zh":"{feel}。","s":{"feel":{"o":[["a lot of money, but it feels safe","钱不少，但心里踏实"],["hard every month, but it's ours","每个月都紧，但房子是自己的"],["fine — I can manage it","还行，我扛得住"]]}}}]},"paths":{"rent":{"reply1":["oliver","Same here — I share with three people, and half my salary goes on rent. London, basically 😅","我也一样——跟三个人合租，一半工资交了房租。伦敦嘛，就这样 😅"],"ask2":["wanjiru","So, any landlord stories? Honestly, everyone has one.","那跟房东有过什么事吗？说实话，每个人都有一个。"],"kinds":[{"e":"💸","zh":"押金没退回来","model":["oliver","When I left my first flat, the landlord kept half of my deposit. He said the carpet was dirty. I showed him my photos from day one, and in the end he gave most of it back.","我搬出第一个房子的时候，房东扣了我一半押金，说地毯脏了。我给他看了第一天拍的照片，最后他退了大部分。"],"hl":["kept","deposit","in the end","gave most of it back"],"steps":[{"zh":"什么时候","o":[["When I moved out last year,","去年搬走的时候，"],["Two years ago,","两年前，"],["When I left my first flat,","离开第一个房子的时候，"]]},{"zh":"发生了什么","o":[["my landlord kept all of my deposit.","房东把押金全扣了。"],["my landlord kept part of my deposit.","房东扣了一部分押金。"]]},{"zh":"他怎么说","o":[["He said the walls were dirty.","他说墙脏了。"],["He said I broke something.","他说我弄坏了东西。"],["He didn't give a reason.","他也没说为什么。"]]},{"zh":"你怎么办 · 结果","o":[["I sent him photos, and in the end I got half of it back.","我给他发了照片，最后拿回了一半。"],["I argued with him, and in the end I got it all back.","我跟他理论，最后全拿回来了。"],["I just let it go, so I never got it back.","我就算了，所以一分没拿回来。"]]},{"zh":"你学到的","o":[["Now I always take photos on the first day.","现在我第一天就拍照。"],["Now I read the contract carefully.","现在我会仔细看合同。"],["","不加这句"]]}],"fact":"在英格兰，押金最多收 5 周房租（2019 年《租客收费法》），房东还必须在 30 天内把押金放进政府认可的保护计划；退押金有纠纷，可以免费找第三方裁决（gov.uk）。","reply":["oliver","Fair enough — that's why everyone here takes photos on day one now.","可以理解——所以我们这儿现在人人第一天都拍照。"]},{"e":"📈","zh":"房东突然涨房租","model":["wanjiru","Last year my landlord put the rent up by 20%. He told me on WhatsApp, two weeks before! I couldn't afford it, so I looked for a new place. In the end, I found a smaller flat closer to my shop — and honestly, I'm happier.","去年房东把房租涨了 20%，提前两周在 WhatsApp 上说的！我付不起，就找了新地方。最后找到一个小点、离我店近的房子——说实话，更开心了。"],"hl":["put the rent up","couldn't afford it","looked for a new place","In the end"],"steps":[{"zh":"什么时候","o":[["Last year,","去年，"],["This spring,","今年春天，"],["A few months ago,","几个月前，"]]},{"zh":"发生了什么","o":[["my landlord put the rent up by 10%.","房东涨了 10% 房租。"],["my landlord put the rent up twice in one year.","房东一年涨了两次房租。"],["my landlord put the rent up a lot.","房东涨了很多房租。"]]},{"zh":"你怎么办 · 结果","o":[["I tried to talk him down, and he agreed to a smaller rise.","我跟他讲价，他同意少涨一点。"],["I couldn't afford it, so I moved somewhere cheaper.","我付不起，就搬到了便宜点的地方。"],["I just paid it, but I'm still not happy about it.","我就交了，不过到现在还不太高兴。"]]}],"reply":["wanjiru","Sawa, that's so common. Landlords everywhere are the same, my friend!","嗯，太常见了。哪儿的房东都一样，朋友！"]},{"e":"🧦","zh":"室友的事","model":["oliver","One of my flatmates never did the dishes. Basically, the sink was full every night. We talked about it, and now we have a cleaning rota on the fridge. It actually works!","我有个室友从来不洗碗，基本上每天晚上水池都是满的。我们谈了一次，现在冰箱上贴着打扫值日表。还真管用！"],"hl":["never did the dishes","talked about it","cleaning rota"],"steps":[{"zh":"发生了什么","o":[["My flatmate never did the dishes.","我室友从来不洗碗。"],["My flatmate played loud music at night.","我室友晚上放很大声的音乐。"],["My flatmate's friends were always over.","我室友的朋友老来。"]]},{"zh":"你怎么办","o":[["I talked to them about it.","我跟 TA 谈了谈。"],["I left a note on the fridge.","我在冰箱上贴了张纸条。"],["I didn't say anything for months.","我好几个月什么都没说。"]]},{"zh":"结果","o":[["In the end, we made a cleaning rota.","最后我们排了打扫值日表。"],["In the end, things got better.","后来好多了。"],["In the end, I moved out.","最后我搬走了。"]]}],"reply":["oliver","Ha, the flatmate stories never end. To put it simply: talk early!","哈，室友的故事永远讲不完。简单说：早点谈！"]},{"e":"🔍","zh":"找房、看房","model":["oliver","When I was looking for a flat, I saw ten places in one week. One 'double room' had the bed in the kitchen! In the end, I found my flat through a friend.","找房子的时候，我一周看了十套。有一间「双人房」床就在厨房里！最后是朋友介绍才找到现在这套的。"],"hl":["looking for a flat","saw ten places","through a friend"],"steps":[{"zh":"什么时候","o":[["When I was looking for a flat,","找房子的时候，"],["When I first moved to this city,","刚来这个城市的时候，"]]},{"zh":"发生了什么","o":[["I saw ten places in one week.","我一周看了十套。"],["the photos online looked much better than the real flat.","网上的照片比真房子好看多了。"],["an agent asked me for money before I even saw the flat.","中介没看房就让我先交钱。"]]},{"zh":"结果","o":[["In the end, I found one through a friend.","最后是朋友介绍才找到的。"],["In the end, I found one on an app.","最后在 App 上找到的。"],["In the end, I took the first one I saw.","最后就租了看的第一套。"]]}],"reply":["oliver","Ten in a week? Same energy as me. Flat hunting is a full-time job!","一周十套？跟我一样拼。找房简直是一份全职工作！"]}],"l3":{"q":["Rent forever, or buy one day?","一直租下去，还是总有一天要买？"],"sides":[["oliver","租","A home in London costs more than ten times a normal salary. I'll probably rent for a long time — and that's okay.","伦敦一套房是普通工资的十倍多。我大概会租很久，也没什么。"],["chenjian","买","I bought our flat when my son was born. The loan is heavy, but it feels safe.","我儿子出生那年买的房。贷款压力大，但心里踏实。"],["marcela","买","In Argentina, money can lose value fast. People put their savings into bricks.","在阿根廷，钱可能贬值得很快，大家把积蓄换成砖头（买房）。"]],"parts":[{"zh":"我觉得…","o":[["I think I'll rent for now,","我觉得我先租着，"],["I want to buy a place one day,","我想有一天买房，"],["Honestly, I'm not sure yet,","说实话，我还没想好，"]]},{"zh":"因为…","o":[["because I want to be free to move cities.","因为我想能随时换城市。"],["because I don't want a 30-year loan.","因为我不想背三十年贷款。"],["because renting feels like throwing money away.","因为租房感觉钱都白扔了。"],["because a home of my own feels safe.","因为有自己的房子心里踏实。"]]},{"zh":"不过…","o":[["But one day I'd like a place of my own.","不过总有一天我想有个自己的家。"],["But house prices are crazy.","不过房价太离谱了。"],["But my parents don't agree.","不过我爸妈不同意。"],["","不加这句"]]}],"reply":["oliver","Fair enough. To put it simply, there's no one right answer — it depends on the numbers and on you.","可以理解。简单说，没有标准答案——看数字，也看你自己。"]},"ai":"oliver"},"student":{"reply1":["oliver","Uni days! In my first year I lived in halls — four of us shared one tiny kitchen 😄","大学时光！我大一住学校宿舍，四个人共用一个小厨房 😄"],"ask2":["wanjiru","So what's it like living away from home? Honestly, the first months are the hardest.","离开家住是什么感觉？说实话，头几个月最难。"],"kinds":[{"e":"🎮","zh":"室友的作息、习惯","model":["oliver","In my first year, my flatmate got up at five for the gym. I'm a night person! We talked, agreed on 'quiet after midnight', and basically it worked.","大一的时候，我室友每天五点起床去健身，我却是夜猫子！我们聊了聊，说好「半夜以后安静」，基本上就没问题了。"],"hl":["got up at five","night person","agreed on"],"steps":[{"zh":"发生了什么","o":[["My roommate plays games until 2 a.m.","我室友打游戏打到半夜两点。"],["My roommate gets up really early.","我室友起得特别早。"],["My roommate never cleans up.","我室友从来不收拾。"]]},{"zh":"你怎么办","o":[["I asked them nicely to change a little.","我客气地请 TA 稍微改一改。"],["I bought earplugs.","我买了耳塞。"],["I didn't say anything.","我什么都没说。"]]},{"zh":"结果","o":[["Now we get on fine.","现在我们处得挺好。"],["Now we have some dorm rules.","现在我们定了几条宿舍规矩。"],["It's still a problem!","到现在还是个问题！"]]}],"reply":["oliver","Ha, fair enough. Living with strangers teaches you a lot!","哈，可以理解。跟陌生人住在一起，能学到不少！"]},{"e":"🧳","zh":"第一次离开家","model":["wanjiru","When I first moved to Nairobi for work, I missed my family a lot. I called my mum every night. After a few months, the city started to feel like home.","我刚到内罗毕工作的时候，特别想家，每天晚上给妈妈打电话。过了几个月，这座城市才开始有家的感觉。"],"hl":["first moved","missed my family","started to feel like home"],"steps":[{"zh":"什么时候","o":[["When I first left home,","第一次离开家的时候，"],["In my first week at university,","上大学第一周，"]]},{"zh":"发生了什么","o":[["I missed my parents a lot.","我特别想爸妈。"],["I didn't know how to do my own laundry.","我连自己洗衣服都不会。"],["I spent all my money in two weeks.","两周就把钱花光了。"]]},{"zh":"后来","o":[["I called home every day, and after a month I was fine.","我天天给家里打电话，一个月以后就好了。"],["I asked my roommates for help, and I learned fast.","我找室友帮忙，学得很快。"],["I learned slowly, and now I'm much more independent.","我慢慢学，现在独立多了。"]]}],"reply":["wanjiru","Sawa! Everyone has that first month. You did it.","嗯！谁都有那第一个月。你挺过来了。"]},{"e":"🏙️","zh":"实习、出国时在外面找房","model":["oliver","For my first internship, I needed a room in London for three months. Everything was so expensive! In the end, I stayed in a friend's spare room and paid him a bit.","第一次实习，我要在伦敦租三个月的房间，什么都贵得要命！最后住在朋友家的空房间，给了他一点钱。"],"hl":["internship","spare room","In the end"],"steps":[{"zh":"什么时候","o":[["For my internship,","实习的时候，"],["When I went to study abroad,","出国读书的时候，"]]},{"zh":"发生了什么","o":[["I needed a room for a few months.","我要租几个月的房间。"],["I had to find a place from another country.","我人还在国外就得找好房子。"]]},{"zh":"结果","o":[["In the end, I found a room through my school.","最后通过学校找到了房间。"],["In the end, I shared with other students.","最后跟别的学生合租。"],["In the end, I stayed with a friend.","最后住在朋友家。"]]}],"reply":["oliver","Short-term rooms are the hardest to find. Good job!","短租的房间最难找。干得好！"]}],"l3":{"q":["After you graduate: live with your parents, or move out?","毕业以后：跟爸妈住，还是搬出去？"],"sides":[["marcela","住家里","My two kids are at university and still live with us. They save a lot — and eat a lot!","我两个孩子在上大学，还住家里。省了不少钱——也吃了不少！"],["oliver","搬出去","I moved out after uni. Always a bit broke, but free.","我大学毕业就搬出来了。总是有点穷，但自由。"],["wanjiru","去别的城市","I moved to Nairobi for work. Hard at first, but it changed my life.","我为了工作去了内罗毕。一开始难，但改变了我的生活。"]],"parts":[{"zh":"我觉得…","o":[["I think I'll move out after I graduate,","我觉得毕业后我会搬出去，"],["I think I'll live with my parents for a while,","我觉得我会先跟爸妈住一阵，"],["I'd like to move to another city,","我想去别的城市，"]]},{"zh":"因为…","o":[["because I want to be independent.","因为我想独立。"],["because I want to save money first.","因为我想先攒点钱。"],["because there are more jobs there.","因为那边工作机会多。"]]},{"zh":"不过…","o":[["But I'll need a job first!","不过得先找到工作！"],["But my parents want me to stay close.","不过爸妈希望我离家近点。"],["","不加这句"]]}],"reply":["marcela","Bueno, good plan! Mirá, my kids say the same thing every week 😄","嗯，好计划！你看，我家孩子每周都这么说 😄"]},"ai":"oliver"},"home":{"reply1":["marcela","Very normal! My two kids are at university and still live with us. They help in the shop on Saturdays.","很正常！我两个孩子在上大学，还住家里。周六他们会来店里帮忙。"],"ask2":["marcela","And how is it, living with your parents? Any funny stories?","跟爸妈住怎么样？有什么好玩的事吗？"],"kinds":[{"e":"🌙","zh":"回家晚了","model":["marcela","Last month my son came home at 3 a.m. without a message. I didn't sleep all night! Now he has to text me if he's late. Bueno, it's fair.","上个月我儿子凌晨三点才回来，一条消息都没发。我一夜没睡！现在晚回来必须给我发短信。这样才公平嘛。"],"hl":["came home at","without a message","has to text me"],"steps":[{"zh":"什么时候","o":[["Last month,","上个月，"],["Once,","有一次，"]]},{"zh":"发生了什么","o":[["I came home really late and didn't tell my parents.","我很晚才回家，也没跟爸妈说。"],["I forgot to call home on a trip.","出去玩忘了给家里打电话。"]]},{"zh":"后来","o":[["My mum was really worried, so now I always send a message.","我妈急坏了，所以现在我总会发个消息。"],["We argued, but in the end we made a deal.","我们吵了一架，不过最后说好了规矩。"]]}],"reply":["marcela","Mirá, that's what parents do. We worry!","你看，当爸妈的就这样。我们会担心！"]},{"e":"🍳","zh":"家务怎么分","model":["marcela","In our house, everyone has a job. My daughter cooks on Sundays, my son does the dishes. Che, he complains — but he does it!","我们家每个人都有活儿。女儿周日做饭，儿子洗碗。他会抱怨——但还是会做！"],"hl":["everyone has a job","does the dishes","complains"],"steps":[{"zh":"我们家","o":[["At home, I usually do the dishes.","在家我一般洗碗。"],["At home, I cook sometimes.","在家我有时候做饭。"],["At home, my mum does almost everything.","在家几乎都是我妈做。"]]},{"zh":"然后","o":[["I'm trying to help more.","我在努力多帮点忙。"],["We sometimes argue about it.","我们有时候会为这个吵。"],["I know I should help more!","我知道我该多帮点！"]]}],"reply":["marcela","Bueno, honest answer! Your mother will be happy if you help a little more 😄","嗯，说得老实！你多帮一点，你妈会很高兴的 😄"]},{"e":"📦","zh":"想搬出去","model":["wanjiru","At 22, I told my parents I wanted to move out. My dad was not happy! But I paid my own rent, and now they're proud of me.","22 岁那年，我跟爸妈说想搬出去。我爸很不高兴！但我自己交房租，现在他们挺为我骄傲的。"],"hl":["move out","not happy","paid my own rent"],"steps":[{"zh":"我想","o":[["I'd like to move out one day,","我想有一天搬出去，"],["I've thought about moving out,","我想过搬出去，"]]},{"zh":"可是","o":[["but my parents want me to stay.","可是爸妈想让我留下。"],["but rent is too expensive.","可是房租太贵了。"],["but I like living at home!","可是我喜欢住家里！"]]}],"reply":["wanjiru","Honestly, there's no rush. Save money first, my friend.","说实话，不着急。先攒钱吧，朋友。"]}],"l3":{"q":["Should adult children pay their parents something?","成年了住家里，该不该给爸妈钱？"],"sides":[["marcela","不用，帮忙就行","My kids don't pay — they're students. But they help in the shop.","我孩子不交钱——他们是学生。不过会来店里帮忙。"],["oliver","交一点","In the UK, lots of young people pay their parents a bit every month. My friend gives them about a tenth of his salary.","在英国，很多年轻人每个月给爸妈一点钱。我朋友交工资的十分之一左右。"],["wanjiru","反过来给家里","Here, many of us send money home to our parents. I send some to my mum every month.","我们这儿，很多人往家里寄钱给爸妈。我每个月给妈妈寄一点。"]],"parts":[{"zh":"我觉得…","o":[["I think adult children should pay something,","我觉得成年子女应该出点钱，"],["I don't think they need to pay,","我觉得不用给钱，"]]},{"zh":"因为…","o":[["because it's fair.","因为这样公平。"],["because family helps each other.","因为一家人互相帮忙。"],["because it teaches you to manage money.","因为能学会管钱。"]]},{"zh":"不过…","o":[["But they should help at home.","不过家务得帮着做。"],["But it depends on the family.","不过每家情况不一样。"],["","不加这句"]]}],"reply":["oliver","Fair enough — every family does it differently.","可以理解——每家做法都不一样。"]},"ai":"marcela"},"owner":{"reply1":["chenjian","Me too. Twenty more years to pay… but it's ours.","我也是。还要还二十年……不过房子是自己的。"],"ask2":["chenjian","Buying a flat is a big story. Actually, how did it go for you?","买房可是件大事。你那时候怎么样？"],"kinds":[{"e":"💰","zh":"攒首付","model":["chenjian","We saved for the deposit for six years. My wife and I almost never ate out. Actually, my parents helped too — very normal in China.","我们攒首付攒了六年，我和老婆几乎不下馆子。其实我爸妈也帮了一点——在中国很常见。"],"hl":["saved for the deposit","almost never","helped too"],"steps":[{"zh":"怎么攒的","o":[["I saved for the deposit for a few years.","我攒首付攒了好几年。"],["My parents helped me with the deposit.","爸妈帮我出了首付。"],["We saved together as a couple.","我们两个人一起攒的。"]]},{"zh":"那时候","o":[["We almost never ate out.","我们几乎不下馆子。"],["It was hard, but worth it.","很辛苦，但值得。"],["","不加这句"]]}],"reply":["chenjian","No problem — that's the usual way. Hard work, then a home.","没问题——大家都这样。先吃苦，后有家。"]},{"e":"🛠️","zh":"装修","model":["chenjian","The renovation took four months, not two. The workers were always late! Actually, now I love the kitchen, so it was worth it.","装修花了四个月，不是两个月。工人老是迟到！不过现在我很喜欢那个厨房，值了。"],"hl":["renovation","took four months","worth it"],"steps":[{"zh":"发生了什么","o":[["The renovation took much longer than we planned.","装修比计划的久多了。"],["The renovation cost more than we planned.","装修比计划的贵。"]]},{"zh":"结果","o":[["But now I love my home.","不过现在我很爱我的家。"],["I'd do some things differently next time.","下次有些地方我会换个做法。"]]}],"reply":["chenjian","Same everywhere! Renovation always takes longer.","哪儿都一样！装修永远会拖。"]}],"l3":{"q":["Was buying worth it?","买房值不值？"],"sides":[["chenjian","值","For my family, yes. My son has a stable home and a good school nearby.","对我家来说值。儿子有个稳定的家，附近还有好学校。"],["oliver","我买不起","In London I can't even think about it. Renting gives me freedom, at least.","在伦敦我想都不敢想。租房起码自由。"],["marcela","砖头最靠得住","In Argentina, bricks are safer than a bank. So yes!","在阿根廷，砖头比银行可靠。所以值！"]],"parts":[{"zh":"我觉得…","o":[["I think buying was the right choice,","我觉得买房是对的，"],["Sometimes I'm not sure buying was right,","有时候我也不确定买得对不对，"]]},{"zh":"因为…","o":[["because it really feels like home.","因为这才真有家的感觉。"],["because rent is money you never see again.","因为房租交了就没了。"],["because the loan is heavy.","因为贷款压力太大。"]]},{"zh":"不过…","o":[["But I can't move easily now.","不过现在不好随便搬了。"],["But I'd do it again.","不过让我再选还会买。"],["","不加这句"]]}],"reply":["chenjian","Actually, I feel the same. Heavy, but home.","其实我也这么觉得。压力大，但这是家。"]},"ai":"chenjian"}}}};
+window.TALK_DEEP = {"economy_club|rent":{"title":["🏠","My home story","你的房子故事"],"npc":{"oliver":["Oliver","📰","伦敦"],"marcela":["Marcela","🔩","布宜诺斯艾利斯"],"chenjian":["陈建","📦","义乌"],"wanjiru":["Wanjiru","📱","内罗毕"]},"start":{"q":["Where do you live, and who with?","你现在住哪儿，跟谁住？"],"o":[{"id":"share","e":"👥","en":"I share a flat with friends.","zh":"跟朋友合租","path":"rent","ph":"https://img.heyvoyo.com/clips/first_money_split_1.webp"},{"id":"dorm","e":"🏫","en":"I live in a school dorm.","zh":"住学校宿舍","path":"student"},{"id":"home","e":"🏡","en":"I live with my parents.","zh":"跟爸妈住","path":"home","ph":"https://img.heyvoyo.com/clips/life_questions_parents_3.webp"},{"id":"paid","e":"💝","en":"I rent, but my parents pay.","zh":"在外面租，爸妈付房租","path":"student"},{"id":"own","e":"🔑","en":"I rent a place on my own.","zh":"一个人租房","path":"rent","ph":"https://img.heyvoyo.com/clips/life_questions_alone_0.webp"},{"id":"mortgage","e":"🏦","en":"I'm paying off a mortgage.","zh":"在还房贷","path":"owner","ph":"https://img.heyvoyo.com/clips/social_money_rentcap_1.webp"}]},"slots":{"where":{"o":[["a big city","大城市"],["a small town","小城"],["the suburbs","郊区"],["the city centre","市中心"]]},"share":{"o":[["a quarter","四分之一"],["a third","三分之一"],["half","一半"],["more than half","一半以上"]]}},"l1":{"share":[{"en":"I share a flat with {who} in {where}.","zh":"我跟{who}在{where}合租。","s":{"who":{"o":[["a friend","一个朋友"],["two friends","两个朋友"],["three friends","三个朋友"],["people I found online","网上找的室友"]]}}},{"en":"Rent takes about {share} of my income.","zh":"房租大概占我收入的{share}。"},{"en":"It's {bad}, but it's {good}.","zh":"房子{bad}，不过{good}。","s":{"bad":{"o":[["small","有点小"],["old","有点旧"],["noisy","有点吵"],["far from work","离上班有点远"]]},"good":{"o":[["close to work","离上班近"],["cheap","便宜"],["bright","很亮堂"],["quiet","很安静"]]}}}],"own":[{"en":"I rent a small flat on my own in {where}.","zh":"我一个人在{where}租了个小房子。"},{"en":"Rent takes about {share} of my income.","zh":"房租大概占我收入的{share}。"},{"en":"I love {like}, but {hard}.","zh":"我喜欢{like}，不过{hard}。","s":{"like":{"o":[["having my own space","有自己的空间"],["cooking whatever I want","想做什么饭就做什么"],["the quiet","清净"]]},"hard":{"o":[["the rent is all on me","房租全得自己扛"],["it gets a bit lonely sometimes","有时候有点孤单"],["I have to fix everything myself","什么坏了都得自己修"]]}}}],"dorm":[{"en":"I live in a dorm with {who}.","zh":"我住宿舍，跟{who}一起住。","s":{"who":{"o":[["one roommate","一个室友"],["two roommates","两个室友"],["three roommates","三个室友"],["five roommates","五个室友"]]}}},{"en":"{pay}","zh":"{pay}","s":{"pay":{"o":[["My parents pay for it.","钱是爸妈付的。"],["I pay for it with a part-time job.","我打工自己付。"],["My scholarship covers it.","奖学金够付。"]]}}},{"en":"It's {bad}, but it's {good}.","zh":"宿舍{bad}，不过{good}。","s":{"bad":{"o":[["small","有点小"],["noisy","有点吵"],["crowded","有点挤"],["old","有点旧"]]},"good":{"o":[["cheap","便宜"],["close to my classes","离教室近"],["fun","热闹好玩"],["safe","安全"]]}}}],"paid":[{"en":"I rent a room near my {near}.","zh":"我在{near}附近租了个房间。","s":{"near":{"o":[["university","学校"],["language school","语言学校"],["internship","实习的地方"]]}}},{"en":"My parents pay the rent.","zh":"房租是爸妈付的。"},{"en":"So I try {try}.","zh":"所以我尽量{try}。","s":{"try":{"o":[["not to waste money","不乱花钱"],["to cook at home","在家做饭"],["to find a part-time job","找个兼职"]]}}}],"home":[{"en":"I live with my parents in {where}.","zh":"我跟爸妈住在{where}。"},{"en":"I don't pay rent, but I {help}.","zh":"我不交房租，不过我{help}。","s":{"help":{"o":[["help with the housework","帮着做家务"],["cook dinner sometimes","有时候做晚饭"],["buy food sometimes","有时候买菜"],["give my parents some money","给爸妈一点钱"]]}}},{"en":"The best part is {good}. The hard part is {bad}.","zh":"最好的是{good}，难的是{bad}。","s":{"good":{"o":[["the food","吃得好"],["saving money","省钱"],["never feeling lonely","从来不孤单"]]},"bad":{"o":[["having no privacy","没有自己的空间"],["all the questions","爸妈问东问西"],["coming home early","得早点回家"]]}}}],"mortgage":[{"en":"I bought a flat {when}.","zh":"我{when}买了房。","s":{"when":{"o":[["last year","去年"],["three years ago","三年前"],["five years ago","五年前"]]}}},{"en":"The mortgage takes about {share} of my income.","zh":"房贷大概占我收入的{share}。"},{"en":"It's {feel}.","zh":"{feel}。","s":{"feel":{"o":[["a lot of money, but it feels safe","钱不少，但心里踏实"],["hard every month, but it's ours","每个月都紧，但房子是自己的"],["fine — I can manage it","还行，我扛得住"]]}}}]},"paths":{"rent":{"reply1":["oliver","Same here — I share with three people, and half my salary goes on rent. London, basically 😅","我也一样——跟三个人合租，一半工资交了房租。伦敦嘛，就这样 😅"],"ask2":["wanjiru","So, any landlord stories? Honestly, everyone has one.","那跟房东有过什么事吗？说实话，每个人都有一个。"],"kinds":[{"e":"💸","zh":"押金没退回来","model":["oliver","When I left my first flat, the landlord kept half of my deposit. He said the carpet was dirty. I showed him my photos from day one, and in the end he gave most of it back.","我搬出第一个房子的时候，房东扣了我一半押金，说地毯脏了。我给他看了第一天拍的照片，最后他退了大部分。"],"hl":["kept","deposit","in the end","gave most of it back"],"steps":[{"zh":"什么时候","o":[["When I moved out last year,","去年搬走的时候，"],["Two years ago,","两年前，"],["When I left my first flat,","离开第一个房子的时候，"]]},{"zh":"发生了什么","o":[["my landlord kept all of my deposit.","房东把押金全扣了。"],["my landlord kept part of my deposit.","房东扣了一部分押金。"]]},{"zh":"他怎么说","o":[["He said the walls were dirty.","他说墙脏了。"],["He said I broke something.","他说我弄坏了东西。"],["He didn't give a reason.","他也没说为什么。"]]},{"zh":"你怎么办 · 结果","o":[["I sent him photos, and in the end I got half of it back.","我给他发了照片，最后拿回了一半。"],["I argued with him, and in the end I got it all back.","我跟他理论，最后全拿回来了。"],["I just let it go, so I never got it back.","我就算了，所以一分没拿回来。"]]},{"zh":"你学到的","o":[["Now I always take photos on the first day.","现在我第一天就拍照。"],["Now I read the contract carefully.","现在我会仔细看合同。"],["","不加这句"]]}],"fact":"在英格兰，押金最多收 5 周房租（2019 年《租客收费法》），房东还必须在 30 天内把押金放进政府认可的保护计划；退押金有纠纷，可以免费找第三方裁决（gov.uk）。","reply":["oliver","Fair enough — that's why everyone here takes photos on day one now.","可以理解——所以我们这儿现在人人第一天都拍照。"],"ph":"https://img.heyvoyo.com/clips/life_abroad_flat_3.webp"},{"e":"📈","zh":"房东突然涨房租","model":["wanjiru","Last year my landlord put the rent up by 20%. He told me on WhatsApp, two weeks before! I couldn't afford it, so I looked for a new place. In the end, I found a smaller flat closer to my shop — and honestly, I'm happier.","去年房东把房租涨了 20%，提前两周在 WhatsApp 上说的！我付不起，就找了新地方。最后找到一个小点、离我店近的房子——说实话，更开心了。"],"hl":["put the rent up","couldn't afford it","looked for a new place","In the end"],"steps":[{"zh":"什么时候","o":[["Last year,","去年，"],["This spring,","今年春天，"],["A few months ago,","几个月前，"]]},{"zh":"发生了什么","o":[["my landlord put the rent up by 10%.","房东涨了 10% 房租。"],["my landlord put the rent up twice in one year.","房东一年涨了两次房租。"],["my landlord put the rent up a lot.","房东涨了很多房租。"]]},{"zh":"你怎么办 · 结果","o":[["I tried to talk him down, and he agreed to a smaller rise.","我跟他讲价，他同意少涨一点。"],["I couldn't afford it, so I moved somewhere cheaper.","我付不起，就搬到了便宜点的地方。"],["I just paid it, but I'm still not happy about it.","我就交了，不过到现在还不太高兴。"]]}],"reply":["wanjiru","Sawa, that's so common. Landlords everywhere are the same, my friend!","嗯，太常见了。哪儿的房东都一样，朋友！"],"ph":"https://img.heyvoyo.com/clips/social_money_rentcap_1.webp"},{"e":"🧦","zh":"室友的事","model":["oliver","One of my flatmates never did the dishes. Basically, the sink was full every night. We talked about it, and now we have a cleaning rota on the fridge. It actually works!","我有个室友从来不洗碗，基本上每天晚上水池都是满的。我们谈了一次，现在冰箱上贴着打扫值日表。还真管用！"],"hl":["never did the dishes","talked about it","cleaning rota"],"steps":[{"zh":"发生了什么","o":[["My flatmate never did the dishes.","我室友从来不洗碗。"],["My flatmate played loud music at night.","我室友晚上放很大声的音乐。"],["My flatmate's friends were always over.","我室友的朋友老来。"]]},{"zh":"你怎么办","o":[["I talked to them about it.","我跟 TA 谈了谈。"],["I left a note on the fridge.","我在冰箱上贴了张纸条。"],["I didn't say anything for months.","我好几个月什么都没说。"]]},{"zh":"结果","o":[["In the end, we made a cleaning rota.","最后我们排了打扫值日表。"],["In the end, things got better.","后来好多了。"],["In the end, I moved out.","最后我搬走了。"]]}],"reply":["oliver","Ha, the flatmate stories never end. To put it simply: talk early!","哈，室友的故事永远讲不完。简单说：早点谈！"],"ph":"https://img.heyvoyo.com/clips/first_money_split_3.webp"},{"e":"🔍","zh":"找房、看房","model":["oliver","When I was looking for a flat, I saw ten places in one week. One 'double room' had the bed in the kitchen! In the end, I found my flat through a friend.","找房子的时候，我一周看了十套。有一间「双人房」床就在厨房里！最后是朋友介绍才找到现在这套的。"],"hl":["looking for a flat","saw ten places","through a friend"],"steps":[{"zh":"什么时候","o":[["When I was looking for a flat,","找房子的时候，"],["When I first moved to this city,","刚来这个城市的时候，"]]},{"zh":"发生了什么","o":[["I saw ten places in one week.","我一周看了十套。"],["the photos online looked much better than the real flat.","网上的照片比真房子好看多了。"],["an agent asked me for money before I even saw the flat.","中介没看房就让我先交钱。"]]},{"zh":"结果","o":[["In the end, I found one through a friend.","最后是朋友介绍才找到的。"],["In the end, I found one on an app.","最后在 App 上找到的。"],["In the end, I took the first one I saw.","最后就租了看的第一套。"]]}],"reply":["oliver","Ten in a week? Same energy as me. Flat hunting is a full-time job!","一周十套？跟我一样拼。找房简直是一份全职工作！"],"ph":"https://img.heyvoyo.com/clips/life_abroad_flat_2.webp"}],"l3":{"q":["Rent forever, or buy one day?","一直租下去，还是总有一天要买？"],"sides":[["oliver","租","A home in London costs more than ten times a normal salary. I'll probably rent for a long time — and that's okay.","伦敦一套房是普通工资的十倍多。我大概会租很久，也没什么。"],["chenjian","买","I bought our flat when my son was born. The loan is heavy, but it feels safe.","我儿子出生那年买的房。贷款压力大，但心里踏实。"],["marcela","买","In Argentina, money can lose value fast. People put their savings into bricks.","在阿根廷，钱可能贬值得很快，大家把积蓄换成砖头（买房）。"]],"parts":[{"zh":"我觉得…","o":[["I think I'll rent for now,","我觉得我先租着，"],["I want to buy a place one day,","我想有一天买房，"],["Honestly, I'm not sure yet,","说实话，我还没想好，"]]},{"zh":"因为…","o":[["because I want to be free to move cities.","因为我想能随时换城市。"],["because I don't want a 30-year loan.","因为我不想背三十年贷款。"],["because renting feels like throwing money away.","因为租房感觉钱都白扔了。"],["because a home of my own feels safe.","因为有自己的房子心里踏实。"]]},{"zh":"不过…","o":[["But one day I'd like a place of my own.","不过总有一天我想有个自己的家。"],["But house prices are crazy.","不过房价太离谱了。"],["But my parents don't agree.","不过我爸妈不同意。"],["","不加这句"]]}],"reply":["oliver","Fair enough. To put it simply, there's no one right answer — it depends on the numbers and on you.","可以理解。简单说，没有标准答案——看数字，也看你自己。"]},"ai":"oliver"},"student":{"reply1":["oliver","Uni days! In my first year I lived in halls — four of us shared one tiny kitchen 😄","大学时光！我大一住学校宿舍，四个人共用一个小厨房 😄"],"ask2":["wanjiru","So what's it like living away from home? Honestly, the first months are the hardest.","离开家住是什么感觉？说实话，头几个月最难。"],"kinds":[{"e":"🎮","zh":"室友的作息、习惯","model":["oliver","In my first year, my flatmate got up at five for the gym. I'm a night person! We talked, agreed on 'quiet after midnight', and basically it worked.","大一的时候，我室友每天五点起床去健身，我却是夜猫子！我们聊了聊，说好「半夜以后安静」，基本上就没问题了。"],"hl":["got up at five","night person","agreed on"],"steps":[{"zh":"发生了什么","o":[["My roommate plays games until 2 a.m.","我室友打游戏打到半夜两点。"],["My roommate gets up really early.","我室友起得特别早。"],["My roommate never cleans up.","我室友从来不收拾。"]]},{"zh":"你怎么办","o":[["I asked them nicely to change a little.","我客气地请 TA 稍微改一改。"],["I bought earplugs.","我买了耳塞。"],["I didn't say anything.","我什么都没说。"]]},{"zh":"结果","o":[["Now we get on fine.","现在我们处得挺好。"],["Now we have some dorm rules.","现在我们定了几条宿舍规矩。"],["It's still a problem!","到现在还是个问题！"]]}],"reply":["oliver","Ha, fair enough. Living with strangers teaches you a lot!","哈，可以理解。跟陌生人住在一起，能学到不少！"],"ph":"https://img.heyvoyo.com/clips/first_money_split_3.webp"},{"e":"🧳","zh":"第一次离开家","model":["wanjiru","When I first moved to Nairobi for work, I missed my family a lot. I called my mum every night. After a few months, the city started to feel like home.","我刚到内罗毕工作的时候，特别想家，每天晚上给妈妈打电话。过了几个月，这座城市才开始有家的感觉。"],"hl":["first moved","missed my family","started to feel like home"],"steps":[{"zh":"什么时候","o":[["When I first left home,","第一次离开家的时候，"],["In my first week at university,","上大学第一周，"]]},{"zh":"发生了什么","o":[["I missed my parents a lot.","我特别想爸妈。"],["I didn't know how to do my own laundry.","我连自己洗衣服都不会。"],["I spent all my money in two weeks.","两周就把钱花光了。"]]},{"zh":"后来","o":[["I called home every day, and after a month I was fine.","我天天给家里打电话，一个月以后就好了。"],["I asked my roommates for help, and I learned fast.","我找室友帮忙，学得很快。"],["I learned slowly, and now I'm much more independent.","我慢慢学，现在独立多了。"]]}],"reply":["wanjiru","Sawa! Everyone has that first month. You did it.","嗯！谁都有那第一个月。你挺过来了。"],"ph":"https://img.heyvoyo.com/clips/life_abroad_homesick_2.webp"},{"e":"🏙️","zh":"实习、出国时在外面找房","model":["oliver","For my first internship, I needed a room in London for three months. Everything was so expensive! In the end, I stayed in a friend's spare room and paid him a bit.","第一次实习，我要在伦敦租三个月的房间，什么都贵得要命！最后住在朋友家的空房间，给了他一点钱。"],"hl":["internship","spare room","In the end"],"steps":[{"zh":"什么时候","o":[["For my internship,","实习的时候，"],["When I went to study abroad,","出国读书的时候，"]]},{"zh":"发生了什么","o":[["I needed a room for a few months.","我要租几个月的房间。"],["I had to find a place from another country.","我人还在国外就得找好房子。"]]},{"zh":"结果","o":[["In the end, I found a room through my school.","最后通过学校找到了房间。"],["In the end, I shared with other students.","最后跟别的学生合租。"],["In the end, I stayed with a friend.","最后住在朋友家。"]]}],"reply":["oliver","Short-term rooms are the hardest to find. Good job!","短租的房间最难找。干得好！"],"ph":"https://img.heyvoyo.com/clips/life_abroad_newcity_3.webp"}],"l3":{"q":["After you graduate: live with your parents, or move out?","毕业以后：跟爸妈住，还是搬出去？"],"sides":[["marcela","住家里","My two kids are at university and still live with us. They save a lot — and eat a lot!","我两个孩子在上大学，还住家里。省了不少钱——也吃了不少！"],["oliver","搬出去","I moved out after uni. Always a bit broke, but free.","我大学毕业就搬出来了。总是有点穷，但自由。"],["wanjiru","去别的城市","I moved to Nairobi for work. Hard at first, but it changed my life.","我为了工作去了内罗毕。一开始难，但改变了我的生活。"]],"parts":[{"zh":"我觉得…","o":[["I think I'll move out after I graduate,","我觉得毕业后我会搬出去，"],["I think I'll live with my parents for a while,","我觉得我会先跟爸妈住一阵，"],["I'd like to move to another city,","我想去别的城市，"]]},{"zh":"因为…","o":[["because I want to be independent.","因为我想独立。"],["because I want to save money first.","因为我想先攒点钱。"],["because there are more jobs there.","因为那边工作机会多。"]]},{"zh":"不过…","o":[["But I'll need a job first!","不过得先找到工作！"],["But my parents want me to stay close.","不过爸妈希望我离家近点。"],["","不加这句"]]}],"reply":["marcela","Bueno, good plan! Mirá, my kids say the same thing every week 😄","嗯，好计划！你看，我家孩子每周都这么说 😄"]},"ai":"oliver"},"home":{"reply1":["marcela","Very normal! My two kids are at university and still live with us. They help in the shop on Saturdays.","很正常！我两个孩子在上大学，还住家里。周六他们会来店里帮忙。"],"ask2":["marcela","And how is it, living with your parents? Any funny stories?","跟爸妈住怎么样？有什么好玩的事吗？"],"kinds":[{"e":"🌙","zh":"回家晚了","model":["marcela","Last month my son came home at 3 a.m. without a message. I didn't sleep all night! Now he has to text me if he's late. Bueno, it's fair.","上个月我儿子凌晨三点才回来，一条消息都没发。我一夜没睡！现在晚回来必须给我发短信。这样才公平嘛。"],"hl":["came home at","without a message","has to text me"],"steps":[{"zh":"什么时候","o":[["Last month,","上个月，"],["Once,","有一次，"]]},{"zh":"发生了什么","o":[["I came home really late and didn't tell my parents.","我很晚才回家，也没跟爸妈说。"],["I forgot to call home on a trip.","出去玩忘了给家里打电话。"]]},{"zh":"后来","o":[["My mum was really worried, so now I always send a message.","我妈急坏了，所以现在我总会发个消息。"],["We argued, but in the end we made a deal.","我们吵了一架，不过最后说好了规矩。"]]}],"reply":["marcela","Mirá, that's what parents do. We worry!","你看，当爸妈的就这样。我们会担心！"]},{"e":"🍳","zh":"家务怎么分","model":["marcela","In our house, everyone has a job. My daughter cooks on Sundays, my son does the dishes. Che, he complains — but he does it!","我们家每个人都有活儿。女儿周日做饭，儿子洗碗。他会抱怨——但还是会做！"],"hl":["everyone has a job","does the dishes","complains"],"steps":[{"zh":"我们家","o":[["At home, I usually do the dishes.","在家我一般洗碗。"],["At home, I cook sometimes.","在家我有时候做饭。"],["At home, my mum does almost everything.","在家几乎都是我妈做。"]]},{"zh":"然后","o":[["I'm trying to help more.","我在努力多帮点忙。"],["We sometimes argue about it.","我们有时候会为这个吵。"],["I know I should help more!","我知道我该多帮点！"]]}],"reply":["marcela","Bueno, honest answer! Your mother will be happy if you help a little more 😄","嗯，说得老实！你多帮一点，你妈会很高兴的 😄"],"ph":"https://img.heyvoyo.com/clips/life_abroad_homesick_1.webp"},{"e":"📦","zh":"想搬出去","model":["wanjiru","At 22, I told my parents I wanted to move out. My dad was not happy! But I paid my own rent, and now they're proud of me.","22 岁那年，我跟爸妈说想搬出去。我爸很不高兴！但我自己交房租，现在他们挺为我骄傲的。"],"hl":["move out","not happy","paid my own rent"],"steps":[{"zh":"我想","o":[["I'd like to move out one day,","我想有一天搬出去，"],["I've thought about moving out,","我想过搬出去，"]]},{"zh":"可是","o":[["but my parents want me to stay.","可是爸妈想让我留下。"],["but rent is too expensive.","可是房租太贵了。"],["but I like living at home!","可是我喜欢住家里！"]]}],"reply":["wanjiru","Honestly, there's no rush. Save money first, my friend.","说实话，不着急。先攒钱吧，朋友。"],"ph":"https://img.heyvoyo.com/clips/economy_club_rent_2.webp"}],"l3":{"q":["Should adult children pay their parents something?","成年了住家里，该不该给爸妈钱？"],"sides":[["marcela","不用，帮忙就行","My kids don't pay — they're students. But they help in the shop.","我孩子不交钱——他们是学生。不过会来店里帮忙。"],["oliver","交一点","In the UK, lots of young people pay their parents a bit every month. My friend gives them about a tenth of his salary.","在英国，很多年轻人每个月给爸妈一点钱。我朋友交工资的十分之一左右。"],["wanjiru","反过来给家里","Here, many of us send money home to our parents. I send some to my mum every month.","我们这儿，很多人往家里寄钱给爸妈。我每个月给妈妈寄一点。"]],"parts":[{"zh":"我觉得…","o":[["I think adult children should pay something,","我觉得成年子女应该出点钱，"],["I don't think they need to pay,","我觉得不用给钱，"]]},{"zh":"因为…","o":[["because it's fair.","因为这样公平。"],["because family helps each other.","因为一家人互相帮忙。"],["because it teaches you to manage money.","因为能学会管钱。"]]},{"zh":"不过…","o":[["But they should help at home.","不过家务得帮着做。"],["But it depends on the family.","不过每家情况不一样。"],["","不加这句"]]}],"reply":["oliver","Fair enough — every family does it differently.","可以理解——每家做法都不一样。"]},"ai":"marcela"},"owner":{"reply1":["chenjian","Me too. Twenty more years to pay… but it's ours.","我也是。还要还二十年……不过房子是自己的。"],"ask2":["chenjian","Buying a flat is a big story. Actually, how did it go for you?","买房可是件大事。你那时候怎么样？"],"kinds":[{"e":"💰","zh":"攒首付","model":["chenjian","We saved for the deposit for six years. My wife and I almost never ate out. Actually, my parents helped too — very normal in China.","我们攒首付攒了六年，我和老婆几乎不下馆子。其实我爸妈也帮了一点——在中国很常见。"],"hl":["saved for the deposit","almost never","helped too"],"steps":[{"zh":"怎么攒的","o":[["I saved for the deposit for a few years.","我攒首付攒了好几年。"],["My parents helped me with the deposit.","爸妈帮我出了首付。"],["We saved together as a couple.","我们两个人一起攒的。"]]},{"zh":"那时候","o":[["We almost never ate out.","我们几乎不下馆子。"],["It was hard, but worth it.","很辛苦，但值得。"],["","不加这句"]]}],"reply":["chenjian","No problem — that's the usual way. Hard work, then a home.","没问题——大家都这样。先吃苦，后有家。"],"ph":"https://img.heyvoyo.com/clips/first_money_save_0.webp"},{"e":"🛠️","zh":"装修","model":["chenjian","The renovation took four months, not two. The workers were always late! Actually, now I love the kitchen, so it was worth it.","装修花了四个月，不是两个月。工人老是迟到！不过现在我很喜欢那个厨房，值了。"],"hl":["renovation","took four months","worth it"],"steps":[{"zh":"发生了什么","o":[["The renovation took much longer than we planned.","装修比计划的久多了。"],["The renovation cost more than we planned.","装修比计划的贵。"]]},{"zh":"结果","o":[["But now I love my home.","不过现在我很爱我的家。"],["I'd do some things differently next time.","下次有些地方我会换个做法。"]]}],"reply":["chenjian","Same everywhere! Renovation always takes longer.","哪儿都一样！装修永远会拖。"]}],"l3":{"q":["Was buying worth it?","买房值不值？"],"sides":[["chenjian","值","For my family, yes. My son has a stable home and a good school nearby.","对我家来说值。儿子有个稳定的家，附近还有好学校。"],["oliver","我买不起","In London I can't even think about it. Renting gives me freedom, at least.","在伦敦我想都不敢想。租房起码自由。"],["marcela","砖头最靠得住","In Argentina, bricks are safer than a bank. So yes!","在阿根廷，砖头比银行可靠。所以值！"]],"parts":[{"zh":"我觉得…","o":[["I think buying was the right choice,","我觉得买房是对的，"],["Sometimes I'm not sure buying was right,","有时候我也不确定买得对不对，"]]},{"zh":"因为…","o":[["because it really feels like home.","因为这才真有家的感觉。"],["because rent is money you never see again.","因为房租交了就没了。"],["because the loan is heavy.","因为贷款压力太大。"]]},{"zh":"不过…","o":[["But I can't move easily now.","不过现在不好随便搬了。"],["But I'd do it again.","不过让我再选还会买。"],["","不加这句"]]}],"reply":["chenjian","Actually, I feel the same. Heavy, but home.","其实我也这么觉得。压力大，但这是家。"]},"ai":"chenjian"}}}};
 // 🏠 越聊越深（2026-11-09，样板 样板/房租越聊越深样板.html，用户「照这个做」）
 // 用户：学一门语言 = 学说真属于自己的话。别人的话听一听（练耳朵），自己的话练说。每个话题都在聊你，而且越聊越深。
 // 一个话题 = 关于你的一个故事，四层：① 我现在（填你自己的城市、人数、钱）② 碰到过（过去时讲一件事）③ 我觉得（我觉得…因为…不过…）
@@ -63974,179 +63974,446 @@ const store = fn => { const H = window.hvTalk; if (!H) return; try { const s = H
 const keep = L => { store(s => { const M = s.mine || (s.mine = {}), A = M[tk] || (M[tk] = []); L.forEach(l => { if (!A.includes(l[0])) A.push(l[0]); }); });
   L.forEach(l => { try { window.hvPx && window.hvPx({k: "say", i: isle, th: tk, u: key + "|deep|" + l[0].slice(0, 40), say: l[0], from: "deep"}); } catch(e){} }); };
 const booklet = () => { try { const K = "hv.booklet", B = JSON.parse(localStorage.getItem(K) || "{}"); B["deep." + isle + "." + tk] = {e: D.title[0], t: D.title[2], theme: title, lines: story(ST(key)), ts: Date.now()}; localStorage.setItem(K, JSON.stringify(B)); } catch(e){} };
+// ───── 2026-11-09 改版（样板 样板/越聊越深放进软件样板.html，用户「可以，照这个改」）─────
+// 一本摊开的本子：左页「你的故事」只放你自己的话，一层层长出来，一直看得见；右页一次只做一件事。
+// 每一层同样四小步：👂 听一个人的 → ✋ 拼你的 → 🎤 说熟 → 📮 盖章。蓝 = 听（别人的话，只听），红 = 说（你的话）。
+// 说熟是一架撤帮助的梯子：跟着说 → 遮掉几个词 → 只看中文，每句三遍；最后整段一口气说一遍。不打 ✗，只把听到的词标绿。
+// 手机上：右页整屏，左页变成底下拉起来的抽屉。
 const CSS = `
-#dpX{position:fixed;inset:0;z-index:99990;background:#efe8da;color:#24303a;overflow-y:auto;-webkit-overflow-scrolling:touch;font:15px/1.5 -apple-system,"PingFang SC",sans-serif}
-#dpX *{box-sizing:border-box}#dpX .in{max-width:560px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(48px + env(safe-area-inset-bottom,0px))}
-#dpX .top{display:flex;align-items:center;gap:8px;font-size:13px;color:#7a705e}#dpX .top b{color:#24303a;font-size:15px}#dpX .x{all:unset;cursor:pointer;font-size:19px;padding:2px 8px 2px 0}
-#dpX .sc{background:#fffdf7;border-radius:16px;padding:11px 12px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-#dpX .sc .t{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;color:#14305c}
-#dpX .slots{display:flex;gap:6px;margin-top:8px}#dpX .slots button{all:unset;cursor:pointer;flex:1;text-align:center;border-radius:9px;padding:5px 2px;font-size:12px;background:#efe9dc;color:#a99c80}
-#dpX .slots button.on{background:#e8673f;color:#fff;font-weight:800}#dpX .slots button.now{outline:2px dashed #e8673f;color:#e8673f;background:#fff4ee;font-weight:800}#dpX .slots button.sel{box-shadow:0 0 0 2px #14305c inset}
-#dpX .mine{margin-top:9px;font:15px/1.6 Georgia,serif;color:#24303a}#dpX .mine small{display:block;font:12.5px/1.5 -apple-system,"PingFang SC",sans-serif;color:#7a705e;margin-top:3px}
-#dpX .mine .bt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-#dpX .pane{margin-top:14px}#dpX h3{font-size:18px;margin:0 0 3px}#dpX .why{font-size:13px;color:#7a705e;margin-bottom:10px}
-#dpX .tag{display:inline-block;font-size:11.5px;font-weight:800;border-radius:99px;padding:1px 8px;margin:12px 0 6px}#dpX .tag.l{background:#e1e9f3;color:#3d6a99}#dpX .tag.s{background:#fde3d6;color:#c4512a}
-#dpX .q{font-size:20px;font-weight:800;line-height:1.3;display:flex;gap:8px;align-items:flex-start}#dpX .q button{all:unset;cursor:pointer;font-size:18px}#dpX .qz{font-size:13.5px;color:#7a705e;margin-bottom:10px}
-#dpX .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}#dpX .op{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:2px solid #eadfc8;border-radius:14px;padding:10px;font-size:14px;line-height:1.35}#dpX .op small{display:block;color:#7a705e;font-size:12.5px;margin-top:2px}#dpX .op .e{font-size:24px;display:block;margin-bottom:2px}#dpX .op.sel{border-color:#e8673f;background:#fff4ee}
-#dpX .fill{background:#fff;border-radius:14px;padding:11px 12px;margin-top:8px}#dpX .fill .en{font:17px/1.6 Georgia,serif}#dpX .fill .en u{text-decoration:none;border-bottom:2px solid #e8673f;color:#c4512a;font-weight:700;padding:0 2px}#dpX .fill .en u.no{color:#c9bc9f;border-bottom-style:dashed}
-#dpX .fill .zh{font-size:12.5px;color:#7a705e;margin-top:2px}
-#dpX .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}#dpX .chips button{all:unset;cursor:pointer;background:#faf6ec;border:1.5px solid #eadfc8;border-radius:99px;padding:5px 11px;font-size:13.5px}#dpX .chips button.sel{border-color:#e8673f;color:#c4512a;font-weight:700;background:#fff4ee}
-#dpX .chips button small{color:#9a907c;font-size:11.5px;margin-left:4px;font-weight:400}#dpX .chips input{border:1.5px dashed #c9bc9f;border-radius:99px;padding:5px 11px;font:inherit;font-size:13.5px;width:150px;background:#fff;color:#24303a}
-#dpX .sl{font-size:11.5px;font-weight:800;color:#9a907c;margin-top:10px}
-#dpX .who{display:flex;gap:9px;align-items:flex-start;margin-top:8px}#dpX .av{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:#dfe9f2;overflow:hidden}#dpX .av img,#dpX .av svg{width:38px;height:38px;border-radius:50%}
-#dpX .bub{flex:1;background:#fff;border-radius:4px 16px 16px 16px;padding:8px 11px;font-size:14.5px;line-height:1.45}#dpX .bub b{display:block;font-size:11.5px;color:#14305c}#dpX .bub small{display:block;color:#7a705e;font-size:12.5px;margin-top:3px}
-#dpX .bub .hear{all:unset;cursor:pointer;font-size:13px;color:#3d6a99;margin-left:4px;font-weight:700}#dpX .bub i{font-style:normal;background:#ffe7a8;border-radius:4px;padding:0 2px}
-#dpX .fact{background:#e6f2ef;color:#22574e;border-radius:12px;padding:9px 11px;font-size:13px;margin-top:10px}
-#dpX .lnr{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:9px 11px;margin-top:7px}#dpX .lnr .t{flex:1;font:15.5px/1.45 Georgia,serif}#dpX .lnr .t small{display:block;font:12.5px/1.4 -apple-system,"PingFang SC",sans-serif;color:#7a705e}#dpX .lnr .t .r{font:12.5px/1.4 -apple-system,sans-serif;color:#2f7d70}
-#dpX .ib{all:unset;cursor:pointer;flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;background:#e1e9f3}#dpX .ib.mic{background:#e8673f;color:#fff}#dpX .ib.ok{background:#2f7d70;color:#fff}
-#dpX .go{display:block;width:100%;margin-top:14px;border:0;border-radius:14px;padding:12px;font:inherit;font-weight:800;background:#e8673f;color:#fff;cursor:pointer}#dpX .go:disabled{opacity:.4}
-#dpX .go.g{background:#fff;color:#24303a;border:1.5px solid #eadfc8;font-weight:700}#dpX .go.n{background:#14305c}
-#dpX .sbt{all:unset;cursor:pointer;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:700;background:#14305c;color:#fff}#dpX .sbt.g{background:#efe9dc;color:#24303a}
-#dpX .note{font-size:12.5px;color:#7a705e;text-align:center;margin-top:8px}
-#dpX .bars{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}#dpX .bars i{width:3px;height:12px;background:#e8673f;border-radius:2px;animation:dpBar .6s infinite alternate}#dpX .bars i:nth-child(2){animation-delay:.2s}#dpX .bars i:nth-child(3){animation-delay:.4s}
+#dpX{position:fixed;inset:0;z-index:99990;background:rgba(18,28,44,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);color:#24303a;font:15px/1.5 -apple-system,"PingFang SC",sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+#dpX *{box-sizing:border-box}
+#dpX .bk{width:min(1200px,100%);height:100%;max-height:900px;display:flex;flex-direction:column;background:#fbf7ee;border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
+#dpX .dbar{flex:none;display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid rgba(20,48,92,.12);background:#fbf7ee}
+#dpX .x{all:unset;cursor:pointer;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 0 0 1px rgba(20,48,92,.18) inset;color:#14305c;font-size:14px;flex:none}
+#dpX .crumb{font-size:13px;color:#6b7488;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#dpX .crumb b{font:700 17px "Noto Serif SC","Songti SC",serif;color:#14305c;margin-left:4px}
+#dpX .chap{margin-left:auto;display:flex;gap:4px;align-items:center;flex:none}
+#dpX .chap button{all:unset;cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 11px 4px 5px;border-radius:99px;font-size:13px;color:#6b7488}
+#dpX .chap button:disabled{cursor:default;opacity:.55}
+#dpX .chap i{font-style:normal;width:23px;height:23px;border-radius:50%;display:grid;place-items:center;font:700 12px Georgia,serif;border:1.5px solid rgba(20,48,92,.3);color:#14305c}
+#dpX .chap .d i{border-color:#e2552f;color:#e2552f;transform:rotate(-10deg)}
+#dpX .chap .now{background:#14305c;color:#fff}#dpX .chap .now i{background:#fff;border-color:#fff;color:#14305c;transform:none}
+#dpX .chap .ln{width:12px;height:1px;background:rgba(20,48,92,.3)}
+#dpX .sp{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);position:relative}
+#dpX .sp:before{content:"";position:absolute;top:0;bottom:0;left:44.44%;width:26px;margin-left:-13px;background:linear-gradient(90deg,transparent,rgba(20,48,92,.07) 45%,rgba(20,48,92,.11) 50%,rgba(20,48,92,.07) 55%,transparent);pointer-events:none;z-index:1}
+#dpX .pL{overflow-y:auto;padding:24px 30px 80px 34px;background:#fbf7ee;position:relative}
+#dpX .pR{overflow-y:auto;padding:22px 32px 40px 38px;background:#fbf7ee}
+#dpX .pgh{display:flex;align-items:baseline;gap:10px}#dpX .pgh h2{margin:0;font:700 21px "Noto Serif SC","Songti SC",serif;color:#14305c}#dpX .pgh span{font:italic 500 14px "Cormorant Garamond",Georgia,serif;letter-spacing:.2em;color:#6b7488;text-transform:uppercase}
+#dpX .sub{display:block;font-size:12.5px;color:#6b7488;margin:2px 0 10px}
+#dpX .part .pl{display:flex;align-items:center;gap:8px;font:600 12px "Noto Serif SC","Songti SC",serif;color:#6b7488;height:24px;margin-top:10px}
+#dpX .part .pl .st{font:700 10px Georgia,serif;color:#e2552f;border:1.5px solid #e2552f;border-radius:4px;padding:0 5px;transform:rotate(-4deg)}
+#dpX .mine{border-bottom:1px solid rgba(61,106,153,.13);font:600 22px/34px Caveat,"Comic Sans MS",cursive;color:#14305c;margin:0}
+#dpX .mine.cur{background:linear-gradient(transparent 62%,rgba(226,85,47,.18) 62%)}
+#dpX .mine.fresh{animation:dpWr .8s ease-out}@keyframes dpWr{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+#dpX .mine .ok{font:12px -apple-system,sans-serif;color:#2f7d70;margin-left:4px}
+#dpX .mine.gh{color:rgba(20,48,92,.32);font:14px/34px -apple-system,"PingFang SC",sans-serif}
+#dpX .lfoot{display:flex;gap:8px;align-items:center;margin-top:22px}#dpX .lfoot small{color:#6b7488;font-size:12px}
+#dpX .pill{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:7px 14px;font-size:13px;font-weight:700;background:#14305c;color:#fff}
+#dpX .pill.lt{background:#fff;color:#14305c;box-shadow:0 0 0 1px rgba(20,48,92,.18) inset}#dpX .pill.say{background:#e2552f}
+#dpX .steps{display:flex;gap:5px;margin:2px 0 18px;padding:0;line-height:1.4}
+#dpX .steps div{flex:1;display:flex;flex-direction:column;gap:5px;font-size:12px;color:#6b7488}
+#dpX .steps div:before{content:"";height:4px;border-radius:4px;background:rgba(20,48,92,.12)}
+#dpX .steps .d:before{background:#14305c}#dpX .steps .now{color:#14305c;font-weight:800}#dpX .steps .now:before{background:linear-gradient(90deg,#14305c 40%,rgba(20,48,92,.12) 40%)}
+#dpX .steps .now.s{color:#e2552f}#dpX .steps .now.s:before{background:linear-gradient(90deg,#e2552f 40%,rgba(226,85,47,.2) 40%)}
+#dpX .tg{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;border-radius:99px;padding:2px 9px;margin:14px 0 4px}
+#dpX .tg.h{background:#e3ecf5;color:#3d6a99}#dpX .tg.s{background:#fde6dc;color:#e2552f}
+#dpX .q{font:700 21px/1.35 "Noto Serif SC","Songti SC",serif;color:#14305c;margin:2px 0 3px;display:flex;gap:8px;align-items:flex-start}
+#dpX .q button{all:unset;cursor:pointer;flex:none;width:32px;height:32px;border-radius:50%;background:#e3ecf5;color:#3d6a99;display:grid;place-items:center;font-size:14px;margin-top:2px}
+#dpX .qz{font-size:13px;color:#6b7488}
+#dpX .who{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:12px;padding:11px 13px;margin-top:9px;box-shadow:0 1px 3px rgba(20,48,92,.08)}
+#dpX .who.fold{opacity:.72;padding:8px 12px}#dpX .who.fold .bub small{display:none}
+#dpX .av{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:21px;background:#dfe9f2;overflow:hidden;box-shadow:0 0 0 2px #fff,0 1px 4px rgba(20,48,92,.2)}#dpX .av img,#dpX .av svg{width:42px;height:42px;display:block}
+#dpX .bub{flex:1;font:15.5px/1.5 Georgia,serif;color:#24303a}#dpX .bub b{display:block;font:700 11.5px -apple-system,sans-serif;color:#14305c}
+#dpX .bub small{display:block;font:12.5px/1.45 -apple-system,"PingFang SC",sans-serif;color:#6b7488;margin-top:3px}
+#dpX .bub i{font-style:normal;background:#ffe7a8;border-radius:3px;padding:0 2px}
+#dpX .hear{all:unset;cursor:pointer;flex:none;width:34px;height:34px;border-radius:50%;background:#e3ecf5;color:#3d6a99;display:grid;place-items:center;font-size:14px}
+#dpX .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+#dpX .cd{all:unset;cursor:pointer;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(20,48,92,.12);font-size:13px;color:#14305c;font-weight:700;border:2px solid transparent;display:flex;flex-direction:column}
+#dpX .cd .ph{height:78px;background:#efe4cc center/cover;display:grid;place-items:center;font-size:34px}
+#dpX .cd span{display:block;padding:7px 9px 8px;line-height:1.35}#dpX .cd small{display:block;font:400 12.5px Georgia,serif;color:#6b7488;margin-top:2px}
+#dpX .cd.on{border-color:#e2552f}#dpX .cd:hover{box-shadow:0 3px 10px rgba(20,48,92,.18)}
+#dpX .build{background:#fff;border-radius:12px;padding:6px 16px;margin-top:12px;box-shadow:0 1px 3px rgba(20,48,92,.08)}
+#dpX .row{display:grid;grid-template-columns:92px 1fr;overflow:visible;pointer-events:auto;gap:10px;align-items:start;padding:9px 0;border-top:1px dashed rgba(20,48,92,.14)}#dpX .row:first-child{border-top:0}
+#dpX .row .k{font-size:12px;color:#6b7488;padding-top:6px}
+#dpX .chips{display:flex;flex-wrap:wrap;gap:6px}
+#dpX .chip{all:unset;cursor:pointer;border-radius:99px;padding:5px 12px;font:14.5px Georgia,serif;background:#fbf7ee;border:1.5px solid #eadfc8;color:#24303a}
+#dpX .chip small{font:11.5px -apple-system,"PingFang SC",sans-serif;color:#6b7488;margin-left:5px}
+#dpX .chip.on{background:#fde6dc;border-color:#e2552f;color:#8a2f14}
+#dpX .chips input{border:1.5px dashed #c9bc9f;border-radius:99px;padding:5px 12px;font:14px Georgia,serif;width:170px;background:#fff;color:#24303a}
+#dpX .next{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}#dpX .next .n{font-size:12.5px;color:#6b7488}
+#dpX .big{all:unset;cursor:pointer;background:#14305c;color:#fff;border-radius:12px;padding:11px 20px;font-weight:800;text-align:center}
+#dpX .big.say{background:#e2552f}#dpX .big[disabled]{opacity:.35;cursor:default}#dpX .big.lt{background:#fff;color:#14305c;box-shadow:0 0 0 1px rgba(20,48,92,.18) inset}
+#dpX .lnk{all:unset;cursor:pointer;font-size:12.5px;color:#6b7488;text-decoration:underline}
+#dpX .ladder{display:flex;gap:7px;margin:10px 0 12px}
+#dpX .rung{flex:1;border-radius:10px;padding:7px 9px;background:#fff;font-size:11.5px;color:#6b7488;box-shadow:0 1px 3px rgba(20,48,92,.08);line-height:1.35}
+#dpX .rung b{display:block;font-size:12.5px;color:#14305c}#dpX .rung.d{background:#eef5f2}#dpX .rung.d b{color:#2f7d70}
+#dpX .rung.now{background:#e2552f;color:#ffe8de}#dpX .rung.now b{color:#fff}
+#dpX .stage{background:#fff;border-radius:14px;padding:20px 22px 16px;box-shadow:0 1px 3px rgba(20,48,92,.08);text-align:center}
+#dpX .stage .zh{font-size:14px;color:#6b7488}#dpX .stage .zh.big{font:600 19px/1.5 "Noto Serif SC",serif;color:#14305c}
+#dpX .stage .en{font:600 29px/1.35 Caveat,"Comic Sans MS",cursive;color:#14305c;margin:6px 0 0}
+#dpX .stage .en.long{font-size:23px;text-align:left}
+#dpX .stage .en .gap{display:inline-block;border-bottom:2.5px solid #e2552f;color:transparent;margin:0 2px;line-height:1.1}
+#dpX .stage .en .got{color:#2f7d70}#dpX .stage .en .gap.got{color:#2f7d70;border-color:#2f7d70}
+#dpX .mic{all:unset;cursor:pointer;width:72px;height:72px;border-radius:50%;background:#e2552f;color:#fff;margin:14px auto 4px;display:grid;place-items:center;font-size:28px;box-shadow:0 0 0 10px rgba(226,85,47,.13),0 0 0 21px rgba(226,85,47,.06)}
+#dpX .mic.on{animation:dpPu 1.2s infinite}@keyframes dpPu{50%{box-shadow:0 0 0 14px rgba(226,85,47,.2),0 0 0 28px rgba(226,85,47,.08)}}
+#dpX .live{font:15px Georgia,serif;color:#5b6576;min-height:24px}
+#dpX .mh{font-size:12px;color:#6b7488}
+#dpX .reps{display:flex;justify-content:center;gap:6px;margin-top:10px}#dpX .reps i{width:10px;height:10px;border-radius:50%;background:rgba(20,48,92,.15)}#dpX .reps i.d{background:#2f7d70}
+#dpX .sm{display:flex;justify-content:center;gap:14px;margin-top:8px}
+#dpX .queue{margin-top:12px}
+#dpX .qi{display:flex;align-items:center;gap:10px;padding:7px 4px;border-top:1px solid rgba(20,48,92,.08);font:14.5px Georgia,serif;color:#5b6576}
+#dpX .qi .ck{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:12px -apple-system,sans-serif;background:rgba(20,48,92,.08);color:#6b7488}
+#dpX .qi.d .ck{background:#2f7d70;color:#fff}#dpX .qi.now{color:#e2552f;font-weight:700}#dpX .qi.now .ck{background:#e2552f;color:#fff}
+#dpX .bars{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}#dpX .bars i{width:3px;height:13px;background:#e2552f;border-radius:2px;animation:dpBar .6s infinite alternate}#dpX .bars i:nth-child(2){animation-delay:.2s}#dpX .bars i:nth-child(3){animation-delay:.4s}
 @keyframes dpBar{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
-#dpX .whole{background:#14305c;color:#fff;border-radius:16px;padding:12px;margin-top:12px}#dpX .whole p{margin:0 0 8px;font:15px/1.55 Georgia,serif}#dpX .whole .r{font-size:13px;color:#cfe0f2;margin-top:6px;min-height:18px}
-#dpX .stamp{margin:16px auto 4px;width:110px;height:110px;border:4px solid #c63b2b;color:#c63b2b;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-8deg);font-weight:900;font-size:16px;animation:dpHit .35s cubic-bezier(.3,1.6,.5,1) both}#dpX .stamp small{font-size:11px}
+#dpX .seal{text-align:center;padding-top:14px}
+#dpX .stamp{display:inline-grid;place-items:center;width:124px;height:124px;border:4px solid #c63b2b;border-radius:50%;color:#c63b2b;transform:rotate(-8deg);font:900 16px/1.3 "Noto Serif SC",Georgia,serif;animation:dpHit .45s cubic-bezier(.2,1.6,.4,1)}
+#dpX .stamp small{display:block;font:700 11px Georgia,serif;letter-spacing:.08em}
 @keyframes dpHit{from{transform:scale(1.8) rotate(-25deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
-#dpX .ai{background:#fff;border-radius:16px;padding:10px;margin-top:10px}#dpX .ai .log{max-height:52vh;overflow-y:auto}#dpX .ai .me{margin:8px 0 0 auto;max-width:85%;background:#14305c;color:#fff;border-radius:14px 4px 14px 14px;padding:7px 10px;font-size:14.5px;width:fit-content}
-#dpX .ai .fix{background:#fff4ee;color:#8a3a1d;border-radius:10px;padding:6px 9px;font-size:13px;margin-top:6px}#dpX .ai .in2{display:flex;gap:6px;margin-top:10px}#dpX .ai .in2 input{flex:1;border:1.5px solid #eadfc8;border-radius:99px;padding:8px 12px;font:inherit;font-size:14px}
+#dpX .fact{background:#e6f2ef;color:#22574e;border-radius:12px;padding:9px 12px;font-size:13px;margin-top:10px;text-align:left}
+#dpX .ai{background:#fff;border-radius:14px;padding:10px;margin-top:10px}#dpX .ai .log{max-height:46vh;overflow-y:auto}
+#dpX .ai .me{margin:8px 0 0 auto;max-width:85%;background:#14305c;color:#fff;border-radius:14px 4px 14px 14px;padding:7px 10px;font-size:14.5px;width:fit-content}
+#dpX .ai .who{box-shadow:none;padding:6px 2px;margin-top:4px}
+#dpX .ai .fix{background:#fff4ee;color:#8a3a1d;border-radius:10px;padding:6px 9px;font-size:13px;margin-top:6px}
+#dpX .ai .in2{display:flex;gap:6px;margin-top:10px;align-items:center}#dpX .ai .in2 input{flex:1;border:1.5px solid #eadfc8;border-radius:99px;padding:8px 12px;font:inherit;font-size:14px}
 #dpX .ai .hint{font-size:13px;color:#3d6a99;margin-top:6px;cursor:pointer}#dpX .ai .typing{color:#9a907c;font-size:13px;margin-top:6px}
-body.dp-open{overflow:hidden}`;
-function mount(){ if (root) return;
-  if (!document.getElementById("dpCss")){ const s = document.createElement("style"); s.id = "dpCss"; s.textContent = CSS; document.head.append(s); }
-  root = document.createElement("div"); root.id = "dpX"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.innerHTML = '<div class="in" id="dpApp"></div>';
-  document.body.append(root); document.body.classList.add("dp-open"); }
-function close(){ try { speechSynthesis.cancel(); if (AU) AU.pause(); } catch(e){} if (root){ root.remove(); root = null; } document.body.classList.remove("dp-open"); }
-// 别人说的一句：只能听
-const avOf = n => { try { const H = window.HVI; if (H && H.npcAv) return H.npcAv(Object.assign({id: n}, (H.npc && H.npc(n)) || {}), 38); } catch(e){} return npc(n)[1]; };
-const bubble = (n, en, zh, hl) => { const N = npc(n); let h = esc(en); (hl || []).forEach(w => { h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "i"), "<i>$1</i>"); });
-  return '<div class="who"><span class="av">' + avOf(n) + '</span><div class="bub"><b>' + esc(N[0]) + ' · ' + esc(N[2]) + ' · 🎭</b>' + h + ' <button class="hear" data-say="' + esc(en) + '">🔊 听</button><small>' + esc(zh) + '</small></div></div>'; };
-const wireSay = () => $$("[data-say]").forEach(b => b.onclick = () => say(b.dataset.say));
-// ───── 整页：故事卡（四格 + 已经说出来的你的话）+ 这一层 ─────
-function home(){
-  const s = ST(key), nx = level(s), L = story(s), P = pathOf(s);
-  $("#dpApp").innerHTML = '<div class="top"><button class="x" data-dpx aria-label="关掉">✕</button><b>' + esc(title) + '</b></div>' +
-    '<div class="sc"><div class="t"><span>' + esc(D.title[0] + " " + D.title[2]) + '</span><span>' + Math.min(nx, 4) + ' / 4</span></div>' +
-    '<div class="slots">' + LV.map((x, i) => '<button data-lv="' + i + '" class="' + (i < nx ? "on" : i === nx ? "now" : "") + (i === cur && i !== nx ? " sel" : "") + '"' + (i > nx ? " disabled" : "") + '>' + x[0] + (i < nx ? " ✓" : "") + '</button>').join("") + '</div>' +
-    (L.length ? '<div class="mine">' + esc(L.map(x => x[0]).join(" ")) + '<small>' + esc(L.map(x => x[1]).join("")) + '</small><div class="bt"><button class="sbt" id="dpMy">▶ 听我的故事</button></div></div>' : '<div class="note" style="text-align:left">四格说完，你就能用英语讲一分钟：你怎么住、碰到过什么、你怎么想。</div>') + '</div>' +
-    '<div class="pane" id="dpPane"></div>';
-  $$("[data-dpx]").forEach(b => b.onclick = close);
-  $$("[data-lv]").forEach(b => b.onclick = () => { const i = +b.dataset.lv; if (i > level(ST(key))) return; cur = i; W = {}; home(); });
-  const my = $("#dpMy"); if (my) my.onclick = () => playMine(L, my);
-  if (cur >= 4) return done();
-  [l1, l2, l3, l4][cur]();
+#dpX .ib{all:unset;cursor:pointer;flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;background:#e3ecf5}#dpX .ib.mic{background:#e2552f;color:#fff}
+#dpX .sbt{all:unset;cursor:pointer;border-radius:99px;padding:7px 13px;font-size:13px;font-weight:700;background:#14305c;color:#fff}
+#dpX .tg{background:#efe9dc;color:#6b5a2e}
+#dpX .who2{display:flex;gap:12px;align-items:center;background:#fff;border-radius:14px;padding:13px 15px;box-shadow:0 1px 3px rgba(20,48,92,.08);margin-top:4px}
+#dpX .who2 .w2{flex:1;min-width:0}#dpX .who2 b{font-size:12.5px;color:#14305c}
+#dpX .wave{display:flex;gap:3px;align-items:center;height:28px;margin-top:5px}#dpX .wave i{width:4px;border-radius:2px;background:#3d6a99;opacity:.7;height:10px}
+#dpX .wave i:nth-child(3n){height:22px}#dpX .wave i:nth-child(3n+1){height:14px}#dpX .wave i:nth-child(4n){height:26px}#dpX .wave i:nth-child(5n){height:6px}
+#dpX .hear.sl{background:#eef3e6;color:#5b7a2f}
+#dpX .ans{display:grid;gap:8px;margin-top:12px}
+#dpX .an{all:unset;cursor:pointer;display:block;background:#fff;border:2px solid #eadfc8;border-radius:12px;padding:10px 14px;font-size:15px;line-height:1.45}
+#dpX .an small{display:block;font:14px/1.5 Georgia,serif;color:#2f7d70;margin-top:3px}#dpX .an small i{font-style:normal;background:#ffe7a8;border-radius:3px;padding:0 2px}
+#dpX .an.ok{border-color:#2f7d70;background:#eef7f3}#dpX .an.no{border-color:#e9c4b4;color:#a39686;background:#fbf4f0}
+#dpX .an:hover{border-color:#c9bc9f}
+#dpX .dots5{display:flex;gap:6px;justify-content:center;margin-top:12px}#dpX .dots5 i{width:9px;height:9px;border-radius:50%;background:rgba(20,48,92,.15)}#dpX .dots5 i.d{background:#2f7d70}
+#dpX .kara{display:block;background:#fff;border-radius:12px;padding:13px 16px;margin-top:10px;font:16px/1.7 Georgia,serif;color:#b3b9c4;box-shadow:0 1px 3px rgba(20,48,92,.08)}
+#dpX .kara .cur{color:#14305c}#dpX .kara .past{color:#6b7488}#dpX .kara b{color:#14305c;background:#ffe7a8;border-radius:3px;padding:0 2px}
+#dpX .grab{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px}
+#dpX .gw{all:unset;cursor:pointer;display:block;text-align:center;background:#fff;border-radius:10px;padding:8px 6px 9px;box-shadow:0 2px 0 rgba(61,106,153,.25),0 1px 3px rgba(20,48,92,.1);font-size:12px;color:#6b7488;border:2px solid transparent}
+#dpX .gw b{display:block;font:600 21px/1.2 Caveat,"Comic Sans MS",cursive;color:#14305c}#dpX .gw.got{border-color:#2f7d70;background:#eef7f3}
+#dpX .frame{display:block;background:#fff;border-radius:12px;padding:8px 16px;margin-top:10px;box-shadow:0 1px 3px rgba(20,48,92,.08)}
+#dpX .fl{font:17px/2.2 Georgia,serif;color:#24303a;border-top:1px dashed rgba(20,48,92,.12)}#dpX .fl:first-child{border-top:0}
+#dpX .slot{display:inline-block;min-width:90px;text-align:center;border-bottom:2.5px solid #3d6a99;color:#3d6a99;font-weight:700;padding:0 4px;line-height:1.3}
+#dpX .slot.fill{background:#e3ecf5;border-radius:4px 4px 0 0}#dpX .slot.now{border-bottom-color:#e2552f;background:#fff4ee}
+#dpX .bank{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#dpX .bk2{all:unset;cursor:pointer;background:#fff;border:1.5px solid rgba(61,106,153,.45);color:#3d6a99;border-radius:8px;padding:5px 11px;font:600 15px Georgia,serif;box-shadow:0 2px 0 rgba(61,106,153,.25)}
+#dpX .bk2.used{opacity:.3;box-shadow:none;pointer-events:none}#dpX .bk2.o{border-color:rgba(226,85,47,.45);color:#8a2f14;box-shadow:0 2px 0 rgba(226,85,47,.25)}
+#dpX .order{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#fff;border-radius:12px;padding:10px 12px;margin-top:6px;min-height:48px;box-shadow:0 1px 3px rgba(20,48,92,.08)}
+#dpX .ch{all:unset;cursor:pointer;background:#fde6dc;color:#8a2f14;border-radius:8px;padding:5px 11px;font:600 15px Georgia,serif}
+#dpX .gapc{display:inline-block;width:110px;height:30px;border:1.5px dashed rgba(20,48,92,.25);border-radius:8px}
+#dpX .wl{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:4px 0 6px}#dpX .wlh{width:100%;font:600 12px "Noto Serif SC",serif;color:#6b7488}
+#dpX .wt{cursor:pointer;display:inline-block;background:#fff;padding:2px 10px 3px;border-radius:2px;box-shadow:0 1px 3px rgba(20,48,92,.16);transform:rotate(var(--r,0deg));font-size:11px;color:#6b7488}
+#dpX .wt b{font:600 18px Caveat,"Comic Sans MS",cursive;color:#14305c;margin-right:5px}#dpX .wt.new{box-shadow:0 0 0 2px #c9a45c,0 2px 6px rgba(20,48,92,.2)}
+#dpX .wt.gh{cursor:default;background:none;box-shadow:none;border:1.5px dashed rgba(20,48,92,.25);font-size:12px}
+#dpX .drw{display:none}
+@media (max-width:700px){
+  #dpX{padding:0;background:#fbf7ee;backdrop-filter:none}
+  #dpX .bk{max-height:none;border-radius:0;box-shadow:none}
+  #dpX .dbar{padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;flex-wrap:wrap;gap:6px 10px}
+  #dpX .crumb b{font-size:15px}#dpX .chap{margin-left:0;width:100%;justify-content:space-between}#dpX .chap .ln{display:none}#dpX .chap button{padding:3px 8px 3px 4px;font-size:12px}
+  #dpX .sp{display:block;overflow-y:auto}#dpX .sp:before{display:none}
+  #dpX .pR{padding:14px 16px 120px;overflow:visible}
+  #dpX .pL{position:fixed;left:0;right:0;bottom:0;z-index:3;max-height:58px;overflow:hidden;padding:0 18px 20px;border-radius:18px 18px 0 0;box-shadow:0 -6px 20px rgba(20,48,92,.16);background-color:#fffdf7;transition:max-height .25s}
+  #dpX .pL.open{max-height:72vh;overflow-y:auto}
+  #dpX .pL:not(.open)>:not(.drw){display:none}
+  #dpX .drw{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%;height:58px;font:700 14px "Noto Serif SC",serif;color:#14305c;position:sticky;top:0;background:#fffdf7;z-index:2}
+  #dpX .drw:before{content:"";position:absolute;left:50%;top:7px;width:40px;height:4px;margin-left:-20px;border-radius:4px;background:#ccd}
+  #dpX .drw small{font:12px -apple-system,sans-serif;color:#6b7488;margin-left:auto}
+  #dpX .pL .pgh{display:none}
+  #dpX .cards{grid-template-columns:1fr 1fr}#dpX .row{grid-template-columns:1fr}#dpX .row .k{padding-top:0}
+  #dpX .ladder{flex-wrap:wrap}#dpX .rung{flex:1 1 40%}
+  #dpX .stage .en{font-size:25px}
 }
+body.dp-open{overflow:hidden}
+/* 岛页右边话题栏的入口卡 */
+.dp-card{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 14px rgba(20,48,92,.14);border-left:5px solid #e2552f;margin:10px 0 12px;text-align:left;font:14px/1.45 -apple-system,"PingFang SC",sans-serif}
+.dp-card .tp{display:block;padding:11px 14px 10px}
+.dp-card .k{display:block;font:italic 500 13px "Cormorant Garamond",Georgia,serif;letter-spacing:.16em;color:#e2552f;text-transform:uppercase}
+.dp-card b{display:block;font:700 16.5px/1.35 "Noto Serif SC","Songti SC",serif;color:#14305c;margin-top:2px}
+.dp-card .p{display:block;margin-top:4px;font:600 19px/1.3 Caveat,"Comic Sans MS",cursive;color:#14305c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-card .p.e{font:13px/1.45 -apple-system,"PingFang SC",sans-serif;color:#6b7488;white-space:normal}
+.dp-card .bt{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fde6dc;font-size:12.5px;color:#8a2f14}
+.dp-card .bt .dots{display:flex;gap:4px}.dp-card .bt .dots i{width:16px;height:5px;border-radius:3px;background:rgba(226,85,47,.25)}.dp-card .bt .dots i.d{background:#e2552f}
+.dp-card .bt em{margin-left:auto;font-style:normal;font-weight:800}
+.dp-card:hover{box-shadow:0 6px 18px rgba(20,48,92,.2)}
+`;
+(function(){ if (document.getElementById("dpCss")) return; const s = document.createElement("style"); s.id = "dpCss"; s.textContent = CSS; (document.head || document.documentElement).append(s); })();
+// 2026-11-09 再改（样板 样板/越聊越深多过脑子样板.html，用户：「过脑子的太少，展示给用户的东西太少」「听一听的游戏反倒更好」「可以，照这个改」）
+// 前三层每层五步：👂 听懂（不给字，听一句选意思）→ 🧲 抓词（再听一遍，听到话题词就点，贴进本子）→ 🧠 想一想（常识题 / 理解题 / 你呢）
+// → ✍️ 拼你的（先选你的情况，再用抓到的词填空、把一句排好）→ 🎤 说（跟着说 → 只看中文，最后整段）。话题里现成的词、群聊、常识题都用上。
+let ph = 0;   // 这一层走到第几步：0 听懂 · 1 抓词 · 2 想一想 · 3 拼你的 · 4 说 · 5 盖完章
+const STEPS5 = ["👂 听懂", "🧲 抓词", "🧠 想一想", "✍️ 拼你的", "🎤 说"];
+const STEPS4 = ["👂 有人读了你的故事", "🗣️ 聊几句", "🎤 整段说", "📮 盖章"];
+const SLOTN = {who: "跟谁", where: "住在哪儿", share: "占收入多少", bad: "不太好的", good: "好的地方", like: "喜欢的", hard: "难的", pay: "谁付钱", near: "在哪附近", try: "所以你尽量", help: "你帮着", when: "什么时候", feel: "感觉怎么样"};
+const FLD = ["l1", "l2", "l3", "l4"];
+const sealed = (s, n) => !!(s[FLD[n]] && s[FLD[n]].d);
+const shuf = (a, seed) => a.map((x, i) => [((i + 3) * 7919 * (seed || 7)) % 101, x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+const sayS = t => { try { speechSynthesis.cancel(); if (AU){ AU.pause(); AU = null; } const u = new SpeechSynthesisUtterance(t); u.lang = "en-GB"; u.rate = .68; speechSynthesis.speak(u); } catch(e){} };
+const sents = t => String(t || "").split(/(?<=[.!?。！？])\s*/).map(x => x.trim()).filter(Boolean);
+// 这个话题的词（岛上现成的 8 个，带别的说法）
+const TW = () => { try { const X = window.HVI && window.HVI.tkChatOf(isle, tk); return (X && X.words) || []; } catch(e){ return []; } };
+const wre = w => new RegExp("\\b(" + [w.en].concat(w.alt || []).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")\\b", "i");
+const wordsIn = (text, extra) => { const out = [], seen = new Set();
+  TW().forEach(w => { if (wre(w).test(text) && !seen.has(w.en.toLowerCase())){ seen.add(w.en.toLowerCase()); out.push({en: w.en, zh: w.zh, alt: w.alt || []}); } });
+  (extra || []).forEach(h => { if (!seen.has(h.toLowerCase()) && new RegExp("\\b" + h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text)){ seen.add(h.toLowerCase()); out.push({en: h, zh: "", alt: []}); } });
+  return out; };
+const keepWord = w => upd(s => { (s.words || (s.words = {}))[w.en] = w.zh || ""; });
+function mount(){ if (root) return;
+  root = document.createElement("div"); root.id = "dpX"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true");
+  root.innerHTML = '<div class="bk"><div class="dbar"><button class="x" data-dpx aria-label="关掉">✕</button><div class="crumb" id="dpCr"></div><div class="chap" id="dpCh"></div></div>' +
+    '<div class="sp"><section class="pL" id="dpL"></section><section class="pR" id="dpR"></section></div></div>';
+  document.body.append(root); document.body.classList.add("dp-open");
+  root.querySelector("[data-dpx]").onclick = close;
+  root.addEventListener("keydown", e => { if (e.key === "Escape") close(); }); }
+function close(){ try { speechSynthesis.cancel(); if (AU) AU.pause(); } catch(e){} if (root){ root.remove(); root = null; } document.body.classList.remove("dp-open"); try { window.dispatchEvent(new Event("hashchange")); } catch(e){} }
+// 别人说的一句：只能听（蓝）
+const avOf = n => { try { const H = window.HVI; if (H && H.npcAv) return H.npcAv(Object.assign({id: n}, (H.npc && H.npc(n)) || {}), 42); } catch(e){} return npc(n)[1]; };
+const hlIt = (en, hl) => { let h = esc(en); (hl || []).forEach(w => { h = h.replace(new RegExp("(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "i"), "<i>$1</i>"); }); return h; };
+const bubble = (n, en, zh, hl, fold) => { const N = npc(n);
+  return '<div class="who' + (fold ? " fold" : "") + '"><span class="av">' + avOf(n) + '</span><div class="bub"><b>' + esc(N[0]) + (N[2] ? ' · ' + esc(N[2]) : "") + ' · 🎭</b>' + hlIt(en, hl) + '<small>' + esc(zh) + '</small></div><button class="hear" data-say="' + esc(en) + '" aria-label="听">🔊</button></div>'; };
+const wireSay = () => $$("[data-say]").forEach(b => b.onclick = () => say(b.dataset.say));
+const stepsH = n => { const L = n === 3 ? STEPS4 : STEPS5; return '<div class="steps">' + L.map((x, i) => '<div class="' + (i < ph ? "d" : i === ph ? "now" + (/^🎤/.test(x) ? " s" : "") : "") + '">' + x + '</div>').join("") + '</div>'; };
+const next = (note, btn, cls, dis) => '<div class="next"><span class="n">' + (note || "") + '</span><button class="big ' + (cls || "") + '" id="dpNx"' + (dis ? " disabled" : "") + '>' + btn + '</button></div>';
+// ───── 顶上：哪座岛 › 哪个话题 · 四层 ─────
+function bar(){ const s = ST(key), nx = level(s), H = window.HVI;
+  let isn = ""; try { isn = H && H.isleNm ? H.isleNm(isle) : ""; } catch(e){}
+  $("#dpCr").innerHTML = esc(isn ? isn + " › " : "") + esc(title) + ' ›<b>' + esc(D.title[2]) + '</b>';
+  $("#dpCh").innerHTML = LV.map((x, i) => (i ? '<span class="ln"></span>' : "") + '<button data-lv="' + i + '" class="' + (i === cur ? "now" : sealed(s, i) ? "d" : "") + '"' + (i > nx ? " disabled" : "") + '><i>' + (sealed(s, i) && i !== cur ? "✓" : i + 1) + '</i>' + x[0] + '</button>').join("");
+  $$("[data-lv]").forEach(b => b.onclick = () => { const i = +b.dataset.lv; if (i > level(ST(key))) return; go(i); }); }
+// ───── 左页：你的故事（只有你自己的话）+ 这个故事里你抓到的词 ─────
+// pv = 正在拼的这一层的句子（还没盖章，跟着你点的选项变）
+function left(pv){ const s = ST(key), said = s.said || {}, A = [], WD = s.words || {}, wk = Object.keys(WD);
+  let n0 = 0;
+  for (let n = 0; n < 3; n++){
+    const live = pv && n === cur ? pv : null, L = live || (sealed(s, n) ? lines(s, n) : []);
+    n0 += L.filter(l => l[0] && !/___/.test(l[0])).length;
+    const head = '<div class="pl">' + LV[n][0] + (sealed(s, n) && !live ? ' <span class="st">SAID ✓</span>' : live ? " · 正在写" : "") + '</div>';
+    const body = L.length ? L.map(l => '<p class="mine' + (live ? " cur" : "") + (live && live.fresh === l[0] ? " fresh" : "") + '">' + esc(l[0]).replace(/___/g, '<span style="opacity:.3">____</span>') + (said[l[0]] ? '<span class="ok">✓</span>' : "") + '</p>').join("")
+      : '<p class="mine gh">' + (n === cur ? "听完、抓完词，这里写你的" : n < level(s) ? "" : "以后这一层写") + '</p>';
+    A.push('<div class="part">' + head + body + '</div>'); }
+  A.push('<div class="part"><div class="pl">' + LV[3][0] + (sealed(s, 3) ? ' <span class="st">SAID ✓</span>' : "") + '</div><p class="mine gh">' + (s.ai ? "跟岛上的人聊过 " + s.ai + " 次 · 整段一分钟录好了" : sealed(s, 3) ? "整段一分钟录好了" : "前三层说完，有人会读你的故事、接着问你") + '</p></div>');
+  const all = story(s), fr = W.freshW;
+  $("#dpL").innerHTML = '<button class="drw" id="dpDw">你的故事 ⌃<small>' + n0 + ' 句 · ' + wk.length + ' 个词</small></button>' +
+    '<div class="pgh"><h2>你的故事</h2><span>' + esc(D.title[1]) + '</span></div><div class="sub">你自己的话，和你在这个故事里学到的词。</div>' +
+    '<div class="wl"><div class="wlh">这个故事的词 · ' + wk.length + '</div>' + (wk.length ? wk.map((w, i) => '<span class="wt' + (w === fr ? " new" : "") + '" style="--r:' + ((i * 37 % 5) - 2) + 'deg" data-say="' + esc(w) + '"><b>' + esc(w) + '</b>' + esc(WD[w]) + '</span>').join("") : '<span class="wt gh">听的时候抓到的词，会贴在这儿</span>') + '</div>' +
+    A.join("") + (all.length ? '<div class="lfoot"><button class="pill" id="dpMy">▶ 用我的声音听一遍</button><small>录音只存在这台设备上</small></div>' : "");
+  const my = $("#dpMy"); if (my) my.onclick = () => playMine(all, my);
+  $$("#dpL [data-say]").forEach(b => b.onclick = () => say(b.dataset.say));
+  $("#dpDw").onclick = () => $("#dpL").classList.toggle("open"); }
 async function playMine(L, b){ let mine = 0; b.textContent = "▶ 在放…"; for (const x of L){ const blob = await vGet(key + "|" + x[0]);
     if (blob){ mine++; await new Promise(res => { const a = new Audio(URL.createObjectURL(blob)); a.onended = a.onerror = res; a.play().catch(res); }); } else await new Promise(res => say(x[0], res)); }
   b.textContent = mine === L.length ? "▶ 再听一遍（你自己的声音）" : mine ? "▶ 再听（" + mine + " 句是你的声音）" : "▶ 再听（还没录到你的声音，先用机器读）"; }
-// 说出来：每一句 🔊 🎤，再整段说一遍；说完才能盖这一格
-function speakBlock(L, n, onDone){
-  const s = ST(key), said = s.said || {};
-  const html = '<span class="tag s">🎙️ 你的话 · 练说</span><div class="why">一句一句说熟，再整段说一遍。会录下你的声音，最后连成你自己的一分钟。</div>' +
-    L.map((l, i) => '<div class="lnr"><div class="t">' + esc(l[0]) + '<small>' + esc(l[1]) + '</small><div class="r" id="dpR' + n + i + '">' + (said[l[0]] ? "✓ 说过了" : "") + '</div></div><button class="ib" data-sy="' + i + '">🔊</button><button class="ib ' + (said[l[0]] ? "ok" : "mic") + '" data-mc="' + i + '">' + (said[l[0]] ? "✓" : "🎤") + '</button></div>').join("") +
-    '<div class="whole"><p>' + esc(L.map(x => x[0]).join(" ")) + '</p><button class="sbt" style="background:#e8673f" id="dpWh' + n + '">🎤 整段说一遍</button><div class="r" id="dpWr' + n + '"></div></div>';
-  setTimeout(() => {
-    $$("[data-sy]").forEach(b => b.onclick = () => say(L[+b.dataset.sy][0]));
-    $$("[data-mc]").forEach(b => b.onclick = () => { const i = +b.dataset.mc, l = L[i]; b.textContent = "…";
-      listen($("#dpR" + n + i), t => { b.className = "ib ok"; b.textContent = "✓"; $("#dpR" + n + i).textContent = t ? "🗣️ " + t : "✓ 说了"; ding(); upd(x => { (x.said || (x.said = {}))[l[0]] = 1; }); }, key + "|" + l[0]); });
-    const w = $("#dpWh" + n); if (w) w.onclick = () => { w.textContent = "在听…说完停 2 秒"; listen($("#dpWr" + n), t => { w.textContent = "✓ 说完了 · 再说一遍"; ding(); if (t) $("#dpWr" + n).textContent = "🗣️ " + t; onDone && onDone(); }, null, true); };
-  }, 0);
-  return html; }
-const stampHtml = n => '<div class="stamp">' + LV[n][0] + '<small>' + today().slice(5).replace("-", "·") + '</small></div>';
-function seal(n, fld){ upd(s => { s[fld] = Object.assign(s[fld] || {}, W[fld] || {}, {d: today()}); }); const s = ST(key); keep(lines(s, n)); if (n === 3) booklet();
+const STOP = new Set("the a an and but or so of to in on at for with my your his her our their it its is are was were be been i you he she we they me him them this that there then than when what have has had do did does not no just very about from into out up down all some any can will would could should".split(" "));
+const toks = t => String(t).toLowerCase().replace(/[^a-z0-9' ]+/g, " ").split(/\s+/).filter(Boolean);
+// ───── 去第几层（第几步）─────
+function go(n, p){ cur = n; W = {}; ph = p || 0; bar(); left(); $("#dpR").scrollTop = 0; $("#dpL").classList.remove("open");
+  if (cur >= 4) return done(); [l1, l2, l3, l4][cur](); }
+const step = (p, fn) => { ph = p; bar(); $("#dpR").scrollTop = 0; fn(); };
+const enH = (en, heard) => { const H = new Set(toks(heard || "")); return en.split(/\s+/).map(w => H.has(toks(w)[0]) ? '<span class="got">' + esc(w) + '</span>' : esc(w)).join(" "); };
+// ───── 👂 听懂：不给字，听一句选意思（跟「听一听」一样）─────
+// items: [{who, en, zh, opts: [中文…], q?, hl?}]，opts 里跟 zh 一样的是对的
+function listenGame(n, items, onDone, intro){ const box = $("#dpR"); let i = 0;
+  const draw = () => { const it = items[i], N = npc(it.who), done = !!it.ok;
+    box.innerHTML = stepsH(n) + (intro || "") + '<span class="tg h">👂 听懂 · 第 ' + (i + 1) + ' / ' + items.length + ' 句</span>' +
+      '<div class="who2"><span class="av">' + avOf(it.who) + '</span><div class="w2"><b>' + esc(N[0]) + (N[2] ? ' · ' + esc(N[2]) : "") + ' · 🎭</b><div class="wave">' + "<i></i>".repeat(22) + '</div></div><button class="hear" id="dpP" aria-label="再听">🔊</button><button class="hear sl" id="dpPs" aria-label="慢一点">🐢</button></div>' +
+      '<div class="q" style="margin-top:14px">' + esc(it.q || "TA 说的是什么意思？") + '</div><div class="qz">' + (done ? "" : "先别看字，听。听不出来就再点 🔊，或者 🐢 慢一点。") + '</div>' +
+      '<div class="ans">' + it.opts.map((o, j) => '<button class="an' + (done && o === it.zh ? " ok" : it.no && it.no[j] ? " no" : "") + '" data-an="' + j + '">' + esc(o) + (done && o === it.zh ? '<small>✓ ' + hlIt(it.en, it.hl) + '</small>' : "") + '</button>').join("") + '</div>' +
+      '<div class="dots5">' + items.map((x, k) => '<i class="' + (x.ok ? "d" : "") + '"></i>').join("") + '</div>' +
+      (done ? next(it.why || "", i < items.length - 1 ? "下一句 →" : "听懂了，抓词去 →") : "");
+    $("#dpP").onclick = () => say(it.en); $("#dpPs").onclick = () => sayS(it.en);
+    $$("[data-an]").forEach(b => b.onclick = () => { if (it.ok) return; const j = +b.dataset.an;
+      if (it.opts[j] === it.zh){ it.ok = 1; ding(); draw(); } else { (it.no || (it.no = {}))[j] = 1; draw(); const q = $(".qz"); if (q) q.textContent = "不太对。再听一遍——"; setTimeout(() => say(it.en), 300); } });
+    const nx = $("#dpNx"); if (nx) nx.onclick = () => { if (i < items.length - 1){ i++; draw(); setTimeout(() => say(items[i].en), 250); } else onDone(); }; };
+  if (!items.length) return onDone();
+  draw(); setTimeout(() => say(items[0].en), 300); }
+// ───── 🧲 抓词：整段再放一遍，听到话题里的词就点 ─────
+function grabGame(n, L, words, onDone){ const box = $("#dpR"), got = {}; let c = -1, playing = false;
+  if (!words.length) return onDone();
+  const draw = msg => { const fin = c >= L.length;
+    box.innerHTML = stepsH(n) + '<span class="tg h">🧲 抓词</span><div class="qz">整段再放一遍。<b>听到下面的词就点它</b>——点早点晚都没关系，抓到就贴进你的本子。</div>' +
+      '<div class="kara">' + L.map((l, k) => { let h = esc(l.en); words.forEach(w => { if (got[w.en]) h = h.replace(wre(w), "<b>$1</b>"); }); return '<span class="' + (k === c ? "cur" : k < c ? "past" : "") + '">' + h + '</span>'; }).join(" ") + '</div>' +
+      '<div class="grab">' + words.map((w, k) => '<button class="gw' + (got[w.en] ? " got" : "") + '" data-gw="' + k + '"><b>' + esc(w.en) + '</b>' + esc(w.zh || "") + (got[w.en] ? " ✓" : "") + '</button>').join("") + '</div>' +
+      '<div class="qz" id="dpGm" style="margin-top:8px">' + (msg || "") + '</div>' +
+      (fin ? next("抓到 " + Object.keys(got).length + " / " + words.length + " 个。" + (Object.keys(got).length < words.length ? "没抓到的也贴进本子了，下次留意。" : "全抓到了 👏"), "接着，想一想 →") : '<div class="sm"><button class="lnk" id="dpRp">' + (playing ? "在放…" : "▶ 开始放") + '</button></div>');
+    $$("[data-gw]").forEach(b => b.onclick = () => { const w = words[+b.dataset.gw]; if (got[w.en]) return; say(w.en);
+      const heard = L.slice(0, Math.max(c, 0) + 1).some(l => wre(w).test(l.en)) && c >= 0;
+      if (heard || c >= L.length){ got[w.en] = 1; W.freshW = w.en; keepWord(w); left(); ding(); draw(); } else draw("还没听到「" + w.en + "」，接着听。"); });
+    const rp = $("#dpRp"); if (rp) rp.onclick = play;
+    const nx = $("#dpNx"); if (nx) nx.onclick = () => { words.forEach(w => { if (!got[w.en]) keepWord(w); }); W.freshW = null; left(); onDone(); }; };
+  const play = () => { if (playing) return; playing = true; c = 0; draw();
+    const one = () => { if (!root || c >= L.length){ playing = false; draw(); return; } draw(); const me = c; let f = false; const nx = () => { if (f || c !== me) return; f = true; setTimeout(() => { c++; one(); }, 450); };
+      say(L[c].en, nx); setTimeout(nx, 2500 + L[c].en.length * 85); }; one(); };   // 放不出声也不会卡住
+  draw(); setTimeout(play, 400); }
+// ───── 🧠 想一想：一道题（有对错的常识题 / 理解题，或者没有对错的「你呢」）─────
+function think(n, Q, onDone){ const box = $("#dpR"); let pick = null;
+  const draw = () => { const ans = pick != null;
+    box.innerHTML = stepsH(n) + '<span class="tg">🧠 想一想</span>' + (Q.pre || "") +
+      '<div class="q">' + esc(Q.q) + (Q.say ? ' <button data-say="' + esc(Q.say) + '" aria-label="听">🔊</button>' : "") + '</div>' + (Q.zh ? '<div class="qz">' + esc(Q.zh) + '</div>' : "") +
+      '<div class="ans">' + Q.ops.map((o, j) => '<button class="an' + (ans && (Q.a == null ? j === pick : j === Q.a) ? " ok" : ans && j === pick ? " no" : "") + '" data-tk="' + j + '">' + esc(o) + '</button>').join("") + '</div>' +
+      (ans ? (Q.why ? '<div class="fact">' + (Q.a != null ? (pick === Q.a ? "✓ 对了。" : "答案是「" + esc(Q.ops[Q.a]) + "」。") : "") + esc(Q.why) + (Q.src ? '<small style="display:block;opacity:.7;margin-top:3px">出处：' + esc(Q.src) + '</small>' : "") + '</div>' : "") + next("", Q.btn || "接着 →") : "");
+    wireSay();
+    $$("[data-tk]").forEach(b => b.onclick = () => { if (pick != null) return; pick = +b.dataset.tk; if (Q.a == null || pick === Q.a) ding(); draw(); });
+    const nx = $("#dpNx"); if (nx) nx.onclick = () => onDone(pick); };
+  draw(); if (Q.say) setTimeout(() => say(Q.say), 300); }
+// ───── ✍️ 填词 + 排一句：句子是你选的，空格用刚抓到的词；再把一句打乱的词排好 ─────
+function fillOrder(n, L, onDone){ const box = $("#dpR"), WS = TW().concat(Object.keys(ST(key).words || {}).filter(e => !TW().some(w => w.en === e)).map(e => ({en: e, zh: (ST(key).words || {})[e], alt: []})));
+  // 找空格：每句最多两个，长的词先
+  const B = []; const segs = L.map((l, li) => { const used = []; let cnt = 0;
+    WS.slice().sort((a, b) => b.en.length - a.en.length).forEach(w => { if (cnt >= 2) return; const m = wre(w).exec(l[0]); if (!m) return; const s0 = m.index, e0 = s0 + m[0].length;
+      if (used.some(u => s0 < u[1] && e0 > u[0])) return; used.push([s0, e0, m[0], w]); cnt++; });
+    used.sort((a, b) => a[0] - b[0]); const out = []; let p = 0; used.forEach(u => { out.push(l[0].slice(p, u[0])); out.push({b: B.length}); B.push({ans: u[2], w: u[3]}); p = u[1]; }); out.push(l[0].slice(p)); return out; });
+  const fill = B.map(() => null), ansSet = [...new Set(B.map(b => b.ans))];
+  const bank = shuf(ansSet.concat(WS.map(w => w.en).filter(e => !ansSet.some(a => a.toLowerCase() === e.toLowerCase())).slice(0, 2)), L.length + B.length);
+  // 排一句：最长的那句，切成 3–4 块
+  const lo = L.map(l => l[0]).filter(t => t.split(/\s+/).length >= 5).sort((a, b) => b.split(/\s+/).length - a.split(/\s+/).length)[0] || null;
+  let chunks = [], placed = [], pool = [], wrong = 0, okO = !lo;
+  if (lo){ const ws = lo.split(/\s+/), k = Math.min(4, Math.max(3, Math.ceil(ws.length / 3))), sz = Math.ceil(ws.length / k); let cc = [];   // 切块：一块别停在 a / the / in / with 这种小词上
+    ws.forEach((w, i) => { cc.push(w); const left = ws.length - i - 1; if ((cc.length >= sz && !STOP.has(w.toLowerCase().replace(/[^a-z']/g, "")) && left >= 2) || !left){ chunks.push(cc.join(" ")); cc = []; } }); if (cc.length) chunks.push(cc.join(" "));
+    pool = shuf(chunks.map((_, i) => i), lo.length); if (pool.every((x, i) => x === i)) pool.reverse(); }
+  if (!B.length && !lo) return onDone();
+  const draw = msg => { const okF = fill.every(Boolean), nb = fill.indexOf(null);
+    box.innerHTML = stepsH(n) + '<span class="tg s">✍️ 填上你刚抓的词</span><div class="qz">句子是你自己的情况。点下面的词放进空格。</div>' +
+      (B.length ? '<div class="frame">' + segs.map(sg => '<div class="fl">' + sg.map(x => typeof x === "string" ? esc(x) : '<span class="slot' + (fill[x.b] ? " fill" : x.b === nb ? " now" : "") + '">' + (fill[x.b] ? esc(fill[x.b]) : "&nbsp;") + '</span>').join("") + '</div>').join("") + '</div>' +
+        '<div class="bank">' + bank.map((b, i) => '<button class="bk2' + (fill.filter(f => f && f.toLowerCase() === b.toLowerCase()).length >= B.filter(x => x.ans.toLowerCase() === b.toLowerCase()).length && B.some(x => x.ans.toLowerCase() === b.toLowerCase()) ? " used" : "") + '" data-bk="' + i + '">' + esc(b) + '</button>').join("") + '</div>' : "") +
+      '<div class="qz" id="dpFm" style="min-height:20px">' + (msg || "") + '</div>' +
+      (lo ? '<span class="tg s">🔀 再排一句</span><div class="order">' + placed.map((ci, k) => '<button class="ch on" data-oc="' + k + '">' + esc(chunks[ci]) + '</button>').join("") + (okO ? ' <b style="color:#2f7d70">✓</b>' : '<span class="gapc"></span>') + '</div>' +
+        (okO ? "" : '<div class="bank">' + pool.map((ci, k) => '<button class="bk2 o" data-op="' + k + '">' + esc(chunks[ci]) + '</button>').join("") + '</div>') : "") +
+      next(okF && okO ? "都拼好了。前面听过、抓过、拼过，说起来就顺了。" : "", "开始说 →", "say", !(okF && okO));
+    $$("[data-bk]").forEach(b => b.onclick = () => { const v = bank[+b.dataset.bk], k = fill.indexOf(null); if (k < 0) return;
+      if (v.toLowerCase() === B[k].ans.toLowerCase()){ fill[k] = B[k].ans; say(B[k].ans); draw(); } else draw("不太对。这里要的是「" + (B[k].w.zh || "…") + "」，想想刚才听到的。"); });
+    $$("[data-op]").forEach(b => b.onclick = () => { const k = +b.dataset.op; placed.push(pool[k]); pool.splice(k, 1);
+      if (!pool.length){ if (placed.every((x, i) => x === i)){ okO = true; ding(); say(lo); } else { wrong++; pool = placed.slice(); placed = wrong >= 2 ? [0] : []; if (wrong >= 2) pool = pool.filter(x => x !== 0); return draw(wrong >= 2 ? "第一块帮你放好了，接着排。" : "顺序不太对，再试一次。"); } } draw(); });
+    $$("[data-oc]").forEach(b => b.onclick = () => { if (okO) return; const k = +b.dataset.oc; pool.push(placed[k]); placed.splice(k, 1); draw(); });
+    $("#dpNx").onclick = () => { if (okF && okO) onDone(); }; };
+  draw(); }
+// ───── 🎤 说：跟着说 → 只看中文（每句两遍），最后整段 ─────
+const RUNG = [["① 跟着说", "先听，看着整句说"], ["② 只看中文", "英文藏起来，自己说"], ["③ 整段说", "连起来一口气说"]];
+function drill(L, n, onDone){ const box = $("#dpR"), st = {i: 0, r: 0};
+  const s0 = ST(key); if (L.length && L.every(l => (s0.said || {})[l[0]])) st.i = L.length;   // 都说熟过了：直接整段
+  if (!L.length){ onDone && onDone(); return; }
+  const draw = heard => { const whole = st.i >= L.length, l = L[Math.min(st.i, L.length - 1)], r = whole ? 2 : st.r;
+    box.innerHTML = stepsH(n) + '<span class="tg s">🎤 说你的' + (whole ? " · 整段" : " · 第 " + (st.i + 1) + " / " + L.length + " 句") + '</span>' +
+      '<div class="ladder">' + RUNG.map((x, k) => '<div class="rung' + (k < r ? " d" : k === r ? " now" : "") + '"><b>' + x[0] + (k < r ? " ✓" : "") + '</b>' + x[1] + '</div>').join("") + '</div>' +
+      '<div class="stage">' + (whole ? '<div class="zh big">' + esc(L.map(x => x[1]).join("")) + '</div>' + (st.peek ? '<div class="en long">' + esc(L.map(x => x[0]).join(" ")) + '</div>' : "")
+        : '<div class="zh' + (r === 1 ? " big" : "") + '">' + esc(l[1]) + '</div>' + (r === 0 || heard != null || st.peek ? '<div class="en">' + enH(l[0], heard) + '</div>' : "")) +
+      '<button class="mic" id="dpMic" aria-label="说">🎤</button><div class="live" id="dpLv"></div><div class="mh">点一下说，说完停一下会自己停</div>' +
+      (whole ? "" : '<div class="reps">' + [0, 1].map(k => '<i class="' + (k < r ? "d" : "") + '"></i>').join("") + '</div>') +
+      '<div class="sm"><button class="lnk" id="dpHr">🔊 再听一遍</button>' + (r > 0 && !st.peek ? '<button class="lnk" id="dpPk">偷看一眼</button>' : "") + '<button class="lnk" id="dpSk">跳过 ›</button></div></div>' +
+      (whole ? "" : '<div class="queue">' + L.map((x, k) => '<div class="qi' + (k < st.i ? " d" : k === st.i ? " now" : "") + '"><span class="ck">' + (k < st.i ? "✓" : k + 1) + '</span>' + esc(x[0]) + '</div>').join("") + '</div>');
+    const adv = () => { st.peek = 0; if (whole){ onDone && onDone(); return; } if (st.r < 1) st.r++; else { upd(x => { (x.said || (x.said = {}))[l[0]] = 1; }); st.i++; st.r = 0; left(); } draw(); if (!(st.i >= L.length) && st.r === 0) say(L[st.i][0]); };
+    $("#dpHr").onclick = () => say(whole ? L.map(x => x[0]).join(" ") : l[0]);
+    const pk = $("#dpPk"); if (pk) pk.onclick = () => { st.peek = 1; draw(); };
+    $("#dpSk").onclick = adv;
+    const mic = $("#dpMic"); mic.onclick = () => { if (mic.classList.contains("on")) return; mic.classList.add("on"); try { speechSynthesis.cancel(); if (AU) AU.pause(); } catch(e){}
+      listen($("#dpLv"), t => { mic.classList.remove("on"); ding(); draw(t || ""); const lv = $("#dpLv"); if (lv) lv.innerHTML = t ? "🗣️ " + esc(t) : "✓ 说了"; setTimeout(() => { if (root && $("#dpMic")) adv(); }, t ? 1300 : 700); }, whole ? null : key + "|" + l[0], whole); };
+  };
+  draw(); if (st.i < L.length) say(L[0][0]); }
+// ───── 盖章：存下来，别人回你一句，左页这一层亮 ─────
+function seal(n, R, extra){ upd(s => { s[FLD[n]] = Object.assign(s[FLD[n]] || {}, W[FLD[n]] || {}, {d: today()}); }); const s = ST(key); keep(lines(s, n)); if (n === 3) booklet();
   try { localStorage.setItem("hv.me.home", s.start); if (window.hvSyncMark) window.hvSyncMark("hv.me.home"); } catch(e){}
-  W = {}; const nx = level(ST(key)); cur = nx; home(); root.scrollTop = 0;
-  const P = $("#dpPane"); P.insertAdjacentHTML("afterbegin", stampHtml(n) + '<div class="note">' + (nx >= 4 ? "四格都亮了 ✨ 这是你自己的一分钟" : "第 " + (n + 1) + " 格亮了。明天「我的船」会带你回来接着往深一层，现在接着也行 ↓") + '</div>'); ding(); }
-// ① 我现在
+  W = {}; ph = n === 3 ? 3 : 5; const nx = level(ST(key)); bar(); left();
+  $("#dpR").innerHTML = stepsH(n) + '<div class="seal"><div class="stamp">' + LV[n][0] + '<small>SAID · ' + today().slice(5).replace("-", ".") + '</small></div>' +
+    '<div class="q" style="justify-content:center;margin-top:16px">第 ' + (n + 1) + ' 层说完了</div>' + (R ? bubble(R[0], R[1], R[2]) : "") + (extra || "") +
+    '<div class="sm" style="margin-top:18px;gap:10px">' + (nx < 4 ? '<button class="big say" id="dpGo">接着第 ' + (nx + 1) + ' 层：' + LV[nx][0] + ' →</button>' : '<button class="big say" id="dpGo">✨ 听听你的一分钟</button>') + '<button class="big lt" id="dpBye">今天先到这儿</button></div>' +
+    '<div class="qz" style="margin-top:14px">这一层的句子和词进了「我的船」，1 天、3 天、7 天后叫你再说一遍。</div></div>';
+  wireSay(); if (R) setTimeout(() => say(R[1]), 500); ding();
+  $("#dpGo").onclick = () => go(nx >= 4 ? 4 : nx); $("#dpBye").onclick = close; }
+// 拼你的：选项一行一行（选你的情况），选好了 → 填词 + 排一句 → 说
+function buildRows(rows, note, full, onNext){ const box = $("#dpR");
+  box.innerHTML = stepsH(cur) + '<span class="tg s">✋ 先选你的情况</span>' + (note || "") + '<div class="build">' + rows + '</div>' + next(full ? "选好了。接着用刚抓的词把句子补全。" : "左边跟着你选的写上", "选好了 →", "say", !full);
+  $("#dpNx").onclick = () => { if (full) onNext(); }; }
+const chipRow = (label, opts, sel, attr) => '<div class="row"><div class="k">' + esc(label) + '</div><div class="chips">' + opts.map((o, j) => '<button class="chip' + (sel === j ? " on" : "") + '" ' + attr + '="' + j + '">' + (o[0] ? esc(o[0]) + '<small>' + esc(o[1]) + '</small>' : "（" + esc(o[1]) + "）") + '</button>').join("") + '</div></div>';
+const otherZh = (excl, n) => { const out = []; Object.values(D.paths).forEach(P => (P.kinds || []).forEach(k => { if (k !== excl) sents(k.model[2]).forEach(x => out.push(x)); })); return shuf(out, n || 5); };
+const otherEn = (excl, n) => { const out = []; Object.values(D.paths).forEach(P => (P.kinds || []).forEach(k => { if (k !== excl) sents(k.model[1]).forEach(x => out.push(x)); })); return shuf(out, n || 5); };
+// ① 我现在：听岛上群聊里的几句 → 抓话题词 → 常识题 + 你怎么住 → 拼 → 说
 function l1(){
-  const s = ST(key), P = $("#dpPane");
-  if (!s.start || W.reStart){ const pk = W.st || s.start;
-    P.innerHTML = '<h3>① 我现在 · 说你的情况</h3><div class="why">先说说你自己。选最像你的——后面聊什么，跟着你的情况走。</div>' +
-      '<div class="q">' + esc(D.start.q[0]) + ' <button data-say="' + esc(D.start.q[0]) + '">🔊</button></div><div class="qz">' + esc(D.start.q[1]) + '</div>' +
-      '<div class="opts">' + D.start.o.map(o => '<button class="op' + (pk === o.id ? " sel" : "") + '" data-st="' + o.id + '"><span class="e">' + o.e + '</span>' + esc(o.en) + '<small>' + esc(o.zh) + '</small></button>').join("") + '</div>';
-    wireSay(); setTimeout(() => say(D.start.q[0]), 250);
-    $$("[data-st]").forEach(b => b.onclick = () => { const id = b.dataset.st, o = D.start.o.find(x => x.id === id); say(o.en);
-      const old = ST(key); if (old.start && old.start !== id && !confirm("换一种住法，后面几层要重新说。确定吗？")) return;
-      upd(x => { if (x.start !== id){ const said = x.said; Object.keys(x).forEach(k => delete x[k]); x.said = said || {}; } x.start = id; }); W = {}; cur = 0; home(); });
-    return; }
+  const s = ST(key), H = window.HVI || {}; let X = null; try { X = H.tkChatOf ? H.tkChatOf(isle, tk) : null; } catch(e){}
+  const strip = t => String(t).replace(/[\[\]]/g, "");
+  let R = []; try { R = (H.listen ? H.listen(isle, tk) : []).slice(0, 3); } catch(e){}
+  const lines0 = R.map(r => ({who: r.m[0], en: strip(r.m[1]), zh: r.m[2]}));
+  if (ph === 0){ if (!R.length) return step(2, l1);
+    return listenGame(0, R.map(r => ({who: r.m[0], en: strip(r.m[1]), zh: r.m[2], opts: r.opts.map(o => o[2]), hl: (r.m[1].match(/\[([^\]]+)\]/g) || []).map(x => x.slice(1, -1))})), () => step(1, l1),
+      '<div class="qz" style="margin-bottom:6px">岛上的人在聊「' + esc(title) + '」。先听懂他们在说什么。</div>'); }
+  if (ph === 1) return grabGame(0, lines0, wordsIn(lines0.map(l => l.en).join(" ")), () => step(2, l1));
+  if (ph === 2){ const Qz = X && X.chat && X.chat.quiz;
+    const you = () => { const box = $("#dpR"), pk = ST(key).start;
+      box.innerHTML = stepsH(0) + '<span class="tg">🧠 你呢？</span><div class="q">' + esc(D.start.q[0]) + ' <button data-say="' + esc(D.start.q[0]) + '" aria-label="听">🔊</button></div><div class="qz">' + esc(D.start.q[1]) + '　选最像你的——后面聊什么，跟着你的情况走。</div>' +
+        '<div class="cards">' + D.start.o.map(o => '<button class="cd' + (pk === o.id ? " on" : "") + '" data-st="' + o.id + '"><div class="ph"' + (o.ph ? ' style="background-image:url(\'' + esc(o.ph) + '\')"' : "") + '>' + (o.ph ? "" : o.e) + '</div><span>' + (o.ph ? o.e + " " : "") + esc(o.zh) + '<small>' + esc(o.en) + '</small></span></button>').join("") + '</div>';
+      wireSay(); setTimeout(() => say(D.start.q[0]), 250);
+      $$("[data-st]").forEach(b => b.onclick = () => { const id = b.dataset.st, o = D.start.o.find(x => x.id === id); say(o.en);
+        const old = ST(key); if (old.start && old.start !== id && !confirm("换一种住法，后面几层要重新说。确定吗？")) return;
+        upd(x => { if (x.start !== id){ const said = x.said, wd = x.words; Object.keys(x).forEach(k => delete x[k]); x.said = said || {}; if (wd) x.words = wd; } x.start = id; }); step(3, l1); }); };
+    if (!Qz) return you();
+    return think(0, {q: Qz.q.en, say: Qz.q.en, zh: Qz.q.zh, ops: Qz.ops, a: Qz.a, why: Qz.why && Qz.why.zh, src: Qz.src, btn: "你呢？ →"}, you); }
+  if (!s.start) return step(2, l1);
   const T = D.l1[s.start] || [], v = W.v || (W.v = Object.assign({}, (s.l1 && s.l1.v) || {}));
   const all = () => T.every(t => fillT(t, v).full);
-  const draw = () => {
-    P.innerHTML = '<h3>① 我现在 · 说你的情况</h3><div class="why">句子是现成的，内容换成你的。点下面的选项，或者自己打。</div>' +
-      T.map((t, i) => { const f = fillT(t, v); let en = esc(t.en); (t.en.match(/\{(\w+)\}/g) || []).forEach(m => { const k = m.slice(1, -1); en = en.replace(m, '<u class="' + (v[k] ? "" : "no") + '">' + esc(v[k] ? (v[k][0] || "（不说）") : "___") + '</u>'); });
-        return '<div class="fill"><div class="en">' + en + '</div><div class="zh">' + esc(f.zh) + '</div>' +
-          (t.en.match(/\{(\w+)\}/g) || []).map(m => { const k = m.slice(1, -1), S = slotDef(t, k), cv = v[k];
-            if (S.money){ const cc = v._cur || curGuess(), num = v._num || "";
-              return '<div class="chips"><input data-mn="' + k + '" inputmode="decimal" placeholder="填数字，比如 900" value="' + esc(num) + '" style="width:130px">' + CUR.map(c => '<button data-cur="' + esc(c[0]) + '|' + k + '" class="' + (cc === c[0] && cv && cv[0] ? "sel" : "") + '">' + esc(c[0]) + '<small>' + esc(c[3] || c[1]) + '</small></button>').join("") + '<button data-nosay="' + k + '" class="' + (cv && cv[0] === "" ? "sel" : "") + '">🙊<small>不想说多少</small></button></div>'; }
-            return '<div class="chips">' + S.o.map(o => '<button data-k="' + k + '" data-v="' + esc(JSON.stringify(o)) + '" class="' + (cv && cv[0] === o[0] ? "sel" : "") + '">' + esc(o[0]) + '<small>' + esc(o[1]) + '</small></button>').join("") +
-              (S.free ? '<input data-fk="' + k + '" placeholder="' + esc(S.free) + '" value="' + esc(cv && !S.o.some(o => o[0] === cv[0]) ? cv[0] : "") + '">' : "") + '</div>'; }).join("") + '</div>'; }).join("") +
-      '<button class="go" id="dpOk1"' + (all() ? "" : " disabled") + '>就是这样 →</button><button class="go g" id="dpRe">↺ 换一种住法</button>';
-    $$("[data-k]").forEach(b => b.onclick = () => { v[b.dataset.k] = JSON.parse(b.dataset.v); say(b.dataset.v && JSON.parse(b.dataset.v)[0]); draw(); });
-    const setM = k => { const m = money(v._num, v._cur || curGuess()); if (m) v[k] = m; else if (v[k] && v[k][0] !== "") delete v[k]; draw(); };
-    $$("[data-mn]").forEach(inp => inp.onchange = () => { v._num = inp.value.trim(); setM(inp.dataset.mn); });
-    $$("[data-cur]").forEach(b => b.onclick = () => { const [c, k] = b.dataset.cur.split("|"); v._cur = c; if (!v._num){ const i = $("[data-mn]"); if (i) i.focus(); } setM(k); });
-    $$("[data-nosay]").forEach(b => b.onclick = () => { v[b.dataset.nosay] = ["", ""]; draw(); });
-    $$("[data-fk]").forEach(inp => inp.onchange = () => { const x = inp.value.trim(); if (x){ v[inp.dataset.fk] = [x, x]; } else delete v[inp.dataset.fk]; draw(); });
-    $("#dpRe").onclick = () => { W = {reStart: 1, st: s.start}; l1(); };
-    $("#dpOk1").onclick = () => { if (!all()) return; W.l1 = {v}; upd(x => { x.l1 = Object.assign(x.l1 || {}, {v}); }); after(); }; };
-  const after = () => { const L = T.map(t => fillT(t, v)).map(x => [x.en, x.zh]), R = pathOf(ST(key)).reply1;
-    P.innerHTML = '<h3>① 我现在</h3><span class="tag l">🎧 别人怎么回你 · 听一听</span>' + bubble(R[0], R[1], R[2]) +
-      speakBlock(L, 0, () => { if (!$("#dpSeal1")) { $("#dpPane").insertAdjacentHTML("beforeend", '<button class="go" id="dpSeal1">✓ 说完了，亮第一格</button>'); $("#dpSeal1").onclick = () => seal(0, "l1"); } }) +
-      '<button class="go g" id="dpBack1">← 再改改</button>';
-    wireSay(); setTimeout(() => say(R[1]), 300); $("#dpBack1").onclick = draw; };
+  const pv = fresh => { const L = T.map(t => fillT(t, v)).map(x => [x.en, x.zh]); L.fresh = fresh; return L; };
+  if (ph >= 4) return drill(pv().filter(x => !/___/.test(x[0])), 0, () => seal(0, pathOf(ST(key)).reply1));
+  if (W.sub === "fill") return fillOrder(0, pv(), () => { W.sub = null; step(4, l1); });
+  const draw = fresh => { left(pv(fresh));
+    const rows = T.map(t => (t.en.match(/\{(\w+)\}/g) || []).map(m => { const k = m.slice(1, -1), S = slotDef(t, k), cv = v[k];
+      return '<div class="row"><div class="k">' + esc(SLOTN[k] || "你的") + '</div><div class="chips">' + S.o.map(o => '<button class="chip' + (cv && cv[0] === o[0] ? " on" : "") + '" data-k="' + k + '" data-v="' + esc(JSON.stringify(o)) + '">' + esc(o[0]) + '<small>' + esc(o[1]) + '</small></button>').join("") +
+        (S.free ? '<input data-fk="' + k + '" placeholder="' + esc(S.free) + '" value="' + esc(cv && !S.o.some(o => o[0] === cv[0]) ? cv[0] : "") + '">' : "") + '</div></div>'; }).join("")).join("");
+    buildRows(rows, '<div class="qz">句子是现成的，内容换成你的。<button class="lnk" id="dpRe">↺ 换一种住法</button></div>', all(), () => { W.l1 = {v}; upd(x => { x.l1 = Object.assign(x.l1 || {}, {v}); }); W.sub = "fill"; l1(); });
+    $$("[data-k]").forEach(b => b.onclick = () => { const o = JSON.parse(b.dataset.v); v[b.dataset.k] = o; const t = T.find(t => t.en.includes("{" + b.dataset.k + "}")); draw(t ? fillT(t, v).en : null); if (o[0]) say(o[0]); });
+    $$("[data-fk]").forEach(inp => inp.onchange = () => { const x = inp.value.trim(); if (x) v[inp.dataset.fk] = [x, x]; else delete v[inp.dataset.fk]; draw(); });
+    $("#dpRe").onclick = () => step(2, l1); };
   draw();
 }
-// ② 碰到过
+// ② 碰到过：挑一件事 → 听 TA 讲（选意思）→ 抓词 → 理解题 + 各地不一样 → 拼你的 → 说
 function l2(){
-  const s = ST(key), P = pathOf(s), box = $("#dpPane"), A = P.ask2;
-  if (W.kind == null){
-    box.innerHTML = '<h3>② 碰到过 · 讲一件事</h3><div class="why">接着你上次说的。挑一件你真碰到过的事；没碰到过，就挑最接近的。</div>' +
-      '<span class="tag l">🎧 听一听</span>' + bubble(A[0], A[1], A[2]) +
-      '<div class="opts" style="margin-top:12px">' + P.kinds.map((k, i) => '<button class="op" data-kd="' + i + '"><span class="e">' + k.e + '</span>' + esc(k.zh) + '</button>').join("") + '</div>';
+  const s = ST(key), P = pathOf(s), box = $("#dpR"), A = P.ask2;
+  if (W.kind == null){ ph = 0; bar();
+    box.innerHTML = stepsH(1) + '<span class="tg h">👂 听</span>' + bubble(A[0], A[1], A[2]) +
+      '<div class="q" style="margin-top:16px">你碰到过什么？</div><div class="qz">挑一件真发生过的；没碰到过，就挑「最怕碰到的」。先听岛上的人讲讲 TA 的。</div>' +
+      '<div class="cards">' + P.kinds.map((k, i) => '<button class="cd" data-kd="' + i + '"><div class="ph"' + (k.ph ? ' style="background-image:url(\'' + esc(k.ph) + '\')"' : "") + '>' + (k.ph ? "" : k.e) + '</div><span>' + (k.ph ? k.e + " " : "") + esc(k.zh) + '</span></button>').join("") + '</div>';
     wireSay(); setTimeout(() => say(A[1]), 300);
-    $$("[data-kd]").forEach(b => b.onclick = () => { W.kind = +b.dataset.kd; W.picks = (s.l2 && s.l2.kind === W.kind && s.l2.picks) ? s.l2.picks.slice() : []; l2(); });
+    $$("[data-kd]").forEach(b => b.onclick = () => { W.kind = +b.dataset.kd; W.picks = (s.l2 && s.l2.kind === W.kind && s.l2.picks) ? s.l2.picks.slice() : []; step(0, l2); });
     return; }
-  const K = P.kinds[W.kind], pk = W.picks, full = () => K.steps.every((_, i) => pk[i] != null);
-  const draw = () => { const L = K.steps.map((st, i) => st.o[pk[i]]).filter(o => o && o[0]);
-    box.innerHTML = '<h3>② 碰到过 · ' + K.e + ' ' + esc(K.zh) + '</h3>' +
-      '<span class="tag l">🎧 先听 ' + esc(npc(K.model[0])[0]) + ' 讲 TA 的 · 黄色的是讲经历常用的说法</span>' + bubble(K.model[0], K.model[1], K.model[2], K.hl) +
-      '<span class="tag s">🧩 照这个顺序，搭你的事</span>' +
-      K.steps.map((st, i) => '<div class="sl">' + esc(st.zh) + '</div><div class="chips">' + st.o.map((o, j) => '<button data-sp="' + i + '|' + j + '" class="' + (pk[i] === j ? "sel" : "") + '">' + (o[0] ? esc(o[0]) : "（" + esc(o[1]) + "）") + (o[0] ? '<small>' + esc(o[1]) + '</small>' : "") + '</button>').join("") + '</div>').join("") +
-      (L.length ? '<div class="fill"><div class="en">' + esc(L.map(o => o[0]).join(" ")) + '</div><div class="zh">' + esc(L.map(o => o[1]).join("")) + '</div></div>' : "") +
-      '<button class="go" id="dpOk2"' + (full() ? "" : " disabled") + '>就是这样 →</button><button class="go g" id="dpK2">← 换一件事</button>';
+  const K = P.kinds[W.kind], E = sents(K.model[1]), Z = sents(K.model[2]), same = E.length === Z.length;
+  const ML = (same ? E : [K.model[1]]).map(en => ({who: K.model[0], en}));
+  if (ph === 0){ const oz = otherZh(K, E.length + 3);
+    const items = same ? E.slice(0, 4).map((en, i) => ({who: K.model[0], en, zh: Z[i], hl: K.hl, opts: shuf([Z[i], oz[(i * 2) % oz.length], oz[(i * 2 + 1) % oz.length]], i + 2)}))
+      : [{who: K.model[0], en: K.model[1], zh: K.model[2], hl: K.hl, opts: shuf([K.model[2], oz[0], oz[1]], 3)}];
+    box.onclick = e => { if (e.target && e.target.id === "dpK2"){ W = {}; ph = 0; l2(); } };
+    return listenGame(1, items, () => step(1, l2), '<div class="qz" style="margin-bottom:6px">' + K.e + ' ' + esc(K.zh) + ' · ' + esc(npc(K.model[0])[0]) + ' 讲 TA 碰到的事。<button class="lnk" id="dpK2">换一件事</button></div>'); }
+  if (ph === 1) return grabGame(1, ML, wordsIn(K.model[1], K.hl), () => step(2, l2));
+  if (ph === 2){ const li = Math.max(0, E.length - 1), oe = otherEn(K, 4);
+    const ops = shuf([E[li], oe[0], oe[1]], 4);
+    return think(1, same ? {q: "用英语怎么说的？", zh: npc(K.model[0])[0] + " 最后说：「" + Z[li] + "」——是哪一句？", ops, a: ops.indexOf(E[li]), why: K.fact ? "🌍 " + K.fact : "", btn: "拼我的 →"}
+      : {q: "哪一句是 " + npc(K.model[0])[0] + " 刚才说的？", zh: "想想刚才听到的，挑出来。", ops, a: ops.indexOf(E[li]), why: K.fact ? "🌍 " + K.fact : "", btn: "拼我的 →"}, () => step(3, l2)); }
+  const pk = W.picks, full = () => K.steps.every((_, i) => pk[i] != null);
+  const pv = fresh => { const L = lines(Object.assign({}, s, {l2: {kind: W.kind, picks: pk.map(x => x == null ? -1 : x)}}), 1); L.fresh = fresh; return L; };
+  if (ph >= 4) return drill(pv(), 1, () => seal(1, K.reply, K.fact ? '<div class="fact">🌍 ' + esc(K.fact) + '</div>' : ""));
+  if (W.sub === "fill") return fillOrder(1, pv(), () => { W.sub = null; step(4, l2); });
+  const draw = fresh => { left(pv(fresh));
+    buildRows(K.steps.map((st, i) => chipRow(st.zh, st.o, pk[i], "data-sp")).join(""), bubble(K.model[0], K.model[1], "", K.hl, true) + '<div class="qz" style="margin-top:8px">照 ' + esc(npc(K.model[0])[0]) + ' 讲的顺序，搭你自己的事。</div>', full(), () => { W.l2 = {kind: W.kind, picks: pk.slice()}; W.sub = "fill"; l2(); });
     wireSay();
-    $$("[data-sp]").forEach(b => b.onclick = () => { const [i, j] = b.dataset.sp.split("|").map(Number); pk[i] = j; const o = K.steps[i].o[j]; if (o[0]) say(o[0]); draw(); });
-    $("#dpK2").onclick = () => { W = {}; l2(); };
-    $("#dpOk2").onclick = () => { if (!full()) return; W.l2 = {kind: W.kind, picks: pk.slice()}; after(); }; };
-  const after = () => { const tmp = Object.assign({}, ST(key), {l2: {kind: W.kind, picks: pk}}), L = lines(tmp, 1), R = K.reply;
-    box.innerHTML = '<h3>② 碰到过 · ' + K.e + ' ' + esc(K.zh) + '</h3><span class="tag l">🎧 别人怎么回你 · 听一听</span>' + bubble(R[0], R[1], R[2]) + (K.fact ? '<div class="fact">🌍 各地不一样：' + esc(K.fact) + '</div>' : "") +
-      speakBlock(L, 1, () => { if (!$("#dpSeal2")){ box.insertAdjacentHTML("beforeend", '<button class="go" id="dpSeal2">✓ 讲完了，亮第二格</button>'); $("#dpSeal2").onclick = () => seal(1, "l2"); } }) +
-      '<button class="go g" id="dpBack2">← 再改改</button>';
-    wireSay(); setTimeout(() => say(R[1]), 300); $("#dpBack2").onclick = draw; };
+    $$("[data-sp]").forEach(b => b.onclick = () => { const i = [...b.closest(".build").children].indexOf(b.closest(".row")), j = +b.dataset.sp; pk[i] = j; const o = K.steps[i].o[j]; draw(o[0] || null); if (o[0]) say(o[0]); }); };
   draw();
 }
-// ③ 我觉得
+// ③ 我觉得：听三种看法（TA 是哪一边？）→ 抓词 → 谁跟你最像 → 拼你的看法 → 说
 function l3(){
-  const s = ST(key), Q = pathOf(s).l3, box = $("#dpPane"), pk = W.picks || (W.picks = (s.l3 && s.l3.picks) ? s.l3.picks.slice() : []);
+  const s = ST(key), Q = pathOf(s).l3, pk = W.picks || (W.picks = (s.l3 && s.l3.picks) ? s.l3.picks.slice() : []);
+  const labels = [...new Set(Q.sides.map(x => x[1]))];   // 一样的选项只留一个（一题只有一个对的）
+  if (ph === 0) return listenGame(2, Q.sides.map((x, i) => ({who: x[0], en: x[2], zh: x[1], why: x[3], opts: shuf(labels.slice(), i + 3), q: "TA 是哪一边？"})), () => step(1, l3),
+    '<div class="q" style="font-size:18px">' + esc(Q.q[0]) + ' <button data-say="' + esc(Q.q[0]) + '" aria-label="听">🔊</button></div><div class="qz" style="margin-bottom:6px">' + esc(Q.q[1]) + '　大家看法不一样，没有对错。听三个人怎么说。</div>');
+  if (ph === 1){ const L = Q.sides.map(x => ({who: x[0], en: x[2]})); return grabGame(2, L, wordsIn(L.map(l => l.en).join(" ") + " " + Q.q[0]), () => step(2, l3)); }
+  if (ph === 2) return think(2, {q: "三个人里，谁跟你想法最像？", zh: "没有对错。选了，下一步就说你自己的看法：我觉得…因为…不过…", ops: Q.sides.map(x => npc(x[0])[0] + "：" + x[1]), a: null, btn: "说我的看法 →"}, () => step(3, l3));
   const full = () => pk[0] != null && pk[1] != null && pk[2] != null;
-  const draw = () => { const tmp = Object.assign({}, s, {l3: {picks: pk}}), L = full() ? lines(tmp, 2) : [];
-    box.innerHTML = '<h3>③ 我觉得 · 说你的看法</h3><div class="why">大家看法不一样，没有对错。先听三个地方的人怎么想，再说你的：我觉得…因为…不过…</div>' +
-      '<div class="q">' + esc(Q.q[0]) + ' <button data-say="' + esc(Q.q[0]) + '">🔊</button></div><div class="qz">' + esc(Q.q[1]) + '</div>' +
-      '<span class="tag l">🎧 三种想法 · 听一听</span>' + Q.sides.map(x => bubble(x[0], x[2], "【" + x[1] + "】" + x[3])).join("") +
-      '<span class="tag s">🧩 你的看法</span>' + Q.parts.map((p, i) => '<div class="sl">' + esc(p.zh) + '</div><div class="chips">' + p.o.map((o, j) => '<button data-pp="' + i + '|' + j + '" class="' + (pk[i] === j ? "sel" : "") + '">' + (o[0] ? esc(o[0]) : "（" + esc(o[1]) + "）") + (o[0] ? '<small>' + esc(o[1]) + '</small>' : "") + '</button>').join("") + '</div>').join("") +
-      (L.length ? '<div class="fill"><div class="en">' + esc(L.map(o => o[0]).join(" ")) + '</div><div class="zh">' + esc(L.map(o => o[1]).join("")) + '</div></div>' : "") +
-      '<button class="go" id="dpOk3"' + (full() ? "" : " disabled") + '>就是这样 →</button>';
-    wireSay();
-    $$("[data-pp]").forEach(b => b.onclick = () => { const [i, j] = b.dataset.pp.split("|").map(Number); pk[i] = j; const o = Q.parts[i].o[j]; if (o[0]) say(o[0]); draw(); });
-    $("#dpOk3").onclick = () => { if (!full()) return; W.l3 = {picks: pk.slice()}; after(L); }; };
-  const after = L => { const R = Q.reply;
-    box.innerHTML = '<h3>③ 我觉得</h3><span class="tag l">🎧 别人怎么回你 · 听一听</span>' + bubble(R[0], R[1], R[2]) +
-      speakBlock(L, 2, () => { if (!$("#dpSeal3")){ box.insertAdjacentHTML("beforeend", '<button class="go" id="dpSeal3">✓ 说完了，亮第三格</button>'); $("#dpSeal3").onclick = () => seal(2, "l3"); } }) +
-      '<button class="go g" id="dpBack3">← 再改改</button>';
-    wireSay(); setTimeout(() => say(R[1]), 300); $("#dpBack3").onclick = draw; };
+  const pv = fresh => { let L = full() ? lines(Object.assign({}, s, {l3: {picks: pk}}), 2) : Q.parts.map((p, i) => pk[i] != null ? p.o[pk[i]] : null).filter(o => o && o[0]).map(o => [o[0], o[1]]); L = L.slice(); L.fresh = fresh; return L; };
+  if (ph >= 4) return drill(lines(Object.assign({}, s, {l3: {picks: pk}}), 2), 2, () => seal(2, Q.reply));
+  if (W.sub === "fill") return fillOrder(2, pv(), () => { W.sub = null; step(4, l3); });
+  const draw = fresh => { left(pv(fresh));
+    buildRows(Q.parts.map((p, i) => chipRow(p.zh, p.o, pk[i], "data-pp")).join(""), '<div class="q" style="font-size:18px">' + esc(Q.q[0]) + '</div>', full(), () => { W.l3 = {picks: pk.slice()}; W.sub = "fill"; l3(); });
+    $$("[data-pp]").forEach(b => b.onclick = () => { const i = [...b.closest(".build").children].indexOf(b.closest(".row")), j = +b.dataset.pp; pk[i] = j; const o = Q.parts[i].o[j]; draw(o[0] || null); if (o[0]) say(o[0]); }); };
   draw();
 }
-// ④ 说给人听：AI 扮演岛上的人，读过你的故事，追着问你（1 🛟）；最后整段一分钟录下来
 const AI_MAX = 8;
 function aiSys(nid, L){ const H = window.HVI, n = (H && H.npc && H.npc(nid)) || {}, N = npc(nid);
   return `You are ${n.name || N[0]}, ${n.age || ""}, ${n.job || ""}, living in ${n.city || N[2]}. (Profile notes may be Chinese; speak English.)
@@ -64164,15 +64431,16 @@ Rules:
 - After about ${AI_MAX} learner turns or when they say goodbye, close warmly in one sentence and set "end": true.
 Reply with ONLY JSON: {"say":"...","zh":"Chinese translation","fix":null or {"from":"...","to":"..."},"hint":{"en":"...","zh":"..."},"end":false}`; }
 function l4(){
-  const s = ST(key), P = pathOf(s), L = story(s), box = $("#dpPane"), nid = P.ai, N = npc(nid), H = window.HVI || {}, ai = H.ai && H.ai();
-  box.innerHTML = '<h3>④ 说给人听 · 有人追着问你</h3><div class="why">前三格是你准备好的话。真聊天时，别人会接着问——用你已经会说的句子去答，答不上的地方，正是下一句该学的。</div>' +
-    '<div class="who"><span class="av">' + avOf(nid) + '</span><div class="bub"><b>' + esc(N[0]) + ' · ' + esc(N[2]) + ' · 🎭 AI 扮演</b>读过你的故事了，想接着问你几句。<small>大约 5 分钟、几句来回 · 用 1 个 🛟（后面的来回不再扣）· 说不出来可以说中文，TA 教你英语怎么说</small></div></div>' +
+  const s = ST(key), P = pathOf(s), L = story(s), box = $("#dpR"), nid = P.ai, N = npc(nid), H = window.HVI || {}, ai = H.ai && H.ai();
+  if (ph >= 2) return drill(L, 3, () => seal(3, null, '<div class="qz" style="margin-top:12px">四层都亮了 ✨ 你怎么住、碰到过什么、你怎么想——别人问起，你都说得出来。</div>'));
+  box.innerHTML = stepsH(3) + '<span class="tg h">👂 有人读了你的故事</span>' +
+    '<div class="who"><span class="av">' + avOf(nid) + '</span><div class="bub"><b>' + esc(N[0]) + (N[2] ? ' · ' + esc(N[2]) : "") + ' · 🎭 AI 扮演</b>读过你的故事了，想接着问你几句。<small>前三层是你准备好的话。真聊天时，别人会接着问——用你已经会说的句子去答，答不上的地方，正是下一句该学的。大约 5 分钟 · 用 1 个 🛟 · 说不出来可以说中文，TA 教你英语怎么说。</small></div></div>' +
     '<div id="dpAi"></div>' +
-    (!ai ? '<div class="fact" style="background:#fff4ee;color:#8a3a1d">AI 聊天现在用不了。先把整段录一遍，第四格一样能亮。</div>' : (!H.logged || H.logged() || !(H.aiSite && H.aiSite())) ? '<button class="go n" id="dpAiGo">🗣️ 跟 ' + esc(N[0]) + ' 聊聊我的故事 · 1 🛟</button>' : '<button class="go n" id="dpLogin">先登录（🛟 存在账号里）</button>') +
-    '<span class="tag s" style="margin-top:18px">🎙️ 你的一分钟 · 整段录下来</span>' +
-    speakBlock(L, 3, () => { if (!$("#dpSeal4")){ box.insertAdjacentHTML("beforeend", '<button class="go" id="dpSeal4">✓ 录好了，亮第四格</button>'); $("#dpSeal4").onclick = () => seal(3, "l4"); } });
+    (!ai ? '<div class="fact" style="background:#fff4ee;color:#8a3a1d">AI 聊天现在用不了。直接把整段说一遍，第四层一样能亮。</div>' : (!H.logged || H.logged() || !(H.aiSite && H.aiSite())) ? '<div class="sm" style="margin-top:12px"><button class="big" id="dpAiGo">🗣️ 跟 ' + esc(N[0]) + ' 聊聊我的故事 · 1 🛟</button></div>' : '<div class="sm" style="margin-top:12px"><button class="big" id="dpLogin">先登录（🛟 存在账号里）</button></div>') +
+    next("最后，把你的故事整段说一遍（大约一分钟）", "🎤 整段说一遍 →", "say");
   const lg = $("#dpLogin"); if (lg) lg.onclick = () => { close(); H.login && H.login(); };
-  const go = $("#dpAiGo"); if (go) go.onclick = () => { go.remove(); chat(nid, L); };
+  const g = $("#dpAiGo"); if (g) g.onclick = () => { g.parentNode.remove(); ph = 1; bar(); const st = root.querySelector(".steps"); if (st) st.outerHTML = stepsH(3); chat(nid, L); };
+  $("#dpNx").onclick = () => { ph = 2; bar(); l4(); };
 }
 function chat(nid, L){ const H = window.HVI, wrap = $("#dpAi"), N = npc(nid), S0 = {msgs: [], turns: 0, busy: false, over: false, mine: []};
   wrap.innerHTML = '<div class="ai"><div class="log"></div><div class="hint" id="dpHint"></div><div class="in2"><button class="ib mic" id="dpAm">🎤</button><input id="dpAt" placeholder="按话筒说，或者打字（中文也行）"><button class="sbt" id="dpAs">发送</button></div></div>';
@@ -64196,14 +64464,15 @@ function chat(nid, L){ const H = window.HVI, wrap = $("#dpAi"), N = npc(nid), S0
     const r = new R(); r.lang = "en-GB"; r.interimResults = true; let got = "", dn = false, tm = null; const f = () => { if (dn) return; dn = true; try { r.stop(); } catch(x){} $("#dpAm").textContent = "🎤"; send(got.trim()); };
     r.onresult = ev => { got = [...ev.results].map(x => x[0].transcript).join(" "); $("#dpAt").value = got; clearTimeout(tm); tm = setTimeout(f, 1400); }; r.onend = f; r.onerror = f; $("#dpAm").textContent = "…"; try { r.start(); setTimeout(f, 15000); } catch(x){ f(); } };
   S0.msgs = [{role: "user", content: "(The learner just opened the chat after telling you their story. Greet them by reacting to one detail of it, then ask your first follow-up question.)"}]; ask(); }
-// 四格都亮了
+// 四层都亮了：你的一分钟
 function done(){
-  const s = ST(key), L = story(s);
-  $("#dpPane").innerHTML = '<h3>✨ 你的一分钟</h3><div class="why">这是你自己的话：你怎么住、碰到过什么、你怎么想。别人问起，你都说得出来。点上面四格的任何一格，可以回去改、再练。</div>' +
-    speakBlock(L, 4, null) +
-    '<button class="go n" id="dpBk">📒 存进小册子</button><button class="go g" id="dpNew">↺ 我的情况变了，重新说</button>';
+  const s = ST(key), L = story(s); ph = 3; bar(); left();
+  $("#dpR").innerHTML = '<div class="seal"><div class="stamp" style="animation:none">一分钟<small>MY STORY</small></div><div class="q" style="justify-content:center;margin-top:16px">✨ 你的一分钟</div>' +
+    '<div class="qz">这是你自己的话：你怎么住、碰到过什么、你怎么想。点上面四层的任何一层，可以回去改、再练。</div>' +
+    '<div class="sm" style="margin-top:16px;gap:10px;flex-wrap:wrap"><button class="big say" id="dpAgain">🎤 再整段说一遍</button><button class="big lt" id="dpBk">📒 存进小册子</button><button class="big lt" id="dpNew">↺ 我的情况变了，重新说</button></div></div>';
+  $("#dpAgain").onclick = () => { ph = 2; drill(L, 3, done); };
   $("#dpBk").onclick = e => { booklet(); e.currentTarget.textContent = "✓ 存好了"; };
-  $("#dpNew").onclick = () => { if (!confirm("从第一格重新开始？你说过的录音还留着。")) return; upd(x => { delete x.l1; delete x.l2; delete x.l3; delete x.l4; }); W = {reStart: 1, st: s.start}; cur = 0; home(); };
+  $("#dpNew").onclick = () => { if (!confirm("从第一层重新开始？你说过的录音还留着。")) return; upd(x => { delete x.l1; delete x.l2; delete x.l3; delete x.l4; }); go(0); };
 }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-dpopen]"); if (!b) return; const [i, k] = b.dataset.dpopen.split("|"); window.DEEP && window.DEEP.open(i, k); });
 window.DEEP = {
@@ -64214,7 +64483,14 @@ window.DEEP = {
   // 「我的船」用：开过头、还没走完的
   started: () => Object.entries(ALL()).filter(([kk, s]) => (window.TALK_DEEP || {})[kk] && s.start && level(s) > 0 && level(s) < 4).map(([kk, s]) => ({key: kk, next: level(s), name: LV[level(s)][0]})),
   open(id, k, t){ const d = (window.TALK_DEEP || {})[id + "|" + k]; if (!d || !ok()) return false; D = d; isle = id; tk = k; key = id + "|" + k;
-    title = t || (window.HVI && window.HVI.prTitle ? window.HVI.prTitle(id, k) : d.title[2]); W = {}; const nx = level(ST(key)); cur = nx >= 4 ? 4 : nx; mount(); home(); root.scrollTop = 0; return true; }
+    title = t || (window.HVI && window.HVI.prTitle ? window.HVI.prTitle(id, k) : d.title[2]); const nx = level(ST(key)); mount(); go(nx >= 4 ? 4 : nx); return true; },
+  // 岛页右边话题栏最上面的那张卡（样板 越聊越深放进软件样板.html ①）
+  card(id, k){ const d = (window.TALK_DEEP || {})[id + "|" + k]; if (!d || !ok()) return ""; const s = ALL()[id + "|" + k] || {}, nx = level(s), sv = D; D = d;
+    let L = [], q = ""; try { L = story(s); const P = pathOf(s); q = nx === 0 ? d.start.q[1] : nx === 1 ? "讲一件你碰到过的事" : nx === 2 ? (P ? P.l3.q[1] : "说说你的看法") : nx === 3 ? "有人读了你的故事，想接着问你" : "你的一分钟 ✨"; } catch(e){} D = sv;
+    const n = Object.keys(s.said || {}).length;
+    return '<button class="dp-card" data-dpopen="' + esc(id + "|" + k) + '"><span class="tp"><span class="k">' + esc(d.title[1]) + (nx < 4 ? ' · 第 ' + (nx + 1) + ' 层' : "") + '</span><b>' + d.title[0] + ' ' + (nx < 4 ? esc(LV[nx][0]) + '：' : "") + esc(q) + '</b>' +
+      (L.length ? '<span class="p">"' + esc(L.map(x => x[0]).join(" ")) + '"</span>' : '<span class="p e">关于你的一个故事，一层层往深说：我现在 → 碰到过 → 我觉得 → 说给人听。别人的话只听，你自己的话练说。</span>') + '</span>' +
+      '<span class="bt"><span class="dots">' + LV.map((_, i) => '<i class="' + (i < nx ? "d" : "") + '"></i>').join("") + '</span>' + (n ? "已经说了 " + n + " 句" : "大约 5 分钟一层") + '<em>' + (nx >= 4 ? "再听一遍 →" : n ? "接着聊 →" : "开始 →") + '</em></span></button>'; }
 };
 })();
 /* 🖥️ 电脑版杂志头版（2026-11-08，样板 样板/电脑版杂志样板.html 第三版；用户「对，照这个做」）
@@ -67972,7 +68248,7 @@ function tkModesHtml(id, k){ const m = tkModeOf(id, k), st = tkStreak(id, k);   
   const ty = window.TYOU && window.TYOU.has(id, k) ? window.TALK_YOU[id + "|" + k].qs[0].q : null;   // 💬 电脑上：门头下面就是「聊聊你自己」（手机上是岛页里的 #islePr）
   const tl = ty && window.TYOU.label(id, k);
   const dl = window.DEEP && window.DEEP.has(id, k) ? window.DEEP.label(id, k) : null;   // 🏠 越聊越深（2026-11-09）：有它的话题只放这一个入口
-  return `${tkHeadHtml(id, k)}${dl ? `<button class="ty-entry" data-dpopen="${id}|${k}">${esc(dl.t)}<small>${esc(dl.s)}</small></button>` : ""}${!dl && window.TFEED && window.TFEED.has(id, k) ? `<button class="ty-entry tf-entry" data-tfopen="${id}|${k}">${UI === "zh" ? "📱 竖着刷这个话题" : "📱 Swipe through this topic"}<small>${UI === "zh" ? "一屏一样，往上划，每段盖章" : "One thing per screen — swipe up, collect stamps"}</small></button>` : ""}${ty && !dl ? `<button class="ty-entry" data-tyopen="${id}|${k}">${esc(tl.t)}<small>${esc(tl.s)}</small></button>` : ""}<div class="tk-modes" role="tablist">${TK_MODES.map(([key, e, zh])=>`<button class="tk-mode${m === key ? " on" : ""}" role="tab" aria-selected="${m === key}" data-tkmode="${key}">${e} ${Z(zh)}${key === "photo" && st ? ` <small>${Z("连续")} ${st} ${UI === "zh" ? "天" : (ZL && ZL["天"]) || "days"}</small>` : ""}</button>`).join("")}</div>
+  return `${tkHeadHtml(id, k)}${dl ? window.DEEP.card(id, k) : ""}${!dl && window.TFEED && window.TFEED.has(id, k) ? `<button class="ty-entry tf-entry" data-tfopen="${id}|${k}">${UI === "zh" ? "📱 竖着刷这个话题" : "📱 Swipe through this topic"}<small>${UI === "zh" ? "一屏一样，往上划，每段盖章" : "One thing per screen — swipe up, collect stamps"}</small></button>` : ""}${ty && !dl ? `<button class="ty-entry" data-tyopen="${id}|${k}">${esc(tl.t)}<small>${esc(tl.s)}</small></button>` : ""}<div class="tk-modes" role="tablist">${TK_MODES.map(([key, e, zh])=>`<button class="tk-mode${m === key ? " on" : ""}" role="tab" aria-selected="${m === key}" data-tkmode="${key}">${e} ${Z(zh)}${key === "photo" && st ? ` <small>${Z("连续")} ${st} ${UI === "zh" ? "天" : (ZL && ZL["天"]) || "days"}</small>` : ""}</button>`).join("")}</div>
     ${m === "drill" ? (window.PR && window.PR.has(id, k) ? prEntryHtml(id, k) : tkDrillHtml(id, k)) : m === "listen" ? tkListenHtml(id, k) : m === "photo" ? tkSelfHtml(id, k) : tkChatHtml(id, k)}`; }
 // 🎧 听一听：从这个主题的群聊里挑 5 句，听一句，选它的意思；答完看原句（词照样能点、能存）
 function tkListenRounds(id, k){ const X = tkChatOf(id, k), M = X.chat.msgs.filter(m=>m[2]), seed = Math.floor(Date.now() / 864e5) + k.length;
