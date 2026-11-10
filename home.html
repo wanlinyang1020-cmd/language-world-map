@@ -267,12 +267,16 @@ footer nav{display:flex;gap:16px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 [data-l]{display:none}svg [data-l]{display:none}html[lang="en"] svg [data-l="en"],html[lang="zh"] svg [data-l="zh"]{display:inline}html[lang="en"] [data-l="en"],html[lang="zh"] [data-l="zh"]{display:revert}
 </style>
+<link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/app/apple-touch-icon.png"><meta name="theme-color" content="#2179d2"><meta name="apple-mobile-web-app-title" content="HeyVoyo">
+<style>.cine-top .rt{display:flex;align-items:center;gap:10px}.hv-inst{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:7px 14px;font:600 13px/1 "Noto Sans SC",sans-serif;color:#fbf7ee;background:rgba(255,255,255,.14);box-shadow:0 0 0 1px rgba(251,247,238,.45) inset;backdrop-filter:blur(6px)}.hv-inst:hover{background:rgba(255,255,255,.26)}.hv-inst svg{width:14px;height:14px}.hv-inst[hidden]{display:none}@media(max-width:560px){.hv-inst .t{display:none}.hv-inst{padding:7px 10px}}</style>
+<script src="/install.js" defer></script>
 </head>
 <body>
 <section class="cine">
   <div class="cine-v"><video class="on" src="https://img.heyvoyo.com/clips/eat_well_lunch_0.mp4" poster="https://img.heyvoyo.com/clips/eat_well_lunch_0.webp" muted loop playsinline autoplay></video><video src="https://img.heyvoyo.com/clips/eat_well_feel_0.mp4" poster="https://img.heyvoyo.com/clips/eat_well_feel_0.webp" muted loop playsinline preload="none"></video><video src="https://img.heyvoyo.com/clips/eat_well_breakfast_0.mp4" poster="https://img.heyvoyo.com/clips/eat_well_breakfast_0.webp" muted loop playsinline preload="none"></video></div>
   <div class="cine-shade"></div><div class="cine-frame"></div>
-  <header class="cine-top"><a class="logo" href="/?home">HEYVOYO</a><div class="lang"><button data-set="en">English</button><button data-set="zh">中文</button></div></header>
+  <header class="cine-top"><a class="logo" href="/?home">HEYVOYO</a><div class="rt"><button class="hv-inst" id="hvInstBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="t"></span></button><div class="lang"><button data-set="en">English</button><button data-set="zh">中文</button></div></div></header>
+<script>addEventListener("DOMContentLoaded",()=>{const b=document.getElementById("hvInstBtn");const up=()=>{const I=window.HVInstall;if(!I||!b)return;b.hidden=!I.show();b.querySelector(".t").textContent=I.label()};const w=()=>{if(window.HVInstall){HVInstall.onChange(up);up();b.onclick=()=>HVInstall.open();document.querySelectorAll("[data-set]").forEach(x=>x.addEventListener("click",()=>setTimeout(up,0)))}else setTimeout(w,200)};w()});</script>
   <div class="cine-mid">
     <div class="cine-k">A language-learning journal · <span data-l="zh">航海手帐</span><span data-l="en">Voyage Journal</span></div>
     <h1>One more word,<br>one more <em>world</em>.</h1>
