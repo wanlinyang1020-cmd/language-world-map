@@ -65146,7 +65146,7 @@ function wire(box){ mount(); box.querySelectorAll("[data-act]").forEach(c => c.o
 // ── 一个活动 ──
 let pg = null, curId = null, curDay = null;
 function close(){ if (pg){ pg.hidden = true; try { speechSynthesis.cancel(); } catch(e){} } curId = null; const g = document.getElementById("gal"); if (g && !g.hidden){ const top = g.scrollTop; g.querySelector(".acx") && (g.querySelector(".acx").outerHTML = html()); wire(g); g.scrollTop = top; } }
-function open(id, day){ const a = ALL.find(x => x.id === id); if (!a) return; mount(); curId = id; const o = ST(), J = o.j[id], host = who(a.host);
+function open(id, day){ const a = ALL.find(x => x.id === id); if (!a) return; mount(); try { window.hvPulse && window.hvPulse("act"); } catch(e){} curId = id; const o = ST(), J = o.j[id], host = who(a.host);
   const nd = J ? nextStep(a, J) : 0, d = day != null ? day : J ? (nd < 0 ? myDay(a, J) : nd) : 0; curDay = d; const D = a.D[d] || {}, R = run(a);
   const fin = finished(a, J);
   pg.innerHTML = `<div class="acx-pg"><div class="acx-top"><button class="acx-x" data-x>‹</button><b>${esc(ZH() ? a.t.zh : a.t.en)}</b></div>
@@ -65283,7 +65283,7 @@ function wireTask(a, d){ const D = a.D[d], P = TYPES[D.type] || TYPES.say, $ = s
     if (D.own && own && !own.value.trim()){ own.focus(); own.placeholder = T("先把空填上，再说出来", "Fill the blanks first, then say it"); return; }
     if (MIC){ MIC.stop(); return; }
     const target = D.own ? own.value.trim() : plain(D.line), lang = TGT(a)[2];
-    const after = (txt, v) => { mic.classList.remove("rec"); MIC = null; clearTimeout(c._sil); const J = judgeSay(txt, target, D.own ? [] : chunksIn(D.line)); c._tries = (c._tries || 0) + 1; showJudge(a, d, c, J, v, target); if (J.lv !== "far") tick(txt); };
+    const after = (txt, v) => { mic.classList.remove("rec"); MIC = null; clearTimeout(c._sil); const J = judgeSay(txt, target, D.own ? [] : chunksIn(D.line)); c._tries = (c._tries || 0) + 1; showJudge(a, d, c, J, v, target); if (J.lv !== "far"){ tick(txt); try { window.hvPulse && window.hvPulse("say"); } catch(e){} } };
     mic.classList.add("rec"); heard.textContent = ""; const jb = $(".acx-judge"); if (jb) jb.innerHTML = "";
     const onText = t => { heard.textContent = "“" + t + "”"; clearTimeout(c._sil); if (t) c._sil = setTimeout(() => MIC && MIC.stop(), 1600); };
     const H0 = window.HVI || {}, rs = H0.recStart && H0.canRec ? H0.recStart : null;
@@ -67987,7 +67987,14 @@ const pxGet = () => { try { return JSON.parse(localStorage.getItem("practice.v1"
 function pxAdd(e){ const A = pxGet(); A.push({t: Date.now(), ...e}); while (A.length > 800){ const j = A.filter(x=>x.k === "stk").length > 200 ? A.findIndex(x=>x.k === "stk") : 0; A.splice(j, 1); }   /* 看过的贴纸最多占 200 条，别把练过的挤掉 */ try { localStorage.setItem("practice.v1", JSON.stringify(A)); } catch(err){} try { syncMark("practice.v1"); } catch(err){} try { pxLedger(e); } catch(err){} }
 // 跟读没说准、后来也没练对的句子（老说不准）
 // 👣 足迹（2026-11-08）：四个页面共用这一本。主程序外面的模块（话题五步、竖着刷、朋友、手帐）和地图贴纸也往这里写一行；带 u 的同一天同一件事只记一次
-window.hvPx = e => { try { if (!e || !e.k) return; const day = blDay(); if (e.u && pxGet().some(x=>x.k === e.k && x.u === e.u && blDay(x.t) === day)) return; pxAdd(e); } catch(err){} };
+// 📊 几个数（2026-11-10，后台/pulse.sql）：打开 / 点开活动 / 说了一句 / 做完这一步 / 送给世界，每台手机每天各记一次数（只记次数，不记说了什么）。没连上后台就算了
+window.hvPulse = k => { try { const go = (tries) => { if (typeof HV === "undefined" || !HV.sb){ if (tries < 20) setTimeout(() => go(tries + 1), 1500); return; }
+    let dv = ""; try { dv = localStorage.getItem("hv.dev"); if (!dv){ dv = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("hv.dev", dv); } } catch(e){ return; }
+    const t = new Date(), day = t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+    HV.sb.rpc("pulse_hit", {p_day: day, p_device: dv, p_kind: k}).then(() => {}, () => {}); }; go(0); } catch(e){} };
+const PULSE_OF = {actday: "step", say: "say", tripsay: "say", reply: "say", tyreply: "say"};
+if (!window.claude) window.hvPulse("open");
+window.hvPx = e => { try { if (!e || !e.k) return; const pk = e.k === "gift" ? (e.to === "world" ? "send" : "") : PULSE_OF[e.k]; if (pk) window.hvPulse(pk); const day = blDay(); if (e.u && pxGet().some(x=>x.k === e.k && x.u === e.u && blDay(x.t) === day)) return; pxAdd(e); } catch(err){} };
 function pxMiss(){ const A = pxGet(), ok = {}, M = {}; A.forEach(e=>{ if (e.k === "card" && e.ok) ok[e.i + "|" + e.u] = e.t; if (e.k === "miss") M[e.i + "|" + e.s] = e; });
   return Object.values(M).filter(e=>!(ok[e.i + "|" + e.s] > e.t)); }
 // ⛵ 我的航线：海域 = 生活基础三档，再接你常去的岛；一站 = 岛上的一个主题。站型穿插（练一轮 / 听一听 / 说自己），每片海域最后是港口（开船去真实城市说一句才开下一片）
