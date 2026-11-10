@@ -65456,6 +65456,17 @@ function wireLang(a, d){ if (!pg) return; const D = a.D[d] || {}, $ = s => pg.qu
     b.textContent = "…"; let j = null;
     try { j = await ai.json([{role: "user", content: t}], {modelTier: "chat", cache: false, system: `You are ${host.nm}, ${host.job || ""}, hosting a language-learning activity called "${a.t.en}". Today's line: "${plain(D.line)}". A learner (Chinese speaker, around B1) asks a question about English. Answer like a friendly expert in 1-2 short spoken English sentences, plus a short Chinese version. Be accurate; if unsure, say so. Reply only as JSON: {"en":"...","zh":"..."}`}); } catch(e){ j = null; }
     if (j && j.en) rec.a = [j.en, j.zh || ""]; save(); }); }
+// 「今天」最上面：还没参加过任何活动的新人，先看到三张今天就能开始的海报（样板 样板/新人第一眼样板.html）
+// 一块土壤一张：看见自己 / 语言 / 文化；不讲教程、不先问水平；参加以后这一块换成 todayBar()
+const STARTERS = ["nadia_label", "daniel_praise", "isabel_minute"];
+function starter(){ const o = ST(); if (Object.keys(o.j || {}).length) return ""; const H = window.HVI || {};
+  if (!ZH() || (H.LEARN && H.LEARN !== "en")) return "";   // 现在的活动是给中文界面学英语的人写的
+  const A = STARTERS.map(id => L.find(a => a.id === id)).filter(Boolean); if (!A.length) return ""; mount();
+  const col = a => (SOILS.find(x => x[0] === soilOf(a)) || [])[6] || "#14305c";
+  return `<div class="acx-start"><h2>${T("从一个活动开始", "Start with an activity")}</h2><p>${T("每天 5 分钟，做一件小事，顺便把它说出来", "Five minutes a day: do one small thing, and say it")}</p>
+    <div class="acx-prow">${A.map((a, i) => poster(a, i, col(a)).replace('data-act="', 'data-acxstart="').replace(/<div class="acx-tp"><span>[^<]*<\/span>/, `<div class="acx-tp"><span>${T("今天就能开始", "Start today")}</span>`)).join("")}</div><div class="acx-more" data-acxall>${T("还有 " + (L.length - A.length) + " 个活动在「活动」那一栏 ›", (L.length - A.length) + " more in Activities ›")}</div></div>`; }
+document.addEventListener("click", e => { const s = e.target.closest("[data-acxstart]"); if (s){ e.preventDefault(); open(s.dataset.acxstart); return; }
+  if (e.target.closest("[data-acxall]")){ const b = document.querySelector('#galTabs [data-galtab="home"]'); if (b) b.click(); } });
 // 「今天」页上的一条：你在参加的，今天这一步
 function todayBar(){ const A = L.filter(a => joined(a.id) && !finished(a, joined(a.id))); if (!A.length) return "";
   const a = A[0], J = joined(a.id), n = nextStep(a, J); if (n < 0) return "";
@@ -65572,8 +65583,10 @@ const CSS = `:root{--acx-ink:#14305c;--acx-mute:#6b7488;--acx-say:#e2552f;--acx-
 .acx-ru{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.acx-ru button{all:unset;cursor:pointer;font-size:12px;border-radius:99px;padding:2px 9px;background:#fff;color:#3d6a99;box-shadow:0 0 0 1px #d6e0ec inset}
 
 .acx-ans{align-items:center}.acx-ans input{flex:1;min-width:0;border:1px solid #d9cfb8;border-radius:99px;padding:6px 12px;font-size:13.5px}.acx-ans button{all:unset;cursor:pointer;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:700;background:#7b2d6e;color:#fff}
+
+.acx-start{margin:6px 0 12px}.acx-start h2{margin:4px 0 2px;font:900 22px/1.25 "Noto Serif SC","Songti SC",serif;color:var(--acx-ink)}.acx-start p{margin:0;color:var(--acx-mute);font-size:13.5px}.acx-start .acx-prow{margin-top:10px}.acx-more{font-size:13px;color:var(--acx-mute);cursor:pointer}
 `;
-window.ACT = {html, wire, open, close, todayBar, isOpen: () => !!(pg && !pg.hidden), list: () => L};
+window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => L};
 })();
 /* 🖥️ 电脑版杂志头版（2026-11-08，样板 样板/电脑版杂志样板.html 第三版；用户「对，照这个做」）
    电脑屏幕大：点「今天」不是手机那张手帐，而是一期杂志的头版——今日世界三张（轮换，可以就地猜）、转动的地球、今天的话题（短片在播）、
@@ -65611,7 +65624,7 @@ function html(){ const d = new Date(), dt = X.UI === "zh" ? (d.getMonth() + 1) +
   let I = []; try { I = X.bpTodayItems(); } catch(e){}
   let W0 = ["", ""]; try { W0 = X.meWho(); } catch(e){}
   return `<div class="dm"><header class="dm-top"><h1>HEYVOYO</h1><div class="dm-iss">${no ? L("第 " + no + " 期", "No. " + no) + "<br>" : ""}${E(dt)}</div><button class="dm-search" data-dm="search">🔍 ${L("搜一个地方、一个人、一个词……", "Search a place, a person, a word…")}</button>${sk ? `<span class="dm-streak">🔥 ${L("连续 " + sk + " 天", sk + "-day streak")}</span>` : ""}<button class="dm-av" data-dm="me">🙂</button></header>
-    <div class="hv-echo-slot"></div>${window.ACT ? window.ACT.todayBar() : ""}
+    <div class="hv-echo-slot"></div>${window.ACT ? window.ACT.starter() + window.ACT.todayBar() : ""}
     <div class="dm-a">${TP.length ? tcHtml(TP[0], " dm-lead") : `<section class="dm-tw"></section>`}
       <section class="dm-globe"><div class="gh">🌍 ${L("世界 · 今天这些地方有人在说", "WORLD · people are talking here today")}</div><svg id="dmGlobe" viewBox="0 0 400 400"></svg><div class="gf" id="dmGf">${L("点地球上的点，打开那里的一篇", "Tap a dot to open that story")}</div></section></div>
     <div class="dm-sec"><h2>💬 ${L("今天的话题", "Today's topics")}</h2><small>${L("每篇里都有住在那儿的人，点开说一句", "Each one has people who live there — open it and say a line")}</small><button class="more" data-dm="topics">${L("全部话题 →", "All topics →")}</button></div>
@@ -72752,7 +72765,7 @@ function bpHtml(){ if (!bpOnly && window.DESK && window.DESK.on()) return window
     ${bpVoyage(R, L)}`;
   if (bpOnly){ const T = {walk: "👣 " + ZZ("我走过的", "Where I've been"), pass: "🛂 " + ZZ("我的护照", "My passport"), hold: "🧳 " + ZZ("收藏和记录", "Saved & log")}[bpOnly] || "";
     return `<div class="bp-wrap"><button class="chip" data-btback>← ${Z("我")}</button><h2 style="margin:10px 0 6px">${T}</h2>${bpOnly === "walk" ? bpWalkHtml() : bpOnly === "pass" ? bpPassHtml() + bpPath(R) : bpPocketHtml() + bpHold(R, L)}</div>`; }
-  return `<div class="bp-wrap"><div class="hv-echo-slot"></div>${bpToday()}${bpMore()}</div>`; }
+  return `<div class="bp-wrap"><div class="hv-echo-slot"></div>${window.ACT ? ACT.starter() : ""}${bpToday()}${bpMore()}</div>`; }
 function bpOpen(view){ if (view) bpView = view; galClose(); let box = document.getElementById("boatPg");
   if (!box){ box = document.createElement("div"); box.id = "boatPg"; document.body.appendChild(box); }
   const y = box.hidden ? 0 : box.scrollTop; if (window.DESK) window.DESK.stop(); box.classList.remove("dm-box"); box.innerHTML = bpHtml(); box.hidden = false; box.scrollTop = y;
