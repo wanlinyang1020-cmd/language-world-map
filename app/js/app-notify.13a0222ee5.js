@@ -58,7 +58,14 @@ function kBoat(){
   let L = []; try { L = window.PR && window.PR.due ? window.PR.due() : []; } catch(e){} if (!L.length) return null; const x = L[0];
   return {tab: "boat", title: T(`☕ ${x.npc} 在等你`, `☕ ${x.npc} is waiting for you`), body: x.where ? T(`熟客：${cut(x.where, 40)}，再去聊两句。`, `Your regular spot: ${cut(x.where, 40)}. Drop by for a quick chat.`) : T("老地方，再去聊两句。", "Same place as last time. Drop by for a quick chat.")};
 }
+// 🎪 活动（2026-11-10，用户：「活动最怕第 2 天没人回来」）：参加的活动那天开了新的一步、还没做，这条提醒先说它
+function kAct(d){ let J = {}; try { J = (JSON.parse(lsg("act.v1") || "{}").j) || {}; } catch(e){} const A = window.ACTS || [], day = ymd(d), zh = ui() === "zh";
+  for (const id in J){ const a = A.find(x => x.id === id), j = J[id]; if (!a || !j || !j.d0) continue; const i = Math.round((Date.parse(day) - Date.parse(j.d0)) / 864e5);
+    if (i < 0 || i >= a.days || (j.done || {})[i] != null) continue; const D = a.D[i] || {}, host = (window.PTAB_INFO && window.PTAB_INFO(a.host) || {}).nm || "";
+    return {tab: "acts", act: id, title: T(`🎪 ${a.t.zh} · 第 ${i + 1} 天开了`, `🎪 ${a.t.en} · Day ${i + 1} is open`), body: (host ? host + T("：", ": ") : "") + cut(zh ? (D.say || [])[1] : (D.say || [])[0], 90)}; }
+  return null; }
 function contentFor(d, i, skipToday){
+  const ka = kAct(d); if (ka) return ka;
   const dn = Math.floor((d.getTime() - d.getTimezoneOffset() * 6e4) / 864e5), K = [kToday, kPeople, kBoat];
   for (let j = 0; j < 3; j++){ const f = K[(dn + j) % 3]; if (skipToday && f === kToday) continue; const c = f(d, i); if (c) return c; }
   return null;
@@ -75,7 +82,7 @@ async function schedule(){
     const auto = S.t === "auto", [hh, mm] = when(S.t).split(":").map(Number), now = Date.now(), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })(), N = [];
     for (let i = 0; i < DAYS; i++){ const d = new Date(); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); if (d.getTime() < now + 20e3) continue; if (auto && i === 0 && usedToday()) continue;   // 跟着习惯：今天已经来过，就不叫了
       const c = contentFor(d, i, i === 0 && done); if (!c) continue;
-      N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d)}}); }
+      N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d), act: c.act || ""}}); }
     if (N.length) await LN().schedule({notifications: N});
   } catch(e){ try { console.warn("提醒排不上", e); } catch(_){} } finally { busy = null; } })();
   return busy;
@@ -129,7 +136,7 @@ function ask(){
 function hook(h){
   H = h || {}; if (!app()) return;
   try { LN().addListener("localNotificationActionPerformed", e => { const x = (e && e.notification && e.notification.extra) || {}, f = H.open && H.open[x.tab];
-    if (f) setTimeout(() => { try { f(); } catch(err){} }, 1200); }); } catch(e){}
+    if (f) setTimeout(() => { try { f(x.act); } catch(err){} }, 1200); }); } catch(e){}
   markUse();
   document.addEventListener("visibilitychange", () => { if (!document.hidden){ markUse(); schedule(); } });
   setTimeout(schedule, 2500);
