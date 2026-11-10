@@ -791,6 +791,143 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => L};
 })();
 
+/* world_feed.js */
+// 📺 刷世界（2026-11-11，样板 样板/刷世界样板.html，用户：「我的设想是能让用户在这个软件一天停留两个小时」「可以，放进软件」）
+// 一屏一条往上刷：真实街头短片（门头短片 ISLE_CLIPS，学中文的先放中国的）+ 要学的语言的字幕（每个词能点：拼音 / 🔊 / 收进复习）
+// 中间穿插：朋友页的人的动态（配 TA 自己的声音）、学中文/英语的人送给世界的真声音（Supabase linevoices，有人送才有）、每八条一张活动卡。
+// 右边：❤️ 收进复习（feed.v1，template2 的 revPool 读它）· 🐢 慢慢再听 · 🎤 跟着说。顶上「今天听了几分钟、几句」，只给自己看，不设目标、不断签。
+// 对外：window.WFEED = {open, card}；地址 #feed 直接打开。
+(function(){
+const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } };
+const H = () => window.HVI || {};
+const UI = () => (document.documentElement.lang || "zh").slice(0, 2), ZH = () => UI() === "zh";
+const LZ = () => (H().LEARN || "en") === "zh";
+const T = (zh, en) => ZH() ? zh : en;
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const today = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const ST = () => { const o = ls("feed.v1") || {}; o.saved = o.saved || []; if (o.day !== today()){ o.day = today(); o.secs = 0; o.lines = 0; } return o; };
+const SAVE = o => { ls("feed.v1", o); try { window.hvSyncMark && window.hvSyncMark("feed.v1"); } catch(e){} };
+const lang = () => LZ() ? "zh-CN" : "en-GB";
+let AU = null;
+function speak(t, rate, url){ try { speechSynthesis.cancel(); } catch(e){} if (AU){ AU.pause(); AU = null; }
+  if (url){ AU = new Audio(url); AU.playbackRate = rate && rate < .9 ? .8 : 1; AU.play().catch(() => tts(t, rate)); return; } tts(t, rate); }
+function tts(t, rate){ try { const u = new SpeechSynthesisUtterance(t); u.lang = lang(); u.rate = rate || .95; speechSynthesis.speak(u); } catch(e){} }
+const blip = k => { try { if (localStorage.getItem("hv.sound") === "off") return; const A = window.AudioContext || window.webkitAudioContext; const ac = blip.ac || (blip.ac = new A()), o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = k === "ok" ? 880 : 660; g.gain.setValueAtTime(.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(.08, ac.currentTime + .01); g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + .12); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + .14); } catch(e){} };
+
+// ── 内容 ──
+const day0 = Math.floor(Date.now() / 864e5);
+const shuffle = (A, seed) => { const a = A.slice(); let s = seed || 1; for (let i = a.length - 1; i > 0; i--){ s = (s * 9301 + 49297) % 233280; const j = Math.floor(s / 233280 * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function clips(){ const C = typeof ISLE_CLIPS !== "undefined" ? ISLE_CLIPS : {}, out = [], seen = new Set();
+  for (const k in C) (C[k] || []).forEach(c => { const t = c.cap && (LZ() ? c.cap.zh : c.cap.en); if (!t || !c.src || seen.has(c.src) || c.ok === false) return; seen.add(c.src);
+    out.push({k: "clip", src: c.src, poster: c.poster, t, m: LZ() ? c.cap.en : c.cap.zh, where: c.where ? (ZH() ? c.where.zh : c.where.en) : "", cn: /^(CN|TW|HK)$/.test(c.country || "")}); });
+  const A = shuffle(out, day0), cn = A.filter(x => x.cn), rest = A.filter(x => !x.cn);
+  return LZ() ? cn.concat(rest) : A; }   // 学中文的人先刷中国的
+function posts(){ const D = window.PTAB; if (!D || !D.posts) return []; const out = [], t = today();
+  for (const id in D.posts){ const p = (D.people || {})[id] || {}, pl = p.learn || (/^(shanghai|beijing|chengdu|guangzhou)\./.test(id) ? "zh" : "en"); if ((pl === "zh") !== LZ()) continue;
+    (D.posts[id] || []).forEach(x => { if (!x || !x[4] || (x[12] && x[12] > t)) return; out.push({k: "post", id, nm: p.nm || id, img: p.img || "", t: x[4], m: x[5] || "", ph: x[3] && x[3][0] ? `https://images.pexels.com/photos/${x[3][0]}/pexels-photo-${x[3][0]}.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&fit=crop` : "", city: x[2] || "", d: x[12] || ""}); }); }
+  return shuffle(out.sort((a, b) => (b.d || "").localeCompare(a.d || "")).slice(0, 80), day0 + 7); }
+function acts(){ try { return (window.ACT && ACT.list ? ACT.list() : []).filter(a => !(((ls("act.v1") || {}).j || {})[a.id])); } catch(e){ return []; } }
+let VOICES = [];
+async function loadVoices(){ try { const sb = typeof HV !== "undefined" && HV.sb; if (!sb) return; const r = await sb.from("docs").select("id,owner,data").eq("coll", "linevoices").eq("data->>l", LZ() ? "zh" : "en").order("created_at", {ascending: false}).limit(30);
+  VOICES = (r.data || []).filter(x => x.data && x.data.hid !== true && (x.data.url || x.data.a) && (x.data.t || x.data.heard)).map(x => ({k: "voice", nm: (x.data.nm || "").trim() || T("一位朋友", "Someone"), t: x.data.t || x.data.heard, url: x.data.url || "", a: x.data.a, mime: x.data.mime})); } catch(e){} }
+let Q = [], qi = 0;
+function build(){ const C = clips(), P = posts(), A = acts(); const out = []; let ci = 0, pi = 0, ai = 0, vi = 0;
+  for (let n = 0; n < 60 && (ci < C.length || pi < P.length); n++){
+    if (n % 8 === 7 && A.length){ out.push({k: "act", a: A[ai++ % A.length]}); continue; }
+    if (n % 6 === 5 && VOICES.length){ out.push(VOICES[vi++ % VOICES.length]); continue; }
+    if (n % 4 === 3 && pi < P.length){ out.push(P[pi++]); continue; }
+    if (ci < C.length) out.push(C[ci++]); else if (pi < P.length) out.push(P[pi++]); }
+  return out; }
+
+// ── 字幕：每个词能点 ──
+function toks(t){ if (!LZ()) return t.split(/(\s+)/).map(w => /\w/.test(w) ? {w, p: ""} : {w, sp: 1});
+  const P = window.pinyinPro; let words = null; try { words = P && P.segment ? P.segment(t) : null; } catch(e){ words = null; }
+  if (words && words.length) return words.map(x => /[一-鿿]/.test(x.origin) ? {w: x.origin, p: x.result} : {w: x.origin, sp: 1});
+  return [...t].map(ch => /[一-鿿]/.test(ch) ? {w: ch, p: (() => { try { return P ? P.pinyin(ch) : ""; } catch(e){ return ""; } })()} : {w: ch, sp: 1}); }
+const capHtml = t => toks(t).map(x => x.sp ? `<span>${esc(x.w)}</span>` : `<span class="wf-w" data-w="${esc(x.w)}">${LZ() && x.p ? `<small>${esc(x.p)}</small>` : ""}${esc(x.w)}</span>`).join("");
+
+// ── 画一张卡 ──
+const rail = () => `<div class="wf-rail"><button data-wl title="Save">❤️</button><small>${T("收藏", "Save")}</small><button data-ws>🐢</button><small>${T("慢放", "Slow")}</small><button data-we>🎤</button><small>${T("跟着说", "Say it")}</small></div>`;
+const face = (img, nm) => img ? `<img src="${esc(img)}" alt="">` : `<span class="wf-av">${esc((nm || "?")[0])}</span>`;
+function cardHtml(x, i){
+  if (x.k === "clip") return `<div class="wf-c" data-i="${i}"><video src="${esc(x.src)}" poster="${esc(x.poster || "")}" muted loop playsinline preload="none"></video><div class="wf-sh"></div>${x.where ? `<span class="wf-where">📍 ${esc(x.where)}</span>` : ""}<div class="wf-cap" data-nopy><div class="wf-t">${capHtml(x.t)}</div><div class="wf-m">${esc(x.m || "")}</div></div>${rail()}</div>`;
+  if (x.k === "post") return `<div class="wf-c" data-i="${i}"><div class="wf-post"><div class="wf-who">${face(x.img, x.nm)}<span>${esc(x.nm)}<br><small>${esc(x.city)} · 🎭 ${T("角色", "character")}</small></span></div>${x.ph ? `<div class="wf-ph" style="background-image:url('${esc(x.ph)}')"></div>` : ""}<div class="wf-cap2" data-nopy><div class="wf-t">${capHtml(x.t)}</div><div class="wf-m">${esc(x.m)}</div></div></div>${rail()}</div>`;
+  if (x.k === "voice") return `<div class="wf-c" data-i="${i}"><div class="wf-voice"><div class="wf-who" style="justify-content:center">${face("", x.nm)}<span>${esc(x.nm)}<br><small>${T("送给世界的 · 真人的声音", "sent to the world · real voice")}</small></span></div><div class="wf-wave">${Array.from({length: 18}, (_, k) => `<i style="height:${18 + (k * 37 % 40)}px;animation-delay:${k * .05}s"></i>`).join("")}</div><div class="wf-cap2" data-nopy><div class="wf-t">${capHtml(x.t)}</div></div><button class="wf-btn" data-wv>▶ ${T("听 TA 说", "Hear them")}</button></div>${rail()}</div>`;
+  const a = x.a, nm = (window.PTAB_INFO && window.PTAB_INFO(a.host) || {}).nm || "";
+  return `<div class="wf-c" data-i="${i}"><div class="wf-act" style="background-image:url('https://img.heyvoyo.com/npc/${esc(a.pic || "")}.webp')"><div class="wf-box"><small>🎪 ${T("活动", "Activity")} · ${a.days} ${T("天", a.days === 1 ? "day" : "days")}${nm ? " · " + esc(nm) : ""}</small><h3>${esc(T(a.t.zh, a.t.en))}</h3><button class="wf-btn" data-wa="${esc(a.id)}">${T("去看看", "Take a look")} →</button></div></div></div>`; }
+
+// ── 页面 ──
+let pg = null, io = null, tick = null;
+function mount(){ if (!document.getElementById("wfCss")){ const s = document.createElement("style"); s.id = "wfCss"; s.textContent = CSS; document.head.appendChild(s); }
+  if (!pg){ pg = document.createElement("div"); pg.id = "wfPg"; pg.dataset.nopy = ""; pg.hidden = true; document.body.appendChild(pg); } }
+function earTxt(){ const o = ST(); return `👂 ${Math.floor((o.secs || 0) / 60)} min · ${o.lines || 0} ${T("句", "lines")}`; }
+function add(n){ const feed = pg.querySelector(".wf-feed"), start = qi; let h = ""; for (let k = 0; k < n && Q.length; k++){ const x = Q[qi % Q.length]; h += cardHtml(x, qi); qi++; } feed.insertAdjacentHTML("beforeend", h);
+  feed.querySelectorAll(".wf-c").forEach(c => { if (+c.dataset.i >= start) io.observe(c); }); }
+async function open(){ mount();
+  if (LZ() && !window.pinyinPro && H().loadPinyin){ try { await Promise.race([H().loadPinyin(), new Promise(r => setTimeout(r, 2500))]); } catch(e){} }
+  Q = build(); qi = 0; if (!Q.length) return;
+  pg.innerHTML = `<div class="wf-top"><button class="wf-x" data-wx>✕</button><b>${T("刷世界", "Watch the world")}</b><span class="wf-ear">${earTxt()}</span></div><div class="wf-feed"></div><div class="wf-sheet"></div><div class="wf-toast"></div>`;
+  pg.hidden = false; document.body.classList.add("wf-on"); const feed = pg.querySelector(".wf-feed");
+  io = new IntersectionObserver(es => es.forEach(e => { const v = e.target.querySelector("video"), x = Q[+e.target.dataset.i % Q.length];
+    if (e.isIntersecting){ if (v){ v.preload = "auto"; v.play().catch(() => {}); } if (!e.target._seen){ e.target._seen = 1; const o = ST(); o.lines = (o.lines || 0) + 1; SAVE(o); pg.querySelector(".wf-ear").textContent = earTxt(); }
+      if (x && x.k !== "act" && x.k !== "voice") setTimeout(() => { if (e.target.getBoundingClientRect().top < 40 && e.target.getBoundingClientRect().top > -40) speak(x.t, .95, x.k === "post" && window.hvVoiceUrl ? window.hvVoiceUrl(x.t) : ""); }, 500);
+      if (+e.target.dataset.i >= qi - 3) add(10); }
+    else if (v) v.pause(); }), {root: feed, threshold: .6});
+  add(12); clearInterval(tick); tick = setInterval(() => { if (pg.hidden || document.hidden) return; const o = ST(); o.secs = (o.secs || 0) + 5; SAVE(o); const e = pg.querySelector(".wf-ear"); if (e) e.textContent = earTxt(); }, 5000);
+  try { window.hvPulse && window.hvPulse("act"); } catch(e){}
+  if (!VOICES.length) loadVoices().then(() => { if (VOICES.length){ const more = build().filter(x => x.k === "voice"); if (more.length) Q.splice(Math.min(Q.length, qi + 2), 0, ...more.slice(0, 3)); } });
+  pg.onclick = onClick; }
+function close(){ if (!pg) return; pg.hidden = true; document.body.classList.remove("wf-on"); clearInterval(tick); try { io && io.disconnect(); } catch(e){} if (AU){ AU.pause(); AU = null; } try { speechSynthesis.cancel(); } catch(e){} pg.querySelectorAll("video").forEach(v => v.pause());
+  if (location.hash === "#feed") history.replaceState(null, "", location.pathname + location.search); }
+const toast = t => { const el = pg.querySelector(".wf-toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 1500); };
+function saveLine(x, word){ const o = ST(), key = (word || "") + "|" + x.t; if (!o.saved.find(s => s.key === key)){ o.saved.push({key, t: word || x.t, m: word ? x.t : (x.m || ""), at: Date.now()}); if (o.saved.length > 500) o.saved.shift(); SAVE(o); } blip("ok"); toast(T("❤️ 收进复习了，过几天会回来", "❤️ Saved — it'll come back in review")); }
+function onClick(e){ if (e.target.closest("[data-wx]")){ close(); return; }
+  const sh = pg.querySelector(".wf-sheet"); if (!e.target.closest(".wf-sheet")) sh.classList.remove("on");
+  const card = e.target.closest(".wf-c"); if (!card) return; const x = Q[+card.dataset.i % Q.length]; if (!x) return;
+  const w = e.target.closest(".wf-w"); if (w){ const word = w.dataset.w; speak(word, .7); blip();
+    let py = ""; try { py = LZ() && window.pinyinPro ? pinyinPro.pinyin(word) : ""; } catch(_){}
+    sh.innerHTML = `<div><span class="wf-big">${esc(word)}</span><span class="wf-py">${esc(py)}</span></div><div class="wf-in">${T("在这句里：", "In: ")}${esc(x.t)}${x.m ? `<br><small>${esc(x.m)}</small>` : ""}</div><div class="wf-row"><button data-sv>❤️ ${T("收进复习", "Save to review")}</button><button data-ag>🔊 ${T("再听", "Again")}</button></div>`;
+    sh.classList.add("on"); sh.querySelector("[data-sv]").onclick = ev => { ev.stopPropagation(); w.classList.add("saved"); sh.classList.remove("on"); saveLine(x, word); }; sh.querySelector("[data-ag]").onclick = ev => { ev.stopPropagation(); speak(word, .6); }; return; }
+  if (e.target.closest("[data-wl]")){ e.target.closest("[data-wl]").classList.add("on"); saveLine(x); return; }
+  if (e.target.closest("[data-ws]")){ speak(x.t, .6, x.k === "voice" ? x.url : ""); toast("🐢 …"); return; }
+  if (e.target.closest("[data-wv]")){ const v = card.querySelector(".wf-voice"); v.classList.add("play"); let u = x.url; if (!u && x.a){ try { const b = atob(x.a), a = new Uint8Array(b.length); for (let k = 0; k < b.length; k++) a[k] = b.charCodeAt(k); u = URL.createObjectURL(new Blob([a], {type: x.mime || "audio/webm"})); } catch(_){} } speak(x.t, 1, u); setTimeout(() => v.classList.remove("play"), 3000); return; }
+  if (e.target.closest("[data-wa]")){ const id = e.target.closest("[data-wa]").dataset.wa; close(); try { ACT.open(id); } catch(_){} return; }
+  if (e.target.closest("[data-we]")){ const b = e.target.closest("[data-we]"), h = H(); if (b.classList.contains("rec")) return;
+    if (!h.recStart || !h.canRec){ toast(T("这台设备开不了话筒", "No microphone here")); return; }
+    b.classList.add("rec"); toast(T("🎤 说吧……", "🎤 Your turn…")); let txt = "";
+    h.recStart({lang: lang(), onText: t => { txt = t; }, onDone: v => { b.classList.remove("rec"); const said = (v && v.text) || txt; blip("ok"); toast(said ? "✓ “" + said.slice(0, 40) + "”" : T("没听清，再来一次？", "Didn't catch that — again?")); }, onError: () => { b.classList.remove("rec"); toast(T("话筒打不开", "Can't open the mic")); }}).then(hd => { if (hd) setTimeout(() => hd.stop && hd.stop(), 6000); else b.classList.remove("rec"); }); return; } }
+// 「活动」那一栏最上面的入口
+function card(){ const c = clips()[0]; if (!c) return ""; mount();
+  return `<button class="wf-entry" data-wfopen><video src="${esc(c.src)}" poster="${esc(c.poster || "")}" muted loop playsinline autoplay preload="metadata"></video><span class="wf-eg"></span><span class="wf-et"><b>▶ ${T("刷世界", "Watch the world")}</b><small>${LZ() ? T("真实的中国街头，中文字幕，每个词都能点", "Real streets in China, Chinese subtitles — tap any word") : T("真实的街头，英文字幕，每个词都能点", "Real streets, English subtitles — tap any word")}</small><em>${earTxt()}</em></span></button>`; }
+document.addEventListener("click", e => { const b = e.target.closest("[data-wfopen]"); if (b){ e.preventDefault(); open(); } });
+if (location.hash === "#feed") setTimeout(open, 1800);
+window.addEventListener("hashchange", () => { if (location.hash === "#feed") open(); });
+window.WFEED = {open, close, card, isOpen: () => !!(pg && !pg.hidden)};
+
+const CSS = `#wfPg{position:fixed;inset:0;z-index:62;background:#000;color:#fff}body.wf-on{overflow:hidden}
+.wf-top{position:absolute;left:0;right:0;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:12px 14px;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.6)}.wf-top b{flex:1}
+.wf-x{pointer-events:auto;border:0;background:rgba(0,0,0,.4);color:#fff;width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer}.wf-ear{background:rgba(0,0,0,.4);border-radius:99px;padding:3px 10px;font-size:12px}
+.wf-feed{position:absolute;inset:0;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}.wf-feed::-webkit-scrollbar{display:none}
+.wf-c{height:100%;height:100dvh;scroll-snap-align:start;position:relative;overflow:hidden;max-width:560px;margin:0 auto}
+.wf-c video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.wf-sh{position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(0,0,0,.8))}
+.wf-where{position:absolute;left:14px;bottom:170px;font-size:12px;background:rgba(0,0,0,.4);padding:2px 8px;border-radius:4px}
+.wf-cap{position:absolute;left:14px;right:72px;bottom:64px}.wf-t{font:900 23px/1.6 "Noto Serif SC",Georgia,serif;text-shadow:0 2px 8px rgba(0,0,0,.6)}.wf-m{font-size:13.5px;opacity:.9;margin-top:4px}
+.wf-w{cursor:pointer;border-radius:4px;padding:0 1px;display:inline-flex;flex-direction:column;align-items:center;line-height:1.15}.wf-w:hover{background:rgba(255,255,255,.18)}.wf-w small{font:600 10.5px -apple-system,sans-serif;opacity:.85}.wf-w.saved{background:rgba(226,85,47,.55)}
+.wf-rail{position:absolute;right:10px;bottom:72px;display:flex;flex-direction:column;gap:12px;align-items:center;z-index:3}.wf-rail button{border:0;background:rgba(0,0,0,.4);color:#fff;width:46px;height:46px;border-radius:50%;font-size:20px;cursor:pointer}.wf-rail small{font-size:10px;margin-top:-9px;text-shadow:0 1px 3px #000}.wf-rail .on{background:#e2552f}.wf-rail .rec{background:#e2552f;animation:wfp 1s infinite}@keyframes wfp{50%{box-shadow:0 0 0 10px rgba(226,85,47,.25)}}
+.wf-who{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-weight:800}.wf-who img,.wf-av{width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;display:inline-grid;place-items:center;background:#7b2d6e}.wf-who small{font-weight:500;opacity:.85}
+.wf-post{position:absolute;inset:0;background:linear-gradient(160deg,#2b3f63,#14305c);display:flex;flex-direction:column;justify-content:center;padding:60px 72px 60px 20px}.wf-ph{width:100%;height:42vh;border-radius:16px;background:#333 center/cover;margin:10px 0 14px}
+.wf-voice{position:absolute;inset:0;background:radial-gradient(circle at 30% 20%,#7b2d6e,#2b1630);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 72px 60px 22px}
+.wf-wave{display:flex;gap:4px;align-items:center;height:60px;margin:14px 0}.wf-wave i{width:5px;border-radius:3px;background:#fff;opacity:.8;animation:wfw 1s infinite ease-in-out paused}.wf-voice.play .wf-wave i{animation-play-state:running}@keyframes wfw{50%{transform:scaleY(.35)}}
+.wf-act{position:absolute;inset:0;background:#222 center/cover}.wf-box{position:absolute;left:16px;right:72px;bottom:72px;background:rgba(251,247,238,.96);color:#24303a;border-radius:16px;padding:14px}.wf-box small{color:#6b7488}.wf-box h3{margin:2px 0 8px;font:900 21px Georgia,"Noto Serif SC",serif;color:#14305c}
+.wf-btn{border:0;border-radius:99px;padding:9px 16px;font-weight:800;background:#e2552f;color:#fff;cursor:pointer;margin-top:10px}
+.wf-sheet{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:#fbf7ee;color:#24303a;border-radius:20px 20px 0 0;padding:16px 18px 24px;transform:translateY(105%);transition:.3s;z-index:9}.wf-sheet.on{transform:none}
+.wf-big{font:900 34px "Noto Serif SC",Georgia,serif;color:#14305c}.wf-py{font-size:18px;color:#e2552f;font-weight:800;margin-left:8px}.wf-in{color:#6b7488;font-size:13px;margin-top:6px}.wf-row{display:flex;gap:8px;margin-top:12px}.wf-row button{border:1.5px solid #e6dfcf;background:#fff;border-radius:99px;padding:7px 12px;font-weight:700;color:#14305c;cursor:pointer}
+.wf-toast{position:absolute;top:58px;left:50%;transform:translate(-50%,-20px);opacity:0;background:#fff;color:#14305c;font-weight:800;padding:6px 14px;border-radius:99px;transition:.3s;z-index:10;font-size:13px;white-space:nowrap}.wf-toast.on{opacity:1;transform:translate(-50%,0)}
+.wf-entry{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:block;position:relative;height:150px;border-radius:16px;overflow:hidden;margin:6px 0 16px;background:#222;box-shadow:0 8px 20px rgba(20,30,50,.2)}.wf-entry video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.wf-eg{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.75),transparent)}
+.wf-et{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#fff;max-width:70%}.wf-et b{display:block;font:900 22px Georgia,"Noto Serif SC",serif}.wf-et small{display:block;opacity:.9;font-size:13px;margin-top:2px}.wf-et em{display:inline-block;font-style:normal;font-size:11.5px;background:rgba(255,255,255,.2);border-radius:99px;padding:2px 8px;margin-top:6px}
+@media (prefers-reduced-motion:reduce){.wf-wave i,.wf-rail .rec{animation:none}}`;
+})();
+
 /* desk_mag.js */
 /* 🖥️ 电脑版杂志头版（2026-11-08，样板 样板/电脑版杂志样板.html 第三版；用户「对，照这个做」）
    电脑屏幕大：点「今天」不是手机那张手帐，而是一期杂志的头版——今日世界三张（轮换，可以就地猜）、转动的地球、今天的话题（短片在播）、
@@ -828,7 +965,7 @@ function html(){ const d = new Date(), dt = X.UI === "zh" ? (d.getMonth() + 1) +
   let I = []; try { I = X.bpTodayItems(); } catch(e){}
   let W0 = ["", ""]; try { W0 = X.meWho(); } catch(e){}
   return `<div class="dm"><header class="dm-top"><h1>HEYVOYO</h1><div class="dm-iss">${no ? L("第 " + no + " 期", "No. " + no) + "<br>" : ""}${E(dt)}</div><button class="dm-search" data-dm="search">🔍 ${L("搜一个地方、一个人、一个词……", "Search a place, a person, a word…")}</button>${sk ? `<span class="dm-streak">🔥 ${L("连续 " + sk + " 天", sk + "-day streak")}</span>` : ""}<button class="dm-av" data-dm="me">🙂</button></header>
-    <div class="hv-echo-slot"></div>${window.ACT ? window.ACT.starter() + window.ACT.todayBar() : ""}
+    <div class="hv-echo-slot"></div>${window.ACT ? window.ACT.starter() + window.ACT.todayBar() : ""}${window.WFEED ? window.WFEED.card() : ""}
     <div class="dm-a">${TP.length ? tcHtml(TP[0], " dm-lead") : `<section class="dm-tw"></section>`}
       <section class="dm-globe"><div class="gh">🌍 ${L("世界 · 今天这些地方有人在说", "WORLD · people are talking here today")}</div><svg id="dmGlobe" viewBox="0 0 400 400"></svg><div class="gf" id="dmGf">${L("点地球上的点，打开那里的一篇", "Tap a dot to open that story")}</div></section></div>
     <div class="dm-sec"><h2>💬 ${L("今天的话题", "Today's topics")}</h2><small>${L("每篇里都有住在那儿的人，点开说一句", "Each one has people who live there — open it and say a line")}</small><button class="more" data-dm="topics">${L("全部话题 →", "All topics →")}</button></div>
