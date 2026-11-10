@@ -56,9 +56,11 @@ async function load(){
   const r = await sb.rpc("pulse_report", {p_days: range});
   if (r.error){ $("#main").innerHTML = /管理员/.test(r.error.message) ? `<p class="empty">这个账号不是管理员，看不了。<a href="#" id="out">换个账号</a></p>` : `<p class="empty">没拿到数：${esc(r.error.message)}</p>`;
     const o = $("#out"); if (o) o.onclick = async e => { e.preventDefault(); await sb.auth.signOut(); loginForm(); }; return; }
+  const f = await sb.rpc("fb_report", {p_days: Math.max(range, 7)}); FB = f.error ? null : f.data;   // 💬 反馈 + ⚠️ 出错（后台/feedback.sql）；没跑那段 SQL 就不显示
   R = r.data; $("#upd").textContent = "更新于 " + new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"}); draw();
 }
 const md = s => { const p = String(s).split("-"); return (+p[1]) + "/" + (+p[2]); };
+let FB = null;
 function draw(){
   const D = R.days || [], S = D, today = S[S.length - 1] || {}, sum = k => S.reduce((a, d) => a + (+d[k] || 0), 0);
   const since = R.since, P = R.people || [];
@@ -80,9 +82,12 @@ function draw(){
       const nm = p.who === "u" ? (p.name || "登录了 · 没填名字") : "手机 · " + p.who.slice(2), tag = p.who === "u" ? "登录了" : "没登录";
       return `<div class="r"><div><b><span class="dot" style="background:${p.sends ? "var(--ok)" : p.steps ? "var(--ink)" : "#c9c2b0"}"></span>${esc(nm)}</b><i>${tag} · 最远走到「${LV[(p.far || 1) - 1]}」 · 最近 ${md(p.last)}</i></div><span>${p.days}</span><span>${p.steps}</span><span>${p.sends}</span></div>`; }).join("")}</div>` : `<p class="empty">这段时间还没有人来。</p>`);
   h += `<p class="foot">只记次数：打开、点开活动、说了一句、做完这一步、送给世界。不记说了什么、在哪儿。没登录的人只显示手机编号的后四位。这一页只有管理员看得到。<br><a href="#" id="out">退出登录</a></p>`;
+  if (FB){ const F = FB.feedback || [], E = FB.errs || [], face = f => f == null ? "💬" : ["😕", "🙂", "😍"][f], when = t => new Date(t).toLocaleString("zh-CN", {month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"});
+    h += `<h3>💬 大家说的 <small style="font-weight:400;color:#6b7488">最近 ${Math.max(range, 7)} 天 · ${F.length} 条 · 😍 ${F.filter(x => x.face === 2).length} · 🙂 ${F.filter(x => x.face === 1).length} · 😕 ${F.filter(x => x.face === 0).length}</small></h3>` + (F.length ? `<table class="fb"><tr><th>时间</th><th>在哪</th><th></th><th>说了什么</th></tr>${F.map(x => `<tr><td>${when(x.ts)}</td><td>${esc(x.place || "")}<br><small>${esc(x.ui || "")} → ${esc(x.learn || "")}${x.logged ? " · 登录了" : ""}</small></td><td>${face(x.face)}</td><td>${(x.tags || []).map(t => `<b>${esc(t)}</b>`).join(" · ")}${x.msg ? (x.tags && x.tags.length ? " · " : "") + "“" + esc(x.msg) + "”" : ""}</td></tr>`).join("")}</table>` : `<p class="empty">还没有人反馈。</p>`);
+    h += `<h3>⚠️ 自动记下的出错 <small style="font-weight:400;color:#6b7488">同一个错合成一行，按次数排</small></h3>` + (E.length ? `<table class="fb"><tr><th>次数</th><th>哪一页</th><th>什么错</th><th>最近</th></tr>${E.map(x => `<tr><td>${x.n}</td><td>${esc(x.place || "")}</td><td>${esc(x.msg || "")}<br><small>${esc((x.ua || "").slice(0, 90))}</small></td><td>${when(x.last_ts)}</td></tr>`).join("")}</table>` : `<p class="empty">没有出错。</p>`); }
   $("#main").innerHTML = h;
   $("#rng").onclick = e => { const b = e.target.closest("button"); if (b){ range = +b.dataset.r; load(); } };
   $("#out").onclick = async e => { e.preventDefault(); await sb.auth.signOut(); loginForm(); };
 }
 start();
-</script></body></html>
+</script><style>table.fb{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden;margin-bottom:18px}table.fb td,table.fb th{padding:7px 9px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}table.fb th{background:#f4efe4}table.fb small{color:#6b7488}</style></body></html>
