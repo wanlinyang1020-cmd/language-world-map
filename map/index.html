@@ -65293,6 +65293,48 @@ function tts(t, lang, rate){ try { speechSynthesis.cancel(); const u = new Speec
 function playSay(t, lang, rate){ try { speechSynthesis.cancel(); } catch(e){} if (AU){ AU.pause(); AU = null; } const url = actVoice(t, lang);
   if (!url) return tts(t, lang, rate); AU = new Audio(url); AU.playbackRate = rate && rate < .8 ? .7 : rate && rate < .9 ? .85 : 1; AU.play().catch(() => tts(t, lang, rate)); }
 function speak(t, lang){ playSay(t, lang, .9); }
+
+// 🐦 动一下就有回应（2026-11-10，样板 样板/活动里的鼓励样板.html；用户：「点一个、说一个、发一个、做一个动作，软件就有一个互动，像多邻国的小鸟那样高频率」）
+// 三档：① 每次点：按钮弹一下、轻轻一声，点 🔊 飘一个 ♪；② 每次说、答、发：主持人的脸从下面冒出来说一句（每次换一句）；
+// ③ 大时刻：加入时欢迎 + 护照空章位、一天做完盖章 + 明天的悬念、隔了几天回来、全做完大章 + 主持人的下一个活动。不罚、不清零、不打 ✗。
+const SND = () => { try { return localStorage.getItem("hv.sound") !== "off"; } catch(e){ return true; } };
+let ACX_AC = null;
+function blip(kind){ if (SND()) try { ACX_AC = ACX_AC || new (window.AudioContext || window.webkitAudioContext)(); const AC = ACX_AC, N = {tap: [[700, .04]], ok: [[660, .07], [990, .13]], big: [[523, .08], [659, .08], [784, .08], [1047, .22]], soft: [[440, .09]]}[kind] || [[700, .04]];
+    let t = AC.currentTime; N.forEach(([f, d]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(kind === "tap" ? .05 : .11, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); t += d * .8; }); } catch(e){}
+  try { if (kind !== "tap" && navigator.vibrate) navigator.vibrate(kind === "big" ? [12, 40, 12] : 8); } catch(e){} }
+const RX = {
+  clear: [["很清楚！🔔", "Clear as a bell! 🔔"], ["就是这样说的。", "That's exactly how it's said."], ["对面的人一听就懂。", "Anyone would get that first time."], ["很自然！", "Ooh, natural!"], ["好听！", "Sounds great!"]],
+  rep2: [["最后一遍！", "Last one!"], ["一遍比一遍顺。", "Smoother every time."], ["再来一遍，这句就是你的了。", "One more and it's yours."]],
+  part: [["差一点——浅色的词再听一下。", "Almost — have another listen to the pale words."], ["开头很好！再来一遍。", "Good start! Once more."], ["比你想的近。", "Closer than you think."]],
+  far: [["我没听清——离近一点？", "I missed that — come a little closer?"], ["那边有点吵？再来 🙂", "Bit noisy there? Try again 🙂"]],
+  qok: [["对！就是这个。", "Yes! That's the one."], ["耳朵很灵 👏", "You've got an ear for this 👏"], ["完全正确。", "Spot on."]],
+  qno: [["差一点——绿色的那个才是大家说的。", "Not quite — the green one is what people say."], ["没关系，记住绿色那个。", "No worries — remember the green one."]],
+  sent: [["送出去了！今天会有人听到你 🌍", "Sent! Someone will hear you today 🌍"], ["你的声音上路了。", "Your voice is on its way."]],
+  kept: [["留给你自己了 🔒", "Kept just for you 🔒"]],
+  ask: [["好问题，会有人回你。", "Good question — someone will answer."]],
+  back: [["你回来啦！第 {n} 天在等你。", "You're back! Day {n} waited for you."], ["欢迎回来，从这里接着走。", "Welcome back — pick up right here."]],
+  day: [["第 {n} 天，盖章！", "Day {n} — stamped!"], ["今天的做完了 ✓ 明天见。", "Today's done ✓ See you tomorrow."]],
+  done: [["全部做完了！你真行 🎉", "You did all of it! 🎉"], ["{n} 天，一天不少。", "{n} days, every single one."]]};
+let BD_T = null; const RX_LAST = {};
+function buddy(a, k, n, ms){ if (!pg || !a || !RX[k]) return; const P = RX[k]; let i = Math.floor(Math.random() * P.length); if (P.length > 1 && i === RX_LAST[k]) i = (i + 1) % P.length; RX_LAST[k] = i;
+  let b = pg.querySelector(".acx-bd"); if (!b){ b = document.createElement("div"); b.className = "acx-bd"; pg.appendChild(b); }
+  b.innerHTML = `${av(a.host, 44)}<div class="acx-bdq">${esc(T(P[i][0], P[i][1]).replace("{n}", n == null ? "" : n))}</div>`; b.classList.remove("on"); void b.offsetWidth; b.classList.add("on");
+  clearTimeout(BD_T); BD_T = setTimeout(() => b.classList.remove("on"), ms || 2300); b.onclick = () => b.classList.remove("on"); }
+function floatUp(el, s){ try { const r = el.getBoundingClientRect(), f = document.createElement("span"); f.className = "acx-fl"; f.textContent = s; f.style.left = (r.left + r.width / 2) + "px"; f.style.top = (r.top - 4) + "px"; document.body.appendChild(f); setTimeout(() => f.remove(), 950); } catch(e){} }
+function sparks(el, n){ try { const r = el.getBoundingClientRect(); for (let k = 0; k < (n || 14); k++){ const s = document.createElement("i"); s.className = "acx-sp2"; s.style.left = (r.left + r.width / 2) + "px"; s.style.top = (r.top + r.height / 2) + "px"; s.style.background = ["#e2552f", "#c8962e", "#2f7d70", "#14305c"][k % 4];
+    const g = Math.random() * 6.28, d = 40 + Math.random() * 70; s.style.setProperty("--x", Math.cos(g) * d + "px"); s.style.setProperty("--y", Math.sin(g) * d + "px"); document.body.appendChild(s); setTimeout(() => s.remove(), 1100); } } catch(e){} }
+function welcome(a){ const host = who(a.host), faces = ((a.D[0] || {}).crowd || []).slice(0, 4).map(c => av(c[0], 28)).join(""), w = document.createElement("div"); w.className = "acx-wel";
+  w.innerHTML = `<div class="acx-welc">${av(a.host, 64)}<div class="acx-welh">${T("欢迎加入！", "Welcome in!")} 👋</div><div class="acx-q">${esc(T("我是 " + host.nm + "。" + a.days + " 天，每天一句，大约 5 分钟。", "I'm " + host.nm + ". " + a.days + (a.days === 1 ? " day" : " days") + ", one line a day, about 5 minutes."))}</div>
+   <div class="acx-welp">${T("你是这期第 " + ((a.n || 0) + 1) + " 个加入的", "You're #" + ((a.n || 0) + 1) + " this round")}${faces ? `<span class="acx-faces">${faces}</span>` : ""}</div>
+   <div class="acx-pass">${a.D.map((x, i) => `<span class="acx-slot" data-nopy><b>${i + 1}</b>${esc((x.k || "").slice(0, 6))}</span>`).join("")}</div>
+   <button class="acx-btn say" data-wgo>${a.days === 1 ? T("开始", "Start") : T("开始第 1 天", "Start Day 1")}</button></div>`;
+  pg.appendChild(w); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("on"))); blip("big");
+  w.onclick = e => { if (e.target !== w && !e.target.closest("[data-wgo]")) return; w.classList.remove("on"); setTimeout(() => w.remove(), 350); const t = pg.querySelector(".acx-today"); if (t) t.scrollIntoView({behavior: "smooth", block: "start"}); }; }
+function teaser(a, d){ if (!pg || d + 1 >= a.days) return; const box = pg.querySelector(".acx-today"); if (!box || box.querySelector(".acx-tmr")) return; const nx = a.D[d + 1] || {}, el = document.createElement("div"); el.className = "acx-tmr";
+  el.innerHTML = `<span>🔒</span><div><b>${T("明天：", "Tomorrow: ")}${esc(nx.k || "")}</b><small data-cd></small></div>`; box.appendChild(el);
+  const cd = el.querySelector("[data-cd]"), tk = () => { if (!el.isConnected) return; const n = new Date(), m = new Date(n); m.setHours(24, 0, 0, 0); const s = Math.max(0, Math.floor((m - n) / 1000));
+    cd.textContent = T("还有 ", "opens in ") + Math.floor(s / 3600) + "h " + String(Math.floor(s % 3600 / 60)).padStart(2, "0") + "m " + String(s % 60).padStart(2, "0") + "s"; setTimeout(tk, 1000); }; tk(); }
+let WELCOME = null;
 // ── 卡片 ──
 const card = a => { const R = run(a), J = joined(a.id), host = who(a.host);
   const tag = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("进行中 · 第 ", "On · day ") + (myDay(a, J) + 1) + T(" 天", "")) : R.cur ? T("这期进行中", "Running now") : R.next ? md(R.next) + " " + WK(R.next) + T(" 开始", "") : "";
@@ -65364,19 +65406,25 @@ function open(id, day){ mode(); const a = ALL.find(x => x.id === id); if (!a) re
      <div class="acx-crowd"><div class="acx-real"></div><h4>${T("大家今天交的", "What people sent today")}<small>${(D.crowd || []).length ? T("点一下听", "tap to hear") : ""}</small></h4>
        ${J && (J.done || {})[d] ? `<div class="acx-it2 you"><span class="acx-av acx-avt" style="width:34px;height:34px;background:var(--acx-ok)">${T("你", "You")[0]}</span><div><div class="acx-q">${esc(J.done[d] || plain(D.line || ""))}</div><small>${T("你 · 刚才", "You · just now")}</small></div></div>` : ""}
        ${(D.crowd || []).map(c => { const p = who(c[0]); return `<div class="acx-it2" data-say="${esc(c[1])}" data-lang="${esc(ZHL() ? "zh-CN" : p.lang || "en-US")}">${av(c[0], 34)}<div><div class="acx-q">${esc(c[1])}</div><small>${esc(p.nm)}${ZHL() ? " · " + (/^zh/.test(p.lang || "") ? "native" : "learning Chinese") : p.home ? " · " + esc(p.home) : ""}${SUB() ? " · " + esc(ZH() ? c[2] : TR(c[2])) : ""}</small></div></div>`; }).join("")}</div></div>`}</div>`;
-  pg.hidden = false; pg.scrollTop = 0; wireOpen(a, d); wireLang(a, d); if (pg.querySelector(".acx-real")){ drawReal(a, d); loadReal(a, d); } if (pg.querySelector(".acx-realq")){ drawQ(a, d); loadQ(a, d); }
+  pg.hidden = false; pg.scrollTop = 0; wireOpen(a, d); wireLang(a, d);
+  if (WELCOME === a.id){ WELCOME = null; welcome(a); }
+  else if (fin && day == null && J && !J.cel){ const o2 = ST(); o2.j[a.id].cel = 1; SAVE(o2); setTimeout(() => { const s = pg.querySelector(".acx-end .acx-stamp"); if (!s) return; s.scrollIntoView({block: "center"}); s.classList.add("acx-drop"); setTimeout(() => { sparks(s, 30); const e2 = pg.querySelector(".acx-end"); if (e2){ e2.classList.add("acx-shk"); } }, 320); blip("big"); buddy(a, "done", a.days, 3800); }, 250); }
+  else if (J && !fin && day == null && J.last && J.bk !== today() && dayDiff(J.last, today()) >= 2){ const o2 = ST(); o2.j[a.id].bk = today(); SAVE(o2); setTimeout(() => { buddy(a, "back", d + 1, 3800); blip("ok"); }, 500); } if (pg.querySelector(".acx-real")){ drawReal(a, d); loadReal(a, d); } if (pg.querySelector(".acx-realq")){ drawQ(a, d); loadQ(a, d); }
 }
 function endHtml(a, J){ const host = who(a.host), lines = a.D.map((x, i) => (typeof J.done[i] === "string" && J.done[i]) || plain(x.line || "")).filter(Boolean);
   const last = a.D[a.D.length - 1].shout;
   return `<div class="acx-end"><div class="acx-stamp s0 big"><div>${esc((a.end || {}).stamp || "")}<b>${a.days}/${a.days}</b>${esc(host.nm.toUpperCase())}</div></div><div><h3>${T(a.days + " 天做完了。这是你这几天说过的话：", "Done! Here's everything you said:")}</h3><div class="acx-para">${lines.map(esc).join(" ")}</div>
     <div class="acx-join"><button class="acx-btn say" data-sayall>🔊 ${T("放一遍", "Play it")}</button><button class="acx-btn lt" data-d="0">${T("回头看每一天", "Look back at each day")}</button></div>
-    ${last ? `<div class="acx-shout">📣 ${esc(host.nm)}：${esc(last[0])}${ZH() ? `<small>${esc(last[1])}</small>` : ""}</div>` : ""}</div></div>`; }
+    ${last ? `<div class="acx-shout">📣 ${esc(host.nm)}：${esc(last[0])}${ZH() ? `<small>${esc(last[1])}</small>` : ""}</div>` : ""}${nxHtml(a)}</div></div>`; }
+const nxHtml = a => { const id = (a.end || {}).next, x = id && L.find(y => y.id === id && !joined(y.id)); if (!x) return ""; const h = who(x.host);
+  return `<button class="acx-nx" data-act-nx="${esc(x.id)}">${av(x.host, 40)}<span><small>${esc(T(h.nm + " 的下一个活动", "Next with " + h.nm))}</small><b>${esc(T(x.t.zh, x.t.en))}</b></span><span style="margin-left:auto">›</span></button>`; };
 function wireOpen(a, d){ const $ = s => pg.querySelector(s), host = who(a.host);
   $("[data-x]").onclick = close;
   pg.querySelectorAll("[data-say]").forEach(b => b.onclick = e => { e.stopPropagation(); speak(b.dataset.say, b.dataset.lang || host.lang || "en-GB"); });
   pg.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { if (b.classList.contains("lock")) return; open(a.id, +b.dataset.d); });
   const hp = $("[data-ppl]"); if (hp) hp.onclick = () => { if (window.PTAB_PERSON){ close(); try { window.HVI && window.HVI.ptOpen ? window.HVI.ptOpen() : 0; } catch(e){} window.PTAB_PERSON(a.host); } };
-  const jb = $("[data-join]"); if (jb) jb.onclick = () => { const o = ST(); o.j[a.id] = {d0: today(), done: {}}; SAVE(o); try { window.hvPx && window.hvPx({k: "actjoin", act: a.id}); } catch(e){} open(a.id); };
+  const jb = $("[data-join]"); if (jb) jb.onclick = () => { const o = ST(); o.j[a.id] = {d0: today(), done: {}}; SAVE(o); try { window.hvPx && window.hvPx({k: "actjoin", act: a.id}); } catch(e){} WELCOME = a.id; open(a.id); };
+  const nx = $("[data-act-nx]"); if (nx) nx.onclick = () => open(nx.dataset.actNx);
   const sa = $("[data-sayall]"); if (sa) sa.onclick = () => speak(pg.querySelector(".acx-para").textContent, "en-US");
   wireTask(a, d);
 }
@@ -65470,10 +65518,11 @@ function wireTask(a, d){ const D = a.D[d], P = TYPES[D.type] || TYPES.say, $ = s
   const c = {a, D, d, pg, $, host, lang: ZHL() ? "zh-CN" : host.lang || "en-GB", onDone: null,
     unlock(){ const s = $(".acx-say"); if (s && s.classList.contains("lk")){ s.classList.remove("lk"); setTimeout(() => s.scrollIntoView({behavior: "smooth", block: "center"}), 300); } },
     setOwn(t, keepBlank){ const n = $(".acx-own"); if (n) n.value = t; else if (!keepBlank){ const l = $(".acx-line"); if (l) l.textContent = t; } c.said = t; },
-    finish(txt){ const o = ST(); if (!o.j[a.id]) o.j[a.id] = {d0: today(), done: {}}; o.j[a.id].done[d] = txt; SAVE(o);
+    finish(txt){ const o = ST(); if (!o.j[a.id]) o.j[a.id] = {d0: today(), done: {}}; o.j[a.id].done[d] = txt; o.j[a.id].last = today(); SAVE(o);
       try { window.hvPx && window.hvPx({k: "actday", act: a.id, day: d, type: D.type || "say", say: String(txt || "").slice(0, 200)}); } catch(e){}
-      pg.querySelectorAll(".acx-mine").forEach(m => m.classList.add("on")); const b = pg.querySelector('.acx-dy[data-d="' + d + '"]'); if (b) b.classList.add("done");
-      if (c.onDone) c.onDone(txt); if (finished(a, o.j[a.id])) setTimeout(() => open(a.id), 1200); } };
+      pg.querySelectorAll(".acx-mine").forEach(m => m.classList.add("on")); const b = pg.querySelector('.acx-dy[data-d="' + d + '"]'); if (b){ b.classList.add("done", "acx-thunk"); setTimeout(() => sparks(b, 16), 300); }
+      blip("big"); const allDone = finished(a, o.j[a.id]); if (!allDone){ buddy(a, "day", d + 1, 3000); teaser(a, d); }
+      if (c.onDone) c.onDone(txt); if (allDone) setTimeout(() => open(a.id), 1700); } };
   if (P.w) P.w(c);
   const hear = $("[data-sayown]"); if (hear) hear.onclick = e => { e.stopPropagation(); const n = $(".acx-own"); speak((n && n.value.trim()) || c.said || D.line, c.lang); };
   const mic = $("[data-acxmic]"); if (!mic) return;
@@ -65484,7 +65533,8 @@ function wireTask(a, d){ const D = a.D[d], P = TYPES[D.type] || TYPES.say, $ = s
     if (D.own && own && !own.value.trim()){ own.focus(); own.placeholder = T("先把空填上，再说出来", "Fill the blanks first, then say it"); return; }
     if (MIC){ MIC.stop(); return; }
     const target = D.own ? own.value.trim() : plain(D.line), lang = TGT(a)[2];
-    const after = (txt, v) => { mic.classList.remove("rec"); MIC = null; clearTimeout(c._sil); const J = judgeSay(txt, target, D.own ? [] : chunksIn(D.line)); c._tries = (c._tries || 0) + 1; showJudge(a, d, c, J, v, target); if (J.lv !== "far"){ tick(txt); try { window.hvPulse && window.hvPulse("say"); } catch(e){} } };
+    const after = (txt, v) => { mic.classList.remove("rec"); MIC = null; clearTimeout(c._sil); const J = judgeSay(txt, target, D.own ? [] : chunksIn(D.line)); c._tries = (c._tries || 0) + 1; showJudge(a, d, c, J, v, target); if (J.lv !== "far"){ tick(txt); try { window.hvPulse && window.hvPulse("say"); } catch(e){} }
+      if (J.lv === "far"){ buddy(a, "far"); blip("soft"); } else if (reps < 3){ buddy(a, J.lv === "part" ? "part" : reps === 1 ? "clear" : "rep2"); blip("ok"); } };
     mic.classList.add("rec"); heard.textContent = ""; const jb = $(".acx-judge"); if (jb) jb.innerHTML = "";
     const onText = t => { heard.textContent = "“" + t + "”"; clearTimeout(c._sil); if (t) c._sil = setTimeout(() => MIC && MIC.stop(), 1600); };
     const H0 = window.HVI || {}, rs = H0.recStart && H0.canRec ? H0.recStart : null;
@@ -65526,7 +65576,7 @@ function showJudge(a, d, c, J, v, target){ const box = c.$(".acx-judge"); if (!b
   const q = s => box.querySelector(s);
   if (q("[data-jhear]")) q("[data-jhear]").onclick = () => sayAt(weak.join(ZHL() ? "" : " "), .7, tg[2]);
   if (q("[data-jslow]")) q("[data-jslow]").onclick = () => sayAt(target, J.lv === "far" ? .85 : .6, tg[2]);
-  if (q("[data-jkeep]")) q("[data-jkeep]").onclick = () => { box.innerHTML = `<div class="acx-jd clear"><b>🔒 ${T("留给自己了", "Kept to yourself")}</b><p>${T("在你的手机里，随时能听。", "It stays on your phone.")}</p></div>`; };
+  if (q("[data-jkeep]")) q("[data-jkeep]").onclick = () => { box.innerHTML = `<div class="acx-jd clear"><b>🔒 ${T("留给自己了", "Kept to yourself")}</b><p>${T("在你的手机里，随时能听。", "It stays on your phone.")}</p></div>`; buddy(a, "kept"); };
   if (q("[data-jsend]")) q("[data-jsend]").onclick = async () => { const H = window.HVI || {}, SOC = H.SOC, logged = !!(H.logged && H.logged() && SOC && SOC.db);
     if (!logged){ box.querySelector("p").innerHTML = T("登录以后才能送给世界。", "Log in to send it to the world.") + ` <button class="acx-btn lt" data-jlog>${T("去登录", "Log in")}</button>`; const lg = q("[data-jlog]"); if (lg) lg.onclick = () => { close(); const H = window.HVI || {}; H.login && H.login(); }; return; }
     const V = c.lastV; let id = null;
@@ -65536,7 +65586,7 @@ function showJudge(a, d, c, J, v, target){ const box = c.$(".acx-judge"); if (!b
       const ref = SOC.db.collection("linevoices").doc(); await ref.set(doc); id = ref.id; (RV[a.id + "|" + d] || (RV[a.id + "|" + d] = [])).unshift({id, owner: SOC.uid, ...doc, _u: V.url});
       try { window.hvPx && window.hvPx({k: "gift", act: a.id, day: d, to: "world", from: "act"}); } catch(e){}
     } catch(e){ id = null; }
-    if (id){ c.sent = true; box.innerHTML = `<div class="acx-jd clear"><b>🌍 ${T("送出去了", "Sent")}</b><p>${T("做这个活动的人会听到你的声音，也能拿它来练。", "People doing this activity will hear you — and practise with it.")}</p></div>`; drawReal(a, d); }
+    if (id){ c.sent = true; buddy(a, "sent"); blip("ok"); sparks(box, 18); box.innerHTML = `<div class="acx-jd clear"><b>🌍 ${T("送出去了", "Sent")}</b><p>${T("做这个活动的人会听到你的声音，也能拿它来练。", "People doing this activity will hear you — and practise with it.")}</p></div>`; drawReal(a, d); }
     else box.querySelector("p").textContent = T("没送出去，再试一次？", "Couldn't send — try again?"); }; }
 // 大家在这一天问的问题（真人）和回答；回答别人 = 给提问的人一条「回应」
 const RQ = {};
@@ -65647,11 +65697,12 @@ function wireLang(a, d){ if (!pg) return; const D = a.D[d] || {}, $ = s => pg.qu
   // 小题：只有一个对
   const L = LANGD(a, d).lang, qz = $(".acx-quiz");
   if (qz && L && L.quiz) qz.onclick = e => { const b = e.target.closest("[data-qi]"); if (!b) return; const ok = L.quiz.o[+b.dataset.qi][1];
-    qz.querySelectorAll("button").forEach((x, i) => x.className = L.quiz.o[i][1] ? "y" : "n"); $(".acx-qa").textContent = SUB() ? (ok ? "✓ " + TR(L.quiz.ok || "") : TR(L.quiz.no || "")) : ok ? "✓" : ""; sayAt(L.quiz.o.find(o => o[1])[0], .9, VL); };
+    qz.querySelectorAll("button").forEach((x, i) => x.className = L.quiz.o[i][1] ? "y" : "n"); $(".acx-qa").textContent = SUB() ? (ok ? "✓ " + TR(L.quiz.ok || "") : TR(L.quiz.no || "")) : ok ? "✓" : ""; sayAt(L.quiz.o.find(o => o[1])[0], .9, VL);
+    buddy(a, ok ? "qok" : "qno"); blip(ok ? "ok" : "soft"); if (ok) sparks(b, 10); };
   // 你也问一句
   pg.querySelectorAll("[data-ask]").forEach(b => b.onclick = async () => { const inp = $(".acx-ask input"), t = inp.value.trim(); if (!t) return;
     const key = a.id + ":" + d, toHost = b.dataset.ask === "1", rec = {t, at: today()};
-    const save = () => { const o = ST(); o.q = o.q || {}; (o.q[key] = o.q[key] || []).push(rec); SAVE(o); const y = pg.scrollTop; open(a.id, curDay); pg.scrollTop = y; };
+    const save = () => { const o = ST(); o.q = o.q || {}; (o.q[key] = o.q[key] || []).push(rec); SAVE(o); const y = pg.scrollTop; open(a.id, curDay); pg.scrollTop = y; buddy(a, "ask"); blip("ok"); };
     if (!toHost){ const H = window.HVI || {}, SOC = H.SOC || {};
       if (H.logged && H.logged() && SOC.db){ try { const ref = SOC.db.collection("actq").doc(); await ref.set({author: SOC.uid, nm: (H.myName && H.myName()) || "", act: a.id, day: String(d), t, ts: Date.now()}); rec.id = ref.id; } catch(e){} }
       save(); return; }
@@ -65677,8 +65728,26 @@ function todayBar(){ mode(); const A = L.filter(a => joined(a.id) && !finished(a
   const a = A[0], J = joined(a.id), n = nextStep(a, J); if (n < 0) return "";
   return `<div class="acx-tbar" data-act="${esc(a.id)}">${av(a.host, 44)}<div><b>${T("你在参加 · ", "You're in · ")}${esc(who(a.host).nm)}${T(" 的「", "'s “")}${esc(T(a.t.zh, a.t.en))}${T("」", "”")}</b><small>${T("第 " + (n + 1) + " 天", "Day " + (n + 1))} · ${esc(lead(a.D[n]))}</small></div><button>${T("做今天这一步 →", "Today's step →")}</button></div>`; }
 function mount(){ if (!document.getElementById("acxCss")){ const s = document.createElement("style"); s.id = "acxCss"; s.textContent = CSS; document.head.appendChild(s); }
-  if (!pg){ pg = document.createElement("div"); pg.id = "acxPg"; pg.hidden = true; document.body.appendChild(pg); } }
-const CSS = `html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg .acx-line{direction:ltr;unicode-bidi:isolate}:root{--acx-ink:#14305c;--acx-mute:#6b7488;--acx-say:#e2552f;--acx-ok:#2f7d70;--acx-paper:#fbf7ee}
+  if (!pg){ pg = document.createElement("div"); pg.id = "acxPg"; pg.hidden = true; document.body.appendChild(pg);
+    pg.addEventListener("pointerdown", e => { const b = e.target.closest("button,[data-say],.acx-it2"); if (!b || b.disabled || b.classList.contains("lock")) return; b.classList.remove("acx-sq"); void b.offsetWidth; b.classList.add("acx-sq"); if (b.matches("[data-say],[data-sayown],[data-sayall],.acx-sp")) floatUp(b, "♪"); blip("tap"); }); } }
+const CSS = `.acx-bd{position:fixed;right:14px;bottom:18px;z-index:70;display:flex;align-items:flex-end;gap:8px;max-width:min(340px,calc(100vw - 28px));transform:translateY(150%);opacity:0;transition:transform .38s cubic-bezier(.3,1.5,.5,1),opacity .2s;pointer-events:none}.acx-bd.on{transform:none;opacity:1;pointer-events:auto}html[dir=rtl] .acx-bd{right:auto;left:14px}
+.acx-bd .acx-av{border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.2);animation:acxHop .55s .1s;flex:none}.acx-bdq{order:-1;background:#fff;border-radius:16px 16px 4px 16px;padding:9px 13px;font-weight:700;color:var(--acx-ink);box-shadow:0 6px 18px rgba(20,48,92,.2)}@keyframes acxHop{40%{transform:translateY(-9px)}}
+.acx-sq{animation:acxSq .22s}@keyframes acxSq{50%{transform:scale(.92)}}
+.acx-fl{position:fixed;z-index:90;pointer-events:none;font-size:18px;font-weight:900;color:#e2552f;animation:acxFl .9s ease-out forwards;transform:translate(-50%,0)}@keyframes acxFl{to{transform:translate(-50%,-48px);opacity:0}}
+.acx-sp2{position:fixed;z-index:90;width:7px;height:7px;border-radius:2px;pointer-events:none;animation:acxSpk 1s ease-out forwards}@keyframes acxSpk{to{transform:translate(var(--x),var(--y)) rotate(200deg);opacity:0}}
+.acx-dy.done{background:#fff4ee;color:var(--acx-say);box-shadow:inset 0 0 0 2px var(--acx-say);transform:rotate(-4deg)}.acx-dy.done b::after{color:var(--acx-say)}
+.acx-thunk{animation:acxThunk .55s cubic-bezier(.3,1.6,.5,1)}@keyframes acxThunk{0%{transform:scale(2.4) rotate(-20deg);opacity:0}60%{transform:scale(.9) rotate(-4deg);opacity:1}100%{transform:rotate(-4deg)}}
+.acx-drop{animation:acxDrop .6s cubic-bezier(.3,1.6,.5,1)}@keyframes acxDrop{0%{transform:scale(2.6) rotate(-25deg);opacity:0}60%{transform:scale(.92) rotate(-7deg);opacity:1}100%{transform:rotate(-7deg)}}
+.acx-shk{animation:acxShk .35s}@keyframes acxShk{25%{transform:translate(2px,1px)}50%{transform:translate(-2px,-1px)}75%{transform:translate(1px,-1px)}}
+.acx-tmr{margin-top:12px;border:1.5px dashed #c9b98f;border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;background:#fffaf0;animation:acxIn .45s}.acx-tmr>span{font-size:20px}.acx-tmr small{display:block;font:700 12px ui-monospace,monospace;color:var(--acx-say)}@keyframes acxIn{from{opacity:0;transform:translateY(8px)}}
+.acx-wel{position:fixed;inset:0;z-index:75;background:rgba(10,20,40,0);display:flex;align-items:flex-end;justify-content:center;transition:background .3s}.acx-wel.on{background:rgba(10,20,40,.38)}
+.acx-welc{background:var(--acx-paper);border-radius:22px 22px 0 0;padding:22px 18px 26px;width:min(520px,100%);transform:translateY(105%);transition:transform .45s cubic-bezier(.2,.9,.3,1);text-align:center}.acx-wel.on .acx-welc{transform:none}@media(min-width:761px){.acx-wel{align-items:center}.acx-welc{border-radius:22px}}
+.acx-welc>.acx-av{margin:0 auto;display:block;animation:acxHop .6s .3s}.acx-welh{font:900 22px Georgia,serif;color:var(--acx-ink);margin:8px 0 4px}.acx-welp{color:var(--acx-mute);font-size:13px;margin:12px 0;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.acx-faces{display:inline-flex}.acx-faces .acx-av{margin-left:-6px;border:2px solid var(--acx-paper)}.acx-pass{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;background:#f3ead6;border-radius:12px;padding:12px;margin:6px 0 14px}
+.acx-slot{width:62px;height:62px;border-radius:50%;border:2px dashed #cdbb92;display:grid;place-content:center;font-size:10.5px;color:#a8946a;line-height:1.2}.acx-slot b{font:900 15px Georgia,serif}
+.acx-nx{display:flex;gap:10px;align-items:center;margin-top:14px;background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;border:0;width:100%;text-align:start;font:inherit;color:inherit;box-shadow:0 2px 8px rgba(20,48,92,.08)}.acx-nx small{display:block;color:var(--acx-mute)}
+@media (prefers-reduced-motion:reduce){.acx-bd,.acx-fl,.acx-sp2,.acx-thunk,.acx-drop,.acx-sq,.acx-shk{animation:none!important;transition:none!important}}
+html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg .acx-line{direction:ltr;unicode-bidi:isolate}:root{--acx-ink:#14305c;--acx-mute:#6b7488;--acx-say:#e2552f;--acx-ok:#2f7d70;--acx-paper:#fbf7ee}
 .acx{padding:6px 16px 10px;color:#24303a;background:#f3eee2;border-radius:0 0 22px 22px;margin-bottom:14px}.acx h2{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:24px 0 10px;font:800 19px "Noto Serif SC","Songti SC",serif;color:var(--acx-ink)}.acx h2 small{font:12.5px -apple-system,sans-serif;color:var(--acx-mute)}
 .acx-sub{margin:30px 0 0;color:var(--acx-mute);font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.acx-isl{margin-left:auto;font-size:13px;color:var(--acx-ink);background:#fff;border-radius:99px;padding:4px 12px;box-shadow:0 0 0 1px rgba(20,48,92,.15) inset;text-decoration:none;cursor:pointer}
 .acx-av{border-radius:50%;object-fit:cover;flex:none;display:inline-block}.acx-avt{display:inline-grid;place-items:center;background:#8a7a52;color:#fff;font:700 13px Georgia,serif}
@@ -66201,7 +66270,7 @@ const LABELS = [
 // 在 claude.ai 里打开时用 Claude 自带的登录、数据库和 AI；在 heyvoyo.com 上打开时用这里的实现。
 // 对外提供和 claude.ai 一样的接口：HV.user（id / isOwner / can / profiles）、HV.db（collection / doc）、HV.sample.json()。
 // HV_CONFIG 由 deploy.sh 从 ../后台/config.json 填进来；没填时整个后台不启用。
-var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": "https://pfqbskweyqyrmnrkioha.supabase.co/functions/v1/ai", "google": true};
+var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": "https://pfqbskweyqyrmnrkioha.supabase.co/functions/v1/ai", "google": true, "apple": ""};
 var HV = {sb: null, session: null, user: null, db: null, sample: null, ready: false};
 // 从「重设密码」邮件点回来时，网址里带着 type=recovery：记下来，登录后直接打开「设新密码」
 try { if (/type=recovery/.test(location.hash + location.search)) sessionStorage.setItem("hv.recovery", "1"); } catch(e){}
@@ -66340,6 +66409,8 @@ async function hvSignIn(email){
 async function hvSignOut(){ await HV.sb.auth.signOut(); }
 // ---- 用 Google 账号登录（2026-11-10）：跳到 Google，回来就登录了，不发邮件。要在 Supabase → Auth → Providers 里开 Google，config.json 里 google: true 才显示按钮
 async function hvSignInGoogle(){ const r = await HV.sb.auth.signInWithOAuth({provider: "google", options: {redirectTo: hvBackUrl()}}); if (r.error) throw r.error; }
+// ---- 用 Apple 账号登录（2026-11-10 备好）：iPhone App 里有 Google 登录，苹果规定也要有 Apple 登录。要先有苹果开发者账号，在 Supabase → Auth → Providers 开 Apple，config.json 里 apple: true 才显示按钮
+async function hvSignInApple(){ const r = await HV.sb.auth.signInWithOAuth({provider: "apple", options: {redirectTo: hvBackUrl()}}); if (r.error) throw r.error; }
 // ---- 邮箱 + 密码：第一次用登录链接进来，之后在「👤 我」里设密码，以后直接用密码登录（不用等邮件）
 async function hvSignInPassword(email, password){
   const r = await HV.sb.auth.signInWithPassword({email, password});
@@ -74519,6 +74590,7 @@ const AU_T = {en:{brand:"HeyVoyo",login:"Log in",signup:"Sign up",
   email:"Email",emailPh:"you@example.com",pw:"Password",pwPh:"Enter your password",newPwPh:"At least 8 characters",name:"Display name",namePh:"What people see in clubs",
   show:"Show",hide:"Hide",forgot:"Forgot password?",loginBtn:"Log in",signupBtn:"Create account",or:"or",magic:"✉️  Email me a login link (no password)",
   google:"Continue with Google",
+  apple:"Continue with Apple",
   agree:'I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>',
   noAcc:"New to HeyVoyo?",haveAcc:"Already have an account?",toSignup:"Sign up free",toLogin:"Log in",
   foot:'By logging in you agree to our <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.',
@@ -74541,6 +74613,7 @@ const AU_T = {en:{brand:"HeyVoyo",login:"Log in",signup:"Sign up",
   email:"邮箱",emailPh:"you@example.com",pw:"密码",pwPh:"输入密码",newPwPh:"至少 8 位",name:"昵称",namePh:"别人在圈子里看到的名字",
   show:"显示",hide:"隐藏",forgot:"忘记密码？",loginBtn:"登录",signupBtn:"创建账号",or:"或",magic:"✉️  用邮箱登录链接（免密码）",
   google:"用 Google 账号登录",
+  apple:"用 Apple 账号登录",
   agree:'我已阅读并同意 <a href="/terms.html" target="_blank" rel="noopener">用户协议</a> 和 <a href="/privacy.html" target="_blank" rel="noopener">隐私政策</a>',
   noAcc:"还没有账号？",haveAcc:"已经有账号了？",toSignup:"免费注册",toLogin:"去登录",
   foot:'登录即表示你同意 <a href="/terms.html" target="_blank" rel="noopener">用户协议</a> 和 <a href="/privacy.html" target="_blank" rel="noopener">隐私政策</a>。',
@@ -74567,11 +74640,11 @@ function auView(){
   const head = (title, sub, back) => `<button class="au-close" data-auclose aria-label="${t("close")}">✕</button>${back ? `<button class="au-back" data-aug="${back}">${t("back")}</button>` : ""}<div class="au-brand"><span class="au-logo">⛵</span>${t("brand")}</div><h1 id="auTitle">${title}</h1>${sub ? `<p class="au-sub">${sub}</p>` : ""}${AU.alert ? `<div class="au-alert" role="alert">${t(AU.alert)}</div>` : ""}`;
   const lang = `<div class="au-lang"><button data-aul="en" class="${auLang() === "en" ? "on" : ""}">English</button>·<button data-aul="zh" class="${auLang() === "zh" ? "on" : ""}">中文</button></div>`;
   const tabs = on => `<div class="au-tabs" role="tablist"><button role="tab" class="${on === "login" ? "on" : ""}" data-aug="login">${t("login")}</button><button role="tab" class="${on === "signup" ? "on" : ""}" data-aug="signup">${t("signup")}</button></div>`;
-  if (S === "login") return head(t("loginTitle"), t("loginSub")) + tabs("login") + `${window.HV_CONFIG && HV_CONFIG.google ? `<button class="au-btn secondary au-google" id="auGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="vertical-align:-4px;margin-right:8px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>${t("google")}</button><div class="au-or">${t("or")}</div>` : ""}<form novalidate id="auF">${emailIn}
+  if (S === "login") return head(t("loginTitle"), t("loginSub")) + tabs("login") + `${window.HV_CONFIG && HV_CONFIG.google ? `<button class="au-btn secondary au-google" id="auGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="vertical-align:-4px;margin-right:8px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>${t("google")}</button>` : ""}${window.HV_CONFIG && HV_CONFIG.apple ? `<button class="au-btn secondary au-apple" id="auApple"><svg width="16" height="18" viewBox="0 0 814 1000" aria-hidden="true" style="vertical-align:-3px;margin-right:8px"><path fill="currentColor" d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 201-1 3-21 72-69 142-43 62-88 123-156 123s-86-39-164-39c-77 0-104 41-167 41s-106-57-156-128C44 788 0 667 0 553 0 368 120 270 238 270c63 0 115 41 154 41 38 0 97-44 168-44 27 0 124 3 188 74zM554 169c29-35 50-83 50-131 0-7-1-14-2-19-48 2-104 32-138 71-27 30-52 78-52 127 0 7 1 15 2 17 3 1 8 1 13 1 43 0 97-29 127-66z"/></svg>${t("apple")}</button>` : ""}${window.HV_CONFIG && (HV_CONFIG.google || HV_CONFIG.apple) ? `<div class="au-or">${t("or")}</div>` : ""}<form novalidate id="auF">${emailIn}
     <div class="au-field"><label for="auPw">${t("pw")} <a href="#" data-aug="forgot">${t("forgot")}</a></label>${pwIn("auPw", t("pwPh"), "current-password")}</div>
     <button class="au-btn primary" id="auGo">${t("loginBtn")}</button></form><div class="au-or">${t("or")}</div><button class="au-btn secondary" id="auMagic">${t("magic")}</button>
     <p class="au-switch">${t("noAcc")} <a href="#" data-aug="signup">${t("toSignup")}</a></p><p class="au-foot">${t("foot")}</p>${lang}`;
-  if (S === "signup") return head(t("signupTitle"), t("signupSub")) + tabs("signup") + `${window.HV_CONFIG && HV_CONFIG.google ? `<button class="au-btn secondary au-google" id="auGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="vertical-align:-4px;margin-right:8px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>${t("google")}</button><div class="au-or">${t("or")}</div>` : ""}<form novalidate id="auF">
+  if (S === "signup") return head(t("signupTitle"), t("signupSub")) + tabs("signup") + `${window.HV_CONFIG && HV_CONFIG.google ? `<button class="au-btn secondary au-google" id="auGoogle"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style="vertical-align:-4px;margin-right:8px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>${t("google")}</button>` : ""}${window.HV_CONFIG && HV_CONFIG.apple ? `<button class="au-btn secondary au-apple" id="auApple"><svg width="16" height="18" viewBox="0 0 814 1000" aria-hidden="true" style="vertical-align:-3px;margin-right:8px"><path fill="currentColor" d="M788 341c-6 4-108 62-108 190 0 148 130 200 134 201-1 3-21 72-69 142-43 62-88 123-156 123s-86-39-164-39c-77 0-104 41-167 41s-106-57-156-128C44 788 0 667 0 553 0 368 120 270 238 270c63 0 115 41 154 41 38 0 97-44 168-44 27 0 124 3 188 74zM554 169c29-35 50-83 50-131 0-7-1-14-2-19-48 2-104 32-138 71-27 30-52 78-52 127 0 7 1 15 2 17 3 1 8 1 13 1 43 0 97-29 127-66z"/></svg>${t("apple")}</button>` : ""}${window.HV_CONFIG && (HV_CONFIG.google || HV_CONFIG.apple) ? `<div class="au-or">${t("or")}</div>` : ""}<form novalidate id="auF">
     <div class="au-field"><label for="auNm">${t("name")}</label><div class="au-inp"><input id="auNm" autocomplete="nickname" maxlength="20" placeholder="${t("namePh")}"></div></div>${emailIn}
     <div class="au-field"><label for="auPw">${t("pw")}</label>${pwIn("auPw", t("newPwPh"), "new-password")}<div class="au-meter" id="auMeter"><i></i><i></i><i></i><i></i></div><div class="au-hint" id="auPwh">${t("pwHint")}</div></div>
     <label class="au-check"><input type="checkbox" id="auAg"><span>${t("agree")}</span></label><button class="au-btn primary" id="auGo">${t("signupBtn")}</button></form>
@@ -74617,6 +74690,7 @@ function auDraw(){
   const go = document.getElementById("auGo"); if (go) go.dataset.label = go.textContent;
   const keepAfter = () => { try { if (AU.after) localStorage.setItem("hv.after", AU.after); } catch(e){} };
   const gg = document.getElementById("auGoogle"); if (gg) gg.onclick = async () => { keepAfter(); gg.disabled = true; try { await hvSignInGoogle(); } catch(e){ gg.disabled = false; auFail(e); } };   // 🔑 Google 登录（2026-11-10）：不发邮件
+  const ap = document.getElementById("auApple"); if (ap) ap.onclick = async () => { keepAfter(); ap.disabled = true; try { await hvSignInApple(); } catch(e){ ap.disabled = false; auFail(e); } };   // 🍎 Apple 登录（备好，config.json 里 apple: true 才显示；要先有苹果开发者账号）
   const mg = document.getElementById("auMagic");
   if (mg) mg.onclick = async ()=>{ card.querySelectorAll(".au-msg").forEach(x=>x.remove()); const em = document.getElementById("auEm"); AU.email = em.value.trim();
     if (!auOk(AU.email)){ auErr("auEm", auT("e_email")); em.focus(); return; }
