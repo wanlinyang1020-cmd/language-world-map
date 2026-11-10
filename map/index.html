@@ -66234,7 +66234,7 @@ document.addEventListener("change", async e => { if (e.target.matches("[data-snf
 
 // ── 夜景地图 ──
 let mp = null, MS = 1, MX = 0, MY = 0, BW = 0, BH = 0, mday = 0, ITEMS = [], showRoute = false;
-const BASE = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/3840px-The_earth_at_night.jpg";
+const BASE = "https://img.heyvoyo.com/map/earth_night.webp";   // NASA Earth Observatory / NOAA NGDC「The earth at night」（公有领域，维基共享资源 3840 宽），转成 webp 放在 R2
 const P = (lon, lat) => [(lon + 180) / 360, (90 - lat) / 180];
 async function loadDay(i){ const d = D(), C = CITIES(), day = d.days[i], out = [];
   (day.seeds || []).forEach(s => { const ll = C[s[0]]; if (ll) out.push({city: s[0], lon: ll[0], lat: ll[1], img: NPC(s[1]), l: s[2], t: s[3], m: s[4], tag: s[5], seed: true}); });
