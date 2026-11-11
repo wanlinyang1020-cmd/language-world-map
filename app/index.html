@@ -8713,15 +8713,15 @@ function openFlag(id){
   card.querySelector("#flDel").onclick = ()=>{ flagsSet(flagsGet().filter(x=>x.id !== id)); closeCard(); };
 }
 // ===== 🏃 我的一次经历：10 件真实小事（第一次去健身房、参加一次活动……），去之前看现场会怎么说，回来说说，插一面旗（内容来自言己）=====
-const ACT = typeof ACTIVITIES !== "undefined" ? ACTIVITIES : {groups: [], activities: []};
+const EXP_ACT = typeof ACTIVITIES !== "undefined" ? ACTIVITIES : {groups: [], activities: []};
 function openActivities(ll){
   card.innerHTML = expTop("🏃", Z("做了一件事"), Z("真实的小事：去之前看看现场会怎么说，回来说说"), "#2f9e44") + `
     <p class="note">${Z("选一件你最近做了、或者打算去做的事。")}</p>
-    ${ACT.groups.map(([g, zh])=>{ const L = ACT.activities.filter(a=>a.group === g); return L.length ? `<h3>${esc(zh)}</h3>${L.map(a=>`<button class="chip" data-act="${a.id}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(a.title)}</b><br><small class="note">${esc(a.intro)}</small></span></button>`).join("")}` : ""; }).join("")}`;
+    ${EXP_ACT.groups.map(([g, zh])=>{ const L = EXP_ACT.activities.filter(a=>a.group === g); return L.length ? `<h3>${esc(zh)}</h3>${L.map(a=>`<button class="chip" data-act="${a.id}" style="display:flex;width:100%;justify-content:flex-start;text-align:left;margin:3px 0;white-space:normal"><span><b>${esc(a.title)}</b><br><small class="note">${esc(a.intro)}</small></span></button>`).join("")}` : ""; }).join("")}`;
   expOpen(); card.scrollTop = 0; card.querySelectorAll("[data-act]").forEach(b=>b.onclick = ()=>openActivity(b.dataset.act, ll, 0));
 }
 function openActivity(id, ll, mi){
-  const a = ACT.activities.find(x=>x.id === id); if (!a) return; const m = a.moments[mi] || a.moments[0], from = "🏃 " + a.title;
+  const a = EXP_ACT.activities.find(x=>x.id === id); if (!a) return; const m = a.moments[mi] || a.moments[0], from = "🏃 " + a.title;
   card.innerHTML = expTop("🏃", esc(a.title), esc(a.en), "#2f9e44") + `<div class="chips"><button class="chip" id="acBack">${Z("← 换一件")}</button></div>
     <p>${esc(a.intro)}</p>${a.notes.map(n=>`<p class="note">· ${esc(n)}</p>`).join("")}
     <h3>${Z("到了现场")}</h3><div class="chips">${a.moments.map((x, i)=>`<button class="chip" data-mo="${i}"${i === mi ? ' aria-pressed="true" style="background:#ebfbee;border-color:#2f9e44"' : ""}>${esc(x.title)}</button>`).join("")}</div>
