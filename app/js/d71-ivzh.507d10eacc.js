@@ -60,7 +60,7 @@ const SOILS = [["lang", "🗣️", "语言", "Language", "从人怎么说话长�
   ["pro", "🔬", "懂行的人", "People who know", "从一个人的职业长出来 · 他懂，你才信", "Grown from someone's job — they know, so you trust it", "#1f4f8b"],
   ["culture", "🏛️", "文化与思想", "Culture & ideas", "从历史、想法、艺术长出来", "Grown from history, ideas and art", "#7a4b2a"],
   ["days", "📅", "日子", "Days", "从日历长出来 · 节日、季节、出门、过日子", "Grown from the calendar — seasons, trips, everyday life", "#b5862b"],
-  ["hot", "🔥", "热议", "Talked about", "从这周大家在聊、在吵、在流行的长出来 · 每周换，有出处", "What people are arguing about this week — changes weekly, always sourced", "#7b2d6e"]];
+  ["hot", "🔥", "热议", "Talked about", "从大家正在聊、在吵、在流行的长出来 · 有出处", "What people are arguing about right now — always sourced", "#7b2d6e"]];
 const SOIL_OF = {daniel_praise: "lang", rachel_th: "lang", kenji_standup: "lang", yuriko_spanish: "lang", bea_taglish: "lang", linhao_phone: "lang", xiaoyu_visa: "lang", mei_order: "lang",
   nadia_label: "self", oliver_money: "self", hana_mealplan: "self", amara_jetlag: "pro", jade_mornings: "pro", tom_veg: "pro", nadia_5k: "pro",
   eleni_lines: "culture", isabel_minute: "culture", kwame_afrobeats: "culture", jordi_map: "culture", arun_know: "culture", farah_five: "culture",
@@ -150,7 +150,7 @@ function sparks(el, n){ try { const r = el.getBoundingClientRect(); for (let k =
     const g = Math.random() * 6.28, d = 40 + Math.random() * 70; s.style.setProperty("--x", Math.cos(g) * d + "px"); s.style.setProperty("--y", Math.sin(g) * d + "px"); document.body.appendChild(s); setTimeout(() => s.remove(), 1100); } } catch(e){} }
 function welcome(a){ const host = who(a.host), faces = ((a.D[0] || {}).crowd || []).slice(0, 4).map(c => av(c[0], 28)).join(""), w = document.createElement("div"); w.className = "acx-wel";
   w.innerHTML = `<div class="acx-welc">${av(a.host, 64)}<div class="acx-welh">${T("欢迎加入！", "Welcome in!")} 👋</div><div class="acx-q">${esc(ivSpan(a) ? T("我是 " + host.nm + "。" + a.days + " 天，每天 " + ivSpan(a) + " 个真会碰到的问题，大约 10 分钟。", "I'm " + host.nm + ". " + a.days + " days, " + ivSpan(a) + " real questions a day, about 10 minutes.") : T("我是 " + host.nm + "。" + a.days + " 天，每天一句，大约 5 分钟。", "I'm " + host.nm + ". " + a.days + (a.days === 1 ? " day" : " days") + ", one line a day, about 5 minutes."))}</div>
-   <div class="acx-welp">${T("你是这期第 " + ((a.n || 0) + 1) + " 个加入的", "You're #" + ((a.n || 0) + 1) + " this round")}${faces ? `<span class="acx-faces">${faces}</span>` : ""}</div>
+   ${faces ? `<div class="acx-welp"><span class="acx-faces">${faces}</span></div>` : ""}
    <div class="acx-pass">${a.D.map((x, i) => `<span class="acx-slot" data-nopy title="${esc(x.k || "")}"><b>${i + 1}</b><span class="acx-dyk">${esc(x.k || "")}</span></span>`).join("")}</div>
    <button class="acx-btn say" data-wgo>${a.days === 1 ? T("开始", "Start") : T("开始第 1 天", "Start Day 1")}</button>${a.days > 1 ? `<div style="margin-top:10px">${remindHtml()}</div>` : ""}</div>`;
   pg.appendChild(w); wireRemind(w, a); requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("on"))); blip("big");
@@ -233,28 +233,28 @@ async function realShout(a, d){ if (d < 1) return; await loadReal(a, d - 1); if 
   el.querySelector("[data-rsp]").onclick = e => { e.stopPropagation(); rvPlay(rvUrl(v)); }; }
 // ── 卡片 ──
 const card = a => { const R = run(a), J = joined(a.id), host = who(a.host);
-  const tag = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("进行中 · 第 ", "On · day ") + (myDay(a, J) + 1) + T(" 天", "")) : R.cur ? T("这期进行中", "Running now") : R.next ? md(R.next) + " " + WK(R.next) + T(" 开始", "") : "";
+  const tag = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("进行中 · 第 ", "On · day ") + (myDay(a, J) + 1) + T(" 天", "")) : T("一直开着", "Always open");
   return `<div class="acx-c" data-act="${esc(a.id)}"><div class="acx-pic" style="background-image:url('${esc(pic(a))}')"><span>${a.days === 1 ? T("一次", "One day") : a.days + T(" 天", " days")}${tag ? " · " + esc(tag) : ""}</span></div>
-    <div class="acx-b"><h3>${esc(T(a.t.zh, a.t.en))}</h3>${ZH() ? `<div class="acx-en">${esc(a.t.en)}</div>` : ""}<div class="acx-h">${av(a.host, 24)}<b>${esc(host.nm)}</b><span>${esc(host.home || "")}</span></div><div class="acx-n"><i>${a.n || 0}</i> ${T("人在做", "doing it")}</div></div></div>`; };
+    <div class="acx-b"><h3>${esc(T(a.t.zh, a.t.en))}</h3>${ZH() ? `<div class="acx-en">${esc(a.t.en)}</div>` : ""}<div class="acx-h">${av(a.host, 24)}<b>${esc(host.nm)}</b><span>${esc(host.home || "")}</span></div></div></div>`; };   // 2026-11-11：写死的「N 人在做」不显示了（冷启动不写假人数；a.n 留在数据里）
 // ── 海报 ──
 const poster = (a, i, col) => { const R = run(a), J = joined(a.id), host = who(a.host), L_ = "ABC"[i % 3], showD = DAYS_ID.has(a.id) || !!a.showDays;
-  const when = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("你在第 ", "You're on day ") + (myDay(a, J) + 1) + T(" 天", "")) : a.days === 1 && !R.next ? T("随时能玩", "Any time") : R.cur ? T("这期进行中", "Running now") : R.next ? ago(R.next) + T(" 开始", "") : T("随时能玩", "Any time");
-  const hb = `${av(a.host, 26)}<span><b>${esc(host.nm)}</b> ${T("带", "hosts")}<br>${esc(host.job || host.home || "")}</span><em>${(a.n || 0).toLocaleString()}<br>${T("人在做", "doing it")}</em>`;
+  const when = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("你在第 ", "You're on day ") + (myDay(a, J) + 1) + T(" 天", "")) : T("一直开着", "Always open");
+  const hb = `${av(a.host, 26)}<span><b>${esc(host.nm)}</b> ${T("带", "hosts")}<br>${esc(host.job || host.home || "")}</span>`;   // 写死的人数不显示（同上）
   return `<div class="acx-po ${L_}" style="--k:${col}" data-act="${esc(a.id)}"><div class="acx-ph" style="background-image:url('${esc(pic(a))}')"></div><div class="acx-tint"></div><div class="acx-grad"></div>
     <div class="acx-tp"><span>${esc(when)}</span>${a.level === "up" ? `<span class="acx-lvup">${T("进阶", "LEVEL UP")}</span>` : ""}${showD ? `<span class="acx-dd">${a.days}<small>DAYS</small></span>` : ""}</div>
     <div class="acx-bt2">${ZH() ? `<div class="acx-pen">${esc(a.t.en)}</div>` : ""}<h3 class="acx-pt">${esc(T(a.t.zh, a.t.en))}</h3><div class="acx-hk">${esc(hookOf(a))}</div>${L_ !== "B" ? `<div class="acx-ft">${hb}</div>` : ""}</div>${L_ === "B" ? `<div class="acx-bf">${hb}</div>` : ""}</div>`; };
 const posterNext = (x, i, col) => { const L_ = "ABC"[i % 3], rem = (ST().rem || {})[x.id], P = nextPic(x);
-  const hb = `<img class="acx-av" style="width:26px;height:26px" src="${esc(NPC + x.host + "/face.webp")}" alt="" onerror="this.style.visibility='hidden'"><span><b>${esc(x.hostNm)}</b> ${T("带", "hosts")}<br>${esc(TR(x.hostJob))}</span><em>${rem ? "🔔 " + T("会提醒你", "We'll tell you") : T("下一期", "Coming next")}</em>`;
+  const hb = `<img class="acx-av" style="width:26px;height:26px" src="${esc(NPC + x.host + "/face.webp")}" alt="" onerror="this.style.visibility='hidden'"><span><b>${esc(x.hostNm)}</b> ${T("带", "hosts")}<br>${esc(TR(x.hostJob))}</span><em>${rem ? "🔔 " + T("会提醒你", "We'll tell you") : T("在准备", "Coming soon")}</em>`;
   return `<div class="acx-po ${L_} nx${P ? "" : " emo"}" style="--k:${col}" data-actn="${esc(x.id)}">${P ? `<div class="acx-ph" style="background-image:url('${esc(P)}')"></div>` : `<div class="acx-ph" style="background:${esc(x.pic.bg)}">${esc(x.pic.emoji)}</div>`}<div class="acx-tint"></div><div class="acx-grad"></div>
-    <div class="acx-tp"><span>${T("下一期", "Coming next")}</span>${x.showDays ? `<span class="acx-dd">${x.days}<small>DAYS</small></span>` : ""}</div>
+    <div class="acx-tp"><span>${T("在准备", "Coming soon")}</span>${x.showDays ? `<span class="acx-dd">${x.days}<small>DAYS</small></span>` : ""}</div>
     <div class="acx-bt2">${ZH() ? `<div class="acx-pen">${esc(x.t.en)}</div>` : ""}<h3 class="acx-pt">${esc(T(x.t.zh, x.t.en) || x.t.zh)}</h3><div class="acx-hk">${esc(ZH() ? x.hook : TR(x.hook) !== x.hook ? TR(x.hook) : "")}</div>${L_ !== "B" ? `<div class="acx-ft">${hb}</div>` : ""}</div>${L_ === "B" ? `<div class="acx-bf">${hb}</div>` : ""}</div>`; };
 function openNext(id){ const x = NEXT.find(n => n.id === id); if (!x) return; mount(); const o = ST(), rem = (o.rem || {})[id], P = nextPic(x);
   pg.innerHTML = `<div class="acx-pg"><div class="acx-top"><button class="acx-x" data-x>‹</button><b>${esc(T(x.t.zh, x.t.en))}</b></div>
-   <div class="acx-nh" style="${P ? `background-image:url('${esc(P)}')` : `background:${esc(x.pic.bg)}`}">${P ? "" : `<span>${esc(x.pic.emoji)}</span>`}<div><span class="acx-tag">${T("下一期", "Coming next")}</span><h1>${esc(T(x.t.zh, x.t.en))}</h1>${ZH() ? `<div class="acx-en">${esc(x.t.en)}</div><p>${esc(TR(x.hook))}</p>` : ""}</div></div>
-   <div class="acx-nb">${ZH() ? `<h4>这是什么</h4><p>${esc(TR(x.what))}</p><h4>每天做什么</h4><p>${esc(TR(x.daily))}</p><h4>最后你会看见</h4><p>${esc(TR(x.end))}</p>` : `<p>${T("", "This one is still being made. Tap below and we'll tell you when it starts.")}</p>`}
+   <div class="acx-nh" style="${P ? `background-image:url('${esc(P)}')` : `background:${esc(x.pic.bg)}`}">${P ? "" : `<span>${esc(x.pic.emoji)}</span>`}<div><span class="acx-tag">${T("在准备", "Coming soon")}</span><h1>${esc(T(x.t.zh, x.t.en))}</h1>${ZH() ? `<div class="acx-en">${esc(x.t.en)}</div><p>${esc(TR(x.hook))}</p>` : ""}</div></div>
+   <div class="acx-nb">${ZH() ? `<h4>这是什么</h4><p>${esc(TR(x.what))}</p><h4>每天做什么</h4><p>${esc(TR(x.daily))}</p><h4>最后你会看见</h4><p>${esc(TR(x.end))}</p>` : `<p>${T("", "This one is still being made. Tap below and we'll tell you when it's ready.")}</p>`}
      <div class="acx-host">${`<img class="acx-av" style="width:40px;height:40px" src="${esc(NPC + x.host + "/face.webp")}" alt="" onerror="this.style.visibility='hidden'">`}<div><b>${esc(x.hostNm)}</b> ${T("带", "hosts")} · ${esc(TR(x.hostJob))} <span class="acx-tag">🎭 ${T("角色", "character")}</span></div></div>
-     <p class="acx-nn">${T("这个活动还在准备，开始那天告诉你。", "Still being made — we'll tell you the day it starts.")}</p>
-     <button class="acx-btn say" data-rem>${rem ? "✓ " + T("开始时会提醒你 · 取消", "We'll remind you · undo") : "🔔 " + T("开始时提醒我", "Remind me when it starts")}</button></div></div>`;
+     <p class="acx-nn">${T("这个活动还在准备，做好了告诉你。", "Still being made — we'll tell you when it's ready.")}</p>
+     <button class="acx-btn say" data-rem>${rem ? "✓ " + T("做好了会提醒你 · 取消", "We'll remind you · undo") : "🔔 " + T("做好了提醒我", "Remind me when it's ready")}</button></div></div>`;
   pg.hidden = false; pg.scrollTop = 0;
   pg.querySelector("[data-x]").onclick = close;
   pg.querySelector("[data-rem]").onclick = () => { const o2 = ST(); o2.rem = o2.rem || {}; if (o2.rem[id]) delete o2.rem[id]; else o2.rem[id] = today(); SAVE(o2); openNext(id); }; }
@@ -262,9 +262,8 @@ function openNext(id){ const x = NEXT.find(n => n.id === id); if (!x) return; mo
 function html(){ mode(); if (!L.length) return "";
   const mine = L.filter(a => joined(a.id) && !finished(a, joined(a.id)));
   const t = today(), week = []; for (let k = 0; k < 7; k++){ const d = new Date(); d.setDate(d.getDate() + k); week.push(dstr(d)); }
-  const starting = week.map(d => [d, L.filter(a => (a.starts || []).includes(d))]).filter(x => x[1].length);
   const pool = L.filter(a => run(a).cur || (a.starts || []).some(s => week.includes(s)));
-  const feat = (pool.length ? pool : L).slice().sort((x, y) => (y.n || 0) - (x.n || 0))[new Date().getDate() % Math.max(1, Math.min(3, (pool.length || L.length)))];
+  const feat = (pool.length ? pool : L).slice()[new Date().getDate() % Math.max(1, Math.min(3, (pool.length || L.length)))];
   const doneL = L.filter(a => finished(a, joined(a.id)));
   return `<div class="acx">
     <p class="acx-sub">${T("跟着一个人、跟一群人，做几天的事 · 顺便把话说出来", "Follow someone, join a crowd, do something for a few days — and say it out loud along the way")}<a href="#galIsles" class="acx-isl" data-acxisl>🏝️ ${T("群岛 · 全部话题", "Islands · all topics")}</a></p>
@@ -273,9 +272,9 @@ function html(){ mode(); if (!L.length) return "";
         <div class="acx-prog">${a.D.map((_, i) => `<i class="${(J.done || {})[i] != null ? "d" : i === d ? "t" : ""}"></i>`).join("")}</div>
         <div class="acx-st">${T("第 " + (d + 1) + " 天", "Day " + (d + 1))} · <b>${D.line ? line(D.line, D.own) : esc(lead(D))}</b></div>
         <button class="acx-go">${n < 0 ? T("明天再来 · 看看大家", "Back tomorrow · see the crowd") : T("做今天这一步 →", "Do today's step →")}</button></div></div>`; }).join("")}</div>` : ""}
-    ${feat ? `<h2>${T("这周的活动", "This week")} <small>${T("错过了就等下一期", "Miss it and wait for the next round")}</small></h2>
-    <div class="acx-feat"><div class="acx-big" data-act="${esc(feat.id)}" style="background-image:url('${esc(pic(feat))}')"><div class="acx-bt"><span class="acx-k">${feat.days === 1 ? T("一次", "One day") : feat.days + T(" 天", " days")}${run(feat).cur ? T(" · 这期进行中", " · running now") : run(feat).next ? " · " + md(run(feat).next) + " " + WK(run(feat).next) + T(" 开始", " start") : ""}</span><h3>${esc(T(feat.t.zh, feat.t.en))}</h3>${ZH() ? `<div class="acx-en">${esc(feat.t.en)}</div>` : ""}<div class="acx-who">${av(feat.host, 34)}<span><b>${esc(who(feat.host).nm)}</b> · ${esc(who(feat.host).job || "")} · ${feat.n || 0} ${T("人已加入", "joined")}</span></div></div></div>
-      ${starting.length ? `<div class="acx-cal">${starting.map(([d, A]) => `<div class="acx-d"><b>${md(d)}<small>${d === t ? T("今天", "Today") : WK(d)}</small></b><div>${A.map(a => `<div class="acx-it" data-act="${esc(a.id)}">${av(a.host, 28)}<span>${esc(T(a.t.zh, a.t.en))}</span><em>${a.days === 1 ? T("一次", "1 day") : a.days + T(" 天", " d")}</em></div>`).join("")}</div></div>`).join("")}</div>` : ""}</div>` : ""}
+    ${feat ? `<h2>${T("今天推荐", "Today's pick")} <small>${T("一直开着 · 随时来说一句", "Always open · say yours anytime")}</small></h2>
+    <div class="acx-feat"><div class="acx-big" data-act="${esc(feat.id)}" style="background-image:url('${esc(pic(feat))}')"><div class="acx-bt"><span class="acx-k">${feat.days === 1 ? T("一次", "One day") : feat.days + T(" 天", " days")}${T(" · 一直开着", " · always open")}</span><h3>${esc(T(feat.t.zh, feat.t.en))}</h3>${ZH() ? `<div class="acx-en">${esc(feat.t.en)}</div>` : ""}<div class="acx-who">${av(feat.host, 34)}<span><b>${esc(who(feat.host).nm)}</b> · ${esc(who(feat.host).job || "")}</span></div></div></div>
+</div>` : ""}
     ${SOILS.map(([k, e, zh, en, s1, s2, col]) => { const A = L.filter(a => soilOf(a) === k && a.level !== "up"), X = NEXT.filter(x => x.soil === k); return A.length + X.length ? `<h2>${e} ${T(zh, en)} <small>${T(s1, s2)}</small></h2><div class="acx-prow">${A.map((a, i) => poster(a, i, col)).join("")}${X.map((x, i) => posterNext(x, i + A.length, col)).join("")}</div>` : ""; }).join("")}
     ${(() => { const U = L.filter(a => a.level === "up"); return U.length ? `<h2>⬆️ ${T("进阶 · 聊观点、聊工作", "Level up · opinions & work")} <small>${T("说的话更像大人：表态、讲理由、让步、讲清楚你的工作", "Sound like an adult: take a side, give reasons, concede a point, explain your work")}</small></h2><div class="acx-prow">${U.map((a, i) => poster(a, i, a.kind === "work" ? "#1f4f8b" : "#7b2d6e")).join("")}</div>` : ""; })()}
     ${doneL.length ? `<h2>${T("你做完的", "Finished")} <small>${T("每个章背后，是你那几天说过的话", "Behind every stamp: the lines you said")}</small></h2><div class="acx-shelf">${doneL.map((a, i) => `<div class="acx-stamp s${i % 3}" data-act="${esc(a.id)}"><div>${esc((a.end || {}).stamp || "")}<b>${a.days}/${a.days}</b>${esc(who(a.host).nm.toUpperCase())}</div></div>`).join("")}</div>` : ""}
@@ -290,10 +289,10 @@ function open(id, day){ mode(); const a = ALL.find(x => x.id === id); if (!a) re
   const nd = J ? nextStep(a, J) : 0, d = day != null ? day : J ? (nd < 0 ? myDay(a, J) : nd) : 0; curDay = d; const D = a.D[d] || {}, R = run(a);
   const fin = finished(a, J);
   pg.innerHTML = `<div class="acx-pg"><div class="acx-top"><button class="acx-x" data-x>‹</button><b>${esc(T(a.t.zh, a.t.en))}</b></div>
-   <div class="acx-hero"><img src="${esc(pic(a))}" alt=""><div class="acx-ti"><span class="acx-tag">${a.days === 1 ? T("一次", "One day") : a.days + T(" 天", " days")}${R.cur ? T(" · 这期进行中", " · running now") : R.next ? " · " + md(R.next) + T(" 开始", " start") : ""}</span><h1>${esc(T(a.t.zh, a.t.en))}</h1>${ZH() ? `<div class="acx-en">${esc(a.t.en)}</div>` : ""}
+   <div class="acx-hero"><img src="${esc(pic(a))}" alt=""><div class="acx-ti"><span class="acx-tag">${a.days === 1 ? T("一次", "One day") : a.days + T(" 天", " days")}${T(" · 一直开着", " · always open")}</span><h1>${esc(T(a.t.zh, a.t.en))}</h1>${ZH() ? `<div class="acx-en">${esc(a.t.en)}</div>` : ""}
      <div class="acx-host" data-ppl="${esc(a.host)}">${av(a.host, 40)}<div><b>${esc(host.nm)}</b> ${T("带", "hosts")} · ${esc(host.job || "")} <span class="acx-tag">🎭 ${T("角色", "character")}</span></div></div>
      <div class="acx-why"><span class="acx-q">${esc(HSm(a.why))}</span>${HSs(a.why)}</div>
-     <div class="acx-join">${J ? `<span class="acx-in">✓ ${T("已加入", "Joined")}</span>` : `<button class="acx-btn say" data-join>＋ ${T("加入", "Join")}</button>`}<span class="acx-cnt">${(a.n || 0) + (J ? 1 : 0)} ${T("人在做", "doing it")}</span></div></div></div>
+     <div class="acx-join">${J ? `<span class="acx-in">✓ ${T("已加入", "Joined")}</span>` : `<button class="acx-btn say" data-join>＋ ${T("加入", "Join")}</button>`}</div></div></div>
    <div class="acx-days">${a.D.map((x, i) => { const ok = J && (J.done || {})[i] != null, open_ = J ? i <= myDay(a, J) : i === 0; return `<button class="acx-dy${ok ? " done" : ""}${i === d ? " on" : ""}${open_ ? "" : " lock"}" data-d="${i}" title="${esc(x.k || "")}"><b>${i + 1}</b><span class="acx-dyk">${esc(x.k || "")}</span></button>`; }).join("")}</div>
    ${fin && day == null ? endHtml(a, J) : `<div class="acx-body"><div class="acx-today"><h4>${T("第 " + (d + 1) + " 天", "Day " + (d + 1))} · ${esc(D.k || "")}<small>${D.iv ? T("大约 10 分钟", "about 10 min") : T("大约 5 分钟", "about 5 min")}</small></h4>
      <div class="acx-hs">${av(a.host, 36)}<div><div class="acx-q">${esc(HSm(D.say))}${ZHL() ? "" : ` <button class="acx-sp" data-say="${esc(D.say ? D.say[0] : "")}">🔊</button>`}</div>${HSs(D.say)}</div></div>
