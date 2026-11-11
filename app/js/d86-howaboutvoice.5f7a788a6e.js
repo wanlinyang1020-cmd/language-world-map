@@ -60,7 +60,7 @@ let pg = null, scr = 0, cur = {}, O = null, TICK = null, conv = "orig";
 function mount(){ A().mount(); if (!document.getElementById("haCss")){ const s = document.createElement("style"); s.id = "haCss"; s.textContent = CSS; document.head.appendChild(s); }
   if (!pg){ pg = document.createElement("div"); pg.id = "haPg"; pg.className = "ak-page"; pg.dataset.nopy = ""; pg.hidden = true; document.body.appendChild(pg); pg.addEventListener("click", onClick); pg.addEventListener("change", onChange); pg.addEventListener("input", onInput); } }
 let HIST = 0;   // 1 = 是这里往浏览器历史里记的那一步（关的时候退回去）
-function open(s){ if (!DATA() || !UIOK()) return; if (pg && !pg.hidden && O){ if (s != null) go(s); return; } mount(); O = dayFor(eff()); if (!O) return; const dr = ls("ha.draft"), mine = dr && dr.date === O.date && !ST().d[O.date];
+function open(s){ if (!DATA() || !UIOK()) return; if (pg && !pg.hidden && O && O.lg === LG()){ if (s != null) go(s); return; } mount(); O = dayFor(eff()); if (O) O.lg = LG(); if (!O) return; const dr = ls("ha.draft"), mine = dr && dr.date === O.date && !ST().d[O.date];
   cur = mine ? dr : {lv: A().level(), pick: {}, n: 5, borrowed: []}; cur.pick = cur.pick || {}; cur.borrowed = cur.borrowed || []; if (cur.th && !cur.img) cur.img = cur.th;
   if (!cur.ll){ const sl = ls("snap.ll"); if (sl && sl.ll){ cur.ll = sl.ll; cur.place = sl.place || ""; } }
   scr = s != null ? s : mine && (dr.said != null || Object.keys(cur.pick).length || cur.borrowed.length) ? 2 : 0; pg.hidden = false; document.body.classList.add("ak-on");
@@ -389,7 +389,10 @@ function card(){ if (!DATA() || !UIOK()) return ""; mount(); const o = dayFor(ef
     <div class="ha-cf"><span class="ha-faces">${faces}</span><small dir="auto">${esc(r ? (r.sent ? T("你今天说过了，灯亮着 ✓", "You've said yours — your light is on ✓") : T("你今天说过了 ✓", "You've said yours today ✓")) : `${tx(o.w.t)} · ${tx(o.day.t)}`)}</small><button data-haopen>${esc(r ? T("看看世界 →", "See the world →") : T("你那边呢？", "How about yours?"))}</button></div></div>`; }
 document.addEventListener("click", e => { const re = e.target.closest(".ak-globe [data-hare]"); if (re && O){ reply(re.dataset.hakey, re.dataset.hare, re); return; } if (e.target.closest("[data-haopen]") && !e.target.closest("#haPg")){ e.preventDefault(); open(); } });
 // 地址 #howabout：软件里由 template2 的 rtGo 打开（先开「今天」再盖上这一页）；没有 rtGo 的页面自己开
-const fromHash = () => { if (location.hash === "#howabout") setTimeout(() => { if (!window.hvRt) open(); }, 1200); };
+// 2026-11-12 修：原来固定等 1.2 秒就自己开。网慢时主程序（template2，里面有 hvRt、HVI）还没加载完，LG() 读不到在学的语言、当成英语，
+//   学法语的人第一次打开就是英文的题（关掉再开才对）。现在等到主程序出来就交给它（rtGo）；页面整个加载完还没有 hvRt，才是没有主程序的页面，自己开
+const fromHash = () => { if (location.hash !== "#howabout") return; let n = 0; const t = setInterval(() => { if (window.hvRt){ clearInterval(t); return; }
+  if (document.readyState === "complete" || ++n > 200){ clearInterval(t); if (!window.hvRt) open(); } }, 300); };
 fromHash(); window.addEventListener("hashchange", () => { if (location.hash === "#howabout" && !window.hvRt) open(); });
 addEventListener("popstate", () => { if (pg && !pg.hidden && location.hash !== "#howabout"){ HIST = 0; close(true); } });   // 返回键
 document.addEventListener("keydown", e => { if (e.key !== "Escape" || !pg || pg.hidden) return; const sh = document.querySelector(".ak-share:not([hidden])"); if (sh){ sh.hidden = true; return; }
