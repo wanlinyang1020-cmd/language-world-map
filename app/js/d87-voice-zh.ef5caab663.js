@@ -20,7 +20,7 @@ const lss = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStor
 const get = () => { try { return JSON.parse(lsg(KEY) || "null"); } catch(e){ return null; } };
 let H = {};   // 主程序给的：UI、open.{today,people,boat}、todayDone()
 const ui = () => (H.UI || document.documentElement.lang || lsg("hv.ui") || "zh").slice(0, 2);
-const T = (zh, en) => ui() === "zh" ? zh : en;
+const T = (zh, en) => ui() === "zh" ? zh : ((typeof UI_L10N !== "undefined" && UI_L10N[ui()] && UI_L10N[ui()][zh]) || en);   // 西日阿先查翻译表
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const learn = () => { const l = lsg("hv.learn"); return l && !(l === "zh" && ui() === "zh") ? l : ui() === "en" ? "zh" : "en"; };   // 跟 people_tab.js 一样
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -43,7 +43,7 @@ const lbl = s => s === "auto" ? T("跟着我的习惯", "Around my usual time") 
 function kToday(d){
   if (typeof TODAY_WORLD === "undefined") return null; const L = TODAY_WORLD.days[ymd(d)]; if (!L || !L.length) return null;
   const n = Math.round((new Date(ymd(d)) - new Date(TODAY_WORLD.start)) / 864e5) + 1;
-  return {tab: "today", title: T(`🌍 今日世界 #${n}：新的 3 张来了`, `🌍 Today's World #${n}: 3 new stickers`), body: cut(L[0].q, 90) || T("今天跨 3 个大洲，猜猜是哪儿。", "Three places, three continents. Can you guess them?")};
+  return {tab: "today", title: T(`🌍 今日世界 #${n}：新的 3 张来了`, `🌍 World Today #${n}: 3 new stickers`), body: cut(L[0].q, 90) || T("今天跨 3 个大洲，猜猜是哪儿。", "Three places, three continents. Can you guess them?")};
 }
 const ZH_C = ["shanghai", "beijing", "chengdu", "guangzhou"];
 function pName(id){ const D = window.PTAB || {}, x = (D.people || {})[id] || {}; if (x.nm) return x.nm; const [c, k] = id.split(".");
@@ -104,8 +104,8 @@ function html(){
   const S = get(), on = S && S.t, cur = on || pick, isOwn = cur !== "auto" && !SLOTS.includes(cur);
   setTimeout(schedule, 0);   // 结果页 = 今天做完了，顺手重排（今天就不再提今日世界）
   return `<div class="tw-push hvn-box"><b>🔔 ${on ? (on === "auto" ? T(`每天在你常来的时间叫你（现在大约${clock(habit())}）`, `Every day around your usual time (now about ${clock(habit())})`) : T("每天", "Every day at") + " " + esc(lbl(on)) + " " + T("叫你", "")) : T("每天准时叫你一声？", "Want a nudge every day?")}</b>
-    <small>${on ? T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。点别的时间就换。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Tap another time to change.")
-                : T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。随时能关。", "One a day, taking turns: a new Today's World, a new post from someone you know, or a regular waiting for you. Turn it off any time.")}</small>
+    <small>${on ? T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。点别的时间就换。", "One a day, taking turns: a new World Today, a new post from someone you know, or a regular waiting for you. Tap another time to change.")
+                : T("一天一条：今日世界的新一期、认识的人发了新动态、熟客在等你，轮着来。随时能关。", "One a day, taking turns: a new World Today, a new post from someone you know, or a regular waiting for you. Turn it off any time.")}</small>
     <div class="tw-pt">${["auto", ...SLOTS].map(s => `<button data-hvnt="${s}"${s === cur ? ' class="on"' : ""}>${esc(lbl(s))}</button>`).join("")}<label class="hvn-own${isOwn ? " on" : ""}">${T("自己定", "Pick a time")} <input type="time" data-hvnown value="${esc(isOwn ? cur : own)}"></label></div>
     ${cur === "auto" ? `<small>${T(`「跟着我的习惯」：按你最近几天第一次打开的时间（现在大约${clock(habit())}），每天自己调；那天已经来过就不叫你。`, `"Around my usual time": based on when you first opened the app over the last few days (now about ${clock(habit())}). It adjusts itself, and skips days you've already been here.`)}</small>` : ""}
     ${on ? `<button class="tw-poff" data-hvnoff>${T("关掉提醒", "Turn off reminders")}</button>` : `<button class="tw-pon" data-hvnon>${T("好，每天叫我", "Yes, remind me daily")}</button>`}
@@ -129,7 +129,7 @@ function ask(){
   if (!app() || get() || lsg(ASKED)) return; lss(ASKED, "1");
   setTimeout(() => {
     const w = document.createElement("div"); w.id = "hvnAsk";
-    w.innerHTML = `<div class="hvn-card"><h3>${T("TA 明天会回你", "They'll reply tomorrow")}</h3><p>${T("要不要每天准时叫你一声？回你的话、新动态、今日世界，到时候就知道。", "Want a daily nudge so you don't miss their reply, new posts or Today's World?")}</p>${html()}<button class="hvn-later" data-hvnlater>${T("先不用", "Not now")}</button></div>`;
+    w.innerHTML = `<div class="hvn-card"><h3>${T("TA 明天会回你", "They'll reply tomorrow")}</h3><p>${T("要不要每天准时叫你一声？回你的话、新动态、今日世界，到时候就知道。", "Want a daily nudge so you don't miss their reply, new posts or World Today?")}</p>${html()}<button class="hvn-later" data-hvnlater>${T("先不用", "Not now")}</button></div>`;
     document.body.appendChild(w); const close = () => w.remove();
     w.onclick = e => { if (e.target === w) close(); }; w.querySelector("[data-hvnlater]").onclick = close;
     wire(w, ok => { if (ok) setTimeout(close, 1200); });

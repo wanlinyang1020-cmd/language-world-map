@@ -254,8 +254,8 @@ function render(){
   box.querySelectorAll("[data-tyopen]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); const [i, k] = b.dataset.tyopen.split("|"); try { if (window.TFEED && window.TFEED.has(i, k)) window.TFEED.open(i, k); else if (window.HVI && window.HVI.blGo){ window.PTAB_CLOSE && window.PTAB_CLOSE(); window.HVI.blGo(i, k); } } catch(x){} });
   box.querySelectorAll("[data-fest],[data-festgo]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); if (window.hvFestOpen) window.hvFestOpen(b.dataset.fest || b.dataset.festgo); });
 }
-function person(id){
-  const p = P(id); if (!p) return; stop(); mount(); { const o = ST(); o.seen[id] = newest(p); SAVE(o); }
+function person(id, away){   // away：从别处（比如「今天」）点进来的：不把「朋友」列表也露出来，关上回到原来那一页（2026-11-12）
+  const p = P(id); if (!p) return; stop(); const was = !box || box.hidden; mount(); if (away && was) box.hidden = true; { const o = ST(); o.seen[id] = newest(p); SAVE(o); }
   let pg = document.getElementById("ppPerson"); if (!pg){ pg = document.createElement("div"); pg.id = "ppPerson"; document.body.appendChild(pg); }
   const canChat = p.city && (p.learn === "zh" ? window.PZ : window.PP && ZHUI() && learn() !== "zh");
   pg.innerHTML = `<div class="pt-app"><div class="pt-top"><button class="pt-x" id="ptX">‹</button><h1 style="font-size:17px">${esc(p.home)}</h1></div>
@@ -293,7 +293,7 @@ window.PTAB_REPLY = (id, i, t) => { if (!t) return; const o = ST(); o.r[id + "."
 window.PTAB_SAY = (id, t, done) => { const p = P(id); if (!p){ done && done(); return; } stop(); say(t, p.lang, p.nm, done, p.id); };
 window.PTAB_KNOW = id => { setK(id, true); };
 window.PTAB_KNOWN = () => { try { return known().map(p => ({id: p.id, nm: p.nm, img: p.img})); } catch(e){ return []; } };   // 「我」页的认识的人（2026-11-08）
-window.PTAB_PERSON = id => person(id);
+window.PTAB_PERSON = (id, away) => person(id, away);
 window.PTAB_INFO = id => { const p = P(id); return p ? {nm: p.nm, img: p.img, job: p.job, home: p.home, lang: p.lang} : null; };   // 🎪 活动（activities.js）用：主持人和交作业的人的名字、照片
 // 岛上群聊里的人 = 朋友页里的人（2026-11-08）：posts_more/isle_<岛>.json 里的人，id 是 more.isle_<岛>.<群聊里的名字>；一屏接一屏里「认识 TA」「明天 TA 还会发」用
 window.PTAB_FIND = (nid, isle) => { const M = D.isle || {}; if (isle && M[isle.replace(/_club$/, "") + "|" + nid]) return M[isle.replace(/_club$/, "") + "|" + nid]; const k = Object.keys(M).find(x => x.endsWith("|" + nid)); return k ? M[k] : null; };

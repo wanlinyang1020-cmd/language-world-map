@@ -843,7 +843,7 @@ magObs(); addEventListener("resize", magKick);
 const PH = n => { const p = typeof STICKER_PHOTOS !== "undefined" && STICKER_PHOTOS[n]; return p ? (p.r2 || p.src || "") : ""; };
 function worldTop(){ let out = "";
   try { const T = X.twToday(); if (T && T.length){ const m = (typeof X.twMine === "function" && X.twMine()) || {res: []}, no = typeof X.twNo === "function" ? X.twNo() : "", done = m.res.filter(r => r !== null && r !== undefined).length;
-    out += `<div class="dw-tw" data-twopen><div class="dw-twh"><b>🌍 ${E(L("今日世界", "Today's World"))} #${E(no)}</b><small>${E(done === 3 ? L("今天的 3 张都看完了", "All 3 done today") : L("全世界今天一起看这 3 张", "The whole world sees these 3 today"))}</small></div>
+    out += `<div class="dw-tw" data-twopen><div class="dw-twh"><b>🌍 ${E(L("今日世界", "World Today"))} #${E(no)}</b><small>${E(done === 3 ? L("今天的 3 张都看完了", "All 3 done today") : L("全世界今天一起看这 3 张", "The whole world sees these 3 today"))}</small></div>
       <div class="dw-three">${T.slice(0, 3).map((x, i) => { const im = PH(x.n) || x.img || "", seen = m.res[i] !== null && m.res[i] !== undefined; return `<div class="${seen ? "seen" : ""}" style="background-image:url('${E(im)}')"><span>${seen ? E(X.mapN ? X.mapN(x.n) : x.n) : "?"}</span></div>`; }).join("")}</div>
       <div class="dw-go">${E(done === 3 ? L("看看今天的答案 →", "See today's answers →") : L("猜一猜是哪儿 →", "Guess where →"))}</div></div>`; } } catch(e){}
   try { const cp = document.getElementById("ctPill"); if (cp && cp.textContent.trim()) out += `<div class="dw-ct" data-dwct><div class="ic">🎒</div><div class="tx">${cp.innerHTML}</div></div>`; } catch(e){}
@@ -857,7 +857,7 @@ function worldList(Lst, pic){ const D = Lst.map(([d, k]) => ({d, k, ph: pic(d)})
   return h; }
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-dwct]"); if (b){ e.preventDefault(); e.stopPropagation(); const cp = document.getElementById("ctPill"); if (cp) cp.click(); } }, true);
 const h1k = () => { const h = document.querySelector("#head h1"); if (h){ h.dataset.dk = L("世界", "World"); h.dataset.kick = "The Atlas"; } else setTimeout(h1k, 500); }; h1k(); setInterval(h1k, 3000);
-window.DESK = {on, html, after, stop: stopAll, article, close: artClose, worldTop, worldList};
+window.DESK = {on, html, after, stop: stopAll, article, close: artClose, worldTop, worldList, topics: topicItems};   // topics：手机「今天」也用同一份话题（2026-11-12）
 
 // ── 样子 ──
 const CSS = `

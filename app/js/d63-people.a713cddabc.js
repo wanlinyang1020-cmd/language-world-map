@@ -350,9 +350,9 @@ window.PSCENE_URL = n => "data:image/svg+xml;charset=utf-8," + encodeURIComponen
 const lsRaw = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } };
 // 2026-11-12：五种界面都开，只给学英语的人（这些城市的人说英语；学中文的人在 people_zh_tail.js 认识中国城市的人）。中文意思行只在中文界面出
-const ok = () => ["zh", "en", "es", "ja", "ar"].includes((lsRaw("hv.ui") || "zh").slice(0, 2)) && (lsRaw("hv.learn") || "en") === "en";
+const ok = () => ["zh", "en", "es", "ja", "ar"].includes(((window.HVI && window.HVI.UI) || lsRaw("hv.ui") || "zh").slice(0, 2)) && ((window.HVI && window.HVI.LEARN) || lsRaw("hv.learn") || "en") === "en";   // 2026-11-12：先读软件真正在用的界面语言
 // 界面语言：中文界面用中文字段；别的界面用英文字段（job_en、story_en、ties_en，内容编辑 2026-11-12 补的），西、日、阿没有自己的版本就用英文
-const UIL = () => (lsRaw("hv.ui") || "zh").slice(0, 2), ZHU = () => UIL() === "zh";
+const UIL = () => ((window.HVI && window.HVI.UI) || lsRaw("hv.ui") || "zh").slice(0, 2), ZHU = () => UIL() === "zh";
 const L5 = (zh, en, es, ja, ar) => ({zh, en, es, ja, ar})[UIL()] || en;
 const jobT = p => ZHU() ? p.job : p.job_en || p.job;   // 头像（people_face.js）照旧用中文 job，换界面语言不换脸
 const storyT = p => ZHU() ? p.story : p.story_en || p.story;
@@ -802,7 +802,7 @@ window.STANDUP = {"_说明":"小镇脱口秀：语言小镇（用户之前做的
 const SU = window.STANDUP; if (!SU) return;
 const lsRaw = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } };
-const ok = () => (lsRaw("hv.ui") || "zh") === "zh" && (lsRaw("hv.learn") || "en") !== "zh";
+const ok = () => ((window.HVI && window.HVI.UI) || lsRaw("hv.ui") || "zh") === "zh" && ((window.HVI && window.HVI.LEARN) || lsRaw("hv.learn") || "en") !== "zh";   // 2026-11-12：先读软件真正在用的界面语言
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const prog = () => ls("hv.standup") || {};
 const face = () => window.PFACE_URL ? window.PFACE_URL({nm: "Xiaoyu", job: "standup", face: {s: 2, h: "long", hc: "black", t: "hoodie", tc: "#e88aa8", a: ["rglasses"], ac: {rglasses: "#333"}, e: "grin", bgs: "stage", prop: "mic"}}) : "";

@@ -265,8 +265,8 @@ const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage
 const lsRaw = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 // 意思行都是中文：只给中文界面、学英语的人（西日阿界面还没翻，别让他们看到中文）
 // 2026-11-06（用户：无论学中文还是学英文都需要）：学中文的人也能练——内容翻过来（中文是要说的，英文是意思），界面字换成英文，拼音由主程序自动加
-const ZH = () => lsRaw("hv.learn") === "zh";
-const ok = () => ZH() || ((lsRaw("hv.ui") || "zh") === "zh" && (lsRaw("hv.learn") || "en") !== "zh");
+const ZH = () => ((window.HVI && window.HVI.LEARN) || lsRaw("hv.learn")) === "zh";
+const ok = () => ZH() || (((window.HVI && window.HVI.UI) || lsRaw("hv.ui") || "zh") === "zh" && ((window.HVI && window.HVI.LEARN) || lsRaw("hv.learn") || "en") !== "zh");   // 2026-11-12：先读软件真正在用的界面语言
 const LANG = () => ZH() ? "zh-CN" : "en-GB";
 const ISLE_NAME = {eat_well: "🥬 营养岛"};
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
@@ -344,7 +344,7 @@ const UI_EN = {"选最像你的，后面就练说你自己的话。": "Pick the 
 const UI_RX = [[/^🧳 我的小册子 · (\d+) 页$/, "🧳 My phrasebook · $1 pages"], [/^✓ 上次练过的 (\d+) 句收起来了 · 点开$/, "✓ $1 lines you practised before · show"], [/^开始（(\d+) 句 · 约 2 分钟）$/, "Start ($1 lines · about 2 min)"],
   [/^第 (\d+) 句 · 共 (\d+) 句$/, "Line $1 of $2"], [/^② 🎙️ (有人问你|配音) · 你的句子还在$/, "② 🎙️ Your turn · your line is shown"], [/^② 🎙️ (有人问你|配音) · 提示只剩开头字母$/, "② 🎙️ Your turn · first letters only"],
   [/^② 🎙️ (有人问你|配音) · 不给提示了$/, "② 🎙️ Your turn · no hints"], [/^你：/, "You: "], [/^开口说了 (\d+) 句$/, "Said $1 lines out loud"], [/^(.*) · 你的这几句$/, "$1 · your lines"], [/^(.*) · (\d+) 句$/, "$1 · $2 lines"]];
-const trUI = el => { if (!ZH() || (lsRaw("hv.ui") || "en") === "zh" || !el) return; const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n;
+const trUI = el => { if (!ZH() || ((window.HVI && window.HVI.UI) || lsRaw("hv.ui") || "en") === "zh" || !el) return; const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n;
   while ((n = tw.nextNode())){ const t = n.data.trim(); if (!t || !/[\u4e00-\u9fff]/.test(t)) continue; let r = UI_EN[t]; if (!r) for (const [re, to] of UI_RX) if (re.test(t)){ r = t.replace(re, to); break; } if (r && r !== t) n.data = n.data.replace(t, r); } };
 function mount(){
   if (root) return;
