@@ -986,12 +986,18 @@ function r1(){
   <div id="door"></div>`;
  rDoor();
 }
+// 「先看看」从离你最近的人开始：按你选的城市排远近（大圆距离），没选城市就按原来的顺序
+function nearFeed(){
+ const feed=TR().feed, c=curCity(); if(!c||c.lat==null) return feed;
+ const R=Math.PI/180, d=p=>{ if(!p||p.lat==null) return 1e9; const a=Math.sin((p.lat-c.lat)*R/2)**2+Math.cos(c.lat*R)*Math.cos(p.lat*R)*Math.sin((p.lon-c.lon)*R/2)**2; return Math.asin(Math.min(1,Math.sqrt(a))) };
+ return feed.map((f,i)=>[f,d(personById(f.pid)),i]).sort((x,y)=>x[1]-y[1]||x[2]-y[2]).map(x=>x[0]);
+}
 function rDoor(){
  const box=$("#door"); if(!box) return; let h="";
  if(S.d1==="look"){
-  const feed=TR().feed, f=feed[S.lk%feed.length], p=personById(f.pid), pv=baseVars(p); const u=tm(p.tz);
+  const feed=nearFeed(), f=feed[S.lk%feed.length], p=personById(f.pid), pv=baseVars(p); const u=tm(p.tz);
   h+=`<div class="fd"><div class="fimg ph0">${IMGT("",SCN(f.pid,f.ph),"object-position:"+(f.pos||"50% 35%"))}<span dir="ltr">${S.lk%feed.length+1} / ${feed.length}</span></div>
-   <div class="hd" style="margin-top:9px">${IMGT("av",IMG(p.id))}<div class="who"><b dir="auto">${esc(nmOf(p))}</b> <span class="tag">${T("role")}</span><small dir="auto">${esc(cityName(p))} · ${T("today")}</small></div><button class="spk heart ${S.liked[S.lk]?"on":""}" data-like="${S.lk}">${S.liked[S.lk]?"❤️":"🤍"}</button></div>
+   <div class="hd" style="margin-top:9px">${IMGT("av",IMG(p.id))}<div class="who"><b dir="auto">${esc(nmOf(p))}</b> <span class="tag">${T("role")}</span><small dir="auto">${esc(cityName(p))} · ${T("today")}</small></div><button class="spk heart ${S.liked[f.pid]?"on":""}" data-like="${f.pid}">${S.liked[f.pid]?"❤️":"🤍"}</button></div>
    ${LN(f.line,pv,p.v,"fl")}
    <div class="acts" style="justify-content:space-between">${S.seen>=3?`<button class="mini big glow2" data-hita="${p.id}">${T("hiTA").replace("{n}",esc(nmOf(p,1)))}</button>`:"<span></span>"}<button class="mini" data-next="1">${T("next")}</button></div></div>`;
  }
@@ -1282,7 +1288,7 @@ ROOT.addEventListener("click",e=>{
  if(d.lamp!=null){ if(!b.classList.contains("on")) return; const i=+d.lamp, pn=$("#pn"+i); showPin(pn&&pn.classList.contains("on")?-1:i); return }
  if(d.door){ S.d1=S.d1===d.door?null:d.door; if(S.d1==="look"&&!S.seen) S.seen=1; r1(); const dd=$("#door"); dd&&dd.scrollIntoView({block:"nearest",behavior:"smooth"}); return }
  if(d.cityopen){ S.cityOpen=!S.cityOpen; r1(); return }
- if(d.like!=null){ S.liked[+d.like]=!S.liked[+d.like]; rDoor(); if(S.liked[+d.like]){ const h=$(".heart"); h&&sparks(h) } return }
+ if(d.like!=null){ S.liked[d.like]=!S.liked[d.like]; rDoor(); if(S.liked[d.like]){ const h=$(".heart"); h&&sparks(h) } return }
  if(d.next){ S.lk++; S.seen++; rDoor(); return }
  if(d.hita){ S.hiTo=d.hita; const p=personById(d.hita); say(S.tr==="zh"?"嗨！":"Hi!", p.v); doorDone("look"); return }
  if(d.wave){ b.classList.add("waving"); doorDone("hi"); return }

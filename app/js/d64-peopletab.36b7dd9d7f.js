@@ -224,7 +224,7 @@ function render(){
   // 今天可以认识：每天换 3 个
   const pool = others.filter(p => vis(p).length), seed = dayN(), meet = pool.map((p, n) => [p, (n * 2654435761 + seed * 40503) % 1000]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(a => a[0]);
   const meetTag = `<span class="pt-tag pt-meet">${T("你可能想认识", "You might like to meet")}</span>`;
-  box.innerHTML = `<div class="pt-app"><div class="pt-top"><h1>${T("朋友", "People")}</h1></div>
+  box.innerHTML = `<div class="pt-app"><div class="pt-top"><h1>${T("人", "People")}</h1></div>
     ${festHtml()}
     ${pings.length || tyPings.length ? `<h2>💌 ${T("回你的", "Replies to you")} <small>${pings.length + tyPings.length}</small></h2>` : ""}
     ${pings.map(([k, p, x]) => `<div class="pt-ping" data-open="${esc(p.id)}"><img src="${p.img}" alt=""><div><b>${esc(p.nm)} ${T("回了你", "replied to you")}</b>${o.r[k] && o.r[k].text ? `<div class="pt-mine">${T("你", "You")}：${esc(o.r[k].text)}</div>` : ""}<div class="pt-mut">“${esc(x[11][0])}”</div>${subOk(p) && x[11][1] ? `<div class="pt-mut pt-zh">${esc(x[11][1])}</div>` : ""}</div></div>`).join("")}

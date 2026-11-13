@@ -775,9 +775,9 @@ function starter(){ mode(); const o = ST(); if (Object.keys(o.j || {}).length) r
   const A = (zl ? STARTERS_ZH : STARTERS).map(id => L.find(a => a.id === id)).filter(Boolean); if (!A.length) return ""; mount();
   const col = a => (SOILS.find(x => x[0] === soilOf(a)) || [])[6] || "#14305c";
   return `<div class="acx-start"><h2>${T("从一个活动开始", "Start with an activity")}</h2><p>${T("每天 5 分钟，做一件小事，顺便把它说出来", zl ? "Five minutes a day: do one small thing, and say it in Chinese" : "Five minutes a day: do one small thing, and say it")}</p>
-    <div class="acx-prow">${A.map((a, i) => poster(a, i, col(a)).replace('data-act="', 'data-acxstart="').replace(/<div class="acx-tp"><span>[^<]*<\/span>/, `<div class="acx-tp"><span>${T("今天就能开始", "Start today")}</span>`)).join("")}</div><div class="acx-more" data-acxall>${T("还有 " + (L.length - A.length) + " 个活动在「活动」那一栏 ›", (L.length - A.length) + " more in Activities ›")}</div></div>`; }
+    <div class="acx-prow">${A.map((a, i) => poster(a, i, col(a)).replace('data-act="', 'data-acxstart="').replace(/<div class="acx-tp"><span>[^<]*<\/span>/, `<div class="acx-tp"><span>${T("今天就能开始", "Start today")}</span>`)).join("")}</div><div class="acx-more" data-acxall>${T("去世界里看全部活动 ›", "See all activities in World ›")}</div></div>`; }
 document.addEventListener("click", e => { const s = e.target.closest("[data-acxstart]"); if (s){ e.preventDefault(); open(s.dataset.acxstart); return; }
-  if (e.target.closest("[data-acxall]")){ const b = document.querySelector('#galTabs [data-galtab="home"]'); if (b) b.click(); } });
+  if (e.target.closest("[data-acxall]")){ if (window.WNET) window.WNET.open({acts: 1}); else { const b = document.querySelector('#galTabs [data-galtab="home"]'); if (b) b.click(); } } });   // 2026-11-13：「活动」那一格搬进了世界，跳到世界最上面的活动
 // 「今天」页上的一条：你在参加的，今天这一步
 function todayBar(){ mode(); const A = L.filter(a => joined(a.id) && !finished(a, joined(a.id))); if (!A.length) return "";
   const a = A[0], J = joined(a.id), n = nextStep(a, J); if (n < 0) return "";
@@ -940,7 +940,9 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 .acx-ivrv{background:#22324e;color:#ffe2a0;border-radius:14px;padding:10px 13px;margin:10px 0;font-size:13.5px;text-align:left}.acx-ivrv .acx-ivlink{color:#fff}
 .acx-ivend{text-align:center;margin-top:12px}.acx-ivend .acx-btn{display:block;width:fit-content;margin:10px auto 0}.acx-ivstamp{display:inline-block;border:4px solid var(--acx-say);color:var(--acx-say);border-radius:12px;padding:6px 14px;font:900 20px Georgia,"Noto Serif SC",serif;transform:rotate(-8deg);animation:acxIvS .5s}@keyframes acxIvS{from{transform:rotate(-8deg) scale(2.6);opacity:0}}.acx-ivstamp small{display:block;font-size:12px}
 `;
-window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => L};
+// 🌍 世界那一页的海报（world_net.js，2026-11-13）：一个活动的名字、主持人、几天、参加了没有
+const meta = id => { mode(); const a = ALL.find(x => x.id === id); if (!a) return null; const h = who(a.host); return {id, t: T(a.t.zh, a.t.en), en: a.t.en, days: a.days, n: a.n || 0, pic: pic(a), cat: a.cat, host: {nm: h.nm, job: h.job || "", img: h.img || ""}, joined: !!joined(id) && !finished(a, joined(id)) ? 1 : 0}; };
+window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta};
 })();
 
 /* world_feed.js */
