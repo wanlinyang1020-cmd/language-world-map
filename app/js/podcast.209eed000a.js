@@ -15,9 +15,11 @@ const UT = (zh, en) => window.HVML && window.HVML.tr ? window.HVML.tr(zh, en, ZH
 const LEARN = () => (window.HVI && window.HVI.LEARN) || window.HV_LEARN || "";
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 const eff = () => ymd(new Date(Date.now() - 8 * 3600e3));   // 跟「你那边呢」一样：各人当地 8:00 换下一天
-const EPS = () => (window.PODCASTS || []).filter(e => e.l === LEARN());
+// 一期只在它的日子到了（各人当地日期，8:00 换天，跟「你那边呢」、朋友动态一样）才露出；还没有录音的（gen_podcast.py 标 norec：秒数是按字数估的）到了日子也先不露
+const live = e => !!(e && !e.norec && e.date <= eff());
+const EPS = () => (window.PODCASTS || []).filter(e => e.l === LEARN() && live(e));
 const epToday = () => EPS().find(e => e.date === eff()) || null;
-const epById = id => (window.PODCASTS || []).find(e => e.id === id) || null;
+const epById = id => (window.PODCASTS || []).find(e => e.id === id && live(e)) || null;
 const IMG = (id, ep) => { const c = ((ep || EP) || {}).cast || {}; return `https://img.heyvoyo.com/npc/${(c[id] && c[id].face) || id}/face.webp`; };   // cast 里写了 face（朋友页的 photo）就用它
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const LSK = "pod.v1";

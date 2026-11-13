@@ -3948,7 +3948,7 @@ function nextHint(){
     if (H && (!H.ok || H.ok()) && H._day) { const o = H._day(), st = LSJ("howabout.v1") || {};
       if (o && o.day && !(st.d || {})[(o.date || today) + "|" + TLg()] && !((st.d || {})[o.date || today] && ((st.d || {})[o.date || today].l || TLg()) === TLg())) { const t = o.day.t || {};
         return {go: "hab", line: UZ() ? `今天的「你那边呢」：「${t.zh || ""}」` : `Today on How About Yours? — “${t.en || t.zh || ""}”`, sub: UT("先听听别处的人怎么说，再说你那边。", "Hear how it is elsewhere, then say yours.")}; } }
-    const PC = window.PODCAST, ep = (window.PODCASTS || []).find(e => e.l === TLg() && e.date === today);
+    const PC = window.PODCAST, ep = (window.PODCASTS || []).find(e => e.l === TLg() && e.date === today && !e.norec);   // 还没有录音的那期不提
     if (PC && ep && !((LSJ("pod.v1") || {}).said || {})[ep.id]) return {go: "pod", line: UZ() ? `今天的角色播客「${ep.title.zh}」` : `Today's podcast: “${ep.title.en}”`, sub: UT("听完，轮到你说一句。", "When it ends, it's your turn to say one line.")};
   } catch (e) {}
   if (window.WNET) return {go: "net", line: UT("去世界的网，在一站下面说一句。", "Go to the world net and say one line under a stop."), sub: ""};
