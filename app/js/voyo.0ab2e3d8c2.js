@@ -709,7 +709,8 @@ function topicItems(){ const out = [], seen = new Set(), T = window.TALK_YOU || 
   const ks = Object.keys(T), d0 = Math.floor(Date.now() / 864e5); for (let j = 0; j < ks.length && out.length < 8; j++){ const [i, k] = ks[(d0 * 7 + j * 13) % ks.length].split("|"); add(i, k, ""); }
   return out; }
 function meNums(){ try { const A = X.pxGet(), d = new Date(), m0 = new Date(d.getFullYear(), d.getMonth(), 1).getTime(), M = A.filter(e => e.t >= m0);
-    return [new Set(M.filter(e => X.SAY_K.has(e.k) && e.say).map(e => e.say)).size, new Set(M.filter(e => e.npc && (e.k === "reply" || e.k === "tyreply" || e.k === "npc")).map(X.pxWho)).size, new Set(M.filter(e => e.i && LIB[e.i]).map(e => e.i)).size]; } catch(e){ return [0, 0, 0]; } }
+    let c = null; try { c = window.MYLANG && window.MYLANG.count && window.MYLANG.count(); } catch(e){}   // 说过的句子：跟网同一套数法（MYLANG.count），拿不到才退回原来的数法
+    return [c ? c.lines : new Set(M.filter(e => X.SAY_K.has(e.k) && e.say).map(e => e.say)).size, new Set(M.filter(e => e.npc && (e.k === "reply" || e.k === "tyreply" || e.k === "npc")).map(X.pxWho)).size, new Set(M.filter(e => e.i && LIB[e.i]).map(e => e.i)).size]; } catch(e){ return [0, 0, 0]; } }
 
 // ── 一页 ──
 // 一张话题卡（短片 + 岛 + 为什么今天 + 住在那儿的人说的一句）；头版第一张放大（2026-11-10 用户：今日世界三张在「世界」页已经有了，「今天」不再放）
@@ -719,7 +720,7 @@ function html(){ const d = new Date(), dt = X.UI === "zh" ? (d.getMonth() + 1) +
   let I = []; try { I = X.bpTodayItems(); } catch(e){}
   let W0 = ["", ""]; try { W0 = X.meWho(); } catch(e){}
   return `<div class="dm"><header class="dm-top"><h1>HEYVOYO</h1><div class="dm-iss">${no ? L("第 " + no + " 期", "No. " + no) + "<br>" : ""}${E(dt)}</div><button class="dm-search" data-dm="search">🔍 ${L("搜一个地方、一个人、一个词……", "Search a place, a person, a word…")}</button>${sk ? `<span class="dm-streak">🔥 ${L("连续 " + sk + " 天", sk + "-day streak")}</span>` : ""}<button class="dm-av" data-dm="me">🙂</button></header>
-    ${window.HOWABOUT ? window.HOWABOUT.card() : ""}<div class="hv-echo-slot"></div>${window.ACT ? window.ACT.starter() + window.ACT.todayBar() : ""}${window.WNET ? window.WNET.todayCard() : ""}${window.SNAP ? window.SNAP.card() : ""}${window.WFEED ? window.WFEED.card() : ""}
+    ${window.NPCMEM ? window.NPCMEM.card() : ""}${window.HOWABOUT ? window.HOWABOUT.card() : ""}${window.PODCAST ? window.PODCAST.card() : ""}<div class="hv-echo-slot"></div>${window.ACT ? window.ACT.starter() + window.ACT.todayBar() : ""}${window.WNET ? window.WNET.todayCard() : ""}${window.SNAP ? window.SNAP.card() : ""}${window.WFEED ? window.WFEED.card() : ""}
     <div class="dm-a">${TP.length ? tcHtml(TP[0], " dm-lead") : `<section class="dm-tw"></section>`}
       <section class="dm-globe"><div class="gh">🌍 ${L("世界 · 今天这些地方有人在说", "WORLD · people are talking here today")}</div><svg id="dmGlobe" viewBox="0 0 400 400"></svg><div class="gf" id="dmGf">${L("点地球上的点，打开那里的一篇", "Tap a dot to open that story")}</div></section></div>
     <div class="dm-sec"><h2>💬 ${L("今天的话题", "Today's topics")}</h2><small>${L("每篇里都有住在那儿的人，点开说一句", "Each one has people who live there — open it and say a line")}</small><button class="more" data-dm="topics">${L("全部话题 →", "All topics →")}</button></div>
@@ -1157,7 +1158,7 @@ const RULES = {
  zh: {1:[/你好|您好|嗨|哈喽|早上好|晚上好|早啊|吃了吗/],2:[/最近怎么样|最近好吗|最近忙吗|今天好热|今天好冷|天气/],3:[/我叫|我来自|我是.{1,10}的|我是.{1,6}人|介绍一下/],
   4:[/再见|拜拜|回头见|下次见|先走了|晚安|慢走/],5:[/谢谢|多谢|感谢|谢啦|不客气/],6:[/对不起|不好意思|抱歉|没关系/],7:[/恭喜|祝你|生日快乐|新年快乐/],
   8:[/别难过|没事的|会好的|辛苦了|抱抱|我懂你/],9:[/一起去|要不要一起|有空吗|我请你|改天一起/],10:[/我每天|我平时|我常常|周末我|我住在|我在.{1,6}(上班|工作|上学|读书)/],
-  11:[[/第一次|那时候|那天|小时候|有一次|后来|刚到|以前|记得/,1.2]],12:[/看起来|长得|颜色|里面有|那个地方|很大|很小/],13:[[/[？?]/,.6],/为什么|怎么|什么|哪儿|哪里|多少|吗$/],
+  11:[[/第一次|那时候|那天|小时候|有一次|后来|刚到|以前|记得/,1.2]],12:[/看起来|长得|颜色|里面有|那个地方|很大|很小/],13:[[/[？?]/,.6],/为什么|怎么|什么|哪儿|哪里|多少|几点|谁|吗$/],
   14:[/你(是|在|怎么|为什么|喜欢|平时|家|们那儿).{0,12}[？?吗]/],15:[[/其实|并不是|没那么|不是.{1,8}而是/,1.3]],16:[/开心|高兴|太好了|好棒|好好玩|兴奋|爱死了/],17:[/难过|伤心|失望|哭/],
   18:[/担心|害怕|怕|紧张|不安/],19:[/受不了|好烦|讨厌|不满|太(贵|甜|累|吵|辣|慢|挤)了/],20:[[/没想到|竟然|居然|原来|真的吗|天哪|一直以为|我以为/,1.4]],21:[/喜欢|爱看|爱吃|最爱|最记得/],
   22:[/我觉得|我认为|我看(?![过了到见完])|说句实话|说实话/],23:[/我也是|我也这么|同意|没错|对啊|不一定|一样/],24:[/不知道|不确定|可能|也许|好像|说不定|大概/],25:[/我想|我要|打算|准备|想去|想学/],
@@ -1175,9 +1176,16 @@ const RULES = {
   29:[/could you|can you help|would you mind|please/i],30:[/you could|you should|why not|how about|try it/i],31:[/i'?ll help|let me help|i can show/i],32:[/careful|watch out|don'?t forget|remember to/i],
   33:[/you can do it|go for it|keep going|you'?ve got this/i],34:[/no thanks|next time|i'?ll pass|i'?d rather not/i],35:[/^(um|hmm|erm)|let me think|how do i put it/i],36:[/by the way|speaking of|anyway|back to/i],
   37:[/for example|like when|such as|just like/i],38:[/haha|\blol\b|kidding|\bjoke/i],39:[/say that again|slower|what do you mean|didn'?t catch/i],40:[/the thing that|what'?s it called|you know, the/i]}};
+/* 是不是一句问话：句尾有问号，或者真有问句的样子（中文句尾「吗、呢」、问句词又不是陈述句收尾；英文 What / How / Do you… 开头）。
+   「When I wake up…」这种从句不算（2026-11-13 检查员：你那边呢的回答被分进了「问事情」） */
+HV.isQ = (text, lg) => { const s = String(text || "").trim();
+  if (/[？?]["”’」）)]*\s*$/.test(s)) return true;
+  if (lg === "zh") return /(吗|呢)["”」）)]*[。]?\s*$/.test(s) || (/为什么|怎么样|怎么|什么|哪儿|哪里|哪个|多少|几点|几个|谁/.test(s) && !/[。！!…]["”」]*\s*$/.test(s) && !/^我/.test(s));
+  if (/^(what|how)\s+(a|an|nice|lovely|great|beautiful|cool|fun|funny|sad|weird|strange)\b/i.test(s)) return false;   // What a shame! / How nice!
+  return /^(what|why|how|who|which|whose|do|does|did|are|is|was|were|can|could|would|will|have|has|should|shall)\b(?!\s+about\b)/i.test(s) || /^(when|where)\s+(do|does|did|is|are|was|were|will|can|could|should|have|has)\b/i.test(s); };
 HV.classify = (text, lg, kind) => {
-  const R = RULES[lg] || RULES.en, s = String(text || "").trim(), sc = {};
-  Object.entries(R).forEach(([n, rs]) => rs.forEach(r => { const [rx, w] = Array.isArray(r) ? r : [r, 1]; if (rx.test(s)) sc[n] = (sc[n] || 0) + w; }));
+  const R = RULES[lg] || RULES.en, s = String(text || "").trim(), sc = {}, q = HV.isQ(s, lg);
+  Object.entries(R).forEach(([n, rs]) => (+n === 13 || +n === 14) && !q ? null : rs.forEach(r => { const [rx, w] = Array.isArray(r) ? r : [r, 1]; if (rx.test(s)) sc[n] = (sc[n] || 0) + w; }));
   const top = Object.keys(sc).map(Number).sort((a, b) => sc[b] - sc[a] || a - b);
   const out = top.slice(0, 2).filter((n, i) => i === 0 || sc[n] >= 1);
   if (!out.length && kind !== "strict") out.push(kind === "ask" ? 13 : kind === "story" ? 11 : kind === "think" ? 22 : 10);
@@ -2422,25 +2430,205 @@ return {enter, route, back: () => { if (!S.stack.length) return false; back(); r
 // 你说过的话自动整理进 6 个柜子、40 个抽屉，每一句带着来源（点一下回到世界的网 / 地图上的线那一页）；外面是借来的说法；
 // 词卡三张网：🗂️ 意思 · 🌱 字形（部首、声旁、词根）· 🔊 声音（拼音、音、只差一点的一对）；「你的话里的字形」「你的话里的音」；跟着说用真话筒，不打分。
 // 数据 window.WORLD_NET（drawer_words、roots、sound，gen_world_net.py → d89_world_net.js）+ hv.mylang.v1（hv_mylang.js，登录后同步）。
-// 演示的人（Lucas / 苏苏）照样板收成一行「演示」，跟你的话分开。最下面接原来「我」里的东西：再说一遍、你走过的路、设置。
+// 2026-11-13 改（样板 样板/你的网长出来样板.html，用户「可以，放进软件」）：去掉演示的人，网上只有你自己说过的话（亮点）和你借来又用上的说法（淡点，带脸）；
+//   全软件里说过的都接进来（迎新 wel.v1 · 你那边呢 howabout.v1 · 角色播客 pod.v1 · 世界的网 / 地图上的线 / 这一页 hv.mylang.v1），每句记着在哪儿、哪天、能「回到那里」。
+//   远看是一张蜘蛛网（你在正中间，最多 12 个泡）；回到这一页时，别处新说的话长出来（这台手机看过哪几句记在 hv.mylang.seen，不同步）。
+// 最下面接原来「我」里的东西：再说一遍、你走过的路、设置。
 // 对外 window.MYLANG = {open(o), hide(), isOpen()}；o = {dr: "d22" 打开那个抽屉, fresh: 刚说的那一句}
 (function(){
 "use strict";
 const ZH = () => (document.documentElement.lang || "zh").slice(0, 2) === "zh";
 const LEARN = () => (window.HVI && window.HVI.LEARN) || window.HV_LEARN || "en";
 const UT = (zh, en) => window.HVML ? window.HVML.tr(zh, en, ZH() ? "zh" : "en") : (ZH() ? zh : en);
-const ML_CSS = "\n:host{--ink:#14305c;--ivory:#fbf7ee;--hot:#e2552f;--ok:#2f7d70;--soft:#6b7488;--desk:#ece4d3;--line:#e6dfcf;--paper:#fffdf7}\n*{box-sizing:border-box}\n.phone{margin:0;color:#24303a;font:15px/1.55 -apple-system,\"PingFang SC\",\"Helvetica Neue\",sans-serif}\nbutton{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}\n.wrap{max-width:1140px;margin:0 auto;padding:18px 16px 80px;display:grid;grid-template-columns:390px 1fr;gap:28px;align-items:start}\n@media(max-width:880px){.wrap{grid-template-columns:1fr}}\n.note0{grid-column:1/-1;background:#fff8e6;border:1px dashed #d9b86a;border-radius:14px;padding:11px 14px;font-size:14px;color:#6b5a2e;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}\n.note0 b{color:#4b3d17}\n.sw{display:inline-flex;background:#fff;border-radius:99px;padding:3px;border:1.5px solid var(--line)}\n.sw button{border:0;background:none;border-radius:99px;padding:5px 12px;font-weight:800;color:var(--soft);font-size:13px}\n.sw button.on{background:var(--ink);color:#fff}\n\n/* 手机 */\n.phone{background:var(--ivory);border-radius:30px;box-shadow:0 12px 34px rgba(20,48,92,.2);height:820px;position:relative;overflow:hidden;display:flex;flex-direction:column;width:100%;max-width:390px;justify-self:center}\n@media(max-width:480px){.phone{height:86vh;min-height:640px;border-radius:24px}}\n.bar{display:flex;align-items:center;gap:8px;padding:12px 16px 10px;border-bottom:1px solid var(--line);font-size:13px;color:var(--soft);background:var(--ivory);z-index:2}\n.bar b{color:var(--ink)}.bar .demo{margin-left:auto;font-size:11px;background:#f1ece0;border-radius:99px;padding:2px 8px;color:#8a7a50;font-weight:700}\n.scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 40px;scroll-behavior:smooth}\n.hd h1{font:700 26px/1.15 Georgia,\"Noto Serif SC\",serif;color:var(--ink);margin:2px 0 4px}\n:host(.zhui) .hd h1{font-family:\"Noto Serif SC\",Georgia,serif;font-weight:900}\n.hd p{margin:0;color:var(--soft);font-size:13.5px}\n.hd .me{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--soft)}\n.hd .me i{font-style:normal;background:#fff;border:1px solid var(--line);border-radius:99px;padding:2px 9px}\n\n/* 网 */\n.netcard{margin:12px -4px 0;background:var(--paper);border-radius:20px;box-shadow:0 2px 12px rgba(20,48,92,.07);position:relative;overflow:hidden;\n background-image:radial-gradient(circle at 50% 50%,rgba(226,85,47,.06),transparent 42%),repeating-linear-gradient(0deg,transparent 0 23px,rgba(20,48,92,.035) 23px 24px)}\n.net{display:block;width:100%;height:auto;touch-action:manipulation}\n.net .e{transition:opacity .3s}\n.net .n{cursor:pointer;transition:opacity .3s}\n.net .n:hover .tg{stroke-width:2}\n.net.focus .n:not(.hl){opacity:.14}.net.focus .e:not(.hl){opacity:.05}\n.net.focus .e.hl{opacity:1!important;stroke-width:2.2}\n.net .tg{fill:#fff;stroke-width:1.3}\n.net .unused .tg{fill:#fbf7ee;stroke-dasharray:3 2.5}\n.net .unused text{fill:#8a93a6}\n.net text{font:600 11px -apple-system,\"PingFang SC\",sans-serif;fill:var(--ink);pointer-events:none}\n.net .own circle{fill:var(--hot);filter:drop-shadow(0 2px 3px rgba(226,85,47,.35))}\n.net .own text{font-size:11.5px;fill:#fff}\n.net .own.fresh circle{animation:fresh 1.2s ease 2}\n@keyframes fresh{50%{r:17}}\n.net .me text{font:italic 700 13px Georgia,serif;fill:var(--hot)}\n.net .pop{animation:netpop .7s cubic-bezier(.3,1.6,.5,1)}\n@keyframes netpop{0%{opacity:0;transform:scale(.2)}100%{opacity:1;transform:scale(1)}}\n.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--soft);padding:0 12px 10px}\n.legend span{display:inline-flex;align-items:center;gap:4px}\n.legend .d{width:10px;height:10px;border-radius:50%;background:var(--hot)}\n.legend .t{width:16px;height:10px;border-radius:5px;border:1.3px solid var(--ink);background:#fff}\n.legend .t.u{border-style:dashed;border-color:#9aa3b5}\n.legend .f{width:11px;height:11px;border-radius:50%;background:#c9d3e6;border:1.5px solid #fff;box-shadow:0 0 0 1px #c9d3e6}\n.nethint{position:absolute;top:10px;right:12px;font-size:11px;color:var(--soft);background:rgba(255,255,255,.8);border-radius:99px;padding:2px 8px}\n\n/* 区块 */\n.sec{margin-top:18px}\n.sec h3{font:700 18px/1.3 Georgia,\"Noto Serif SC\",serif;color:var(--ink);margin:0 0 3px}\n:host(.zhui) .sec h3{font-family:\"Noto Serif SC\",Georgia,serif}\n.sec .sub{margin:0 0 10px;color:var(--soft);font-size:13px}\n.voice{background:#fff;border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(20,48,92,.06)}\n.voice .like{font:600 15.5px/1.55 Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.voice .like b{color:var(--hot)}\n.blobs{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:12px 0 6px}\n.blob{border:0;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;position:relative;transition:transform .2s;padding:0}\n.blob:active{transform:scale(.92)}\n.blob .bi{font-size:20px;line-height:1}\n.blob.faint{opacity:.35}\n.blobl{font-size:11.5px;color:var(--ink);text-align:center;font-weight:700;margin-top:4px;max-width:96px;line-height:1.25}\n.blobw{display:flex;flex-direction:column;align-items:center}\n.voice .mine{font-size:13px;color:#5b6474;background:#f7f2e7;border-radius:12px;padding:9px 11px;margin-top:8px}\n.go{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}\n.go button{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--ink)}\n\n.shelf{display:flex;flex-direction:column;gap:8px}\n.lay{display:flex;align-items:center;gap:10px;background:#fbf7ee;border:1.5px dashed #d6ccb6;border-radius:14px;padding:9px 10px;transition:.3s}\n.lay img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none}\n.lay .lt{flex:1;min-width:0}\n.lay .lt b{font:700 16px \"Noto Serif SC\",Georgia,serif;color:#58627a;cursor:pointer}\n.lay .lt small{display:block;color:var(--soft);font-size:11.5px}\n.lay .use{border:0;background:var(--hot);color:#fff;border-radius:99px;padding:6px 10px;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 3px 8px rgba(226,85,47,.25)}\n.lay.gone{opacity:0;transform:translateX(40px);height:0;padding:0;margin:-4px 0;border:0;overflow:hidden}\n.empty{color:var(--soft);font-size:13px;background:#fff;border-radius:12px;padding:10px 12px}\n\n.said{display:flex;flex-direction:column;gap:9px}\n.s1{background:#fff;border-radius:16px;padding:11px 12px;box-shadow:0 2px 8px rgba(20,48,92,.06);position:relative}\n.s1.newin{animation:slidein .6s ease}\n@keyframes slidein{from{opacity:0;transform:translateY(-12px) scale(.97)}}\n.s1 .k{font-size:11.5px;color:var(--soft);font-weight:700}\n.s1 .tx{font:600 16.5px/1.6 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:3px 0 2px}\n.s1 .tr{font-size:12.5px;color:var(--soft)}\n.s1 .row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}\n.mini{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;box-shadow:0 0 0 1px var(--line)}\n.play{border:0;background:#fff4ee;color:var(--hot);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:800}\n.play.on{background:var(--hot);color:#fff}\n.pend{font-size:11px;background:#eef6ef;color:#2f6d4a;border-radius:99px;padding:1px 8px;font-weight:700}\nu.ph{text-decoration:none;background:linear-gradient(transparent 62%,rgba(226,85,47,.25) 62%);cursor:pointer;border-radius:2px}\nu.ph:hover{background:linear-gradient(transparent 50%,rgba(226,85,47,.4) 50%)}\n\n.start{background:var(--ink);color:#fff;border-radius:18px;padding:15px;position:relative;overflow:hidden}\n.start h3{color:#fff!important}\n.start p{margin:4px 0 10px;font-size:13.5px;opacity:.88}\n.start .btn{background:#fff;color:var(--ink);box-shadow:none}\n.start::after{content:\"\";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(rgba(255,200,97,.45),transparent 70%)}\n\n.btn{border:0;border-radius:99px;padding:11px 18px;font-weight:800;background:var(--hot);color:#fff;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(226,85,47,.3);transition:transform .12s}\n.btn:active,.chip:active,.opt:active,.use:active,.play:active{transform:scale(.95)}\n.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}\n.btn[disabled]{opacity:.4}\n\n/* 底下拉起的纸 */\n.veil{position:absolute;inset:0;background:rgba(20,48,92,.28);opacity:0;pointer-events:none;transition:.25s;z-index:20}\n.veil.on{opacity:1;pointer-events:auto}\n.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--ivory);border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(20,48,92,.2);transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.9,.3,1);z-index:21;display:flex;flex-direction:column}\n.sheet{visibility:hidden;transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s .32s}\n.sheet.on{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.9,.3,1)}\n.sheet .grab{width:40px;height:4px;border-radius:9px;background:#d6ccb6;margin:8px auto 2px;flex:none}\n.sheet .x{position:absolute;right:12px;top:8px;border:0;background:#fff;border-radius:50%;width:30px;height:30px;color:var(--soft);font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}\n.sheet .in{overflow-y:auto;padding:6px 16px 22px}\n.big{font:900 30px/1.25 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:6px 0 0}\n.en-t .big{font-family:Georgia,\"Noto Serif SC\",serif;font-weight:700;font-size:27px}\n.py{color:var(--hot);font-weight:700;font-size:14px}\n.mean{color:#4b5563;font-size:14px;margin-top:2px}\n.card{background:#fff;border-radius:16px;padding:12px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:10px}\n.card .lab{font-size:11.5px;font-weight:800;color:var(--soft);letter-spacing:.02em;margin-bottom:6px}\n.who{display:flex;gap:9px;align-items:center}\n.who img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}\n.who b{color:var(--ink)}.who small{display:block;color:var(--soft);font-size:12px;line-height:1.35}\n.quote{font:600 15.5px/1.65 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:8px 0 2px;padding-left:10px;border-left:3px solid #c9d3e6}\n.quote.mine{border-left-color:var(--hot)}\n.qtr{font-size:12.5px;color:var(--soft)}\n.where{font-size:12px;color:var(--soft);margin-top:6px}\n.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}\n.chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-weight:700;color:var(--ink);font-size:13.5px;transition:.15s}\n.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}\n.chip small{font-weight:500;opacity:.7;margin-left:4px;font-size:11px}\n.letgo{border:0;background:none;color:var(--soft);font-size:12.5px;text-decoration:underline;margin-top:10px;padding:4px 0}\n\n.ask{display:flex;gap:9px;align-items:flex-start;margin:6px 0 4px}\n.ask .bub{background:#fff;border-radius:4px 16px 16px 16px;padding:9px 12px;box-shadow:0 2px 8px rgba(20,48,92,.07);font:600 15px/1.55 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.ask .bub small{display:block;font:400 12px/1.4 -apple-system,sans-serif;color:var(--soft);margin-top:2px}\n.lv{display:flex;gap:6px;margin:12px 0 4px}\n.lv button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:7px 4px;font-size:12.5px;font-weight:800;color:var(--soft);line-height:1.2}\n.lv button small{display:block;font-weight:500;font-size:10.5px;margin-top:2px}\n.lv button.on{border-color:var(--hot);color:var(--hot);background:#fff4ee}\n.lvnote{font-size:12px;color:var(--soft);margin:2px 0 8px}\n.opt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;padding:9px 12px;margin-top:7px;transition:.15s}\n.opt b{display:block;font:600 15.5px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.opt small{color:var(--soft);font-size:12px}\n.opt.on{border-color:var(--hot);background:#fff4ee}\n.frame{font:700 19px/1.8 \"Noto Serif SC\",Georgia,serif;color:var(--ink);text-align:center;background:#fff;border-radius:16px;padding:14px 10px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:6px}\n.slot{display:inline-block;min-width:54px;border-bottom:3px solid var(--hot);color:var(--hot);padding:0 3px}\n.slot.got{animation:netpop .4s}\n.own-in{width:100%;border:1.5px dashed #d6ccb6;border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;background:#fff;margin-top:4px}\ntextarea.own-in{min-height:64px;resize:vertical;font:600 15px/1.5 Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.mic{width:64px;height:64px;border-radius:50%;border:0;background:var(--hot);color:#fff;font-size:26px;display:block;margin:12px auto 4px;box-shadow:0 6px 16px rgba(226,85,47,.35);transition:transform .15s}\n.mic.rec{animation:pulse 1s infinite}\n@keyframes pulse{50%{box-shadow:0 0 0 14px rgba(226,85,47,.12)}}\n.micl{text-align:center;font-size:12.5px;color:var(--soft)}\n.bars{display:flex;gap:3px;justify-content:center;height:22px;align-items:center;margin:4px 0}\n.bars i{width:4px;border-radius:3px;background:var(--hot);height:4px}\n.bars.on i{animation:bar .5s ease-in-out infinite alternate}\n.bars i:nth-child(2){animation-delay:.1s}.bars i:nth-child(3){animation-delay:.2s}.bars i:nth-child(4){animation-delay:.05s}.bars i:nth-child(5){animation-delay:.15s}\n@keyframes bar{to{height:20px}}\n.two{display:flex;gap:8px}.two .btn{margin-top:6px;font-size:13.5px;padding:10px 8px}\n.grow{font:700 21px/1.75 \"Noto Serif SC\",Georgia,serif;color:var(--ink);background:#fff;border-radius:16px;padding:14px 12px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:8px;min-height:60px}\n.en-t .grow{font-family:Georgia,\"Noto Serif SC\",serif}\n.grow span{opacity:0;display:inline;transition:opacity .35s}\n.grow span.gin{opacity:1}\n.grow u.ph{position:relative}\n.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n.src span{display:inline-flex;align-items:center;gap:5px;background:#fff;border-radius:99px;padding:3px 9px 3px 3px;font-size:12px;color:var(--ink);box-shadow:0 1px 4px rgba(20,48,92,.08);opacity:0;transform:translateY(6px);transition:.4s}\n.src span.gin{opacity:1;transform:none}\n.src img{width:20px;height:20px;border-radius:50%;object-fit:cover}\n.native{font:600 15px/1.55 Georgia,\"Noto Serif SC\",serif;color:#4b5563;background:#f7f2e7;border-radius:12px;padding:9px 11px;margin-top:6px}\n.steps{display:flex;gap:4px;margin:4px 0 8px}.steps i{flex:1;height:4px;border-radius:9px;background:#e6dfcf}.steps i.on{background:var(--hot)}\n.q1 .opt{display:flex;align-items:center;gap:10px}\n.q1 .opt .em{font-size:24px}\n.aihelp{font-size:11.5px;color:#8a7a50;background:#fff8e6;border-radius:10px;padding:6px 9px;margin-top:8px}\n\n/* 抽屉 */\n.cab{background:#f3e9d4;border:1.5px solid #e0d2b2;border-radius:16px;padding:10px 10px 8px;margin-top:10px;box-shadow:inset 0 -3px 0 #e0d2b2}\n.cabh{font:700 15.5px Georgia,\"Noto Serif SC\",serif;color:var(--ink);display:flex;gap:7px;align-items:center}\n:host(.zhui) .cabh{font-family:\"Noto Serif SC\",Georgia,serif}\n.dws{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}\n.dw{position:relative;background:#fffdf7;border:1.5px solid #d8c9a6;border-radius:10px;padding:8px 22px 8px 9px;text-align:left;min-height:50px;box-shadow:0 2px 0 #d8c9a6;transition:transform .12s;display:flex;flex-direction:column;justify-content:center;gap:3px}\n.dw:active{transform:translateY(2px);box-shadow:none}\n.dw b{font-size:12.5px;line-height:1.3;color:var(--ink)}\n.dw small{font-size:10.5px;color:#9a8a62;font-weight:600}\n.dw .kn{position:absolute;right:8px;top:50%;width:6px;height:16px;margin-top:-8px;border-radius:4px;background:#cbb98d}\n.dw.full .kn{background:var(--hot)}\n.dw .sl{display:flex;gap:3px}.dw .sl i{width:14px;height:4px;border-radius:2px;background:rgba(226,85,47,.55)}\n.dw.empty{border-style:dashed;background:#fbf7ee;box-shadow:none}\n.dw.empty b{color:#58627a}\n.dw.custom{background:#fff8e6}\n.dw.grow{animation:dgrow 1.4s cubic-bezier(.3,1.5,.5,1)}\n@keyframes dgrow{0%{transform:scale(.2);opacity:0;box-shadow:0 0 0 0 rgba(226,85,47,.6)}60%{transform:scale(1.06);opacity:1;box-shadow:0 0 0 10px rgba(226,85,47,.15)}100%{transform:none;box-shadow:0 2px 0 #d8c9a6}}\n.more{border:0;background:none;color:#8a7a50;font-size:11.5px;padding:7px 2px 2px;text-align:left;cursor:pointer}\n.ghosts{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}\n.ghost{border:1px dashed #d6ccb6;background:transparent;color:#a39a86;border-radius:8px;padding:3px 7px;font-size:11px}\n.growdemo{background:#fff8e6;border:1.5px dashed #d9b86a;border-radius:14px;padding:10px 12px;font-size:13px;color:#6b5a2e}\n.growdemo b{display:block;color:#4b3d17;font-size:12px}\n.newdr{margin-top:12px}\n.dtabs{display:none}\n.dtabs::-webkit-scrollbar{display:none}\n.dtab{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;font-size:12.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:5px;transition:.15s}\n.dtab.empty{border-style:dashed;color:var(--soft);background:#fbf7ee}\n.dtab.on{background:var(--ink);color:#fff;border-color:var(--ink);border-style:solid}\n.dtab:active{transform:scale(.94)}\n.drw{background:#fff;border-radius:18px;padding:12px;box-shadow:0 2px 10px rgba(20,48,92,.06);animation:in .3s}\n@keyframes in{from{opacity:0;transform:translateY(6px)}}\n.drh{font:700 17px Georgia,\"Noto Serif SC\",serif;color:var(--ink);display:flex;gap:7px;align-items:center}\n.lab2{font-size:11px;font-weight:800;color:var(--soft);letter-spacing:.04em;margin:12px 0 5px;text-transform:uppercase}\n.dmine{display:flex;flex-direction:column;gap:7px}\n.dm{background:#fff4ee;border-left:3px solid var(--hot);border-radius:10px;padding:8px 10px;cursor:pointer}\n.dm.newin{animation:slidein .6s ease}\n.dm .play{margin-top:5px}\n.dt{font:600 16px/1.55 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n:host(.zhui) .dt{font-family:Georgia,\"Noto Serif SC\",serif}\n.dinv{font:italic 600 14.5px/1.5 Georgia,\"Noto Serif SC\",serif;color:#8a7a50;background:#fbf7ee;border:1.5px dashed #d6ccb6;border-radius:12px;padding:10px 12px}\n.do{display:flex;gap:9px;padding:9px 0;border-top:1px solid #f1ece0}\n.do img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}\n.dob{flex:1;min-width:0}\n.don{font-size:12px;color:var(--soft)}.don b{color:var(--ink)}\n.dkeep{border:1.5px solid var(--hot);background:#fff;color:var(--hot);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:800}\n.dkeep.on{background:var(--hot);color:#fff}\n.dworld{margin-top:10px;background:#eef3fa;border-radius:12px;padding:9px 11px;font-size:13px;color:#33476b;line-height:1.5}\n.dworld b{color:var(--ink)}\n\n/* 你自己说的 / 演示 / 来源 */\n.net .own.demo circle{fill:#e9b4a3;filter:none}\n.net .own.you circle{fill:var(--hot);stroke:#fff;stroke-width:2.5}\n.net .pin rect{fill:#fff;stroke:#14305c;stroke-width:1;stroke-dasharray:2 2}\n.net .pin text{font-size:10px;fill:#14305c}\n.legend .d.demo{background:#e9b4a3}\n.s1.you{border:2px solid var(--hot)}\n.s1.demo{opacity:.85;background:#fbf7ee;box-shadow:none;border:1.5px dashed #e0d2b2}\n.srcl{color:var(--ink);font-weight:800;text-decoration:none;border-bottom:1.5px solid rgba(20,48,92,.35)}\n.srcl:hover{background:#eef2f8}\n.srcn{color:#8a7a50;font-weight:700}\n.dtag{font-size:10.5px;font-weight:800;background:#f1ece0;color:#8a7a50;border-radius:99px;padding:1px 7px;margin-left:4px}\n.drl{font-size:12px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:3px 8px;display:inline-block;margin-top:6px}\n.drl button{border:0;background:none;color:var(--hot);font-weight:800;text-decoration:underline;font-size:12px;padding:0;margin-left:4px}\n.heardf{font-size:12px;color:#2f6d4a;background:#eef6ef;border-radius:10px;padding:3px 8px;display:inline-block;margin:6px 6px 0 0}\n.myempty{background:#fff;border:1.5px dashed #d6ccb6;border-radius:16px;padding:12px;font-size:13.5px;color:#4b5563}\n.myempty .go a{display:inline-block;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:none;margin:6px 6px 0 0}\n.lead2{font:700 15px/1.5 Georgia,\"Noto Serif SC\",serif;color:var(--hot);margin:2px 0 4px}\n:host(.zhui) .lead2{font-family:\"Noto Serif SC\",Georgia,serif}\n.cabh.tg{width:100%;border:0;background:none;padding:0;text-align:left;cursor:pointer}\n.cabh .dots{margin-left:auto;display:flex;gap:3px;align-items:center}\n.cabh .dots i{width:7px;height:7px;border-radius:50%;background:var(--hot)}\n.cabh .dots i.demo{background:#e9b4a3}\n.cabh .car{font-size:12px;color:#8a7a50;margin-left:6px;transition:transform .2s}\n.cab.shut .dws,.cab.shut .more{display:none}\n.cab.shut .car{transform:rotate(-90deg)}\n.more{cursor:default}\n.tc{cursor:pointer;border-bottom:1.5px dotted rgba(20,48,92,.35)}.tc:hover{background:#eef2f8}\n.bk{border:0;background:#efe9db;border-radius:99px;padding:4px 11px;font-weight:800;color:var(--ink);font-size:13px;margin-top:8px}\n.w3{background:#fff;border-radius:14px;padding:9px 11px;margin-top:10px;box-shadow:0 1px 6px rgba(20,48,92,.06)}\n.w3h{font-size:12px;font-weight:800;color:#7a6a4a;letter-spacing:.04em;margin-bottom:6px}\n.w3n{font-size:12px;color:var(--soft);margin-top:4px}\n.w3.soon{opacity:.55;border:1.5px dashed #d6ccb6;box-shadow:none;background:none}\n.rchips{display:flex;flex-wrap:wrap;gap:6px}\n.rchip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #c9dcc4;background:#f3faf0;border-radius:12px;padding:5px 9px;text-align:left}\n.rchip b{font:700 18px \"Noto Serif SC\",serif;color:#2f6d4a}.rchip.en b{font-family:Georgia,serif;font-size:15px}\n.rchip small{font-size:11.5px;color:#4b5563;max-width:150px}\n.rchip .rc{font:700 15px \"Noto Serif SC\",serif;color:var(--ink);border-right:1px solid #c9dcc4;padding-right:6px}\n.rchip.dim{border-style:dashed;background:#fbf7ee}.rchip.dim b{color:#8a93a6}\n.rchip.ph{border-color:#c9d3e6;background:#eef3fa}.rchip.ph b{color:#2c64b8}.rchip.ph.drifted{border-style:dashed}\n.rchip.none{border-style:dashed;background:none}\n.rgrp{display:inline-flex;flex-direction:column;gap:2px}.rnote{font-size:11.5px;color:#6b5a2e;background:#fff6e2;border-radius:8px;padding:2px 7px;max-width:240px}\n.big.en{font-family:Georgia,serif}\n.rbig{font:900 44px/1.1 \"Noto Serif SC\",serif;color:#2f6d4a;margin-top:6px}.rbig small{font-size:15px;color:var(--soft);margin-left:8px;font-weight:600}.rbig.en{font-family:Georgia,serif;font-size:34px}\n.rsent{font:600 14.5px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink);background:#f3faf0;border-left:3px solid #2f7d70;border-radius:8px;padding:6px 10px;margin-top:8px}\n.rnet{display:block;width:100%;height:auto;margin-top:6px}\n.rnet .rl{stroke:#9ec2a8;stroke-width:1.2}\n.rnet .rcen{fill:#2f7d70}.rnet .rct{font:900 20px \"Noto Serif SC\",serif;fill:#fff}.rnet .rct.en{font:700 12px Georgia,serif}\n.rnet .rw{cursor:pointer}.rnet .rw rect{fill:#fff;stroke:#c9d3e6;stroke-width:1.2}.rnet .rw text{font:600 13px \"Noto Serif SC\",Georgia,serif;fill:var(--ink)}\n.rnet .rw.l0 rect{fill:var(--hot);stroke:var(--hot)}.rnet .rw.l0 text{fill:#fff}\n.rnet .rw.l2 rect{fill:#fbf7ee;stroke-dasharray:3 2}.rnet .rw.l2 text{fill:#6b7488}\n.rleg{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--soft);margin-top:4px}\n.rleg i{display:inline-block;width:12px;height:12px;border-radius:6px;vertical-align:-2px;margin-right:4px;border:1.2px solid #c9d3e6;background:#fff}\n.rleg i.l0{background:var(--hot);border-color:var(--hot)}.rleg i.l2{background:#fbf7ee;border-style:dashed}\n.shps{display:flex;flex-wrap:wrap;gap:7px}\n.shp{display:flex;flex-direction:column;align-items:flex-start;border:1.5px solid #c9dcc4;background:#f3faf0;border-radius:14px;padding:6px 10px;min-width:74px;text-align:left}\n.shp b{font:900 22px/1.1 \"Noto Serif SC\",serif;color:#2f6d4a}.shp b.en{font:700 16px Georgia,serif}\n.shp small{font-size:11px;color:#4b5563}.shp .sw{font-size:12px;color:var(--hot);font-weight:800;margin-top:2px}\n.shp.p{border-color:#c9d3e6;background:#eef3fa}.shp.p b{color:#2c64b8}\n.pron{display:flex;gap:4px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}\n.pron .pc{display:flex;flex-direction:column;align-items:center;min-width:38px}\n.pron .pc i{font-style:normal;font-size:13px;font-weight:700;color:var(--hot);position:relative;padding-right:6px}\n.pron .pc b{font:900 34px/1.1 \"Noto Serif SC\",serif;color:var(--ink)}\n.pron .pyw{font-size:15px;color:var(--hot);font-weight:700}.pron .ipa{font:600 18px Georgia,serif;color:#2c64b8}\n.w3s{font-size:11.5px;color:#7a6a4a;font-weight:700;margin:6px 0 4px}\n.schips{display:flex;flex-wrap:wrap;gap:6px}\n.schip{display:flex;flex-direction:column;align-items:flex-start;border:1.5px solid #c9d3e6;background:#eef3fa;border-radius:12px;padding:4px 9px;text-align:left}\n.schip b{font:700 15px Georgia,\"Noto Serif SC\",serif;color:#2c64b8}.schip small{font-size:12px;color:var(--ink)}\n.pairc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fff;border:1.5px solid #e6dfcf;border-radius:14px;padding:7px 9px;margin-top:6px;cursor:pointer}\n.pairc .vs{font-size:11.5px;color:#7a6a4a;font-weight:800;background:#fff6e2;border-radius:99px;padding:1px 8px}\n.ps{display:inline-flex;align-items:baseline;gap:5px}.ps b{font:700 17px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}.ps small{font-size:12px;color:var(--hot);font-weight:700}.ps .play{padding:0 7px}\n.pairc .why{flex-basis:100%;font-size:12.5px;color:#4b5563}\n.pnote{flex-basis:100%;font-size:12px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:3px 8px;margin-top:4px}\n.hard{flex-basis:100%;font-size:12px;color:#2f6d4a;background:#eef6ef;border-radius:10px;padding:3px 8px;margin-top:4px}\n.pairc.hardp{border-color:#9ec2a8}\n.pairbig{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}.pairbig .ps b{font-size:28px}\n.rbig.snd{color:#2c64b8;font-family:Georgia,\"Noto Serif SC\",serif}.rsent.snd{background:#eef3fa;border-left-color:#2c64b8}\n.rnet.snd .rcen{fill:#2c64b8}.rnet.snd .rl{stroke:#a9bfe0}\n.slist{margin-top:8px}.srow{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px dashed #e6dfcf}.srow .sp{font-size:12.5px;color:var(--hot);font-weight:700}.srow .sg{font-size:12px;color:var(--soft);flex:1}\n.sayafter{display:flex;gap:8px}.sayafter .btn{margin-top:0}.aftout{font:600 16px \"Noto Serif SC\",Georgia,serif;color:var(--ink);text-align:center;min-height:1.5em;margin-top:6px}\n.shp.snd{border-color:#c9d3e6;background:#eef3fa}.shp.snd b{color:#2c64b8}\n.wlist{display:flex;flex-direction:column}\n.wrow{padding:6px 2px;border-top:1px dashed #e6dfcf;cursor:pointer}\n.wrow.u{background:linear-gradient(90deg,#eef3fa,transparent 70%)}\n.ub{font-size:12px}\n.wmain{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}\n.wmain b{font:700 17px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.wpy{font-size:12px;color:var(--hot);font-weight:700}\n.wmean{font-size:12.5px;color:var(--soft)}\n.wi{font-size:12px;color:#8a7a50}\n.wmain .play{margin-left:auto;padding:1px 8px}\n.wother{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:13px;color:#33476b}\n.wother .wl i{font-style:normal;font-size:10.5px;font-weight:800;color:#8a93a6;margin-right:4px}\n.wnote{display:none;font-size:12.5px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:5px 9px;margin-top:5px}\n.wrow.open .wnote{display:block}\n.uni{background:#eef3fa;border-radius:14px;padding:8px 10px;margin-top:10px}\n.uni .sub2{font-size:11.5px;color:var(--soft);margin:0 0 4px}\n.unichips{display:flex;flex-wrap:wrap;gap:5px}\n.uc{border:1.5px solid #c9d3e6;background:#fff;border-radius:99px;padding:3px 10px;font:600 13px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.split{margin-top:12px;background:#fff;border-radius:14px;padding:10px 12px}\n.split b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:4px}\n.split .sp{padding:5px 0;border-top:1px dashed #e6dfcf;font-size:13px}\n.split .sp span{font-weight:800;color:var(--ink)}.split .sp small{display:block;color:var(--soft);font-size:12px}\n.lucasT{border:0;background:none;padding:0;text-align:left;width:100%;cursor:pointer}\n.lucasT .car{font-size:13px;color:#8a7a50;display:inline-block;transition:transform .2s}\n.lucas-shut .said,.lucas-shut .sub{display:none}.lucas-shut .car{transform:rotate(-90deg)}\n.same{margin-top:12px;background:#eef3fa;border-radius:14px;padding:10px 11px}\n.same .h{font:700 14px Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.same .sub2{font-size:11.5px;color:var(--soft);margin:1px 0 4px}\n.same .do{border-top-color:#d7e1f0}\n.same .lg{font-size:10.5px;font-weight:800;background:#fff;border-radius:99px;padding:1px 7px;color:#33476b;margin-left:4px}\n.same .nt{font-size:12.5px;color:#33476b;margin-top:8px;border-top:1px dashed #c9d3e6;padding-top:7px}\n.sbx{margin-top:10px}\n.sbx .micerr{font-size:12.5px;color:#8a3a14;background:#fff1d6;border-radius:10px;padding:6px 10px;margin:6px 0}\n.sbx .live{font:600 17px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink);min-height:1.5em;text-align:center;margin:4px 0}\n.locked{position:relative;border:1.5px dashed #d9b86a!important;background:#fffaf0!important}\n.locked .lk{display:block;font:600 11.5px -apple-system,sans-serif;color:#8a7a50;margin-bottom:4px}\n/* 回应 */\n.toast{position:absolute;top:52px;left:50%;transform:translate(-50%,-14px);opacity:0;background:var(--ink);color:#fff;font-weight:700;padding:7px 14px;border-radius:99px;transition:.3s;z-index:40;font-size:13px;max-width:88%;text-align:center;pointer-events:none}\n.toast.on{opacity:1;transform:translate(-50%,0)}\n.stamp{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) rotate(-10deg) scale(3);opacity:0;border:4px solid var(--hot);color:var(--hot);border-radius:12px;padding:8px 16px;font:900 21px/1.2 Georgia,\"Noto Serif SC\",serif;text-align:center;background:rgba(251,247,238,.94);z-index:45;pointer-events:none;white-space:nowrap}\n.stamp small{display:block;font-size:12px;font-weight:700;letter-spacing:.04em}\n.stamp.on{animation:stamp 1.9s ease forwards}\n@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(3)}14%{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}}\n.note{position:absolute;pointer-events:none;font-size:16px;color:var(--hot);z-index:50;animation:note 1s ease-out forwards}\n@keyframes note{to{transform:translateY(-36px);opacity:0}}\n.conf{position:absolute;width:8px;height:12px;z-index:46;pointer-events:none;border-radius:2px;animation:conf 1.6s ease-in forwards}\n@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}\n.flyer{position:fixed;z-index:9999;pointer-events:none;background:#fff;border:1.5px solid var(--hot);color:var(--ink);border-radius:99px;padding:3px 10px;font:700 13px \"Noto Serif SC\",Georgia,serif;box-shadow:0 6px 18px rgba(226,85,47,.3);transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .8s;white-space:nowrap}\n.flyer.red{background:var(--hot);color:#fff;border-color:var(--hot)}\n\n/* 右边说明 */\n.side{min-width:0}\n.side h2{margin:2px 0 6px;color:var(--ink);font:900 24px/1.3 \"Noto Serif SC\",serif}\n.side .eff{font:700 16px/1.6 \"Noto Serif SC\",serif;color:var(--ink);background:#fff;border-radius:14px;padding:12px 14px;border-left:4px solid var(--hot)}\n.side .m{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 0}\n.side .m b{color:var(--ink)}.side .m p{margin:4px 0 0;font-size:14px;color:#4b5563}\n.side h4{margin:20px 0 6px;color:var(--ink);font:700 16px \"Noto Serif SC\",serif}\n.side table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;font-size:13px}\n.side td,.side th{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}\n.side th{background:#f4efe4;color:var(--ink)}\n.tbl{overflow-x:auto;border-radius:14px}\n.chk{background:#f4efe4;border-radius:14px;padding:10px 14px;font-size:13.5px;color:#4b5563;margin-top:12px}\n.chk li{margin:4px 0}\n\n/* ===== 软件里：整屏、跟着底栏 ===== */\n:host{position:fixed;inset:0;z-index:40;display:block;background:var(--ivory);color:#24303a;font:15px/1.55 -apple-system,\"PingFang SC\",\"Helvetica Neue\",sans-serif}\n:host([hidden]){display:none}\n.phone{width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;border-radius:0!important;box-shadow:none!important;margin:0}\n.bar{padding-top:calc(12px + env(safe-area-inset-top,0px))}\n.bar .setb{margin-left:auto;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--ink)}\n.scr{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}\n@media (max-width:700px){.sheet{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}}\n.myempty .go button{border:0;background:none;color:var(--hot);font:inherit;font-weight:800;padding:0;cursor:pointer}\n:host(.rtl) :is(p,div,span,b,small,button,h1,h2,h3,h4,a,em,i,u,label,textarea,input,text){unicode-bidi:plaintext}\n.mefoot{display:flex;flex-direction:column;gap:8px}\n.mefoot button{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:14px;padding:11px 13px;box-shadow:0 1px 6px rgba(20,48,92,.07);font:inherit;color:#24303a;cursor:pointer}\n.mefoot b{color:var(--ink);font-size:14.5px}.mefoot small{display:block;color:var(--soft);font-size:12px;margin-top:1px}\n@media (min-width:701px){\n :host{left:84px}\n .scr{padding:22px 32px 60px}\n .scr>*{max-width:760px;margin-left:auto;margin-right:auto}\n .sheet{left:50%;right:auto;width:min(620px,92%);transform:translate(-50%,105%)}\n .sheet.on{transform:translate(-50%,0)}\n}\n";
-const SKEL = () => `<div class="phone" id="phone"><div class="bar">🌱 <b id="tBar"></b><span class="demo" id="tDemo" hidden></span><button class="setb" data-mego="set">⚙️ ${UT("设置", "Settings")}</button></div><div class="toast" id="toast"></div><div class="stamp" id="stamp"></div><div class="scr" id="scr"></div><div class="veil" id="veil"></div><div class="sheet" id="sheet"><div class="grab"></div><button class="x" id="x" aria-label="close">✕</button><div class="in" id="sin"></div></div></div>`;
+const ML_CSS = "\n:host{--ink:#14305c;--ivory:#fbf7ee;--hot:#e2552f;--ok:#2f7d70;--soft:#6b7488;--desk:#ece4d3;--line:#e6dfcf;--paper:#fffdf7}\n*{box-sizing:border-box}\n.phone{margin:0;color:#24303a;font:15px/1.55 -apple-system,\"PingFang SC\",\"Helvetica Neue\",sans-serif}\nbutton{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}\n.wrap{max-width:1140px;margin:0 auto;padding:18px 16px 80px;display:grid;grid-template-columns:390px 1fr;gap:28px;align-items:start}\n@media(max-width:880px){.wrap{grid-template-columns:1fr}}\n.note0{grid-column:1/-1;background:#fff8e6;border:1px dashed #d9b86a;border-radius:14px;padding:11px 14px;font-size:14px;color:#6b5a2e;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}\n.note0 b{color:#4b3d17}\n.sw{display:inline-flex;background:#fff;border-radius:99px;padding:3px;border:1.5px solid var(--line)}\n.sw button{border:0;background:none;border-radius:99px;padding:5px 12px;font-weight:800;color:var(--soft);font-size:13px}\n.sw button.on{background:var(--ink);color:#fff}\n\n/* 手机 */\n.phone{background:var(--ivory);border-radius:30px;box-shadow:0 12px 34px rgba(20,48,92,.2);height:820px;position:relative;overflow:hidden;display:flex;flex-direction:column;width:100%;max-width:390px;justify-self:center}\n@media(max-width:480px){.phone{height:86vh;min-height:640px;border-radius:24px}}\n.bar{display:flex;align-items:center;gap:8px;padding:12px 16px 10px;border-bottom:1px solid var(--line);font-size:13px;color:var(--soft);background:var(--ivory);z-index:2}\n.bar b{color:var(--ink)}.bar .demo{margin-left:auto;font-size:11px;background:#f1ece0;border-radius:99px;padding:2px 8px;color:#8a7a50;font-weight:700}\n.scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 40px;scroll-behavior:smooth}\n.hd h1{font:700 26px/1.15 Georgia,\"Noto Serif SC\",serif;color:var(--ink);margin:2px 0 4px}\n:host(.zhui) .hd h1{font-family:\"Noto Serif SC\",Georgia,serif;font-weight:900}\n.hd p{margin:0;color:var(--soft);font-size:13.5px}\n.hd .me{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--soft)}\n.hd .me i{font-style:normal;background:#fff;border:1px solid var(--line);border-radius:99px;padding:2px 9px}\n\n/* 区块 */\n.sec{margin-top:18px}\n.sec h3{font:700 18px/1.3 Georgia,\"Noto Serif SC\",serif;color:var(--ink);margin:0 0 3px}\n:host(.zhui) .sec h3{font-family:\"Noto Serif SC\",Georgia,serif}\n.sec .sub{margin:0 0 10px;color:var(--soft);font-size:13px}\n.voice{background:#fff;border-radius:18px;padding:14px;box-shadow:0 2px 10px rgba(20,48,92,.06)}\n.voice .like{font:600 15.5px/1.55 Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.voice .like b{color:var(--hot)}\n.blobs{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:12px 0 6px}\n.blob{border:0;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;position:relative;transition:transform .2s;padding:0}\n.blob:active{transform:scale(.92)}\n.blob .bi{font-size:20px;line-height:1}\n.blob.faint{opacity:.35}\n.blobl{font-size:11.5px;color:var(--ink);text-align:center;font-weight:700;margin-top:4px;max-width:96px;line-height:1.25}\n.blobw{display:flex;flex-direction:column;align-items:center}\n.voice .mine{font-size:13px;color:#5b6474;background:#f7f2e7;border-radius:12px;padding:9px 11px;margin-top:8px}\n.go{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}\n.go button{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--ink)}\n\n.shelf{display:flex;flex-direction:column;gap:8px}\n.lay{display:flex;align-items:center;gap:10px;background:#fbf7ee;border:1.5px dashed #d6ccb6;border-radius:14px;padding:9px 10px;transition:.3s}\n.lay img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none}\n.lay .lt{flex:1;min-width:0}\n.lay .lt b{font:700 16px \"Noto Serif SC\",Georgia,serif;color:#58627a;cursor:pointer}\n.lay .lt small{display:block;color:var(--soft);font-size:11.5px}\n.lay .use{border:0;background:var(--hot);color:#fff;border-radius:99px;padding:6px 10px;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 3px 8px rgba(226,85,47,.25)}\n.lay.gone{opacity:0;transform:translateX(40px);height:0;padding:0;margin:-4px 0;border:0;overflow:hidden}\n.empty{color:var(--soft);font-size:13px;background:#fff;border-radius:12px;padding:10px 12px}\n\n.said{display:flex;flex-direction:column;gap:9px}\n.s1{background:#fff;border-radius:16px;padding:11px 12px;box-shadow:0 2px 8px rgba(20,48,92,.06);position:relative}\n.s1.newin{animation:slidein .6s ease}\n@keyframes slidein{from{opacity:0;transform:translateY(-12px) scale(.97)}}\n.s1 .k{font-size:11.5px;color:var(--soft);font-weight:700}\n.s1 .tx{font:600 16.5px/1.6 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:3px 0 2px}\n.s1 .tr{font-size:12.5px;color:var(--soft)}\n.s1 .row{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}\n.mini{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;box-shadow:0 0 0 1px var(--line)}\n.play{border:0;background:#fff4ee;color:var(--hot);border-radius:99px;padding:4px 10px;font-size:12px;font-weight:800}\n.play.on{background:var(--hot);color:#fff}\n.pend{font-size:11px;background:#eef6ef;color:#2f6d4a;border-radius:99px;padding:1px 8px;font-weight:700}\nu.ph{text-decoration:none;background:linear-gradient(transparent 62%,rgba(226,85,47,.25) 62%);cursor:pointer;border-radius:2px}\nu.ph:hover{background:linear-gradient(transparent 50%,rgba(226,85,47,.4) 50%)}\n\n.start{background:var(--ink);color:#fff;border-radius:18px;padding:15px;position:relative;overflow:hidden}\n.start h3{color:#fff!important}\n.start p{margin:4px 0 10px;font-size:13.5px;opacity:.88}\n.start .btn{background:#fff;color:var(--ink);box-shadow:none}\n.start::after{content:\"\";position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:radial-gradient(rgba(255,200,97,.45),transparent 70%)}\n\n.btn{border:0;border-radius:99px;padding:11px 18px;font-weight:800;background:var(--hot);color:#fff;width:100%;margin-top:8px;box-shadow:0 4px 12px rgba(226,85,47,.3);transition:transform .12s}\n.btn:active,.chip:active,.opt:active,.use:active,.play:active{transform:scale(.95)}\n.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}\n.btn[disabled]{opacity:.4}\n\n/* 底下拉起的纸 */\n.veil{position:absolute;inset:0;background:rgba(20,48,92,.28);opacity:0;pointer-events:none;transition:.25s;z-index:20}\n.veil.on{opacity:1;pointer-events:auto}\n.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--ivory);border-radius:22px 22px 0 0;box-shadow:0 -8px 30px rgba(20,48,92,.2);transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.9,.3,1);z-index:21;display:flex;flex-direction:column}\n.sheet{visibility:hidden;transition:transform .32s cubic-bezier(.2,.9,.3,1),visibility 0s .32s}\n.sheet.on{transform:none;visibility:visible;transition:transform .32s cubic-bezier(.2,.9,.3,1)}\n.sheet .grab{width:40px;height:4px;border-radius:9px;background:#d6ccb6;margin:8px auto 2px;flex:none}\n.sheet .x{position:absolute;right:12px;top:8px;border:0;background:#fff;border-radius:50%;width:30px;height:30px;color:var(--soft);font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}\n.sheet .in{overflow-y:auto;padding:6px 16px 22px}\n.big{font:900 30px/1.25 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:6px 0 0}\n.en-t .big{font-family:Georgia,\"Noto Serif SC\",serif;font-weight:700;font-size:27px}\n.py{color:var(--hot);font-weight:700;font-size:14px}\n.mean{color:#4b5563;font-size:14px;margin-top:2px}\n.card{background:#fff;border-radius:16px;padding:12px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:10px}\n.card .lab{font-size:11.5px;font-weight:800;color:var(--soft);letter-spacing:.02em;margin-bottom:6px}\n.who{display:flex;gap:9px;align-items:center}\n.who img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}\n.who b{color:var(--ink)}.who small{display:block;color:var(--soft);font-size:12px;line-height:1.35}\n.quote{font:600 15.5px/1.65 \"Noto Serif SC\",Georgia,serif;color:var(--ink);margin:8px 0 2px;padding-left:10px;border-left:3px solid #c9d3e6}\n.quote.mine{border-left-color:var(--hot)}\n.qtr{font-size:12.5px;color:var(--soft)}\n.where{font-size:12px;color:var(--soft);margin-top:6px}\n.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}\n.chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-weight:700;color:var(--ink);font-size:13.5px;transition:.15s}\n.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}\n.chip small{font-weight:500;opacity:.7;margin-left:4px;font-size:11px}\n.letgo{border:0;background:none;color:var(--soft);font-size:12.5px;text-decoration:underline;margin-top:10px;padding:4px 0}\n\n.ask{display:flex;gap:9px;align-items:flex-start;margin:6px 0 4px}\n.ask .bub{background:#fff;border-radius:4px 16px 16px 16px;padding:9px 12px;box-shadow:0 2px 8px rgba(20,48,92,.07);font:600 15px/1.55 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.ask .bub small{display:block;font:400 12px/1.4 -apple-system,sans-serif;color:var(--soft);margin-top:2px}\n.lv{display:flex;gap:6px;margin:12px 0 4px}\n.lv button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:7px 4px;font-size:12.5px;font-weight:800;color:var(--soft);line-height:1.2}\n.lv button small{display:block;font-weight:500;font-size:10.5px;margin-top:2px}\n.lv button.on{border-color:var(--hot);color:var(--hot);background:#fff4ee}\n.lvnote{font-size:12px;color:var(--soft);margin:2px 0 8px}\n.opt{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;padding:9px 12px;margin-top:7px;transition:.15s}\n.opt b{display:block;font:600 15.5px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.opt small{color:var(--soft);font-size:12px}\n.opt.on{border-color:var(--hot);background:#fff4ee}\n.frame{font:700 19px/1.8 \"Noto Serif SC\",Georgia,serif;color:var(--ink);text-align:center;background:#fff;border-radius:16px;padding:14px 10px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:6px}\n.slot{display:inline-block;min-width:54px;border-bottom:3px solid var(--hot);color:var(--hot);padding:0 3px}\n.slot.got{animation:netpop .4s}\n.own-in{width:100%;border:1.5px dashed #d6ccb6;border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;background:#fff;margin-top:4px}\ntextarea.own-in{min-height:64px;resize:vertical;font:600 15px/1.5 Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.mic{width:64px;height:64px;border-radius:50%;border:0;background:var(--hot);color:#fff;font-size:26px;display:block;margin:12px auto 4px;box-shadow:0 6px 16px rgba(226,85,47,.35);transition:transform .15s}\n.mic.rec{animation:pulse 1s infinite}\n@keyframes pulse{50%{box-shadow:0 0 0 14px rgba(226,85,47,.12)}}\n.micl{text-align:center;font-size:12.5px;color:var(--soft)}\n.bars{display:flex;gap:3px;justify-content:center;height:22px;align-items:center;margin:4px 0}\n.bars i{width:4px;border-radius:3px;background:var(--hot);height:4px}\n.bars.on i{animation:bar .5s ease-in-out infinite alternate}\n.bars i:nth-child(2){animation-delay:.1s}.bars i:nth-child(3){animation-delay:.2s}.bars i:nth-child(4){animation-delay:.05s}.bars i:nth-child(5){animation-delay:.15s}\n@keyframes bar{to{height:20px}}\n.two{display:flex;gap:8px}.two .btn{margin-top:6px;font-size:13.5px;padding:10px 8px}\n.grow{font:700 21px/1.75 \"Noto Serif SC\",Georgia,serif;color:var(--ink);background:#fff;border-radius:16px;padding:14px 12px;box-shadow:0 2px 8px rgba(20,48,92,.06);margin-top:8px;min-height:60px}\n.en-t .grow{font-family:Georgia,\"Noto Serif SC\",serif}\n.grow span{opacity:0;display:inline;transition:opacity .35s}\n.grow span.gin{opacity:1}\n.grow u.ph{position:relative}\n.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n.src span{display:inline-flex;align-items:center;gap:5px;background:#fff;border-radius:99px;padding:3px 9px 3px 3px;font-size:12px;color:var(--ink);box-shadow:0 1px 4px rgba(20,48,92,.08);opacity:0;transform:translateY(6px);transition:.4s}\n.src span.gin{opacity:1;transform:none}\n.src img{width:20px;height:20px;border-radius:50%;object-fit:cover}\n.native{font:600 15px/1.55 Georgia,\"Noto Serif SC\",serif;color:#4b5563;background:#f7f2e7;border-radius:12px;padding:9px 11px;margin-top:6px}\n.steps{display:flex;gap:4px;margin:4px 0 8px}.steps i{flex:1;height:4px;border-radius:9px;background:#e6dfcf}.steps i.on{background:var(--hot)}\n.q1 .opt{display:flex;align-items:center;gap:10px}\n.q1 .opt .em{font-size:24px}\n.aihelp{font-size:11.5px;color:#8a7a50;background:#fff8e6;border-radius:10px;padding:6px 9px;margin-top:8px}\n\n/* 抽屉 */\n.cab{background:#f3e9d4;border:1.5px solid #e0d2b2;border-radius:16px;padding:10px 10px 8px;margin-top:10px;box-shadow:inset 0 -3px 0 #e0d2b2}\n.cabh{font:700 15.5px Georgia,\"Noto Serif SC\",serif;color:var(--ink);display:flex;gap:7px;align-items:center}\n:host(.zhui) .cabh{font-family:\"Noto Serif SC\",Georgia,serif}\n.dws{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}\n.dw{position:relative;background:#fffdf7;border:1.5px solid #d8c9a6;border-radius:10px;padding:8px 22px 8px 9px;text-align:left;min-height:50px;box-shadow:0 2px 0 #d8c9a6;transition:transform .12s;display:flex;flex-direction:column;justify-content:center;gap:3px}\n.dw:active{transform:translateY(2px);box-shadow:none}\n.dw b{font-size:12.5px;line-height:1.3;color:var(--ink)}\n.dw small{font-size:10.5px;color:#9a8a62;font-weight:600}\n.dw .kn{position:absolute;right:8px;top:50%;width:6px;height:16px;margin-top:-8px;border-radius:4px;background:#cbb98d}\n.dw.full .kn{background:var(--hot)}\n.dw .sl{display:flex;gap:3px}.dw .sl i{width:14px;height:4px;border-radius:2px;background:rgba(226,85,47,.55)}\n.dw.empty{border-style:dashed;background:#fbf7ee;box-shadow:none}\n.dw.empty b{color:#58627a}\n.dw.custom{background:#fff8e6}\n.dw.grow{animation:dgrow 1.4s cubic-bezier(.3,1.5,.5,1)}\n@keyframes dgrow{0%{transform:scale(.2);opacity:0;box-shadow:0 0 0 0 rgba(226,85,47,.6)}60%{transform:scale(1.06);opacity:1;box-shadow:0 0 0 10px rgba(226,85,47,.15)}100%{transform:none;box-shadow:0 2px 0 #d8c9a6}}\n.more{border:0;background:none;color:#8a7a50;font-size:11.5px;padding:7px 2px 2px;text-align:left;cursor:pointer}\n.ghosts{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}\n.ghost{border:1px dashed #d6ccb6;background:transparent;color:#a39a86;border-radius:8px;padding:3px 7px;font-size:11px}\n.growdemo{background:#fff8e6;border:1.5px dashed #d9b86a;border-radius:14px;padding:10px 12px;font-size:13px;color:#6b5a2e}\n.growdemo b{display:block;color:#4b3d17;font-size:12px}\n.newdr{margin-top:12px}\n.dtabs{display:none}\n.dtabs::-webkit-scrollbar{display:none}\n.dtab{flex:none;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;font-size:12.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:5px;transition:.15s}\n.dtab.empty{border-style:dashed;color:var(--soft);background:#fbf7ee}\n.dtab.on{background:var(--ink);color:#fff;border-color:var(--ink);border-style:solid}\n.dtab:active{transform:scale(.94)}\n.drw{background:#fff;border-radius:18px;padding:12px;box-shadow:0 2px 10px rgba(20,48,92,.06);animation:in .3s}\n@keyframes in{from{opacity:0;transform:translateY(6px)}}\n.drh{font:700 17px Georgia,\"Noto Serif SC\",serif;color:var(--ink);display:flex;gap:7px;align-items:center}\n.lab2{font-size:11px;font-weight:800;color:var(--soft);letter-spacing:.04em;margin:12px 0 5px;text-transform:uppercase}\n.dmine{display:flex;flex-direction:column;gap:7px}\n.dm{background:#fff4ee;border-left:3px solid var(--hot);border-radius:10px;padding:8px 10px;cursor:pointer}\n.dm.newin{animation:slidein .6s ease}\n.dm .play{margin-top:5px}\n.dt{font:600 16px/1.55 \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n:host(.zhui) .dt{font-family:Georgia,\"Noto Serif SC\",serif}\n.dinv{font:italic 600 14.5px/1.5 Georgia,\"Noto Serif SC\",serif;color:#8a7a50;background:#fbf7ee;border:1.5px dashed #d6ccb6;border-radius:12px;padding:10px 12px}\n.do{display:flex;gap:9px;padding:9px 0;border-top:1px solid #f1ece0}\n.do img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}\n.dob{flex:1;min-width:0}\n.don{font-size:12px;color:var(--soft)}.don b{color:var(--ink)}\n.dkeep{border:1.5px solid var(--hot);background:#fff;color:var(--hot);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:800}\n.dkeep.on{background:var(--hot);color:#fff}\n.dworld{margin-top:10px;background:#eef3fa;border-radius:12px;padding:9px 11px;font-size:13px;color:#33476b;line-height:1.5}\n.dworld b{color:var(--ink)}\n\n/* 你自己说的 / 演示 / 来源 */\n.net .own.demo circle{fill:#e9b4a3;filter:none}\n.net .own.you circle{fill:var(--hot);stroke:#fff;stroke-width:2.5}\n.net .pin rect{fill:#fff;stroke:#14305c;stroke-width:1;stroke-dasharray:2 2}\n.net .pin text{font-size:10px;fill:#14305c}\n.legend .d.demo{background:#e9b4a3}\n.s1.you{border:2px solid var(--hot)}\n.s1.demo{opacity:.85;background:#fbf7ee;box-shadow:none;border:1.5px dashed #e0d2b2}\n.srcl{color:var(--ink);font-weight:800;text-decoration:none;border-bottom:1.5px solid rgba(20,48,92,.35)}\n.srcl:hover{background:#eef2f8}\n.srcn{color:#8a7a50;font-weight:700}\n.dtag{font-size:10.5px;font-weight:800;background:#f1ece0;color:#8a7a50;border-radius:99px;padding:1px 7px;margin-left:4px}\n.drl{font-size:12px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:3px 8px;display:inline-block;margin-top:6px}\n.drl button{border:0;background:none;color:var(--hot);font-weight:800;text-decoration:underline;font-size:12px;padding:0;margin-left:4px}\n.heardf{font-size:12px;color:#2f6d4a;background:#eef6ef;border-radius:10px;padding:3px 8px;display:inline-block;margin:6px 6px 0 0}\n.myempty{background:#fff;border:1.5px dashed #d6ccb6;border-radius:16px;padding:12px;font-size:13.5px;color:#4b5563}\n.myempty .go a{display:inline-block;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:none;margin:6px 6px 0 0}\n.lead2{font:700 15px/1.5 Georgia,\"Noto Serif SC\",serif;color:var(--hot);margin:2px 0 4px}\n:host(.zhui) .lead2{font-family:\"Noto Serif SC\",Georgia,serif}\n.cabh.tg{width:100%;border:0;background:none;padding:0;text-align:left;cursor:pointer}\n.cabh .dots{margin-left:auto;display:flex;gap:3px;align-items:center}\n.cabh .dots i{width:7px;height:7px;border-radius:50%;background:var(--hot)}\n.cabh .dots i.demo{background:#e9b4a3}\n.cabh .car{font-size:12px;color:#8a7a50;margin-left:6px;transition:transform .2s}\n.cab.shut .dws,.cab.shut .more{display:none}\n.cab.shut .car{transform:rotate(-90deg)}\n.more{cursor:default}\n.tc{cursor:pointer;border-bottom:1.5px dotted rgba(20,48,92,.35)}.tc:hover{background:#eef2f8}\n.bk{border:0;background:#efe9db;border-radius:99px;padding:4px 11px;font-weight:800;color:var(--ink);font-size:13px;margin-top:8px}\n.w3{background:#fff;border-radius:14px;padding:9px 11px;margin-top:10px;box-shadow:0 1px 6px rgba(20,48,92,.06)}\n.w3h{font-size:12px;font-weight:800;color:#7a6a4a;letter-spacing:.04em;margin-bottom:6px}\n.w3n{font-size:12px;color:var(--soft);margin-top:4px}\n.w3.soon{opacity:.55;border:1.5px dashed #d6ccb6;box-shadow:none;background:none}\n.rchips{display:flex;flex-wrap:wrap;gap:6px}\n.rchip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #c9dcc4;background:#f3faf0;border-radius:12px;padding:5px 9px;text-align:left}\n.rchip b{font:700 18px \"Noto Serif SC\",serif;color:#2f6d4a}.rchip.en b{font-family:Georgia,serif;font-size:15px}\n.rchip small{font-size:11.5px;color:#4b5563;max-width:150px}\n.rchip .rc{font:700 15px \"Noto Serif SC\",serif;color:var(--ink);border-right:1px solid #c9dcc4;padding-right:6px}\n.rchip.dim{border-style:dashed;background:#fbf7ee}.rchip.dim b{color:#8a93a6}\n.rchip.ph{border-color:#c9d3e6;background:#eef3fa}.rchip.ph b{color:#2c64b8}.rchip.ph.drifted{border-style:dashed}\n.rchip.none{border-style:dashed;background:none}\n.rgrp{display:inline-flex;flex-direction:column;gap:2px}.rnote{font-size:11.5px;color:#6b5a2e;background:#fff6e2;border-radius:8px;padding:2px 7px;max-width:240px}\n.big.en{font-family:Georgia,serif}\n.rbig{font:900 44px/1.1 \"Noto Serif SC\",serif;color:#2f6d4a;margin-top:6px}.rbig small{font-size:15px;color:var(--soft);margin-left:8px;font-weight:600}.rbig.en{font-family:Georgia,serif;font-size:34px}\n.rsent{font:600 14.5px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink);background:#f3faf0;border-left:3px solid #2f7d70;border-radius:8px;padding:6px 10px;margin-top:8px}\n.rnet{display:block;width:100%;height:auto;margin-top:6px}\n.rnet .rl{stroke:#9ec2a8;stroke-width:1.2}\n.rnet .rcen{fill:#2f7d70}.rnet .rct{font:900 20px \"Noto Serif SC\",serif;fill:#fff}.rnet .rct.en{font:700 12px Georgia,serif}\n.rnet .rw{cursor:pointer}.rnet .rw rect{fill:#fff;stroke:#c9d3e6;stroke-width:1.2}.rnet .rw text{font:600 13px \"Noto Serif SC\",Georgia,serif;fill:var(--ink)}\n.rnet .rw.l0 rect{fill:var(--hot);stroke:var(--hot)}.rnet .rw.l0 text{fill:#fff}\n.rnet .rw.l2 rect{fill:#fbf7ee;stroke-dasharray:3 2}.rnet .rw.l2 text{fill:#6b7488}\n.rleg{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--soft);margin-top:4px}\n.rleg i{display:inline-block;width:12px;height:12px;border-radius:6px;vertical-align:-2px;margin-right:4px;border:1.2px solid #c9d3e6;background:#fff}\n.rleg i.l0{background:var(--hot);border-color:var(--hot)}.rleg i.l2{background:#fbf7ee;border-style:dashed}\n.shps{display:flex;flex-wrap:wrap;gap:7px}\n.shp{display:flex;flex-direction:column;align-items:flex-start;border:1.5px solid #c9dcc4;background:#f3faf0;border-radius:14px;padding:6px 10px;min-width:74px;text-align:left}\n.shp b{font:900 22px/1.1 \"Noto Serif SC\",serif;color:#2f6d4a}.shp b.en{font:700 16px Georgia,serif}\n.shp small{font-size:11px;color:#4b5563}.shp .sw{font-size:12px;color:var(--hot);font-weight:800;margin-top:2px}\n.shp.p{border-color:#c9d3e6;background:#eef3fa}.shp.p b{color:#2c64b8}\n.pron{display:flex;gap:4px;align-items:flex-end;margin-top:6px;flex-wrap:wrap}\n.pron .pc{display:flex;flex-direction:column;align-items:center;min-width:38px}\n.pron .pc i{font-style:normal;font-size:13px;font-weight:700;color:var(--hot);position:relative;padding-right:6px}\n.pron .pc b{font:900 34px/1.1 \"Noto Serif SC\",serif;color:var(--ink)}\n.pron .pyw{font-size:15px;color:var(--hot);font-weight:700}.pron .ipa{font:600 18px Georgia,serif;color:#2c64b8}\n.w3s{font-size:11.5px;color:#7a6a4a;font-weight:700;margin:6px 0 4px}\n.schips{display:flex;flex-wrap:wrap;gap:6px}\n.schip{display:flex;flex-direction:column;align-items:flex-start;border:1.5px solid #c9d3e6;background:#eef3fa;border-radius:12px;padding:4px 9px;text-align:left}\n.schip b{font:700 15px Georgia,\"Noto Serif SC\",serif;color:#2c64b8}.schip small{font-size:12px;color:var(--ink)}\n.pairc{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fff;border:1.5px solid #e6dfcf;border-radius:14px;padding:7px 9px;margin-top:6px;cursor:pointer}\n.pairc .vs{font-size:11.5px;color:#7a6a4a;font-weight:800;background:#fff6e2;border-radius:99px;padding:1px 8px}\n.ps{display:inline-flex;align-items:baseline;gap:5px}.ps b{font:700 17px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}.ps small{font-size:12px;color:var(--hot);font-weight:700}.ps .play{padding:0 7px}\n.pairc .why{flex-basis:100%;font-size:12.5px;color:#4b5563}\n.pnote{flex-basis:100%;font-size:12px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:3px 8px;margin-top:4px}\n.hard{flex-basis:100%;font-size:12px;color:#2f6d4a;background:#eef6ef;border-radius:10px;padding:3px 8px;margin-top:4px}\n.pairc.hardp{border-color:#9ec2a8}\n.pairbig{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}.pairbig .ps b{font-size:28px}\n.rbig.snd{color:#2c64b8;font-family:Georgia,\"Noto Serif SC\",serif}.rsent.snd{background:#eef3fa;border-left-color:#2c64b8}\n.rnet.snd .rcen{fill:#2c64b8}.rnet.snd .rl{stroke:#a9bfe0}\n.slist{margin-top:8px}.srow{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px dashed #e6dfcf}.srow .sp{font-size:12.5px;color:var(--hot);font-weight:700}.srow .sg{font-size:12px;color:var(--soft);flex:1}\n.sayafter{display:flex;gap:8px}.sayafter .btn{margin-top:0}.aftout{font:600 16px \"Noto Serif SC\",Georgia,serif;color:var(--ink);text-align:center;min-height:1.5em;margin-top:6px}\n.shp.snd{border-color:#c9d3e6;background:#eef3fa}.shp.snd b{color:#2c64b8}\n.wlist{display:flex;flex-direction:column}\n.wrow{padding:6px 2px;border-top:1px dashed #e6dfcf;cursor:pointer}\n.wrow.u{background:linear-gradient(90deg,#eef3fa,transparent 70%)}\n.ub{font-size:12px}\n.wmain{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}\n.wmain b{font:700 17px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.wpy{font-size:12px;color:var(--hot);font-weight:700}\n.wmean{font-size:12.5px;color:var(--soft)}\n.wi{font-size:12px;color:#8a7a50}\n.wmain .play{margin-left:auto;padding:1px 8px}\n.wother{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:13px;color:#33476b}\n.wother .wl i{font-style:normal;font-size:10.5px;font-weight:800;color:#8a93a6;margin-right:4px}\n.wnote{display:none;font-size:12.5px;color:#6b5a2e;background:#fff6e2;border-radius:10px;padding:5px 9px;margin-top:5px}\n.wrow.open .wnote{display:block}\n.uni{background:#eef3fa;border-radius:14px;padding:8px 10px;margin-top:10px}\n.uni .sub2{font-size:11.5px;color:var(--soft);margin:0 0 4px}\n.unichips{display:flex;flex-wrap:wrap;gap:5px}\n.uc{border:1.5px solid #c9d3e6;background:#fff;border-radius:99px;padding:3px 10px;font:600 13px \"Noto Serif SC\",Georgia,serif;color:var(--ink)}\n.split{margin-top:12px;background:#fff;border-radius:14px;padding:10px 12px}\n.split b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:4px}\n.split .sp{padding:5px 0;border-top:1px dashed #e6dfcf;font-size:13px}\n.split .sp span{font-weight:800;color:var(--ink)}.split .sp small{display:block;color:var(--soft);font-size:12px}\n.lucasT{border:0;background:none;padding:0;text-align:left;width:100%;cursor:pointer}\n.lucasT .car{font-size:13px;color:#8a7a50;display:inline-block;transition:transform .2s}\n.lucas-shut .said,.lucas-shut .sub{display:none}.lucas-shut .car{transform:rotate(-90deg)}\n.same{margin-top:12px;background:#eef3fa;border-radius:14px;padding:10px 11px}\n.same .h{font:700 14px Georgia,\"Noto Serif SC\",serif;color:var(--ink)}\n.same .sub2{font-size:11.5px;color:var(--soft);margin:1px 0 4px}\n.same .do{border-top-color:#d7e1f0}\n.same .lg{font-size:10.5px;font-weight:800;background:#fff;border-radius:99px;padding:1px 7px;color:#33476b;margin-left:4px}\n.same .nt{font-size:12.5px;color:#33476b;margin-top:8px;border-top:1px dashed #c9d3e6;padding-top:7px}\n.sbx{margin-top:10px}\n.sbx .micerr{font-size:12.5px;color:#8a3a14;background:#fff1d6;border-radius:10px;padding:6px 10px;margin:6px 0}\n.sbx .live{font:600 17px/1.5 \"Noto Serif SC\",Georgia,serif;color:var(--ink);min-height:1.5em;text-align:center;margin:4px 0}\n.locked{position:relative;border:1.5px dashed #d9b86a!important;background:#fffaf0!important}\n.locked .lk{display:block;font:600 11.5px -apple-system,sans-serif;color:#8a7a50;margin-bottom:4px}\n/* 回应 */\n.toast{position:absolute;top:52px;left:50%;transform:translate(-50%,-14px);opacity:0;background:var(--ink);color:#fff;font-weight:700;padding:7px 14px;border-radius:99px;transition:.3s;z-index:40;font-size:13px;max-width:88%;text-align:center;pointer-events:none}\n.toast.on{opacity:1;transform:translate(-50%,0)}\n.stamp{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%) rotate(-10deg) scale(3);opacity:0;border:4px solid var(--hot);color:var(--hot);border-radius:12px;padding:8px 16px;font:900 21px/1.2 Georgia,\"Noto Serif SC\",serif;text-align:center;background:rgba(251,247,238,.94);z-index:45;pointer-events:none;white-space:nowrap}\n.stamp small{display:block;font-size:12px;font-weight:700;letter-spacing:.04em}\n.stamp.on{animation:stamp 1.9s ease forwards}\n@keyframes stamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(3)}14%{opacity:1;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-10deg) scale(1)}}\n.note{position:absolute;pointer-events:none;font-size:16px;color:var(--hot);z-index:50;animation:note 1s ease-out forwards}\n@keyframes note{to{transform:translateY(-36px);opacity:0}}\n.conf{position:absolute;width:8px;height:12px;z-index:46;pointer-events:none;border-radius:2px;animation:conf 1.6s ease-in forwards}\n@keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}\n.flyer{position:fixed;z-index:9999;pointer-events:none;background:#fff;border:1.5px solid var(--hot);color:var(--ink);border-radius:99px;padding:3px 10px;font:700 13px \"Noto Serif SC\",Georgia,serif;box-shadow:0 6px 18px rgba(226,85,47,.3);transition:transform .8s cubic-bezier(.4,0,.2,1),opacity .8s;white-space:nowrap}\n.flyer.red{background:var(--hot);color:#fff;border-color:var(--hot)}\n\n/* 右边说明 */\n.side{min-width:0}\n.side h2{margin:2px 0 6px;color:var(--ink);font:900 24px/1.3 \"Noto Serif SC\",serif}\n.side .eff{font:700 16px/1.6 \"Noto Serif SC\",serif;color:var(--ink);background:#fff;border-radius:14px;padding:12px 14px;border-left:4px solid var(--hot)}\n.side .m{background:#fff;border-radius:14px;padding:12px 14px;margin:10px 0}\n.side .m b{color:var(--ink)}.side .m p{margin:4px 0 0;font-size:14px;color:#4b5563}\n.side h4{margin:20px 0 6px;color:var(--ink);font:700 16px \"Noto Serif SC\",serif}\n.side table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;font-size:13px}\n.side td,.side th{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}\n.side th{background:#f4efe4;color:var(--ink)}\n.tbl{overflow-x:auto;border-radius:14px}\n.chk{background:#f4efe4;border-radius:14px;padding:10px 14px;font-size:13.5px;color:#4b5563;margin-top:12px}\n.chk li{margin:4px 0}\n\n/* ===== 软件里：整屏、跟着底栏 ===== */\n:host{position:fixed;inset:0;z-index:40;display:block;background:var(--ivory);color:#24303a;font:15px/1.55 -apple-system,\"PingFang SC\",\"Helvetica Neue\",sans-serif}\n:host([hidden]){display:none}\n.phone{width:100%!important;max-width:none!important;height:100%!important;min-height:0!important;border-radius:0!important;box-shadow:none!important;margin:0}\n.bar{padding-top:calc(12px + env(safe-area-inset-top,0px))}\n.bar .setb{margin-left:auto;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--ink)}\n.scr{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}\n@media (max-width:700px){.sheet{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}}\n.myempty .go button{border:0;background:none;color:var(--hot);font:inherit;font-weight:800;padding:0;cursor:pointer}\n:host(.rtl) :is(p,div,span,b,small,button,h1,h2,h3,h4,a,em,i,u,label,textarea,input,text){unicode-bidi:plaintext}\n.mefoot{display:flex;flex-direction:column;gap:8px}\n.mefoot button{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:14px;padding:11px 13px;box-shadow:0 1px 6px rgba(20,48,92,.07);font:inherit;color:#24303a;cursor:pointer}\n.mefoot b{color:var(--ink);font-size:14.5px}.mefoot small{display:block;color:var(--soft);font-size:12px;margin-top:1px}\n@media (min-width:701px){\n :host{left:84px}\n .scr{padding:22px 32px 60px}\n .scr>*{max-width:760px;margin-left:auto;margin-right:auto}\n .sheet{left:50%;right:auto;width:min(620px,92%);transform:translate(-50%,105%)}\n .sheet.on{transform:translate(-50%,0)}\n}\n";
+const NET_CSS = String.raw`
+/* 你的网（样板 样板/你的网长出来样板.html） */
+.netcard{margin:8px auto 0;background:var(--paper);border-radius:20px;box-shadow:0 2px 12px rgba(20,48,92,.07);position:relative;overflow:hidden;direction:ltr;
+ background-image:radial-gradient(circle at 50% 50%,rgba(226,85,47,.07),transparent 45%),repeating-linear-gradient(0deg,transparent 0 23px,rgba(20,48,92,.035) 23px 24px)}
+.netcard svg text{unicode-bidi:normal}
+@media (max-width:700px){.netcard{margin:8px -4px 0}}
+.net{display:block;margin:0 auto;touch-action:manipulation;max-width:none}
+.netscroll{overflow:auto;overscroll-behavior:contain;padding:4px 0}
+.nethint2.lk{border:0;background:none;padding:0;text-decoration:underline;cursor:pointer;font-size:11.5px;color:var(--ink)}
+.net .bubsn{font:700 var(--fs) -apple-system,"PingFang SC",sans-serif;fill:#8a4a2f;paint-order:stroke;stroke:#fffdf7;stroke-width:3px;stroke-linejoin:round}
+.net .start{font-size:calc(var(--fs) * 1.15)!important}
+.net text{font:600 var(--fs, 9.5px) -apple-system,"PingFang SC",sans-serif;fill:var(--ink);pointer-events:none}
+.net .pill rect{fill:#fff;stroke:var(--ink);stroke-width:1}
+.net .pill{cursor:pointer}
+.net .pill text{font-weight:700}
+.net .own{cursor:pointer}
+.net .own circle.d{fill:var(--hot);stroke:#fff;stroke-width:1.5;filter:drop-shadow(0 1.5px 2px rgba(226,85,47,.35))}
+.net .own.root circle.d{stroke-width:2.5}
+.net .own.root circle.ring{fill:none;stroke:var(--hot);stroke-width:1.2;opacity:.5;transform-box:fill-box;transform-origin:center;animation:ring 2.4s ease-out infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.4);opacity:0}}
+.net .bor{cursor:pointer}
+.net .bor circle.bg{fill:#eef2f9;stroke:#c9d3e6;stroke-width:1.5}
+.net .bor image{opacity:.72}
+.net .e1{stroke:var(--ink);stroke-opacity:.16;fill:none;stroke-width:1}
+.net .e2{stroke:var(--hot);stroke-opacity:.38;stroke-width:.9}
+.net .e3{stroke:#8f9bb3;stroke-width:1;stroke-dasharray:2.5 2.5;fill:none}
+.net .e4{stroke:var(--ink);stroke-opacity:.09;stroke-width:.8;stroke-dasharray:1.5 2.5}
+.net .g{transform-box:fill-box;transform-origin:center}
+.net .seq{animation:pop .55s cubic-bezier(.3,1.6,.5,1) both}
+.net .lseq{animation:fadein .5s ease both}
+.net .grow{animation:grow .9s cubic-bezier(.25,1.7,.45,1) both}
+.net .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s ease forwards}
+@keyframes pop{0%{opacity:0;transform:scale(.15)}100%{opacity:1;transform:scale(1)}}
+@keyframes grow{0%{opacity:0;transform:scale(0)}55%{opacity:1;transform:scale(1.9)}100%{transform:scale(1)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.net .ripple{fill:none;stroke:var(--hot);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:rip 1.1s ease-out forwards}
+@keyframes rip{0%{transform:scale(.4);opacity:.9}100%{transform:scale(5);opacity:0}}
+.net.focus .own:not(.hl),.net.focus .bor:not(.hl),.net.focus .pill:not(.hl){opacity:.15}
+.net.focus line:not(.hl),.net.focus path:not(.hl){opacity:.06}
+.net .start{font:italic 700 11px Georgia,"Noto Serif SC",serif;fill:var(--hot)}
+.net .snip{font:600 9px "Noto Serif SC",Georgia,serif;fill:#5b6474}
+.net .bub-g{cursor:pointer}
+.net .bubc{fill:#fde3d9;stroke:var(--hot);stroke-width:1.4}
+.net .bub-g:hover .bubc{fill:#fbd2c3}
+.net .bubn{font:800 11px Georgia,"Noto Serif SC",serif;fill:var(--hot)}
+.net .bubs{fill:none;stroke:var(--hot);stroke-opacity:.35;stroke-width:1;stroke-dasharray:2 3}
+.net .ripe{fill:none;stroke:var(--ok);stroke-width:1.6}
+.net .scat{animation:scat .7s cubic-bezier(.25,1.4,.45,1) both}
+@keyframes scat{from{transform:translate(var(--fx),var(--fy)) scale(.3);opacity:0}to{transform:none;opacity:1}}
+.net .bline{stroke:#9fb0cd;stroke-linecap:round;fill:none;opacity:.75}
+.net .pnode{cursor:pointer}
+.net .pnode circle.bg{fill:#eef2f9;stroke:#9fb0cd;stroke-width:1.6}
+.net .plab{font:700 var(--fs) -apple-system,"PingFang SC",sans-serif;fill:#5b6b8a;paint-order:stroke;stroke:#fffdf7;stroke-width:3.5px;stroke-linejoin:round}
+.net .pill.open rect{fill:#14305c}
+.net .pill.open text{fill:#fff}
+.net .pill text,.net .snip{font-size:var(--fs)}
+.net .bubn{font-size:calc(var(--fs) * 1.1)}
+.net .webring{fill:none;stroke:var(--ink);stroke-opacity:.08;stroke-width:1;stroke-dasharray:3 4}
+.net .e1.web{stroke:var(--ink);stroke-opacity:.22;stroke-width:1.1}
+.net .yout{font:800 calc(var(--fs) * 1.05) Georgia,"Noto Serif SC",serif;fill:#fff}
+.net .bubt{font:700 var(--fs) -apple-system,"PingFang SC",sans-serif;fill:var(--ink)}
+.net .more-g{cursor:pointer}
+.net .more-g rect{fill:#fff;stroke:var(--ink);stroke-width:1;stroke-dasharray:3 2}
+.net .more-g text{font-size:var(--fs);font-weight:800}
+.net .plabbg{fill:#fffdf7;fill-opacity:.94}
+.netempty{min-height:200px;display:grid;place-items:center;text-align:center;padding:30px 24px;color:var(--soft);font:600 15px/1.5 "Noto Serif SC",Georgia,serif}
+.zoomrow{display:flex;align-items:center;gap:6px;padding:8px 8px 0 10px}
+.zoom{display:flex;gap:4px;margin-left:auto;flex:none}
+.zoom button{border:1.5px solid var(--line);background:rgba(255,255,255,.92);border-radius:99px;padding:3px 9px;font-size:11.5px;font-weight:800;color:var(--soft)}
+.zoom button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.nethint2{font-size:11px;color:var(--soft);min-width:0}
+.legend{display:flex;gap:4px 12px;flex-wrap:wrap;font-size:11.5px;color:var(--soft);padding:6px 12px 10px;direction:ltr;border-top:1px dashed var(--line)}
+.pnrow{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pnchip{display:inline-flex;align-items:center;gap:6px;border:1px solid #c9d3e6;background:#f4f6fb;border-radius:99px;padding:2px 9px 2px 3px;font-size:11.5px;font-weight:700;color:#5b6b8a}
+.pnchip .fc{display:inline-flex}.pnchip img{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid #fff;margin-right:-6px}.pnchip .fc img:last-child{margin-right:0}
+:host(.rtl) .legend{direction:rtl}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend .d{width:10px;height:10px;border-radius:50%;background:var(--hot)}
+.legend .d.ripe{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ok)}
+.legend .b{width:12px;height:12px;border-radius:50%;background:#eef2f9;border:1.5px solid #c9d3e6}
+.legend .t{width:16px;height:10px;border-radius:5px;border:1.2px solid var(--ink);background:#fff}
+.yhd{display:flex;gap:10px;align-items:center}
+.yhd .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 18px Georgia,serif;flex:none;background:var(--hot)}
+.yhd h1{font:700 24px/1.15 Georgia,"Noto Serif SC",serif;color:var(--ink);margin:0}
+:host(.zhui) .yhd h1{font-family:"Noto Serif SC",Georgia,serif;font-weight:900}
+.yhd p{margin:1px 0 0;color:var(--soft);font-size:12.5px}
+.ylike{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:var(--ink);min-height:26px}
+.ylike img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);margin-right:-10px}
+.ylike .faces{display:flex;padding-right:10px}
+.ylike b{color:var(--hot)}
+.ytabs{display:flex;gap:6px;margin-top:12px}
+.ytabs button{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:6px 4px;font-size:12.5px;font-weight:800;color:var(--soft)}
+.ytabs button.on{border-color:var(--ink);color:var(--ink);background:#f3f0e6}
+.ynext{margin-top:10px;background:#fff;border-radius:16px;padding:11px 12px;box-shadow:0 2px 10px rgba(20,48,92,.06);display:flex;gap:10px;align-items:center}
+.ynext .nt{flex:1;min-width:0;font-size:13px;color:var(--soft);line-height:1.45}
+.ynext .nt b{color:var(--ink);display:block}
+.ynext .nt .q{display:block;color:var(--ink);font:600 14.5px/1.4 "Noto Serif SC",Georgia,serif;margin-top:2px}
+.ynext .nt .qm{display:block;font-size:12px;color:var(--soft)}
+.ysay{border:0;background:var(--hot);color:#fff;border-radius:99px;padding:9px 14px;font-weight:800;font-size:13.5px;flex:none;box-shadow:0 3px 0 #b63c1d;transition:transform .12s}
+.ysay:active{transform:scale(.9) translateY(2px);box-shadow:0 1px 0 #b63c1d}
+.ydrw{display:flex;flex-direction:column;gap:6px}
+.ydr{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:9px 11px;border:0;text-align:start;width:100%;box-shadow:0 1px 6px rgba(20,48,92,.05)}
+.ydr .i{font-size:17px;flex:none}
+.ydr .tx{flex:1;min-width:0}
+.ydr .tx b{display:block;font-size:13px;color:var(--ink)}
+.ydr .tx span{display:block;font-size:12.5px;color:#5b6474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"Noto Serif SC",Georgia,serif}
+.ydots{display:flex;gap:3px;flex-wrap:wrap;max-width:62px;justify-content:flex-end;flex:none;align-items:center}
+.ydots i{width:7px;height:7px;border-radius:50%;background:var(--hot)}
+.ydots i.p{background:#eef2f9;box-shadow:inset 0 0 0 1.3px #c9d3e6}
+.ydots small{font-size:10.5px;color:var(--soft);margin-left:2px}
+.ydr.new{animation:yflash 1.4s ease}
+@keyframes yflash{0%,40%{background:#fde7df}100%{background:#fff}}
+.yinvite{font-size:12.5px;color:var(--soft);padding:6px 4px 0}
+.ypicked{display:flex;flex-direction:column;gap:8px}
+.ypk{background:#f4f6fb;border-radius:14px;padding:9px 10px}
+.ypk .hd2{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink);font-weight:800}
+.ypk .hd2 img{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.ypk .hd2 small{font-weight:600;color:var(--soft)}
+.ypk button{display:block;border:0;background:none;text-align:start;padding:4px 0 0 36px;font:600 13.5px/1.4 "Noto Serif SC",Georgia,serif;color:var(--ink);width:100%}
+:host(.rtl) .ypk button{padding:4px 36px 0 0}
+.ypk button small{font:500 11px -apple-system,sans-serif;color:var(--soft);margin-left:4px}
+.ysrc{display:inline-flex;align-items:center;gap:6px;background:#f1ece0;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;color:#7a6a40;margin-top:8px}
+.ybig{font:600 21px/1.45 "Noto Serif SC",Georgia,serif;color:var(--ink);margin:10px 0 2px}
+.ypy{color:var(--soft);font-size:13px;font-style:italic;margin:0 0 2px}
+.ymn{color:#4a5466;font-size:13.5px;margin:0 0 10px}
+.yrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.ybtn{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 13px;font-weight:800;font-size:13px;color:var(--ink);transition:transform .12s}
+.ybtn:active{transform:scale(.92)}
+.ybtn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+.yinbox{font-size:12.5px;color:var(--soft);margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.yinbox b{color:var(--ink)}
+.yinbox b.serif{font-family:"Noto Serif SC",Georgia,serif}
+.ylk{border:0;background:none;padding:0;color:var(--soft);text-decoration:underline;font-size:12.5px}
+.ripeTag{display:inline-flex;align-items:center;gap:5px;background:#e3f2ee;color:var(--ok);border-radius:99px;padding:2px 9px;font-size:12px;font-weight:800}
+.yalso{font-size:12px;color:var(--soft);margin-top:4px}
+.yfrom{margin-top:12px;background:#f4f6fb;border-radius:16px;padding:11px 12px;display:flex;gap:10px}
+.yfrom img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex:none}
+.yfrom .tx{flex:1;min-width:0;font-size:12.5px;color:var(--soft)}
+.yfrom .tx .k{color:var(--ink);font-weight:800;font-size:13px}
+.yfrom .tx .l{font:600 15px/1.45 "Noto Serif SC",Georgia,serif;color:var(--ink);margin:4px 0 1px}
+.yfrom .tx .l u,.there .bub .l u{text-decoration:none;background:linear-gradient(transparent 60%,#dfe6f3 60%)}
+.yfrom .tx .bp{font-size:12px;font-style:italic}
+.ymini{border:0;background:none;padding:0;color:var(--ok);font-weight:800;font-size:12.5px;margin-top:4px}
+.ylist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.yli{display:block;width:100%;text-align:start;border:0;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 1px 5px rgba(20,48,92,.06)}
+.yli b{display:block;font:600 14px/1.4 "Noto Serif SC",Georgia,serif;color:var(--ink)}
+.yli i{display:block;font-size:12px;color:var(--soft)}
+.yli em{display:block;font-style:normal;font-size:12px;color:#4a5466}
+.yli span{font-size:11.5px;color:var(--soft)}
+/* 回到那里 */
+.there{position:absolute;inset:0;background:var(--ivory);z-index:30;transform:translateX(105%);transition:transform .35s cubic-bezier(.3,1,.4,1);display:flex;flex-direction:column;visibility:hidden}
+:host(.rtl) .there{transform:translateX(-105%)}
+.there.on{transform:none;visibility:visible}
+.there .tb{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink);font-weight:800}
+.there .tb button{border:0;background:#fff;border-radius:99px;padding:5px 11px;font-weight:800;font-size:12.5px;box-shadow:0 1px 4px rgba(20,48,92,.1);color:var(--ink)}
+.there .bd{flex:1;overflow-y:auto;padding:14px}
+.qcard{background:var(--ink);color:#fff;border-radius:18px;padding:14px}
+.qcard .k{font-size:11.5px;opacity:.75;font-weight:700;letter-spacing:.02em}
+.qcard .q{font:600 19px/1.4 "Noto Serif SC",Georgia,serif;margin:4px 0 2px}
+.qcard .qp{font-size:12.5px;opacity:.8;font-style:italic;margin-bottom:2px}
+.qcard .qm{font-size:12.5px;opacity:.8}
+.msg{display:flex;gap:8px;margin-top:12px;align-items:flex-start}
+.msg img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}
+.msg .bub{background:#fff;border-radius:4px 16px 16px 16px;padding:9px 12px;box-shadow:0 1px 6px rgba(20,48,92,.07);max-width:84%}
+.msg .bub .n{font-size:11.5px;color:var(--soft);font-weight:700}
+.msg .bub .l{font:600 15px/1.45 "Noto Serif SC",Georgia,serif;color:var(--ink)}
+.msg .bub .bp{font-size:12px;color:var(--soft);font-style:italic}
+.msg .bub .bm{font-size:12px;color:var(--soft)}
+.msg.me{flex-direction:row-reverse}
+.msg.me .bub{background:#fff1ec;border-radius:16px 4px 16px 16px;box-shadow:0 0 0 2px var(--hot)}
+.msg.me .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 14px Georgia,serif;background:var(--hot);flex:none}
+.here{display:inline-block;margin-top:4px;font-size:11px;color:var(--hot);font-weight:800}
+.here.soft{color:#7d8aa6}
+`;
+const SKEL = () => `<div class="phone" id="phone"><div class="bar">🌱 <b id="tBar"></b><button class="setb" data-mego="set">⚙️ ${UT("设置", "Settings")}</button></div><div class="toast" id="toast"></div><div class="stamp" id="stamp"></div><div class="scr" id="scr"></div><div class="veil" id="veil"></div><div class="sheet" id="sheet"><div class="grab"></div><button class="x" id="x" aria-label="close">✕</button><div class="in" id="sin"></div></div><div class="there" id="there"></div></div>`;
 let HOST = null, SR = null, API = null, WANT = null, POLL = 0;
 const ready = () => !!(window.WORLD_NET && window.HVML);
 function shell(){ if (HOST) return; HOST = document.createElement("div"); HOST.id = "mlPg"; HOST.hidden = true; document.body.appendChild(HOST);
   SR = HOST.attachShadow({mode: "open"}); SR.innerHTML = `<style>${ML_CSS}</style><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8f7a4c;font:600 12px Georgia,serif;letter-spacing:.5em">HEYVOYO</div>`; }
-function boot(){ if (API) return; SR.innerHTML = `<style>${ML_CSS}${window.HVML.CSS}</style>` + SKEL(); API = run(SR, HOST); }
+function boot(){ if (API) return; SR.innerHTML = `<style>${ML_CSS}${NET_CSS}${window.HVML.CSS}</style>` + SKEL(); API = run(SR, HOST); }
 function open(o){ shell(); if (window.hvPage) window.hvPage.show("me"); HOST.hidden = false; HOST.classList.toggle("rtl", document.documentElement.dir === "rtl"); document.body.classList.add("gal-on", "ml-on"); WANT = o || {};
   if (ready()){ boot(); API.enter(WANT); return; }
   if (!POLL) POLL = setInterval(() => { if (!ready()) return; clearInterval(POLL); POLL = 0; boot(); if (!HOST.hidden) API.enter(WANT); }, 150); }
 function hide(){ if (!HOST || HOST.hidden) return; HOST.hidden = true; document.body.classList.remove("ml-on"); if (API) API.close(); try { speechSynthesis.cancel(); } catch (e) {} }
-window.MYLANG = {open, hide, isOpen: () => !!(HOST && !HOST.hidden)};
+/* count()：你说过多少句——跟网用同一套数法（同一句说过几次算一个点）：{lines 点数, times 一共说了几次}；「你走过的路」等处要对得上就用它 */
+function count(){ if (!ready()) return null; shell(); boot(); return API.count(); }
+window.MYLANG = {open, hide, isOpen: () => !!(HOST && !HOST.hidden), count};
 function run(SR, HOST){
 const HV = window.HVML;
 
@@ -2463,8 +2651,7 @@ function face(id){
 const D = {
 zh: {
  ui:"en", tl:"zh-CN", natLang:"pt-BR", natName:"Portuguese",
- bar:"Your Chinese", demo:"demo · 演示", title:"Lucas's Chinese",
- me:"Lucas", meTag:"São Paulo · speaks Portuguese · learning Chinese",
+ bar:"Your Chinese",
  lead:"It grows every time you say something of your own.",
  circles:{
   anim:{n:"Animation people",i:"🎬",c:"#3a6fb8"},
@@ -2557,14 +2744,6 @@ zh: {
    q:"跟着视频不用说话，跟着音乐动就行。练完出一身汗，心情就好了。",qtr:"With a video I don't have to talk. After a good sweat I feel better."}
  ],
  kinds:{answer:"💬 Answer in a public talk",think:"🗣️ What do you think?",like:"❤️ I like",line:"🔗 I know a line",fresh:"🌱 Just said"},
- lines:[
-  {id:"o1",k:"answer",at:"Spirited Away",t:"我小时候一直以为千寻很勇敢。其实她一开始很害怕，跟我第一次来中国一样。",tr:"As a kid I always thought Chihiro was brave. Actually she's scared at first — like me my first time in China.",uses:["p_yizhi","p_qishi"]},
-  {id:"o2",k:"like",at:"Ne Zha",t:"我喜欢哪吒的爸爸。嘴上很凶，可是心里很软，跟我爸一模一样。",tr:"I like Ne Zha's dad. Tough words, soft heart — exactly like my dad.",uses:["p_zuishang"],mk:{p_zuishang:["嘴上很凶，可是心里很软"]}},
-  {id:"o3",k:"think",at:"AI arrives",t:"说句实话，我看不出哪张是 AI 画的。可是好不好看，还要人来定。",tr:"Honestly, I can't tell which drawings AI made. But whether it looks good — a person still has to decide.",uses:["p_shuoju","p_renlai"]},
-  {id:"o4",k:"think",at:"Bubble tea",t:"圣保罗的奶茶太甜了，难怪我每次都喝不完。去台北我要点无糖的。",tr:"Milk tea in São Paulo is too sweet — no wonder I never finish one. In Taipei I'll order it with no sugar.",uses:["p_nanguai"]},
-  {id:"o5",k:"answer",at:"Pamela takes off in China",t:"我也跟着她练过！不用去健身房，铺个垫子就行。练了三天，我的腿就酸得下不了楼了，哈哈。",tr:"I've done her workouts too! No gym needed — just a mat. Three days in, my legs were too sore to take the stairs, haha.",uses:["p_buyong","p_liangtian"],mk:{p_liangtian:["了三天","就酸"]}},
-  {id:"o6",k:"line",at:"Tokyo's first ramen shop ↔ São Paulo",t:"其实圣保罗也有很多拉面店。巴西是日本以外日裔最多的国家。",tr:"Actually São Paulo has lots of ramen shops too. Brazil has more people of Japanese descent than anywhere outside Japan.",uses:["p_qishi"],pend:"🌱 being checked · needs a source"}
- ],
 
 
  /* 抽屉里的东西：「别人这么说」全部是世界的网的公开聊和角色问答原句；找不到真句子的抽屉就空着 */
@@ -2660,32 +2839,7 @@ zh: {
   d38:{note:"A “哈哈” at the end tells everyone it's light.",others:[
     {w:"owen",nm:"Owen",c:"New York",t:"我在纽约也跟着她练过！不过我跟不上她的速度，哈哈。",tr:"I did her workouts in New York too! Couldn't keep up with her though, haha.",at:"🏃 Pamela takes off in China"}]}
  },
- mine:{
-  d10:[{t:"我也跟着她练过！不用去健身房，铺个垫子就行。",tr:"I've done her workouts too! No gym needed — just a mat.",src:"o5"}],
-  d11:[{t:"练了三天，我的腿就酸得下不了楼了，哈哈。",tr:"Three days in, my legs were too sore to take the stairs, haha.",src:"o5"}],
-  d15:[{t:"其实她一开始很害怕。",tr:"Actually she's scared at first.",src:"o1"},{t:"其实圣保罗也有很多拉面店。",tr:"Actually São Paulo has lots of ramen shops too.",src:"o6"}],
-  d19:[{t:"圣保罗的奶茶太甜了。",tr:"Milk tea in São Paulo is too sweet.",src:"o4"}],
-  d20:[{t:"我小时候一直以为千寻很勇敢。",tr:"As a kid I always thought Chihiro was brave.",src:"o1"}],
-  d21:[{t:"我喜欢哪吒的爸爸。",tr:"I like Ne Zha's dad.",src:"o2"}],
-  d22:[{t:"说句实话，我看不出哪张是 AI 画的。",tr:"Honestly, I can't tell which drawings AI made.",src:"o3"}],
-  d25:[{t:"去台北我要点无糖的。",tr:"In Taipei I'll order it with no sugar.",src:"o4"}]
- },
  drMap:{p_wende:"d33",p_yiban:"d15",p_luanshuo:"d24",p_buju:"d36",p_faner:"d20",p_lei:"d10",start:"d10"},
- grow:{t:"我没赶上在电影院看《哪吒》，太可惜了。",tr:"I missed Ne Zha in the cinema — such a shame.",at:"Ne Zha",dr:"d27",word:"可惜"},
- start:{
-  q1:"On weekends, what do you do most?",q2:"Why? Pick the one most like you.",
-  a1:[
-   {em:"📺",l:"Watch anime at home",t:"周末我常常在家看动画。",tr:"On weekends I usually watch anime at home.",n:"No fim de semana eu costumo ver anime em casa.",done:"看完"},
-   {em:"🍳",l:"Cook for myself",t:"周末我常常自己做饭。",tr:"On weekends I usually cook for myself.",n:"No fim de semana eu costumo cozinhar pra mim.",done:"做完饭"},
-   {em:"🏃",l:"Go running in the park",t:"周末我常常去公园跑步。",tr:"On weekends I usually go running in the park.",n:"No fim de semana eu costumo correr no parque.",done:"跑完"},
-   {em:"😴",l:"Sleep till noon",t:"周末我常常睡到中午。",tr:"On weekends I usually sleep till noon.",n:"No fim de semana eu costumo dormir até o meio-dia.",done:"睡醒了"}
-  ],
-  a2:[
-   {l:"No plans, nobody to meet up with",g:[["不用","p_buyong"],["跟别人约，一个人"],["就行","p_buyong"],["。"]],tr:"No need to make plans with anyone — on my own is fine.",n:"Não preciso combinar com ninguém — sozinho já basta."},
-   {l:"Honestly, the week wears me out",g:[["说句实话","p_shuoju"],["，一周下来太累了。"]],tr:"Honestly, by the end of the week I'm worn out.",n:"Pra ser sincero, a semana me cansa demais."},
-   {l:"Afterwards I'm in a better mood",g:[["{done}，"],["心情就好了","p_xinqing"],["。"]],tr:"Once it's done, I feel better.",n:"Depois disso eu fico de bom humor."}
-  ]
- },
  T:{
   net:"tap anything", lgOwn:"what you said", lgUsed:"phrases you use", lgUn:"not yours yet", lgWho:"who you got them from",
   voiceH:"Your voice right now", voiceS:"It comes from the circles you hang out in.",
@@ -2724,14 +2878,13 @@ zh: {
   drNew:"＋ Open a drawer of my own", drNewH:"A drawer of your own", drNewP:"Name it the way you'd say it. Pick the cabinet it lives in.", drNewPh:"e.g. Talking about football", drNewGo:"Open it",
   customQ:"Your own drawer. Put your first line here.", drMineTag:"mine",
   drInvA:q=>`Empty for now. ${q} Listen to how others say it.`, drInvB:q=>`Empty for now. ${q} Nobody in the net has said one yet — you could be the first.`,
-  drGrew:"A NEW DRAWER GREW", drGrewS:n=>n, drDemoH:"Demo · a drawer grows", drDemoP:w=>`Lucas says something with “${w}” for the first time.`, drDemoB:"🎙️ Play it",
+  drGrew:"A NEW DRAWER GREW", drGrewS:n=>n,
   drMine:"I USUALLY SAY", drOthers:"OTHERS SAY IT LIKE THIS", drFrom:"from"
  }
 },
 en: {
  ui:"zh", tl:"en-GB", natLang:"zh-CN", natName:"中文",
- bar:"你的英语", demo:"演示", title:"苏苏的英语",
- me:"Susu", meTag:"成都 · 说得好：中文 · 在学：英语",
+ bar:"你的英语",
  lead:"你每说一句自己的话，它就长大一点。",
  circles:{
   anim:{n:"做动画的人",i:"🎬",c:"#3a6fb8"},
@@ -2818,14 +2971,6 @@ en: {
    q:"Both exist, but these days it's a lot of coding.",qtr:"两种都有，不过现在写代码的很多。"}
  ],
  kinds:{answer:"💬 公开聊里的回答",think:"🗣️ 你怎么看",like:"❤️ 我喜欢",line:"🔗 我知道一条线",fresh:"🌱 刚说的"},
- lines:[
-  {id:"o1",k:"answer",at:"《千与千寻》",t:"The bathhouse scene stays with me. It felt like my grandma's old teahouse in Chengdu.",tr:"汤屋那一段我一直忘不了，很像成都我外婆那间老茶馆。",uses:["q_stays"]},
-  {id:"o2",k:"like",at:"《哪吒》",t:"I love Ne Zha's dad. Strict, yes — but not cold.",tr:"我喜欢哪吒的爸爸。严是严，可是不冷淡。",uses:["q_yesbut"]},
-  {id:"o3",k:"think",at:"AI 来了",t:"AI drawing anime? Both, in a way. Fine for the in-betweens, not for the faces.",tr:"AI 画动画？两边都有点道理。画中割可以，画脸不行。",uses:["q_both"],mk:{q_both:["Both, in a way"]}},
-  {id:"o4",k:"think",at:"《鱿鱼游戏》",t:"Pretty much every night I watch one episode with subtitles. The dub felt wrong for the faces.",tr:"我差不多每天晚上看一集，开字幕。配音跟脸对不上。",uses:["q_pretty","q_wrong"]},
-  {id:"o5",k:"answer",at:"程序员在家上班",t:"Written notes beat a good memory. I write two lines before every stand-up.",tr:"写下来比记性好。每次站会前我都先写两句。",uses:["q_beats"],mk:{q_beats:["beat"]}},
-  {id:"o6",k:"line",at:"《哪吒》↔ 成都",t:"These days Chengdu makes films the whole world watches — Ne Zha was made right here.",tr:"现在成都做的片子全世界都在看，《哪吒》就是在这儿做的。",uses:["q_these"],pend:"🌱 还在核对 · 要附来源"}
- ],
 
  dr:{
   d1:{note:"Rosa in Guadalajara uses the name first; Kenji in Osaka and Lin in Tokyo both ease in with “I want to ask…”.",others:[
@@ -2898,31 +3043,7 @@ en: {
     {w:"holly",nm:"Holly",c:"伦敦",t:"My mum still watches everything dubbed — she says she can't knit and read at the same time.",tr:"我妈到现在什么都看配音的，她说她没法一边织毛衣一边看字。",at:"🎞️ 《鱿鱼游戏》"},
     {w:"paolo",nm:"Paolo",c:"马尼拉",t:"Next time you watch, wave :)",tr:"下次你看的时候，挥挥手 :)",at:"🎬 马尼拉给日本画中割"}]}
  },
- mine:{
-  d10:[{t:"These days Chengdu makes films the whole world watches.",tr:"现在成都做的片子全世界都在看。",src:"o6"}],
-  d11:[{t:"The bathhouse scene stays with me. It felt like my grandma's old teahouse in Chengdu.",tr:"汤屋那一段我一直忘不了，很像成都我外婆那间老茶馆。",src:"o1"}],
-  d19:[{t:"The dub felt wrong for the faces.",tr:"配音跟脸对不上。",src:"o4"}],
-  d21:[{t:"I love Ne Zha's dad. Strict, yes — but not cold.",tr:"我喜欢哪吒的爸爸。严是严，可是不冷淡。",src:"o2"}],
-  d23:[{t:"Both, in a way.",tr:"两边都有点道理。",src:"o3"}],
-  d30:[{t:"Written notes beat a good memory.",tr:"写下来比记性好。",src:"o5"}]
- },
  drMap:{q_eye:"d33",q_late:"d8",q_totally:"d8",q_never:"d11",q_point:"d22",q_start:"d33",start:"d10"},
- grow:{t:"I missed Ne Zha in the cinema — what a shame.",tr:"没赶上在电影院看《哪吒》，太可惜了。",at:"《哪吒》",dr:"d27",word:"what a shame"},
- start:{
-  q1:"周末你最常做什么？",q2:"为什么？挑最像你的。",
-  a1:[
-   {em:"📺",l:"在家看动画",t:" weekend, I watch anime at home.",tr:"周末我差不多都在家看动画。",n:"周末我差不多都在家看动画。"},
-   {em:"🍳",l:"自己做饭",t:" weekend, I cook for myself.",tr:"周末我差不多都自己做饭。",n:"周末我差不多都自己做饭。"},
-   {em:"🏃",l:"去公园跑步",t:" weekend, I go running in the park.",tr:"周末我差不多都去公园跑步。",n:"周末我差不多都去公园跑步。"},
-   {em:"😴",l:"睡到中午",t:" weekend, I sleep till noon.",tr:"周末我差不多都睡到中午。",n:"周末我差不多都睡到中午。"}
-  ],
-  pre:[["Pretty much every","q_pretty"]],
-  a2:[
-   {l:"不用约人，一个人就挺好",g:[[" No plans, no people — "],["and that's the point","q_point"],["."]],tr:"不用约人，要的就是这个。",n:"不用约人，要的就是这个。"},
-   {l:"说实话，一周下来太累了",g:[[" Honestly, by Friday I'm worn out."]],tr:"说实话，到周五我就累坏了。",n:"说实话，一周下来太累了。"},
-   {l:"做完心情好，能好一整天",g:[[" The good mood "],["stays with","q_stays"],[" me all day."]],tr:"好心情能一直待到晚上。",n:"做完心情好，能好一整天。"}
-  ]
- },
  T:{
   net:"点哪儿都行", lgOwn:"你说过的话", lgUsed:"你在用的说法", lgUn:"还没变成你的", lgWho:"借给你的人",
   voiceH:"你现在的声音", voiceS:"你混哪个圈子，说话就像哪个圈子。",
@@ -2961,7 +3082,7 @@ en: {
   drNew:"＋ 开一个我自己的抽屉", drNewH:"开一个你自己的抽屉", drNewP:"用你自己会说的话起个名字，再挑它放在哪个柜子里。", drNewPh:"比如：聊足球", drNewGo:"开好了",
   customQ:"这是你自己的抽屉，放进第一句吧。", drMineTag:"我的",
   drInvA:q=>`还空着。${q}听听大家怎么说。`, drInvB:q=>`还空着。${q}网上还没人说过——你可以是第一个。`,
-  drGrew:"长出一个新抽屉", drGrewS:n=>n, drDemoH:"演示 · 抽屉长出来", drDemoP:w=>`苏苏第一次说了一句带「${w}」的话。`, drDemoB:"🎙️ 放一遍",
+  drGrew:"长出一个新抽屉", drGrewS:n=>n,
   drMine:"我常这么说", drOthers:"别人这么说", drFrom:"来自"
  }
 }
@@ -2971,10 +3092,10 @@ en: {
 /* ───────── 新的界面字（两种界面各一份） ───────── */
 const T2 = {
  zh: {sorted:"Everything you've said, sorted for you.", youTitle:"Your Chinese", youTag:"You · São Paulo · speaks Portuguese & English · learning Chinese",
-  demoNote:"The pale dots are Lucas's demo lines, so the net isn't empty. The bright red ones are yours.", lgDemo:"Lucas · demo", lgSrc:"where you said it",
+  lgSrc:"where you said it",
   myH:"What you said out there", myS:"On the world net and on the map. Tap where you said it to go straight back.",
   myNone:"Nothing yet. Say one line on the world net or the map — it shows up here, already sorted into a drawer.", goNet:"🕸️ Go to the world net →", goMap:"🗺️ Go to the map →",
-  inDr:"In", change:"Wrong drawer? Change", heardFrom:(ph, nm) => `You heard “${ph}” from ${nm}`, alsoSays2:(ph, nm) => `${nm} says “${ph}” too`, heardIn:nm => `heard from ${nm}, in a reply to you`, demoMine:n => `${n} · demo`, demoTag:"demo", lucasH:"Lucas's lines · demo", lucasS:"Sample lines so you can see how a full net looks. Not yours.",
+  inDr:"In", change:"Wrong drawer? Change", heardFrom:(ph, nm) => `You heard “${ph}” from ${nm}`, alsoSays2:(ph, nm) => `${nm} says “${ph}” too`, heardIn:nm => `heard from ${nm}, in a reply to you`,
   viaVoice:"said aloud", viaTyped:"typed", sameH:"Same meaning — how people say it", sameS:"Different words, one idea. Each line is one person's way of saying it — not a whole place's.",
   inThread:pl => `in the “${pl}” talk`, onPage:pl => `on ${HV.the(pl)} page`, onPerson:pl => `on ${pl}'s page`, here:"🌱 said while practising here",
   sayIt:"🎙️ Say it", sayItP:"It's only sorted into your language once you say it — or type it if the mic can't hear you.", typeIt:"…or type it here", doneT:"That's it ✓",
@@ -2988,10 +3109,10 @@ const T2 = {
   replyBy:n => `🎭 ${n} replied`, awayTag:" (doesn't live here)", sortedT:n => `Sorted into “${n}”`, youSaidIt:"You said:", nat1:"🗣️ Say it in Portuguese first", natSaid:"You said in Portuguese:",
   noSrc:"demo", playYou:"▶ hear it (phone voice — no recording saved in this sample)", drGrewMine:"A NEW DRAWER GREW", cabOpen:"tap to open", whoAge:a => `${a}`},
  en: {sorted:"你说过的话，我们帮你整理好了。", youTitle:"你的英语", youTag:"你 · 成都 · 说得好：中文 · 在学：英语",
-  demoNote:"淡一点的点是苏苏的演示句，免得网是空的；亮红色的才是你说的。", lgDemo:"苏苏 · 演示", lgSrc:"你在哪儿说的",
+  lgSrc:"你在哪儿说的",
   myH:"你在外面说过的", myS:"在世界的网和地图上说的。点「在哪儿说的」，就回到那儿。",
   myNone:"还没有。去世界的网或者地图上说一句——它会出现在这里，已经放进抽屉了。", goNet:"🕸️ 去世界的网 →", goMap:"🗺️ 去地图上 →",
-  inDr:"放进了", change:"放错了？改一下", heardFrom:(ph, nm) => `这个「${ph}」你是从 ${nm} 那儿听来的`, alsoSays2:(ph, nm) => `${nm} 也这么说「${ph}」`, heardIn:nm => `${nm} 回你的时候说过`, demoMine:n => `${n} · 演示`, demoTag:"演示", lucasH:"苏苏的话 · 演示", lucasS:"示范用的句子，让你看看网满了是什么样子。不是你的。",
+  inDr:"放进了", change:"放错了？改一下", heardFrom:(ph, nm) => `这个「${ph}」你是从 ${nm} 那儿听来的`, alsoSays2:(ph, nm) => `${nm} 也这么说「${ph}」`, heardIn:nm => `${nm} 回你的时候说过`,
   viaVoice:"说出来的", viaTyped:"打字的", sameH:"同一个意思，大家这么说", sameS:"说的不是一句话，意思是一个。每一句都是一个具体的人的说法，不代表一个地方的人。",
   inThread:pl => `在「${pl}」的公开聊里`, onPage:pl => `在「${pl}」这一页`, onPerson:pl => `在 ${pl} 的页上`, here:"🌱 在这儿练的时候说的",
   sayIt:"🎙️ 说出来", sayItP:"说出来才会整理进你的语言；麦克风用不了，可以打字。", typeIt:"……或者在这儿打字", doneT:"就这样 ✓",
@@ -3102,39 +3223,195 @@ const $ = id => SR.getElementById(id);
 /* 来源的小链接（net:… / map:…）：不让浏览器跳走，交给 HVML.nav 打开那一页 */
 SR.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest("a[href]"); if (!a) return; const h = a.getAttribute("href") || ""; if (/^(net|map|me):/.test(h)) { ev.preventDefault(); ev.stopPropagation(); HV.nav(h); } }, true);
 const phone = $("phone"), scr = $("scr");
-function fresh(){
-  const d = D[M];
-  const demoMine = JSON.parse(JSON.stringify(d.mine || {})); Object.values(demoMine).forEach(a => a.forEach(m => m.demo = 1));
-  S = {
-    phrases: d.phrases.map(p => ({...p, hidden: !!p.hidden, gone:false})),
-    demoLines: d.lines.map(l => ({...l, demo: 1})), demoMine, lines: [], mine: {},
-    grown: {}, custom: [], newDr: null, grewDemo: false, openDr: null, cabOpen: {},
-    focus: null, first: true, seq: 0
-  };
-  sync();
-}
 const TLg = () => M === "zh" ? "zh" : "en";            // 在学的语言
 const UIk = () => D[M].ui;                             // 界面语言
-/* 你自己说的话里，用上了网上谁的说法：软件自己找，连上线 */
-function detect(text){
-  const low = String(text).toLowerCase();
-  return S.phrases.filter(p => (p.mk || [p.t]).some(m => m && [...m].length >= 2 && low.includes(String(m).toLowerCase()))).map(p => p.id);
-}
-function userLines(){
-  return HV.items(TLg()).map(it => ({id: "u_" + it.id, k: "you", at: it.where ? (it.where[UIk()] || it.where.en || "") : "", t: it.t, tr: "", uses: detect(it.t), user: 1, it}));
-}
-function sync(){
-  S.lines = S.demoLines.concat(userLines());
-  S.lines.forEach(l => l.uses.forEach(pid => { const p = P(pid); if (p && p.hidden && l.user) p.hidden = false; }));
-  S.mine = JSON.parse(JSON.stringify(S.demoMine));
-  HV.items(TLg()).forEach(it => (it.dr || []).forEach(n => (S.mine["d" + n] = S.mine["d" + n] || []).push({t: it.t, user: 1, id: it.id})));
-}
+const UZ = () => UIk() === "zh";                       // 中文界面
+const ZHL = () => TLg() === "zh";                      // 在学中文：中文都带拼音和英文
 const d_ = () => D[M];
 const TT = () => D[M].T;
 const P = id => S.phrases.find(p => p.id === id);
 const used = p => S.lines.some(l => l.uses.includes(p.id));
 const visible = () => S.phrases.filter(p => !p.hidden && !p.gone);
 const person = id => d_().people[id];
+
+/* ───────── 全软件里你说过的话（2026-11-13 样板 样板/你的网长出来样板.html）─────────
+   网上只放两样：你自己说过的话（亮点）、你从真角色那儿借来又用上的说法（淡点，带脸）。没有演示的人。
+   只读各模块已经存好的数据，不改它们：迎新 wel.v1 · 你那边呢 howabout.v1（回答 d[日期]、回话 re["ha:日期:角色"].sent）·
+   角色播客 pod.v1（said[期号]、口袋 pocket）· 世界的网 / 地图上的线 / 这一页 hv.mylang.v1。每一句记着在哪儿说的、哪天说的。 */
+const LSJ = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+const ymd = t => { const d = new Date(t); return isNaN(d) ? "" : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+const tsOf = (date, extra) => { const d = new Date(String(date) + "T12:00:00"); return (isNaN(d) ? 0 : d.getTime()) + (extra || 0); };
+const strip = s => String(s || "").replace(/<\/?u>/g, "");
+const norm = s => String(s || "").toLowerCase().replace(/<\/?u>/g, "").replace(/[\s\p{P}\p{S}]+/gu, "");
+const hasCJK = s => /[一-鿿]/.test(s || "");
+const inTl = s => ZHL() ? hasCJK(s) : !!s && !hasCJK(s) && /[a-z]/i.test(s);
+const SRC = {wel: ["👋", "你来的第一天", "Your first day"], hab: ["🌍", "你那边呢", "How About Yours?"], pod: ["🎧", "角色播客", "Podcast"], net: ["🕸️", "世界的网", "World net"], map: ["🗺️", "地图上的线", "Map lines"], me: ["🌱", "你的语言", "Your language"], boat: ["⛵", "我的船", "My boat"]};
+const srcName = s => { const r = SRC[s] || SRC.me; return UT(r[1], r[2]); };
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fd = d => { const m = String(d || "").match(/^\d{4}-(\d\d)-(\d\d)$/); if (!m) return ""; return UZ() ? `${+m[1]}-${m[2]}` : `${MON[+m[1] - 1]} ${+m[2]}`; };
+const srcLine = l => [`${(SRC[l.s] || SRC.me)[0]} ${srcName(l.s)}`, UZ() ? l.w[0] : l.w[1], fd(l.d)].filter(Boolean).join(" · ");
+/* 角色：你那边呢、播客里的人用 HA_DATA.people；世界的网的人用 NET.people / 这一页的 people */
+const HAD = () => window.HA_DATA || {people: {}, weeks: []};
+const BW = {};   // who → {nm, face, city, role}
+function whoInfo(id){
+  if (BW[id]) return BW[id];
+  const h = HAD().people[id], n = (NET.people || {})[id], p = d_().people[id];
+  const nm0 = h ? h.nm : n ? (typeof n.nm === "string" ? n.nm : (n.nm.en || n.nm.zh)) : p ? p.nm : id;
+  const o = {nm: nm0, short: String(nm0).replace(/\s*[一-鿿]+$/, ""), face: h ? `https://img.heyvoyo.com/npc/${id}/face.webp` : face(id),
+    city: h && h.city ? h.city : null, role: h && h.who ? [h.who.zh || "", h.who.en || ""] : null, d: p ? p.d : ""};
+  return (BW[id] = o);
+}
+const bf = id => whoInfo(id).face;
+const nmShort = id => whoInfo(id).short;
+const whoSub = id => { const o = whoInfo(id); if (o.city || o.role) return [o.city ? o.city[UZ() ? 0 : 1] : "", o.role ? o.role[UZ() ? 0 : 1] : ""].filter(Boolean).join(" · "); return o.d || ""; };
+
+/* 迎新：wel.v1 只存了名字和城市，那一句照迎新里的写法拼回来（城市表跟 welcome.js 一样） */
+const WEL_ZH = {"Mexico City": ["墨西哥城", "Mòxīgē Chéng"], "Berlin": ["柏林", "Bólín"], "Toronto": ["多伦多", "Duōlúnduō"], "Paris": ["巴黎", "Bālí"], "Sydney": ["悉尼", "Xīní"], "São Paulo": ["圣保罗", "Shèngbǎoluó"]};
+const WEL_EN = {"成都": "Chengdu", "上海": "Shanghai", "台北": "Taipei", "Ciudad de México": "Mexico City", "Madrid": "Madrid", "Bogotá": "Bogotá", "القاهرة": "Cairo", "الرياض": "Riyadh", "الدار البيضاء": "Casablanca", "東京": "Tokyo", "札幌": "Sapporo", "福岡": "Fukuoka"};
+function welLine(){
+  const w = LSJ("wel.v1"); if (!w || w.skip || !w.done) return null;
+  const n = String(w.name || ""), c0 = String(w.city || "");
+  let t, p = "", m = "";
+  if (w.line && w.line.t && (!w.line.l || w.line.l === TLg())) { t = w.line.t; p = ZHL() ? w.line.p || "" : ""; m = w.line.m || ""; }   // 2026-11-13 起迎新把完整那一句存下来了
+  else if (!n) return null;
+  else if (ZHL()) { const c = WEL_ZH[c0] || [c0, c0]; t = `大家好！我是${n}，我在${c[0]}，正在学中文。`; p = `Dàjiā hǎo! Wǒ shì ${n}, wǒ zài ${c[1]}, zhèngzài xué Zhōngwén.`; m = `Hi everyone! I'm ${n}. I'm in ${c0}, and I'm learning Chinese.`; }
+  else { const c = WEL_EN[c0] || c0; t = `Hi everyone! I'm ${n}. I'm in ${c}, and I'm learning English.`; m = UZ() ? `大家好！我是${n}，我在${c0}，正在学英语。` : ""; }
+  return {s: "wel", t, p, m, d: w.done, ts: tsOf(w.done, -11 * 3600e3), w: ["", ""], q: ZHL() ? "介绍一下你自己吧！" : "Tell everyone a bit about you!", qp: ZHL() ? "Jièshào yíxià nǐ zìjǐ ba!" : "", qm: ZHL() ? "Tell everyone a bit about you!" : (UZ() ? "介绍一下你自己吧！" : ""), go: {k: "wel"}, kind: "intro"};
+}
+/* 你那边呢：按日期找到那一天（跟 howabout.js 的 weekFor 一样的轮法） */
+const addD = (s, n) => { const d = new Date(s + "T12:00:00"); d.setDate(d.getDate() + n); return ymd(d); };
+const wdOf = s => (new Date(s + "T12:00:00").getDay() + 6) % 7;
+function haDay(date, wid, wi){
+  const W = HAD().weeks || []; if (!W.length) return null;
+  let w = wid ? W.find(x => x.id === wid) : null, i = wi;
+  if (!w) { const mon = addD(date, -wdOf(date)); w = W.find(x => x.start === mon);
+    if (!w) { if (mon < W[0].start) w = W[0]; else { const diff = Math.round((new Date(mon + "T12:00:00") - new Date(W[0].start + "T12:00:00")) / 864e5); w = W[Math.floor(diff / 7) % W.length]; } }
+    i = wdOf(date); }
+  const di = Math.min(i == null ? 0 : i, w.days.length - 1), day = w.days[di];
+  return day ? {w, i: di, day, m: day[TLg()] || day.en} : null;
+}
+const haTitle = o => o && o.day && o.day.t ? [o.day.t.zh || "", o.day.t.en || ""] : ["", ""];
+function haAns(o, id){   // 角色那一天的原话，换成你在学的语言
+  const a = o && o.day && o.day.ans && o.day.ans[id]; if (!a) return null;
+  const t = inTl(strip(a.t)) ? a.t : (Array.isArray(a.m) ? a.m[ZHL() ? 1 : 0] : "");
+  const mm = Array.isArray(a.m) ? a.m[ZHL() ? 0 : 1] : "";
+  return {who: id, t, p: ZHL() ? (a.p || a.zp || "") : "", m: ZHL() || UZ() ? mm : ""};
+}
+function haLines(){
+  const st = LSJ("howabout.v1") || {}, out = [];
+  Object.entries(st.d || {}).forEach(([key, r]) => { const date = String(key).split("|")[0], kl = String(key).split("|")[1];   // 2026-11-13 起 howabout 的回答按「日期|语言」存（老数据只有日期）
+    if (!r || !r.t || ((kl || r.l) && (kl || r.l) !== TLg())) return;
+    const o = haDay(date, r.w, r.i), c = o && o.m && (o.m.cands || []).find(x => strip(x.q) === r.q) || (o && o.m && (o.m.cands || [])[0]) || {};
+    out.push({s: "hab", t: r.t, p: r.p || "", m: "", d: date, ts: tsOf(date), w: haTitle(o), q: r.q || strip(c.q || ""), qp: c.qp || "", qm: c.qm || "", go: {k: "hab", date}, kind: "answer"});
+  });
+  Object.entries(st.re || {}).forEach(([key, r]) => {
+    const mm = String(key).match(/^ha:(\d{4}-\d\d-\d\d):([^|]+)(?:\|(\w+))?$/); if (!mm || !r || !Array.isArray(r.sent) || (mm[3] && mm[3] !== TLg())) return;   // 2026-11-13 起回话按语言存：ha:日期:人|zh（老的没有 |语言）
+    const date = mm[1], who = mm[2], o = haDay(date), list = (o && o.m && o.m.re && o.m.re[who]) || [];
+    r.sent.forEach(x => {
+      if (!x || !x.t || (x.l && x.l !== TLg())) return;
+      let opt = null; String(x.o || "").split(".").forEach((sg, j) => { const i = +sg.slice(1); opt = j === 0 ? list[i] : opt && opt.r && (opt.r.back || [])[i]; });
+      const own = x.o === "own", top = !own && !/\./.test(String(x.o || ""));
+      const ans = haAns(o, who), rep = x.b && x.b.t ? [x.b.t, ZHL() ? x.b.p || "" : "", x.b.m || ""] : null;
+      out.push({s: "hab", t: x.t, p: x.p || "", m: x.m || "", d: date, ts: x.ts || tsOf(date, 3600e3), w: haTitle(o), to: who, ask: top && opt && opt.k === "ask", own,
+        ctx: ans ? {...ans, r: rep} : (rep ? {who, t: "", p: "", m: "", r: rep} : null), go: {k: "hab", date}, kind: "reply"});
+    });
+  });
+  return out;
+}
+/* 角色播客「轮到你」：pod.v1 的 said[期号]；podcast.js 还没装上也不出错，有了自动接上 */
+function podLines(){
+  const st = LSJ("pod.v1") || {}, EPS = window.PODCASTS || [], out = [];
+  Object.entries(st.said || {}).forEach(([id, x]) => {
+    if (!x || !x.t) return; const ep = EPS.find(e => e.id === id);
+    if (ep && ep.l && ep.l !== TLg()) return; if (!ep && inTl(x.t) === false) return;
+    const q = ep && ep.turn && ep.turn.q || {}, d = x.ts ? ymd(x.ts) : (ep ? ep.date : "");
+    out.push({s: "pod", t: x.t, p: x.p || "", m: "", d, ts: x.ts || tsOf(d), w: ep ? [ep.title.zh || "", ep.title.en || ""] : ["", ""], q: q.t || "", qp: q.p || "", qm: q.m || "", go: {k: "pod", id}, kind: "turn"});
+  });
+  return out;
+}
+/* 世界的网、地图上的线、这一页：hv.mylang.v1（我的船以后写进来也走这里） */
+function mineLines(){
+  return HV.items(TLg()).map(it => {
+    const s = it.page === "map" ? "map" : it.page === "net" ? "net" : it.page === "boat" ? "boat" : "me";
+    const wh = it.where ? [it.where.zh || "", it.where.en || ""] : ["", ""];
+    return {s, t: it.t, p: it.p || "", m: it.tr || "", d: ymd(it.when), ts: +new Date(it.when) || 0, w: [wh[0].replace(/^\S+\s/, ""), wh[1].replace(/^\S+\s/, "")], q: it.q ? it.q.t : "", qp: "", qm: it.q ? it.q.tr : "",
+      reply: it.reply || null, drs: (it.dr || []).map(Number), it, url: HV.url(it.src), go: {k: "url"}, kind: it.kind || "think"};
+  });
+}
+/* 借来的说法：你那边呢里角色话里画线的那一句（a.b）、播客里收进口袋的、世界的网上这一页的说法；你自己说出来了才连上 */
+/* 你真看过的「你那边呢」那几天：按记录里你那天那一题（r.w、r.i）找，不按内容表的周一日期（11-13 到 11-15 轮回来的第一周也认得出） */
+function haSeen(){
+  const st = LSJ("howabout.v1") || {}, seen = {}, put = (k, d) => { if (k && d && (!seen[k] || d < seen[k])) seen[k] = d; };
+  Object.entries(st.d || {}).forEach(([key, r]) => { if (!r) return; const date = String(key).split("|")[0]; const o = haDay(date, r.w, r.i); if (o) put(o.w.id + ":" + o.i, date); });
+  Object.keys(st.re || {}).forEach(key => { const m = String(key).match(/^ha:(\d{4}-\d\d-\d\d):/); if (!m) return; const o = haDay(m[1]); if (o) put(o.w.id + ":" + o.i, m[1]); });
+  return seen;
+}
+/* 世界的网上的说法：你真看过那一段才算——在那一段 / 那个人的页上说过话，或者回你的话里出现过 */
+function netSeen(p){
+  const by = heardBy(p.id); if (by) { const it = HV.items(TLg()).find(x => x.reply && x.reply.by === by); return it ? ymd(it.when) || "0" : "0"; }
+  const m = findMsg(p.q); if (!m) return "";
+  const at = HV.items(TLg()).filter(it => { const s = it.src || {}; return (m.thread && s.thread === m.thread) || (m.on && (s.node === m.on || s.line === m.on)) || (m.pageOf && s.node === m.pageOf); })
+    .map(it => ymd(it.when)).filter(Boolean).sort();
+  return at[0] || "";
+}
+let BOR = null;
+function borList(){
+  if (BOR && BOR.lg === TLg()) return BOR.list;
+  const list = [], seen = haSeen();
+  (HAD().weeks || []).forEach(w => w.days.forEach((day, i) => { const d = seen[w.id + ":" + i]; if (!d) return;
+    Object.entries(day.ans || {}).forEach(([id, a]) => {
+      if (!a || !a.b || !a.b.t || !inTl(a.b.t)) return; const full = inTl(strip(a.t)) ? a.t : `<u>${a.b.t}</u>`;
+      list.push({src: "hab", who: id, t: a.b.t, p: a.b.p || "", m: a.b.m || "", mk: [a.b.t], full, fullp: ZHL() ? (a.p || "") : "", fullm: Array.isArray(a.m) ? a.m[ZHL() ? 0 : 1] : "", d, w: [day.t ? day.t.zh : "", day.t ? day.t.en : ""]});
+    }); }));
+  ((LSJ("pod.v1") || {}).pocket || []).forEach(x => { if (!x || !x.t || !x.from || (x.l && x.l !== TLg())) return;
+    const ep = (window.PODCASTS || []).find(e => e.id === x.ep);
+    list.push({src: "pod", who: x.from, t: x.t, p: x.p || "", m: x.m || "", mk: [x.t], full: x.line || x.t, fullp: "", fullm: "", d: x.ts ? ymd(x.ts) : (ep ? ep.date : "0"), w: ep ? [ep.title.zh, ep.title.en] : ["", ""]}); });
+  S.phrases.forEach(p => { const d = netSeen(p); if (!d) return;
+    list.push({src: "net", pid: p.id, who: p.who, t: p.short || p.t, p: p.py || "", m: p.m || "", mk: p.mk || [p.t], full: p.q, fullp: "", fullm: p.qtr || "", d: d === "0" ? "" : d, w: [p.where || "", p.where || ""]}); });
+  list.forEach(b => { b.keys = b.mk.map(norm).filter(k => ZHL() ? [...k].length >= 2 : k.length >= 5); b.len = b.keys.reduce((s, k) => s + k.length, 0); });
+  BOR = {lg: TLg(), list: list.filter(b => b.keys.length)};
+  return BOR.list;
+}
+function findBorrow(l){
+  const k = norm(l.t), cand = borList().filter(b => b.keys.every(x => k.includes(x)) && (!b.d || !l.d || b.d <= l.d) && (b.src !== "net" || b.len >= (ZHL() ? 3 : 6)));
+  if (l.it && l.it.borrowed && l.it.borrowed[0] && l.it.borrowed[0].who) { const x = l.it.borrowed[0], kk = norm(x.t);   // 你照着 TA 给的那一句说的
+    if (kk && k.includes(kk.slice(0, ZHL() ? 4 : 10))) { const hit = cand.find(b => b.who === x.who); if (hit) return hit; } }
+  cand.sort((a, b) => (a.src === "net") - (b.src === "net") || b.len - a.len);
+  return cand[0] || null;
+}
+function gather(){
+  const DROV = (HV.load().drOv || {});
+  const raw = [welLine(), ...haLines(), ...podLines(), ...mineLines()].filter(x => x && x.t && String(x.t).trim());
+  raw.sort((a, b) => a.ts - b.ts);
+  /* 同一句说过好几次：合成一个点，外面画一圈「熟了」；同一天从播客送进「你那边呢」的同一句只算一次 */
+  const by = new Map(), out = [];
+  raw.forEach(x => { const k = norm(x.t); if (!k) return; const o = by.get(k);
+    if (o) { if (!(o.d === x.d && o.s !== x.s && (o.s === "pod" || x.s === "pod"))) { o.n++; o.also.push({d: x.d, s: x.s, to: x.to || ""}); } return; }
+    const l = {...x, key: k, n: 1, also: []}; by.set(k, l); out.push(l); });
+  out.forEach((l, i) => {
+    l.id = (l.it ? "u_" + l.it.id : l.s + "_" + l.key.slice(0, 24)) + "_" + i;
+    if (!l.drs || !l.drs.length) l.drs = HV.classify(l.t, TLg(), l.kind === "intro" ? "intro" : l.kind === "reply" && l.ask ? "ask" : "answer").map(Number);
+    if (l.kind === "intro" && !l.drs.includes(3)) l.drs.unshift(3);
+    const ov = DROV[l.key]; if (ov && ov.length) l.drs = ov.map(Number);   // 你挪过抽屉的那一句
+    l.dr = l.drs[0] || 10;
+    const b = findBorrow(l);
+    l.b = b ? {...b, nm: whoInfo(b.who).nm} : null;
+    l.uses = b && b.pid ? [b.pid] : [];
+  });
+  return out;
+}
+function fresh(){
+  const d = D[M];
+  S = {phrases: d.phrases.map(p => ({...p, hidden: !!p.hidden, gone: false})), lines: [], custom: [], newDr: null, first: true, seq: 0};
+  BOR = null; sync();
+}
+function sync(){
+  BOR = null;
+  S.lines = gather();
+  S.lines.forEach(l => l.uses.forEach(pid => { const p = P(pid); if (p && p.hidden) p.hidden = false; }));
+}
+/* 你：网的正中间（迎新的名字；没有就写「你」） */
+const ME = () => { const w = LSJ("wel.v1"); const n = w && w.name ? String(w.name) : UT("你", "You"); return {name: [...n].length > 6 ? [...n].slice(0, 5).join("") + "…" : n, color: "#e2552f"}; };
 
 /* ───────── 回应：声音、音符、提示、印章、彩纸 ───────── */
 let AC;
@@ -3210,219 +3487,628 @@ function markText(text, list){
   return o + esc(text.slice(last));
 }
 
-/* ───────── 网的位置 ───────── */
-const W = 400, H = 420, CX = 200, CY = 212;
-function layout(){
-  const d = d_(); const vis = visible();
-  const ordered = [];
-  for (const who of d.order) for (const p of vis) if (p.who === who) ordered.push(p);
-  const N = ordered.length || 1;
-  const pos = {};
-  ordered.forEach((p, i) => {
-    const a = (-90 + (i + .5) * 360 / N) * Math.PI / 180;
-    const u = used(p);
-    const r = (u ? 102 : 136) + (i % 2 ? 9 : -6);
-    const label = p.short || p.t;
-    const w = Math.min(120, measure(label) + 16);
-    pos[p.id] = {x: CX + r * Math.cos(a), y: CY + r * Math.sin(a), w, h: 21, a, label, u};
+/* ───────── 你的网（2026-11-13 样板 样板/你的网长出来样板.html，用户「可以，放进软件」）─────────
+   你在正中间；第一句（多半是迎新那句）是根，「从这里开始长」。句子多了远看是一张蜘蛛网：一个抽屉一个泡，最多 12 个泡，
+   其余收进「还有 N 个 ›」；最近的 8 句单独亮着；说过好几次的一句外面一圈「熟了」；借来的说法是淡点带脸，连着用上它的那句。
+   字形 / 声音两张网只用 word_roots.json、sound_net.json（d89_world_net.js 里的 roots、sound）查得到的，查不到的字不进网。 */
+let VIEW = "mean", FAR = false, LASTG = null, LASTPN = [], WEBMAX = 12, WEBS = 1, BIGK = 1, NETMAXH = 640;
+const PRACTICE_ON = false;   // 2026-11-13 检查员：「还没变成你的 → 用它说一句 → 先用母语说」这条路会落到演示句，先整条藏起来，等 AI 帮手做好再开
+const OPEN = new Set();
+const CABI = {c1: "🤝", c2: "💬", c3: "❤️", c4: "🙋", c5: "🧵", c6: "🔧"};
+/* 网上的短名字（跟样板一样，比抽屉的全名短，泡里写得下） */
+const DRS = [["打招呼","Saying hi"],["寒暄、闲聊","Small talk"],["介绍自己","Introducing yourself"],["道别","Saying bye"],["道谢","Thanks"],["道歉","Sorry"],["祝贺、祝福","Good wishes"],["安慰","Comforting"],["邀请","Inviting"],["说自己的事","Talking about me"],["讲一段经历","Telling a story"],["描述东西、地方","Describing a place"],["问事情","Asking things"],["好奇别人的事","Curious about you"],["其实不是这样","“Actually…”"],["开心、兴奋","Happy"],["难过、失望","Let down"],["担心、害怕","Worried"],["抱怨一下","Complaining"],["惊讶","Surprised"],["喜欢、不喜欢","Like / don't like"],["我觉得……","I think…"],["同意不同意","Agree or not"],["拿不准","Not sure"],["想要、打算","Plans"],["盼着","Looking forward"],["可惜","What a shame"],["都行","Either's fine"],["请人帮忙","Asking for help"],["出主意","Suggesting"],["主动帮忙","Offering help"],["提醒一下","A heads-up"],["打气","Cheering on"],["客气地说不","Saying no nicely"],["想一想、拖一下","Buying time"],["接着刚才说","Picking up the thread"],["举个例子","For example"],["开玩笑、接梗","Joking around"],["没听懂，再说一遍","“Sorry, again?”"],["想不起词，绕着说","Talking around a word"]];
+const netDr = n => { const r = DR40.find(x => x[0] === +n) || DR40[9]; const s = DRS[r[0] - 1]; return [r[0], r[1], s[0], UT(s[0], s[1])]; };
+const drShort = n => netDr(n)[UZ() ? 2 : 3];
+/* 远看小泡下面的短名字（2–4 个字） */
+const DRT = ["打招呼","寒暄","介绍自己","道别","道谢","道歉","祝福","安慰","邀请","我的日子","讲经历","描述","问事情","好奇你","其实","开心","难过","担心","抱怨","惊讶","喜欢","我觉得","同意","拿不准","打算","盼着","可惜","都行","请帮忙","出主意","帮忙","提醒","打气","说不","想一想","接着说","举例","开玩笑","没听懂","绕着说"];
+const DRTE = ["Hi","Small talk","Intro","Bye","Thanks","Sorry","Wishes","Comfort","Invite","My days","Story","Describe","Asking","About you","Actually","Happy","Sad","Worried","Complain","Surprise","Likes","I think","Agree?","Not sure","Plans","Hoping","Shame","Either","Help me","Suggest","Offer help","Heads-up","Cheer","No thanks","Thinking","Back to it","Example","Joking","Again?","Talk around"];
+const tinyName = g => VIEW === "mean" ? (UZ() ? DRT[+g.k - 1] : UT(DRT[+g.k - 1], DRTE[+g.k - 1])) || "" : String(keyLabel(g.k)).split(" ")[0];
+/* 字形：中文看部首（只用「真能帮你猜意思」的那些），英文看词根、前缀、后缀；声音：中文看声母、韵母，英文看音和拼法 */
+function keysFor(it){
+  const out = {}, add = (k, w) => (out[k] = out[k] || new Set()).add(w);
+  const SBW = (SN.by_word || {})[ZHL() ? "zh" : "en"] || {};
+  if (ZHL()) [...it.t].filter(isZh).forEach(ch => {
+    if (VIEW === "form") rootsOf(ch).forEach(r => { if (r.rad && RAD[r.rad] && !r.unsure && RAD[r.rad].meaningful) add(RAD[r.rad].rad, ch); });
+    else (SBW[ch] || []).filter(id => /^zh\.(ini|fin)\./.test(id)).forEach(id => add(id, ch));
   });
-  // 松一松：标签不要叠在一起
-  const ids = Object.keys(pos);
-  for (let it = 0; it < 80; it++){
-    let moved = false;
-    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++){
-      const A = pos[ids[i]], B = pos[ids[j]];
-      const ox = (A.w + B.w) / 2 + 4 - Math.abs(A.x - B.x), oy = (A.h + B.h) / 2 + 3 - Math.abs(A.y - B.y);
-      if (ox > 0 && oy > 0){
-        moved = true;
-        if (ox < oy){ const s = (A.x < B.x ? -1 : 1) * ox / 2; A.x += s; B.x -= s; }
-        else { const s = (A.y < B.y ? -1 : 1) * oy / 2; A.y += s; B.y -= s; }
-      }
-    }
-    for (const id of ids){ const q = pos[id]; q.x = Math.max(q.w / 2 + 4, Math.min(W - q.w / 2 - 4, q.x)); q.y = Math.max(16, Math.min(H - 16, q.y)); }
-    if (!moved) break;
-  }
-  // 人：在 TA 的说法外面
-  const ppos = {};
-  for (const who of d.order){
-    const mine = ordered.filter(p => p.who === who); if (!mine.length) continue;
-    let sx = 0, sy = 0; mine.forEach(p => { sx += Math.cos(pos[p.id].a); sy += Math.sin(pos[p.id].a); });
-    const a = Math.atan2(sy, sx), r = 182;
-    ppos[who] = {x: Math.max(16, Math.min(W - 16, CX + r * Math.cos(a))), y: Math.max(16, Math.min(H - 16, CY + r * Math.sin(a)))};
-  }
-  // 你说过的话：中间一圈
-  // 每一句放在它借来的说法那一边，线就不乱穿
-  const L = S.lines, n = L.length, opos = {};
-  const want = L.map(l => {
-    let sx = 0, sy = 0; l.uses.forEach(pid => { const q = pos[pid]; if (q){ sx += Math.cos(q.a); sy += Math.sin(q.a); } });
-    return {l, a: Math.atan2(sy, sx)};
-  }).sort((u, v) => u.a - v.a);
-  const step = 2 * Math.PI / Math.max(n, 1);
-  let best = 0, bestCost = Infinity;
-  for (let k = 0; k < 72; k++){
-    const off = k * 2 * Math.PI / 72; let cost = 0;
-    want.forEach((w, i) => { let dd = Math.abs(((off + i * step) - w.a + 3 * Math.PI) % (2 * Math.PI) - Math.PI); cost += dd * dd; });
-    if (cost < bestCost){ bestCost = cost; best = off; }
-  }
-  want.forEach((w, i) => {
-    const a = best + i * step, r = n > 8 ? (i % 2 ? 68 : 48) : 56;
-    opos[w.l.id] = {x: CX + r * Math.cos(a), y: CY + r * Math.sin(a)};
+  else (it.t.match(/[A-Za-z']+/g) || []).map(w => w.toLowerCase()).forEach(w => {
+    if (VIEW === "form") rootsOf(w).forEach(r => { if (r.part && ENR[r.part]) add(r.part, w); });
+    else (SBW[w] || []).filter(id => /^en\.(sound|spell)\./.test(id)).forEach(id => add(id, w));
   });
-  // 你在外面说的话：外圈一个小签，连回说它的那一页 / 那条线
-  const pins = {};
-  L.filter(l => l.user && l.it.src && (l.it.src.page === "net" || l.it.src.page === "map")).forEach(l => {
-    const o = opos[l.id], a = Math.atan2(o.y - CY, o.x - CX), lab = pinLabel(l.it);
-    const w = Math.min(110, measure(lab) + 14);
-    pins[l.id] = {x: Math.max(w / 2 + 4, Math.min(W - w / 2 - 4, CX + 196 * Math.cos(a))), y: Math.max(14, Math.min(H - 14, CY + 190 * Math.sin(a))), w, lab, url: HV.url(l.it.src)};
-  });
-  return {pos, ppos, opos, pins};
+  return Object.entries(out).map(([k, s]) => [k, [...s]]);
 }
-function pinLabel(it){
-  const src = it.src || {}, N = NET.nodes || {}, ui = UIk(), nm = n => n ? (ui === "zh" ? n.name.zh : n.name.en) : "";
-  let s = "";
-  if (src.node && N[src.node]) s = nm(N[src.node]);
-  if (src.page === "map" && src.g) s = src.g[0] === "n" && N[src.g.slice(2)] ? nm(N[src.g.slice(2)]) : (ui === "zh" ? src.g.slice(2) : (src.gEn || src.g.slice(2)));
-  if (src.line && src.page !== "map") { const l = (NET.lines || []).find(x => x.id === src.line); if (l && !src.node) s = nm(N[l.from]).replace(/（.*$|\s*\(.*$/, "") + "→" + nm(N[l.to]).replace(/（.*$|\s*\(.*$/, ""); }
-  if (!s && src.node && src.node.startsWith("field:")) s = src.node.slice(6);
-  s = (src.page === "map" ? "🗺️ " : "🕸️ ") + s.replace(/[《》]/g, "");
-  return [...s].length > 14 ? [...s].slice(0, 13).join("") + "…" : s;
+function keyLabel(k){
+  if (VIEW === "form") {
+    if (ZHL()) { const r = RAD[k]; return r ? `${radLook(r)} ${String(UZ() ? r.zh : r.en).split(/[；;]/)[0]}` : k; }
+    const p = ENR[k]; return p ? `${idShow(k)} ${String(UZ() ? p.zh : p.en).split(/[；;]/)[0]}` : idShow(k);
+  }
+  const m = k.match(/^(zh|en)\.(ini|fin|sound|spell)\.(.+)$/); if (!m) return k;
+  if (m[2] === "ini") return m[3] + "-"; if (m[2] === "fin") return m[3][0] === "-" ? m[3] : "-" + m[3];
+  if (m[2] === "sound") { const v = [...((SN.en || {}).vowels || []), ...((SN.en || {}).consonants || [])].find(x => x.ipa === m[3]); return `/${m[3]}/` + (v && v.spell ? " " + v.spell : ""); }
+  const sp = ((SN.en || {}).spelling || []).find(x => x.id === m[3]); return sp ? `${sp.pattern} → /${sp.sound}/` : m[3];
 }
-let _cv;
-function measure(t){
-  _cv = _cv || document.createElement("canvas").getContext("2d");
-  _cv.font = '600 11px -apple-system,"PingFang SC",sans-serif';
-  return _cv.measureText(t).width;
-}
+/* ───────── 布局：从第一句往外长；远看时一个抽屉一个泡 ───────── */
+const VW = 340, VH = 420; let CX = 170, CY = 210;
+let mctx = null;
+let FS = 9.5;   // 网里标签的字号（视框单位）；netSVG 按缩放倒推，保证手机上至少 11px
+const PH = () => FS * 1.7;
+const tw = (s, px = FS) => { mctx = mctx || document.createElement("canvas").getContext("2d"); mctx.font = `700 ${px}px -apple-system, "PingFang SC", sans-serif`; return mctx.measureText(s).width; };
 
-function drawNet(newIds){
-  newIds = newIds || [];
-  const d = d_(); const {pos, ppos, opos, pins} = layout();
-  let edges = "", nodes = "";
-  for (const p of visible()){
-    const q = pos[p.id], pp = ppos[p.who]; if (!pp) continue;
-    const col = d.circles[person(p.who).c].c;
-    edges += `<line class="e" data-a="w:${p.who}" data-b="p:${p.id}" x1="${pp.x}" y1="${pp.y}" x2="${q.x}" y2="${q.y}" stroke="${col}" stroke-opacity=".45" stroke-width="1.2" ${used(p) ? "" : 'stroke-dasharray="3 3"'}/>`;
+function layout(items, far, pad = {}) {
+ const WEB = far && items.length > 20;   // 句子多了远看：你在正中间，抽屉泡围着你，像一张蜘蛛网，一屏放下
+ const G = [], gi = {}, assign = [];
+ const mk = k => { if (!(k in gi)) { gi[k] = G.length; G.push({k, items:[], words:[]}); } return gi[k]; };
+ const freq = {};
+ if (VIEW !== "mean") items.forEach(it => keysFor(it).forEach(([kk]) => freq[kk] = (freq[kk] || 0) + 1));
+ items.forEach(it => {
+  const ks = VIEW === "mean" ? [[String(it.dr), []]] : keysFor(it);
+  if (!ks.length) { assign.push(null); return; }
+  const pick = VIEW === "mean" ? ks[0][0] : ks.slice().sort((a, b) => freq[a[0]] - freq[b[0]] || (a[0] < b[0] ? -1 : 1))[0][0];
+  const g = mk(pick); G[g].items.push(assign.length);
+  ks.forEach(([kk, words]) => { if (kk === pick) G[g].words.push(...words); });
+  assign.push({g, others:ks.filter(x => x[0] !== pick && gi[x[0]] != null).map(x => gi[x[0]])});
+ });
+ if (!G.length) return {empty:1};
+ const g0 = assign[0] ? assign[0].g : 0;
+ G.forEach((g, gidx) => {
+  g.old = g.items.filter(i => !(items[i].rec)); g.rec = g.items.filter(i => items[i].rec);
+  g.col = far && !OPEN.has(g.k) && (WEB ? g.old.length > 0 : g.old.length > 1);
+  const n = g.items.length;
+  const words = [...new Set(g.words)];
+  let base;
+  if (VIEW === "mean") { const r = netDr(+g.k); base = far && !WEB ? tinyName(g) : (UZ() ? r[2] : r[3]); g.cab = CABI[r[1]]; }   /* 一周远看：标签用短名字，网才不会被长标签撑宽、字缩到 11px 以下 */
+  else { base = keyLabel(g.k); const zf = ZHL(); if (!g.col && words.length) base += " · " + words.slice(0, zf ? 4 : 2).join(zf ? "" : ", "); }
+  g.wname = base;
+  g.label = g.col || (far && OPEN.has(g.k)) ? `${base} · ${n}${UZ() ? " 句" : ""}` : base;
+  if (g.label.length > 30) g.label = g.label.slice(0, 29) + "…";
+  g.pw = tw((g.cab ? g.cab + " " : "") + g.label) + 12 + (far && OPEN.has(g.k) ? 10 : 0);
+  const shown = g.col ? g.rec : g.items;
+  g.nb = VIEW === "mean" ? shown.filter(i => items[i].b).length : 0;
+  if (g.col) { g.rb = 10 + 4.2 * Math.sqrt(g.old.length); g.Rd = g.rb + (g.rec.length ? 15 : 3) + (g.nb ? 14 : 0); }
+  else { const STEP = 11.5, isR = gidx === g0; g.Rd = n ? STEP * Math.sqrt(Math.max(0, n - 1)) + (isR ? 9 : 6) : 6; if (g.nb) g.Rd += 14; }
+ });
+ let pillY = null, MORE = null, YOU = null, RINGS = [];
+ const GRID = !WEB && items.length > 20;   // 句子多了：一格一格排（像贴纸本），字才放得下；少的时候照旧从中间往外长
+ CX = 170; CY = 210;
+ if (WEB) {
+  /* 最多 12 个泡（句数最多的），其余合成「还有 N 个」；泡越大离你越近 */
+  CX = VW * WEBS / 2; CY = 0;   // WEBS：按卡片的宽高比把网横着拉开（电脑上铺满卡片宽度）
+  const vis = G.map((g, i) => i).filter(i => G[i].items.length).sort((x, y) => G[y].items.length - G[x].items.length || x - y);
+  const show = vis.slice(0, WEBMAX), more = vis.slice(WEBMAX);
+  more.forEach(i => { const g = G[i]; g.hidden = 1; g.x = -5000; g.y = -5000; g.py = -5000; });
+  show.forEach(i => { const g = G[i];
+   if (g.col) { g.rb = 12 + 5.7 * Math.sqrt(g.items.length) * (g.items.length > 20 ? BIGK : 1); g.nameLines = wrapName(g.wname, 1.3 * g.rb); if (g.nameLines && (g.nameLines.length + 1) * FS * 1.35 > 1.45 * g.rb) g.nameLines = null;   /* 名字离边线留空：横着按泡里那一行的弦长算，竖着也留边；放不下就写到泡下面 */ g.inName = !!g.nameLines;   /* 名字和数字要竖着放得进泡里 */ g.R = g.rb + (g.rec.length ? 19 : 4) + (g.nb ? 16 : 0); if (!g.inName) { g.tiny = tinyName(g); g.R = Math.max(g.R, g.rb + FS * 1.6, tw(g.tiny) / 2 + 4); } }
+   else g.R = Math.max(g.Rd, g.pw / 2) + PH() * .8; });
+  const youR = Math.max(22, FS * 2);
+  YOU = {r:youR};
+  const r1 = show.slice(0, 5), r2 = show.slice(5);
+  const m1 = Math.max(0, ...r1.map(i => G[i].R)), m2 = Math.max(0, ...r2.map(i => G[i].R));
+  const rho1 = youR + m1 + 14, rho2 = rho1 + m1 + m2 + 8;
+  RINGS = [rho1, rho2];
+  const place = (list, rho, off) => list.forEach((i, j) => { const a = -Math.PI / 2 + off + j * 2 * Math.PI / list.length; const g = G[i];
+   const rr = rho === rho1 ? youR + g.R + 14 : rho;   /* 里圈每个泡按自己的大小离你多远，小泡不用跟着最大的泡排那么远 */
+   g.tx = CX + Math.cos(a) * rr * .82 * WEBS; g.ty = CY + Math.sin(a) * rr * .98; g.x = g.tx; g.y = g.ty; });
+  place(r1, rho1, 0); place(r2, rho2, Math.PI / Math.max(1, r2.length));
+  for (let it = 0; it < 260; it++) {
+   show.forEach((i, ii) => { const A = G[i];
+    const dx0 = A.x - CX, dy0 = A.y - CY, d0 = Math.hypot(dx0, dy0) || .1, need0 = A.R + youR + 8; if (d0 < need0) { A.x += dx0 / d0 * (need0 - d0); A.y += dy0 / d0 * (need0 - d0); }
+    show.forEach((j, jj) => { if (jj <= ii) return; const B = G[j]; const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || .1, need = A.R + B.R + 6;
+     if (d < need) { const p = (need - d) / 2; A.x -= dx / d * p; A.y -= dy / d * p; B.x += dx / d * p; B.y += dy / d * p; } });
+   });
+   show.forEach(i => { const g = G[i]; g.x += (g.tx - g.x) * .02; g.y += (g.ty - g.y) * .02; g.x = Math.max(g.R + 3, Math.min(VW * WEBS - g.R - 3, g.x)); });
   }
-  for (const l of S.lines){
-    const o = opos[l.id];
-    for (const pid of l.uses){
-      const q = pos[pid]; if (!q) continue;
-      const mx = (o.x + q.x) / 2 + (CX - (o.x + q.x) / 2) * .25, my = (o.y + q.y) / 2 + (CY - (o.y + q.y) / 2) * .25;
-      edges += `<path class="e" data-a="o:${l.id}" data-b="p:${pid}" d="M${o.x},${o.y} Q${mx},${my} ${q.x},${q.y}" fill="none" stroke="#e2552f" stroke-opacity=".55" stroke-width="1.3"/>`;
+  show.forEach(i => { const g = G[i]; g.py = g.col ? g.y : g.y + g.Rd + PH() * .65; });
+  if (more.length) { let maxY = -1e9; show.forEach(i => maxY = Math.max(maxY, G[i].y + G[i].R)); const lab = UZ() ? `还有 ${more.length} 个 ›` : `${more.length} more ›`; MORE = {x:CX, y:maxY + PH() + 6, w:tw(lab) + 18, lab, list:more}; }
+ } else if (GRID) {
+  const rest = G.map((g, i) => i).filter(i => i !== g0 && G[i].items.length).sort((x, y) => G[y].items.length - G[x].items.length || x - y);
+  G.forEach(g => { if (!g.items.length) { g.x = -3000; g.y = -3000; } });
+  const seq = rest.slice(); seq.splice(Math.floor(rest.length / 2), 0, g0);
+  const cellW = i => 2 * (Math.max(G[i].Rd, G[i].pw / 2) + 7);
+  const rows = []; let cur = [];
+  seq.forEach(i => { const solo = i === g0;
+   if (solo) { if (cur.length) rows.push(cur); rows.push([i]); cur = []; return; }
+   if (cur.reduce((s, j) => s + cellW(j), 0) + cellW(i) > VW - 4 && cur.length) { rows.push(cur); cur = []; }
+   cur.push(i); });
+  if (cur.length) rows.push(cur);
+  let top = 6;
+  rows.forEach((row, ri) => {
+   const ws = row.map(cellW), sum = ws.reduce((s, x) => s + x, 0), gap = (VW - sum) / (row.length + 1);
+   /* 这一行的泡借了几个人的说法，就在上面多留几行空，给人的脸和名字 */
+   const pc = far && VIEW === "mean" ? Math.min(1, [0].concat(row.map(i => G[i].col ? new Set(G[i].old.filter(q => items[q].b).map(q => items[q].b.who)).size : 0)).reduce((s, x) => s + x, 0)) : 0;
+   top += pc * (Math.max(10, FS * 1.05) * 2 + FS * 1.4 + 14) + (pad[ri] || 0);
+   let x = gap; const H = Math.max(...row.map(i => 2 * G[i].Rd + PH() * 1.3 + 12));
+   row.forEach((i, j) => { const g = G[i]; g.x = x + ws[j] / 2; x += ws[j] + gap; g.y = top + 6 + g.Rd; g.py = g.y + g.Rd + PH() * .65; g.fixed = true; g.row = ri; });
+   top += H + 16;
+  });
+  CX = G[g0].x; CY = G[g0].y;
+ } else {
+ G[g0].x = CX; G[g0].y = CY; G[g0].fixed = true;
+  let k = 0;
+  G.forEach((g, gidx) => { if (gidx === g0) return;
+   if (!g.items.length) { g.x = g.tx = -3000 - gidx * 50; g.y = g.ty = -3000; g.fixed = true; return; }
+   const a = -Math.PI / 2 + (k + 1) * 2.39996 + 0.4; const rr = 70 + 16 * Math.sqrt(k);
+   g.tx = CX + Math.cos(a) * rr * 0.92; g.ty = CY + Math.sin(a) * rr * 1.2; g.x = g.tx; g.y = g.ty; k++; });
+  pillY = (g, gidx) => (gidx === g0 || g.y >= CY) ? g.y + g.Rd + PH() * .65 : g.y - g.Rd - PH() * .65;
+  const box = (g, gidx) => { const py = pillY(g, gidx); const hw = Math.max(g.Rd, g.pw / 2); return {l:g.x - hw, r:g.x + hw, t:Math.min(g.y - g.Rd, py - PH() / 2), b:Math.max(g.y + g.Rd, py + PH() / 2)}; };
+  for (let it = 0; it < 240; it++) {
+   for (let i = 0; i < G.length; i++) for (let j = i + 1; j < G.length; j++) {
+    const A = G[i], B = G[j]; if (!A.items.length || !B.items.length) continue;
+    const a = box(A, i), b = box(B, j), m = 5;
+    const ox = Math.min(a.r, b.r) - Math.max(a.l, b.l) + m, oy = Math.min(a.b, b.b) - Math.max(a.t, b.t) + m;
+    if (ox > 0 && oy > 0) {
+     const sx = (B.x >= A.x ? 1 : -1), sy = (B.y >= A.y ? 1 : -1);
+     const fa = A.fixed ? 0 : B.fixed ? 1 : .5, fb = 1 - fa;
+     if (ox < oy) { A.x -= sx * ox * fa; B.x += sx * ox * fb; } else { A.y -= sy * oy * fa; B.y += sy * oy * fb; }
     }
+   }
+   G.forEach(g => { if (g.fixed) return; g.x += (g.tx - g.x) * 0.015; g.y += (g.ty - g.y) * 0.015; });
   }
-  for (const id in pins){ const o = opos[id], q = pins[id];
-    edges += `<line class="e" data-a="o:${id}" data-b="s:${id}" x1="${o.x}" y1="${o.y}" x2="${q.x}" y2="${q.y}" stroke="#14305c" stroke-opacity=".35" stroke-width="1" stroke-dasharray="2 3"/>`;
-    nodes += `<g class="n pin" data-k="s:${id}" data-url="${esc(q.url)}"><rect x="${q.x - q.w / 2}" y="${q.y - 9}" width="${q.w}" height="18" rx="9"/><text x="${q.x}" y="${q.y + 3.5}" text-anchor="middle">${esc(q.lab)}</text></g>`; }
-  // 中心
-  nodes += `<g class="me"><circle cx="${CX}" cy="${CY}" r="19" fill="#fff" stroke="#e2552f" stroke-width="1.5" stroke-dasharray="2 2.5"/><text x="${CX}" y="${CY + 4.5}" text-anchor="middle">${esc(HV.items(TLg()).length ? (UIk() === "zh" ? "你" : "You") : d.me)}</text></g>`;
-  // 说法
-  for (const p of visible()){
-    const q = pos[p.id], col = d.circles[person(p.who).c].c, u = used(p);
-    nodes += `<g class="n tagn ${u ? "" : "unused"} ${newIds.includes("p:" + p.id) ? "pop" : ""}" data-k="p:${p.id}" style="transform-origin:${q.x}px ${q.y}px"><rect class="tg" x="${q.x - q.w / 2}" y="${q.y - q.h / 2}" width="${q.w}" height="${q.h}" rx="10.5" stroke="${u ? col : "#a5adbd"}"/><text x="${q.x}" y="${q.y + 4}" text-anchor="middle">${esc(q.label)}</text></g>`;
   }
-  // 人
-  for (const who in ppos){
-    const q = ppos[who], col = d.circles[person(who).c].c;
-    nodes += `<g class="n" data-k="w:${who}"><clipPath id="cp_${who}"><circle cx="${q.x}" cy="${q.y}" r="13"/></clipPath><circle cx="${q.x}" cy="${q.y}" r="15" fill="#fff" stroke="${col}" stroke-width="1.5"/><image href="${face(who)}" x="${q.x - 13}" y="${q.y - 13}" width="26" height="26" clip-path="url(#cp_${who})" preserveAspectRatio="xMidYMid slice"/></g>`;
+ const pos = [];
+ G.forEach((g, gidx) => {
+  if (g.hidden) { g.items.forEach(idx => { pos[idx] = {x:g.x, y:g.y, g:gidx, hid:1}; }); return; }
+  if (!GRID && !WEB) g.py = pillY(g, gidx);
+  const out = Math.atan2(g.y - CY, g.x - CX) || -Math.PI / 2;
+  const isR = gidx === g0;
+  if (g.col) {
+   g.rec.forEach((idx, j) => { const a = out + (j - (g.rec.length - 1) / 2) * 0.62; const r = g.rb + 9;
+    pos[idx] = {x:g.x + Math.cos(a) * r, y:g.y + Math.sin(a) * r, g:gidx}; });
+   g.old.forEach(idx => { pos[idx] = {x:g.x, y:g.y, g:gidx, hid:1}; });
+  } else {
+   const sub = g.items.filter(i => i !== 0);
+   g.items.forEach(idx => {
+    let x, y;
+    if (idx === 0) { x = g.x; y = g.y; }
+    else { const j = sub.indexOf(idx) + (isR ? 1 : 0);
+     if (!isR && j === 0) { x = g.x; y = g.y; }
+     else { const a = j * 2.39996 + gidx; const r = isR ? 11.5 * Math.sqrt(j) + 6 : 11.5 * Math.sqrt(j); x = g.x + Math.cos(a) * r; y = g.y + Math.sin(a) * r; } }
+    pos[idx] = {x, y, g:gidx};
+   });
   }
-  // 你的话
-  const icon = {answer:"💬",think:"🗣️",like:"❤️",coll:"📌",line:"🔗",fresh:"🌱",you:"★"};
-  for (const l of S.lines){
-    const o = opos[l.id];
-    nodes += `<g class="n own ${l.user ? "you" : "demo"} ${newIds.includes("o:" + l.id) ? "pop fresh" : ""}" data-k="o:${l.id}" style="transform-origin:${o.x}px ${o.y}px"><circle cx="${o.x}" cy="${o.y}" r="13"/><text x="${o.x}" y="${o.y + 4}" text-anchor="middle">${l.user ? ({net:"🕸️", map:"🗺️", mylang:"🌱"}[l.it.page] || "★") : (icon[l.k] || "💬")}</text></g>`;
+  g.items.forEach(idx => { const p = pos[idx], it = items[idx];
+   if (p.hid || !it.b || VIEW !== "mean") return;
+   const ang = (Math.abs(p.x - g.x) < .1 && Math.abs(p.y - g.y) < .1) ? (idx === 0 ? -Math.PI / 2 : out) : Math.atan2(p.y - g.y, p.x - g.x);
+   p.bx = p.x + Math.cos(ang) * 15; p.by = p.y + Math.sin(ang) * 15; });
+ });
+ /* 远看：收在泡里的借来的说法，按人合成一条粗线 */
+ const PN = [];
+ if (far && VIEW === "mean") {
+  /* 每个借来的人，按 TA 在哪个泡里，放在那个泡外侧最近的空地；脸用短线连过去，名字写在脸的外侧 */
+  const pairs = {};
+  G.forEach((g, gidx) => { if (!g.col || g.hidden) return; g.old.forEach(i => { const b = items[i].b; if (!b) return; const key = String(gidx); const o = pairs[key] = pairs[key] || {whos:[], g:gidx, n:0}; o.n++; if (!o.whos.includes(b.who)) o.whos.push(b.who); o.who = o.whos[0]; }); });
+  Object.values(pairs).forEach(o => { if (o.whos.length > 3) { o.more = o.whos.length - 3; o.whos = o.whos.slice(0, 3); } });   // 一个泡里借了好多人的：脸最多并排 3 张，名字写「等 N 人」
+  const rects0 = [], circs0 = []; let rects, circs;
+  G.forEach(g => { if (!g.items.length || g.hidden) return; if (!(WEB && g.col)) rects0.push([g.x - g.pw / 2 - 2, g.py - PH() / 2 - 2, g.x + g.pw / 2 + 2, g.py + PH() / 2 + 2]); if (WEB && g.tiny) { const hw = tw(g.tiny) / 2 + 3, ty = g.y + g.rb + FS * 1.35; rects0.push([g.x - hw, ty - FS * 1.1, g.x + hw, ty + FS * .4]); }   /* 泡下面的短名字也不能被脸压住 */ circs0.push([g.x, g.y, (g.col ? g.rb + 3 : 6)]); });
+  if (YOU) circs0.push([CX, CY, YOU.r + 4]);
+  /* 蜘蛛网的线也不能穿过人名 */
+  const webSegs = WEB ? G.filter(g => g.items.length && !g.hidden).map(g => [CX, CY, g.x, g.y]) : [];
+  const segInRect = Lr => webSegs.some(s => { for (let t = 0; t <= 1; t += .04) { const x = s[0] + (s[2] - s[0]) * t, y = s[1] + (s[3] - s[1]) * t; if (x > Lr[0] && x < Lr[2] && y > Lr[1] && y < Lr[3]) return true; } return false; });
+  if (MORE) rects0.push([MORE.x - MORE.w / 2 - 2, MORE.y - PH() / 2 - 2, MORE.x + MORE.w / 2 + 2, MORE.y + PH() / 2 + 2]);
+  pos.forEach(p => { if (p && !p.hid) circs0.push([p.x, p.y, 10]); if (p && p.bx != null) circs0.push([p.bx, p.by, 9]); });
+  const rc = (r, x, y, rad) => { const cx = Math.max(r[0], Math.min(x, r[2])), cy = Math.max(r[1], Math.min(y, r[3])); return Math.hypot(cx - x, cy - y) < rad; };
+  const rr = (A, B) => A[0] < B[2] && A[2] > B[0] && A[1] < B[3] && A[3] > B[1];
+  const segHits = (x1, y1, x2, y2) => { for (let t = 0.05; t <= 0.95; t += 0.075) { const x = x1 + (x2 - x1) * t, y = y1 + (y2 - y1) * t; if (rects.some(r => x > r[0] && x < r[2] && y > r[1] && y < r[3])) return true; } return false; };
+  /* 摆几种先后顺序，挑压得最少的那一种 */
+  const P0 = Object.values(pairs);
+  const orders = [P0.slice().sort((x, y) => y.n - x.n), P0.slice().sort((x, y) => x.n - y.n), P0.slice().sort((x, y) => G[x.g].y - G[y.g].y || G[y.g].x - G[x.g].x), P0.slice().sort((x, y) => G[y.g].x - G[x.g].x)];
+  orders.push(...orders.map(o => o.slice().reverse()), P0.slice().sort((x, y) => x.who < y.who ? -1 : 1), P0.slice().sort((x, y) => x.who > y.who ? -1 : 1));
+  let bestRun = null;
+  for (const ord of orders) {
+  rects = rects0.slice(); circs = circs0.slice(); const run = [];
+  ord.forEach(o0 => { const o = Object.assign({}, o0);
+   const g = G[o.g]; const out = GRID ? -Math.PI / 2 + (g.x < VW / 2 ? -.55 : .55) : Math.hypot(g.x - CX, g.y - CY) < 1 ? -Math.PI / 2 : Math.atan2(g.y - CY, g.x - CX);   // 一格一格排时：左边的泡往左上放，右边的往右上放
+   const lab = pnLabel(o), fr = Math.max(10, FS * 1.05);
+   const ns = pnNames(o), nj = pnJoin(o);
+   const two = UZ() ? [`从 ${nj}`, `借了 ${o.n} 个说法`] : [`${o.n} ${o.n > 1 ? "phrases" : "phrase"} from`, nj];   // 两行时只在「from」和人名之间断开，人名不拆
+   const variants = far ? [[""]] : [[lab], two];   // 远看：「N 个说法从…」写在网外面（图例那一排），网里只放脸
+   const offs = []; for (let q = 0; q < 36; q++) offs.push((q % 2 ? -1 : 1) * Math.ceil(q / 2) * Math.PI / 18);
+   let bestP = 1e9;
+   let best = null, found = false;
+   for (const d of [4, 10, 18, 28, 40, 54, 70, 88, 108, 130].map(x => g.rb + fr + x)) { for (const off of offs) {
+    const an = out + off, fx = g.x + Math.cos(an) * d, fy = g.y + Math.sin(an) * d;
+    const c = Math.cos(an), s = Math.sin(an);
+    const kk = o.whos.length, x0 = fx - (kk - 1) * fr * .75;   // 几张脸并排，中间是 fx
+    const F = [x0 - fr, fy - fr, x0 + (kk - 1) * fr * 1.5 + fr, fy + fr];
+    const sx = g.x + c * g.rb, sy = g.y + s * g.rb, ex = fx - c * fr, ey = fy - s * fr;
+    /* 名字先写在脸的外侧（离泡远的那一边），放不下再试别的边 */
+    const sides = [];
+    variants.forEach(lines => { const lw = Math.max(...lines.map(x => tw(x))), hh = lines.length * FS * 1.15, h2 = hh / 2;
+     sides.push([[F[2] + 3, fy - h2 - FS * .1, F[2] + 3 + lw, fy + h2], "start", F[2] + 3, fy - h2 + FS * .85, lines],
+      [[F[0] - 3 - lw, fy - h2 - FS * .1, F[0] - 3, fy + h2], "end", F[0] - 3, fy - h2 + FS * .85, lines],
+      [[fx - lw / 2, fy - fr - hh - FS * .2, fx + lw / 2, fy - fr - FS * .1], "middle", fx, fy - fr - hh + FS * .75, lines],
+      [[fx - lw / 2, fy + fr + FS * .1, fx + lw / 2, fy + fr + hh + FS * .2], "middle", fx, fy + fr + FS * 1.05, lines]); });
+    sides.sort((p, q) => { const sc = v => (v[1] === "start" ? c : v[1] === "end" ? -c : v[3] < fy ? -s : s) - (v[4].length - 1) * .3; return sc(q) - sc(p); });
+    for (const [L, anc, lx, ly, lines] of sides) {
+     const XW = WEB ? VW * WEBS : VW, oob = (F[0] < 2 || F[2] > XW - 2 || L[0] < 2 || L[2] > XW - 2);
+     const nR = rects.filter(r => rr(r, L) || rr(r, F)).length, nS = segHits(sx, sy, ex, ey) || [L].some(Lr => { for (let t = .05; t <= .95; t += .075) { const x = sx + (ex - sx) * t, y = sy + (ey - sy) * t; if (x > Lr[0] && x < Lr[2] && y > Lr[1] && y < Lr[3]) return true; } return false; });
+     const nW = segInRect(L) ? 1 : 0;
+     /* 短线也不能穿过别的泡和点 */
+     const segD = (px, py) => { const vx = ex - sx, vy = ey - sy, t = Math.max(0, Math.min(1, ((px - sx) * vx + (py - sy) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(sx + vx * t - px, sy + vy * t - py); };
+     const nB = circs.filter(k => !(Math.abs(k[0] - g.x) < .5 && Math.abs(k[1] - g.y) < .5) && segD(k[0], k[1]) < k[2]).length;
+     const nC = circs.filter(k => rc(L, k[0], k[1], k[2]) || Math.hypot(k[0] - fx, k[1] - fy) < k[2] + fr).length;
+     const cand = {x:fx, y:fy, lx, ly, anc, L, F, sx, sy, ex, ey, fr, lines};
+     if (!oob && !nR && !nS && !nC && !nW && !nB) { best = cand; found = true; break; }
+     /* 都不行就挑压得最少的：出卡片最重，再是压字，再是压点 */
+     const pen = (oob ? 100 : 0) + nR * 10 + (nS ? 10 : 0) + nC * 5 + nB * 5 + nW;   // 压点、压绿圈比压到网线更不行；压网线时名字有白边，线从字下面断开
+     if (pen < bestP) { bestP = pen; best = cand; }
+    }
+    if (found) break;
+   } if (found) break; }
+   Object.assign(o, best, {pen: found ? 0 : bestP}); run.push(o);
+   rects.push([o.L[0] - 2, o.L[1] - 2, o.L[2] + 2, o.L[3] + 2]); circs.push([o.x, o.y, o.fr + 3]);
+  });
+  const tot = run.reduce((s, o) => s + o.pen, 0);
+  if (!bestRun || tot < bestRun.tot) bestRun = {tot, run};
+  if (!tot) break;
   }
-  return `<svg class="net" id="net" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(d.title)}">${edges}${nodes}</svg>`;
+  if (bestRun) PN.push(...bestRun.run);
+ }
+ /* 视框：只看有东西的那一块；点少时放大，长大了慢慢拉远 */
+ let l = 1e9, r = -1e9, t = 1e9, b = -1e9;
+ const ext = (x, y, e) => { l = Math.min(l, x - e); r = Math.max(r, x + e); t = Math.min(t, y - e); b = Math.max(b, y + e); };
+ G.forEach(g => { if (!g.items.length || g.hidden) return; if (!(WEB && g.col)) { ext(g.x - g.pw / 2, g.py, 10); ext(g.x + g.pw / 2, g.py, 10); } if (g.col) ext(g.x, g.y, g.rb + 4); if (g.tiny) { ext(g.x - tw(g.tiny) / 2, g.y + g.rb + FS * 1.6, 3); ext(g.x + tw(g.tiny) / 2, g.y + g.rb + FS * 1.6, 3); } });
+ if (YOU) ext(CX, CY, YOU.r + 6);
+ if (MORE) { ext(MORE.x - MORE.w / 2, MORE.y, 10); ext(MORE.x + MORE.w / 2, MORE.y, 10); }
+ pos.forEach(p => { if (!p || p.hid) return; ext(p.x, p.y, 10); if (p.bx != null) ext(p.bx, p.by, 10); });
+ PN.forEach(o => { ext(o.x, o.y, o.fr + 4); ext(o.F[0], o.F[1], 3); ext(o.F[2], o.F[3], 3); if (o.L[2] > o.L[0]) { ext(o.L[0], o.L[1], 4); ext(o.L[2], o.L[3], 4); } });   // 几张脸并排：整排都要在视框里
+ if (items.length <= 3 && VIEW === "mean") pos.forEach((p, i) => { if (!p) return; const w = tw(snip(items[i].t), FS) / 2 + 6; const g = G[p.g]; const sy = i === 0 ? g.py + PH() / 2 + FS * 1.2 : (g.py > g.y ? p.y - 11 : p.y + 17); ext(p.x - w, sy, 6); ext(p.x + w, sy, 6); });
+ if (items.length === 1) ext(CX + 120, CY - 52, 6);
+ t -= 12;   // 标签别贴着卡片顶边（右上角还有「远看 / 近看」）
+ const AR = .85;   // 点少时网扁一点（第一天一个点别占一整屏）
+ let w = Math.max(r - l, 210), h = Math.max(b - t, 210 * AR), vx, vy;
+ if (WEB) { w = r - l; vx = l; h = b - t; vy = t; }   // 远看：视框正好包住整张网，网在卡片里居中
+ else if (GRID) { w = Math.max(VW, r - l); vx = r - l <= VW ? Math.min(0, l) : l; h = b - t; vy = t; }
+ else { if (w / h > 1 / AR) h = w * AR; else w = h / AR; vx = (l + r) / 2 - w / 2; vy = (t + b) / 2 - h / 2; }
+ return {G, pos, assign, g0, PN, w, h, WEB, MORE, YOU, RINGS, CX, CY, box: [vx, vy, w, h], vb:`${vx.toFixed(1)} ${vy.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`};
 }
+/* 泡里写名字：放得下就写，最多两行；放不下返回 null（小泡只写数字） */
+function wrapName(s, maxw) {
+ /* 只在顿号、斜杠、空格处换行，人名和词不拆开：有顿号就在顿号后；否则在第一个空格（「辶 / to go」「/tʃ/ / ch / tch」「Talking / about me」） */
+ if (tw(s) <= maxw) return [s];
+ let parts = null;
+ const i = s.indexOf("、"), j = s.indexOf(" ");
+ if (i > 0) parts = [s.slice(0, i + 1), s.slice(i + 1)];
+ else if (j > 0) parts = [s.slice(0, j), s.slice(j + 1)];
+ return parts && parts.every(x => tw(x) <= maxw) ? parts : null;
+}
+const snip = t => t.length > 18 ? t.slice(0, 17) + "…" : t;
+const pnNames = o => (o.whos || [o.who]).map(nmShort);
+const pnJoin = o => { const ns = pnNames(o); if (o.more) return UZ() ? `${ns.join("、")} 等 ${ns.length + o.more} 人` : `${ns.join(", ")} & ${o.more} more`; return UZ() ? ns.join("、") : (ns.length > 1 ? ns.slice(0, -1).join(", ") + " & " + ns[ns.length - 1] : ns[0]); };
+const pnLabel = o => UZ() ? `从 ${pnJoin(o)} 借了 ${o.n} 个说法` : `${o.n} ${o.n > 1 ? "phrases" : "phrase"} from ${pnJoin(o)}`;
 
-function focusNet(keys){
-  const svg = $("net"); if (!svg) return;
-  svg.querySelectorAll(".hl").forEach(e => e.classList.remove("hl"));
-  if (!keys){ svg.classList.remove("focus"); return; }
+function netSVG(items, opt = {}) {
+ const far = opt.mini ? false : FAR;
+ items.forEach(it => it.rec = isRecentIn(it, items));
+ let L; const mini0 = opt.mini;
+ if (mini0) { FS = 9.5; L = layout(items, far); }
+ else {   // 屏幕上的字 11–13px：网按卡片宽度放大（手机铺满，电脑最宽 720），倒推字号（视框单位最大 13，免得字比泡大）。
+   // 远看还要整张放进一屏（高度 availH）：放不下就少放几个泡（12 → 9 → 7 → 5，其余收进「还有 N 个」）；还放不下就不管高度，在卡片里滚
+  const sp = parseFloat(getComputedStyle(scr).paddingLeft) || 14, cw0 = $("netcard") ? $("netcard").clientWidth : Math.min(scr.clientWidth - 2 * sp + (PHONE() ? 8 : 0), 760);   // 第一次还没有卡片：按页面内容宽度算（手机上卡片两边各多出 4px）
+  const cw = cw0 || 340, maxW = Math.max(200, Math.min(cw - 6, 720)); let maxH = availH();   // 网永远不比卡片宽（留 3px 边）
+  const pad = {}, caps = PHONE() ? [12, 9, 7, 5] : [12, 9, 7, 5, 3, 1]; let ci = 0, fitH = far, grown = false; BIGK = 1;   // 手机上至少放 5 个泡
+  const fit = L => { let sc = maxW / L.w; if (items.length <= 20) sc = Math.min(sc, 1.7); if (fitH) sc = Math.min(sc, maxH / L.h); return sc; };
+  FS = 9.5; WEBMAX = caps[0]; WEBS = 1; let stretched = false;
+  for (let t = 0; t < 40; t++) {
+   L = layout(items, far, pad); if (L.empty) break;
+   if (L.WEB && fitH && !stretched) { stretched = true; const k = (maxW / maxH) / (L.w / L.h); if (k > 1.2) { WEBS = Math.min(2.2, k); continue; } }   // 卡片比网宽：把网横着拉开，铺满宽度
+   const sc = fit(L), need = Math.max(11.3 / sc, 5);
+   const bad = !far && items.length > 20 ? (L.PN || []).filter(o => o.pen > 0) : [];
+   bad.forEach(o => { const r = L.G[o.g].row; if (r != null) pad[r] = (pad[r] || 0) + 50; });
+   if (need > 13) {   // 这么排字会比泡还大：少放几个泡，或者不再硬塞进一屏
+    if (L.WEB && ci < caps.length - 1) { WEBMAX = caps[++ci]; FS = 9.5; WEBS = 1; stretched = false; continue; }
+    if (fitH && !PHONE()) { fitH = false; ci = 0; WEBMAX = caps[0]; FS = 9.5; continue; }   // 电脑上少放也塞不进一屏：放回 12 个泡，在卡片里往下滚
+    if (L.WEB && PHONE() && !grown) { grown = true; maxH = availH(true); ci = 0; WEBMAX = caps[0]; FS = 9.5; WEBS = 1; stretched = false; continue; }   // 手机上 5 个泡也放不下：卡片长高（卡片里仍然不滚）
+    if (L.WEB && PHONE() && BIGK > .55) { BIGK -= .15; FS = 9.5; WEBS = 1; stretched = false; continue; }   // 还放不下：把最大的泡画小一点
+    if (fitH && PHONE()) { fitH = false; continue; }   // 实在放不下（极少）：才在卡片里滚
+   }
+   if (Math.abs(need - FS) < .12 && !bad.length) break;
+   FS = Math.min(need, 13);
+  }
+  if (L && !L.empty) { let sc = fit(L);
+   for (let t = 0; t < 5 && (FS * sc < 11.05 || FS * sc > 13.5); t++) { FS = Math.min(13, 11.4 / sc * (t ? 1.03 : 1)); L = layout(items, far, pad); sc = fit(L); }   // 字号和网的大小互相牵着，再对几遍
+   L.sc = Math.min(sc, maxW / L.w); }
+  WEBMAX = 12; NETMAXH = maxH;
+ }
+ if (L.empty) return `<div class="netempty">${esc(UT("多说几句，这张网才会长出来", "Say a few more lines and this web will grow"))}</div>`;
+ const {G, pos, assign, g0, PN} = L;
+ const FRS = opt.fresh instanceof Set ? opt.fresh : new Set(opt.fresh != null ? [opt.fresh] : []), seq = opt.seq, mini = opt.mini, scat = opt.scat;
+ if (!mini) { LASTG = G; LASTPN = PN || []; }
+ let ed = "", nd = "", pl = "", k = 0;
+ const dl = i => seq ? `style="animation-delay:${Math.min(i, 50) * 22}ms"` : "";
+ G.forEach((g, gidx) => {
+  if (!g.items.length) return;
+  const newG = g.items.length === 1 && FRS.has(g.items[0]);
+  if (g.hidden) return;
+  if (L.WEB) {   // 蜘蛛网：从「你」连到每个泡
+   const dx = g.x - CX, dy = g.y - CY, d = Math.hypot(dx, dy) || 1, r0 = L.YOU.r, r1 = g.col ? g.rb + 3 : 6;
+   ed += `<line class="e1 web ${seq ? "lseq" : ""}" data-g="${gidx}" x1="${(CX + dx / d * r0).toFixed(1)}" y1="${(CY + dy / d * r0).toFixed(1)}" x2="${(g.x - dx / d * r1).toFixed(1)}" y2="${(g.y - dy / d * r1).toFixed(1)}"/>`;
+  } else if (gidx !== g0 && items.length <= 20) {   // 一格一格排的时候不画从中间出来的线，免得穿过字
+   const mx = (CX + g.x) / 2 + (g.y - CY) * 0.18, my = (CY + g.y) / 2 - (g.x - CX) * 0.18;
+   ed += `<path class="e1 ${newG ? "draw" : seq ? "lseq" : ""}" pathLength="1" data-g="${gidx}" d="M${CX},${CY} Q${mx.toFixed(1)},${my.toFixed(1)} ${g.x.toFixed(1)},${g.y.toFixed(1)}" ${dl(k)}/>`;
+  }
+  const ly = g.py, open = far && OPEN.has(g.k);
+  const edgeY = g.col ? (ly > g.y ? g.y + g.rb : g.y - g.rb) : g.y;
+  if (!(L.WEB && g.col)) ed += `<line class="e2 ${seq ? "lseq" : ""}" data-g="${gidx}" x1="${g.x.toFixed(1)}" y1="${edgeY.toFixed(1)}" x2="${g.x.toFixed(1)}" y2="${(ly + (ly > g.y ? -1 : 1) * PH() / 2).toFixed(1)}" ${dl(k)}/>`;
+  if (g.col) {
+   /* 蜘蛛网里：大泡把名字和数字写在泡里，小泡只写数字（点了再出名字） */
+   const NL = g.nameLines || [], y0 = g.y - (NL.length * FS * 1.35) / 2 + FS * .3;
+   const inner = L.WEB ? (g.inName ? NL.map((ln, j) => `<text class="bubt" x="${g.x.toFixed(1)}" y="${(y0 + j * FS * 1.35).toFixed(1)}" text-anchor="middle">${esc(ln)}</text>`).join("") + `<text class="bubn" x="${g.x.toFixed(1)}" y="${(y0 + NL.length * FS * 1.35 + FS * .15).toFixed(1)}" text-anchor="middle">${g.items.length}</text>` : `<text class="bubn" x="${g.x.toFixed(1)}" y="${(g.y + FS * .4).toFixed(1)}" text-anchor="middle">${g.items.length}</text>`) : `<text class="bubn" x="${g.x.toFixed(1)}" y="${(g.y + 4).toFixed(1)}" text-anchor="middle">${g.items.length}</text>`;
+   nd += `<g class="bub-g g ${seq ? "seq" : ""}" data-bub="${gidx}" data-k="${esc(g.k)}" ${dl(k)}><title>${esc(g.wname)} · ${g.items.length}</title><circle class="bubs" cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="${(g.rb + 3).toFixed(1)}"/><circle class="bubc" cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="${g.rb.toFixed(1)}"/>${inner}${L.WEB && g.tiny ? `<text class="bubsn" x="${g.x.toFixed(1)}" y="${(g.y + g.rb + FS * 1.35).toFixed(1)}" text-anchor="middle">${esc(g.tiny)}</text>` : ""}</g>`;
+  }
+  const lab = (g.cab ? g.cab + " " : "") + g.label + (open ? "  ▴" : "");
+  if (!(L.WEB && g.col)) pl += `<g class="pill g ${open ? "open" : ""} ${seq ? "seq" : ""} ${newG ? "grow" : ""}" data-g="${gidx}" data-k="${esc(g.k)}" ${dl(k)}><rect x="${(g.x - g.pw / 2).toFixed(1)}" y="${(ly - PH() / 2).toFixed(1)}" width="${g.pw.toFixed(1)}" height="${PH().toFixed(1)}" rx="${(PH() / 2).toFixed(1)}"/><text x="${g.x.toFixed(1)}" y="${(ly + FS * .35).toFixed(1)}" text-anchor="middle">${esc(lab)}</text></g>`;
+  k++;
+ });
+ items.forEach((it, idx) => {
+  const p = pos[idx]; if (!p || p.hid) return;
+  const g = G[p.g]; const nw = FRS.has(idx);
+  const sc = scat != null && g.k === scat && !it.rec;
+  const anim = nw ? "grow" : sc ? "scat" : seq ? "seq" : "";
+  const sty = sc ? `style="--fx:${(g.x - p.x).toFixed(1)}px;--fy:${(g.y - p.y).toFixed(1)}px;animation-delay:${(idx % 12) * 25}ms"` : (seq ? dl(idx) : "");
+  const x1 = g.col ? g.x + (p.x - g.x) * (g.rb / Math.hypot(p.x - g.x, p.y - g.y)) : g.x, y1 = g.col ? g.y + (p.y - g.y) * (g.rb / Math.hypot(p.x - g.x, p.y - g.y)) : g.y;
+  if (idx !== 0 || g.col) ed += `<line class="e2 ${nw ? "draw" : seq ? "lseq" : ""}" pathLength="1" data-i="${idx}" data-g="${p.g}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" ${seq ? dl(idx) : ""}/>`;
+  (assign[idx]?.others || []).filter(og => G[og].items.length && !far).slice(0, 1).forEach(og => { const o = G[og]; ed += `<line class="e4" data-i="${idx}" x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${o.x.toFixed(1)}" y2="${o.y.toFixed(1)}"/>`; });
+  const r = idx === 0 && !far ? 8.5 : (mini ? 4.6 : 5.6);
+  nd += `<g class="own g ${idx === 0 && !far ? "root" : ""} ${anim}" data-i="${idx}" data-g="${p.g}" ${sty}>${idx === 0 && !mini && !far ? `<circle class="ring" cx="${p.x}" cy="${p.y}" r="${r}"/>` : ""}${(it.n || 1) > 1 ? `<circle class="ripe" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r + 3.2}"/>` : ""}<circle class="d" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}"/>${nw ? `<circle class="ripple" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}"/>` : ""}${mini ? "" : `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="12" fill="transparent"/>`}</g>`;
+  if (p.bx != null) {
+   const br = mini ? 5 : 7.5, cid = `c${opt.uid || "n"}${idx}`;
+   ed += `<line class="e3 ${nw ? "draw" : seq ? "lseq" : ""}" pathLength="1" data-i="${idx}" data-g="${p.g}" x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${p.bx.toFixed(1)}" y2="${p.by.toFixed(1)}"/>`;
+   nd += `<g class="bor g ${nw ? "grow" : sc ? "scat" : seq ? "seq" : ""}" data-b="${idx}" data-g="${p.g}" style="${nw ? "animation-delay:.45s" : sc ? `--fx:${(g.x - p.bx).toFixed(1)}px;--fy:${(g.y - p.by).toFixed(1)}px` : ""}"><clipPath id="${cid}"><circle cx="${p.bx.toFixed(1)}" cy="${p.by.toFixed(1)}" r="${br - 1}"/></clipPath><circle class="bg" cx="${p.bx.toFixed(1)}" cy="${p.by.toFixed(1)}" r="${br}"/><image href="${bf(it.b.who)}" x="${(p.bx - br).toFixed(1)}" y="${(p.by - br).toFixed(1)}" width="${br * 2}" height="${br * 2}" clip-path="url(#${cid})" preserveAspectRatio="xMidYMid slice"/>${mini ? "" : `<circle cx="${p.bx.toFixed(1)}" cy="${p.by.toFixed(1)}" r="12" fill="transparent"/>`}</g>`;
+  }
+  if (!mini && VIEW === "mean" && items.length <= 3) {
+   const sy = idx === 0 ? g.py + PH() / 2 + FS * 1.2 : (g.py > g.y ? p.y - 11 : p.y + 17);
+   nd += `<text class="snip lseq" x="${p.x.toFixed(1)}" y="${sy.toFixed(1)}" text-anchor="middle">${esc(snip(it.t))}</text>`;
+  }
+ });
+ PN.forEach((o, i) => {
+  ed += `<line class="bline ${seq ? "lseq" : ""}" x1="${o.sx.toFixed(1)}" y1="${o.sy.toFixed(1)}" x2="${o.ex.toFixed(1)}" y2="${o.ey.toFixed(1)}" stroke-width="${Math.min(1.6 + o.n * 1.3, 6).toFixed(1)}"/>`;
+  const r = o.fr, ws = o.whos || [o.who], x0 = o.x - (ws.length - 1) * r * .75;
+  nd += `<g class="pnode g ${seq ? "seq" : ""}" data-pn="${ws.join(",")}" data-pg="${o.g}">` + ws.map((w, j) => { const cx = x0 + j * r * 1.5, cid = `pn${i}_${j}`;
+   return `<clipPath id="${cid}"><circle cx="${cx.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${(r - 1).toFixed(1)}"/></clipPath><circle class="bg" cx="${cx.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${r.toFixed(1)}"/><image href="${bf(w)}" x="${(cx - r).toFixed(1)}" y="${(o.y - r).toFixed(1)}" width="${(2 * r).toFixed(1)}" height="${(2 * r).toFixed(1)}" clip-path="url(#${cid})" preserveAspectRatio="xMidYMid slice"/>`; }).join("") + `${(o.lines || [""]).join("") ? `<rect class="plabbg" x="${(o.L[0] - 2).toFixed(1)}" y="${(o.L[1] - 1).toFixed(1)}" width="${(o.L[2] - o.L[0] + 4).toFixed(1)}" height="${(o.L[3] - o.L[1] + 2).toFixed(1)}" rx="4"/><text class="plab" x="${o.lx.toFixed(1)}" y="${o.ly.toFixed(1)}" text-anchor="${o.anc}">${(o.lines || [pnLabel(o)]).map((ln, j) => `<tspan x="${o.lx.toFixed(1)}" dy="${j ? (FS * 1.15).toFixed(1) : 0}">${esc(ln)}</tspan>`).join("")}</text>` : ""}<rect x="${o.F[0].toFixed(1)}" y="${(o.y - r - 4).toFixed(1)}" width="${(o.F[2] - o.F[0]).toFixed(1)}" height="${(2 * r + 8).toFixed(1)}" fill="transparent"/></g>`;
+ });
+ if (L.WEB) {
+  const p = ME(), yr = L.YOU.r;
+  let web = "";
+  const [bx, by, bw, bh] = L.box, mx = Math.min(CX - bx, bx + bw - CX) - 3, my = Math.min(CY - by, by + bh - CY) - 3;   // 背后那圈虚线收在网的框里，不被卡片边切掉
+  L.RINGS.forEach(rh => { const rx = Math.min(rh * .82 * WEBS, mx), ry = Math.min(rh * .98, my); if (rx > 20 && ry > 20) web += `<ellipse class="webring" cx="${CX}" cy="${CY}" rx="${rx.toFixed(1)}" ry="${ry.toFixed(1)}"/>`; });
+  ed = web + ed;
+  nd += `<g class="you"><circle cx="${CX}" cy="${CY}" r="${yr.toFixed(1)}" fill="${p.color}"/><text class="yout" x="${CX}" y="${(CY + FS * .55).toFixed(1)}" text-anchor="middle">${esc(p.name)}</text></g>`;
+  if (L.MORE) { const M = L.MORE; nd += `<g class="more-g" data-more="${M.list.join(",")}"><rect x="${(M.x - M.w / 2).toFixed(1)}" y="${(M.y - PH() / 2).toFixed(1)}" width="${M.w.toFixed(1)}" height="${PH().toFixed(1)}" rx="${(PH() / 2).toFixed(1)}"/><text x="${M.x.toFixed(1)}" y="${(M.y + FS * .35).toFixed(1)}" text-anchor="middle">${esc(M.lab)}</text></g>`; }
+ }
+ let extra = "";
+ if (!mini && items.length === 1) {
+  const p = pos[0];
+  extra = `<g class="lseq"><path d="M${p.x + 46},${p.y - 40} q-14,6 -30,26" fill="none" stroke="var(--hot)" stroke-width="1.3" stroke-linecap="round"/><path d="M${p.x + 16},${p.y - 14} l1,-8 m-1,8 l7,-3" stroke="var(--hot)" stroke-width="1.3" stroke-linecap="round" fill="none"/><text class="start" x="${p.x + 50}" y="${p.y - 44}">${esc(UT("从这里开始长", "Start here"))}</text></g>`;
+ }
+ return `<div class="netscroll" style="max-height:${NETMAXH + 8}px"><svg class="net" width="${(L.w * (L.sc || 1)).toFixed(0)}" height="${(L.h * (L.sc || 1)).toFixed(0)}" role="img" aria-label="${esc(UT("你说过的话长成的网", "A web grown from what you said"))}" style="--fs:${FS.toFixed(2)}px" viewBox="${L.vb}" xmlns="http://www.w3.org/2000/svg">${ed}${pl}${nd}${extra}</svg></div>`;
+}
+/* 最近说的 8 句，一直单独亮着 */
+function isRecentIn(it, items) { return items.indexOf(it) >= items.length - 8; }
+
+
+/* ───────── 网上点哪儿 ───────── */
+/* 网卡片最多多高：min(640, 视口里卡片下面剩下的地方)；手机上留出底栏 */
+function availH(tall){
+  const sr = scr.getBoundingClientRect(), card = $("netcard");
+  const top = tall ? 8 : card ? card.getBoundingClientRect().top - sr.top + scr.scrollTop : 196;   // tall：卡片可以长到「屏幕高度减去页头和底栏」（往下滑到卡片顶头时一屏看全）
+  const leg = (PHONE() ? 52 : 30) + (FAR && S && S.lines.some(l => l.b) ? (PHONE() ? 64 : 34) : 0);   // 图例那一排（远看时加上「从谁那儿借了几个说法」）
+  return Math.round(Math.max(240, Math.min(tall ? 2000 : 640, scr.clientHeight - top - (PHONE() ? 96 : 20) - 34 - leg)));
+}
+const PHONE = () => matchMedia("(max-width: 600px), (pointer: coarse)").matches;
+function focusNet(){ const svg = SR.querySelector("#netcard svg"); if (!svg) return; svg.classList.remove("focus"); svg.querySelectorAll(".hl").forEach(x => x.classList.remove("hl")); }
+function highlightG(gidx){
+  const svg = SR.querySelector("#netcard svg"); if (!svg) return;
+  svg.querySelectorAll(".hl").forEach(x => x.classList.remove("hl"));
   svg.classList.add("focus");
-  const K = new Set(keys);
-  svg.querySelectorAll(".n").forEach(e => { if (K.has(e.dataset.k)) e.classList.add("hl"); });
-  svg.querySelectorAll(".e").forEach(e => { if (K.has(e.dataset.a) && K.has(e.dataset.b)) e.classList.add("hl"); });
+  svg.querySelectorAll(`[data-g="${gidx}"]`).forEach(x => x.classList.add("hl"));
 }
-function keysForPhrase(pid){
-  const p = P(pid); const k = ["p:" + pid, "w:" + p.who];
-  S.lines.forEach(l => { if (l.uses.includes(pid)) k.push("o:" + l.id); });
-  return k;
+function setFar(f){ if (FAR === f && !OPEN.size) return; FAR = f; OPEN.clear(); render({seq: 1}); toast(f ? UT("远看：一个抽屉一个泡", "Zoomed out: one bubble per drawer") : UT("近看：每一句都散开了", "Zoomed in: every line on its own")); }
+function openBubble(gidx){
+  const svg = SR.querySelector("#netcard svg"); if (!svg) return;
+  const el = svg.querySelector(`.bub-g[data-bub="${gidx}"]`) || svg.querySelector(`.pill[data-g="${gidx}"]`), k = el && el.dataset.k;
+  if (!k) return; blip(520);
+  if (PHONE()) { if (VIEW === "mean") drawerSheet("d" + k); else openGroupList(gidx); return; }   // 手机上直接拉起这个抽屉的句子
+  OPEN.add(k); render({scat: k});
+  toast(UT("泡打开了。点上面的深蓝标签再收回去。", "Opened. Tap the dark label to fold it back."));
 }
-function keysForPerson(who){
-  const k = ["w:" + who];
-  visible().filter(p => p.who === who).forEach(p => { k.push("p:" + p.id); S.lines.forEach(l => { if (l.uses.includes(p.id)) k.push("o:" + l.id); }); });
-  return k;
+function bindNet(){
+  const card = $("netcard"), svg = card && card.querySelector("svg");
+  if (!svg) return;   // 网还没长出来（字形、声音的网在第一天常常是空的）
+  svg.addEventListener("click", ev => {
+    const c = s => ev.target.closest(s);
+    const own = c(".own"), bor = c(".bor"), bub = c(".bub-g"), more = c(".more-g"), pn = c(".pnode"), pill = c(".pill");
+    if (own) { ev.stopPropagation(); blip(660); return openOwn(+own.dataset.i); }
+    if (bor) { ev.stopPropagation(); blip(520); return openBor(+bor.dataset.b); }
+    if (bub) { ev.stopPropagation(); return openBubble(+bub.dataset.bub); }
+    if (more) { ev.stopPropagation(); blip(520); return openMore(more.dataset.more.split(",").map(Number)); }
+    if (pn) { ev.stopPropagation(); blip(520); return openPerson(pn.dataset.pn, pn.dataset.pg); }
+    if (pill) { ev.stopPropagation(); blip(440); const k = pill.dataset.k;
+      if (FAR && OPEN.has(k)) { OPEN.delete(k); render(); toast(UT("收回去了", "Folded back")); return; }
+      const gidx = +pill.dataset.g; if (FAR && svg.querySelector(`.bub-g[data-bub="${gidx}"]`)) { openBubble(gidx); return; }
+      highlightG(gidx); return; }
+    focusNet();
+  });
+  /* 两指放大 = 近看，两指捏小 = 远看；电脑上 Ctrl + 滚轮 */
+  if (S.lines.length <= 12) return;
+  let d0 = 0, done = false;
+  const dist = e => Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  card.addEventListener("touchstart", e => { if (e.touches.length === 2) { d0 = dist(e); done = false; } }, {passive: true});
+  card.addEventListener("touchmove", e => { if (e.touches.length !== 2 || !d0 || done) return; e.preventDefault(); const r = dist(e) / d0;
+    if (r > 1.25) { done = true; setFar(false); } else if (r < 0.8) { done = true; setFar(true); } }, {passive: false});
+  let wl = 0;
+  card.addEventListener("wheel", e => { if (!e.ctrlKey) return; e.preventDefault(); const now = Date.now(); if (now - wl < 600) return; wl = now; setFar(e.deltaY > 0); }, {passive: false});
 }
-function keysForLine(lid){
-  const l = S.lines.find(x => x.id === lid); const k = ["o:" + lid, "s:" + lid];
-  l.uses.forEach(pid => { const p = P(pid); if (p){ k.push("p:" + pid, "w:" + p.who); } });
-  return k;
+
+/* ───────── 下一句可以去哪儿说（一句轻提示）───────── */
+const effDay = () => ymd(Date.now() - 8 * 3600e3);   // 跟「你那边呢」一样：各人当地 8:00 换下一天
+function nextHint(){
+  const today = effDay();
+  try {
+    const H = window.HOWABOUT;
+    if (H && (!H.ok || H.ok()) && H._day) { const o = H._day(), st = LSJ("howabout.v1") || {};
+      if (o && o.day && !(st.d || {})[(o.date || today) + "|" + TLg()] && !((st.d || {})[o.date || today] && ((st.d || {})[o.date || today].l || TLg()) === TLg())) { const t = o.day.t || {};
+        return {go: "hab", line: UZ() ? `今天的「你那边呢」：「${t.zh || ""}」` : `Today on How About Yours? — “${t.en || t.zh || ""}”`, sub: UT("先听听别处的人怎么说，再说你那边。", "Hear how it is elsewhere, then say yours.")}; } }
+    const PC = window.PODCAST, ep = (window.PODCASTS || []).find(e => e.l === TLg() && e.date === today);
+    if (PC && ep && !((LSJ("pod.v1") || {}).said || {})[ep.id]) return {go: "pod", line: UZ() ? `今天的角色播客「${ep.title.zh}」` : `Today's podcast: “${ep.title.en}”`, sub: UT("听完，轮到你说一句。", "When it ends, it's your turn to say one line.")};
+  } catch (e) {}
+  if (window.WNET) return {go: "net", line: UT("去世界的网，在一站下面说一句。", "Go to the world net and say one line under a stop."), sub: ""};
+  return null;
+}
+function goHint(k){
+  if (k === "hab" && window.HOWABOUT) return window.HOWABOUT.open();
+  if (k === "pod" && window.PODCAST) return window.PODCAST.open({});
+  if (k === "net" && window.WNET) return window.WNET.open({});
 }
 
 /* ───────── 页面 ───────── */
-function render(newIds){
-  const d = d_(), T = TT();
-  HOST.classList.toggle("zhui", d.ui === "zh");
-  $("tBar").textContent = d.bar; $("tDemo").textContent = d.demo;
-  // 只按用户自己的话算：你用上了谁的说法、谁跟你说过话
-  const userL = S.lines.filter(l => l.user), usedU = p => userL.some(l => l.uses.includes(p.id));
-  // 「还没变成你的」：只放回你的那几句里真的出现过的说法，算在说它的那个人名下
-  const un = S.phrases.filter(p => !p.gone && heardBy(p.id) && !usedU(p));
-  // 你的声音像谁
-  const cnt = {}, pc = {};
-  for (const p of S.phrases){ if (!usedU(p)) continue; const c = person(p.who).c; cnt[c] = (cnt[c] || 0) + 1; pc[p.who] = (pc[p.who] || 0) + userL.filter(l => l.uses.includes(p.id)).length; }
-  const top = Object.keys(pc).sort((a, b) => pc[b] - pc[a] || d.order.indexOf(a) - d.order.indexOf(b));
-  const nm = w => person(w).s;
-  const blobs = Object.keys(cnt).map(c => {
-    const C = d.circles[c], v = cnt[c], sz = v ? 44 + v * 9 : 40;
-    const fs = S.phrases.filter(p => usedU(p) && person(p.who).c === c).map(p => p.who).filter((w, i, a) => a.indexOf(w) === i).slice(0, 3);
-    return `<div class="blobw"><button class="blob ${v ? "" : "faint"}" data-hang="${c}" style="width:${sz}px;height:${sz}px;background:${C.c}"><span class="bi">${C.i}</span></button><div class="blobl">${esc(C.n)}${v ? "" : `<br><small style="font-weight:500;color:var(--soft)">${esc(T.listening)}</small>`}</div><div style="display:flex;margin-top:3px">${fs.map(w => `<img class="mini" src="${face(w)}" alt="">`).join("")}</div></div>`;
-  }).join("");
-  const hangBtns = Object.keys(cnt).slice(0, 3).map(c => `<button data-hang="${c}">${d.circles[c].i} ${esc(T.hang(d.circles[c].n))}</button>`).join("");
-
-  const kinds = d.kinds;
-  const said = S.lines.filter(l => !l.user).slice().reverse().map(l => {
-    const fs = l.uses.map(pid => P(pid) && P(pid).who).filter((w, i, a) => w && a.indexOf(w) === i);
-    return `<div class="s1 demo ${newIds && newIds.includes("o:" + l.id) ? "newin" : ""}" data-line="${l.id}">
-      <div class="k">${esc(kinds[l.k] || "")} · ${esc(l.at)} <span class="dtag">${esc(T.demoTag)}</span> ${l.pend ? `<span class="pend">${esc(l.pend)}</span>` : ""}</div>
-      <div class="tx">${markText(l.t, marks(l))}</div>
-      <div class="tr">${esc(l.tr)}</div>
-      <div class="row"><button class="play" data-play="${l.id}">${esc(T.playDemo)}</button><span style="font-size:11.5px;color:var(--soft)">${esc(T.from)}</span>${fs.map(w => `<img class="mini" src="${face(w)}" alt="${esc(person(w).nm)}" title="${esc(person(w).nm)}">`).join("")}</div>
-    </div>`;
-  }).join("");
-
-  const mineL = S.lines.filter(l => l.user).slice().reverse();
-  const youH = mineL.length ? mineL.map((l, i) => i < 2 || S.showAllYou ? youCard(l, newIds) : "").join("") + (mineL.length > 2 && !S.showAllYou ? `<button class="btn ghost" data-moreyou="1">${esc(T.moreYou(mineL.length - 2))}</button>` : "") : `<div class="myempty">${esc(T.myNone)}<div class="go"><button data-gonet="1">${esc(T.goNet)}</button><button data-gomap="1">${esc(T.goMap)}</button></div></div>`;
-  const shelf = un.map(p => `<div class="lay" data-lay="${p.id}"><img src="${face(heardBy(p.id))}" alt=""><div class="lt"><b data-p="${p.id}">${esc(p.short || p.t)}</b><small>${esc(p.m)} · ${esc(T.heardIn(whoName(heardBy(p.id))))}</small></div><button class="use" data-use="${p.id}">${esc(T.useS)} →</button></div>`).join("");
-
+function render(opt){
+  opt = opt || {};
+  const d = d_(), T = TT(), items = S.lines;
+  HOST.classList.toggle("zhui", UZ());
+  $("tBar").textContent = d.bar;
+  const me = ME(), first = items[0];
+  // 你借了谁的说法最多
+  const bw = {}; items.forEach(l => { if (l.b) bw[l.b.who] = (bw[l.b.who] || 0) + 1; });
+  const top = Object.keys(bw).sort((a, b) => bw[b] - bw[a]).slice(0, 3), names = top.map(nmShort);
+  const lang = UZ() ? (ZHL() ? "中文" : "英语") : (ZHL() ? UT("中文", "Chinese") : UT("英语", "English"));
+  const likeTxt = !top.length ? esc(UT("说一句，网就长一个点。", "Say a line and the web grows a point."))
+    : UZ() ? `你的${esc(lang)}里有一点 <b>${names.map(esc).join("</b>、<b>")}</b> 的影子。`
+    : `Your ${esc(lang)} has a bit of ${names.length > 1 ? names.slice(0, -1).map(n => `<b>${esc(n)}</b>`).join(", ") + " and " : ""}<b>${esc(names[names.length - 1])}</b> in it.`;
+  const sub = first ? (UZ() ? `从 ${+first.d.slice(5, 7)} 月 ${+first.d.slice(8)} 日起，用你说过的话长出来的。` : `Grown from what you've said since ${fd(first.d)}.`) : UT("你说过的每一句，都会长在这里。", "Every line you say grows here.");
+  const canFar = items.length > 12;
+  const hint0 = nextHint();
+  const hint = hint0 ? `<div class="ynext" dir="auto"><div class="nt">${items.length <= 1 ? `<b>${esc(UT("下一句可以去这儿说：", "Your next line could go here:"))}</b>` : ""}<span class="q">${esc(hint0.line)}</span>${hint0.sub ? `<span class="qm">${esc(hint0.sub)}</span>` : ""}</div><button class="ysay" data-hint="${hint0.go}">🎤 ${esc(UT("去说一句", "Say one"))}</button></div>` : "";
+  // 抽屉：一行一个，句子最多的在上面
+  const byDr = {}; items.forEach((l, i) => (byDr[l.dr] = byDr[l.dr] || []).push(i));
+  const drs = Object.keys(byDr).map(Number).sort((a, b) => byDr[b].length - byDr[a].length || byDr[a][0] - byDr[b][0]);
+  const dots = ii => ii.slice(-10).map(i => `<i></i>${items[i].b ? `<i class="p"></i>` : ""}`).join("") + (ii.length > 10 ? `<small>+${ii.length - 10}</small>` : "");
+  const newDr = opt.fresh ? new Set([...opt.fresh].map(i => items[i] && items[i].dr)) : new Set();
+  const drHtml = drs.map(n => { const ii = byDr[n], last = items[ii[ii.length - 1]], r = netDr(n);
+    return `<button dir="auto" class="ydr ${newDr.has(n) ? "new" : ""}" data-ydr="${n}"><span class="i">${CABI[r[1]]}</span><span class="tx"><b>${esc(HV.drName(n, UIk()))}</b><span>${esc(last.t)}</span></span><span class="ydots">${dots(ii)}</span></button>`; }).join("");
+  // 听来的，变成你的了：按人
+  const byP = {}; items.forEach((l, i) => { if (l.b) (byP[l.b.who] = byP[l.b.who] || []).push(i); });
+  const pkHtml = Object.keys(byP).length ? `<div class="sec"><h3>${esc(UT("听来的，变成你的了", "Picked up, now yours"))}</h3><p class="sub" dir="auto">${esc(UT("你自己说出来了，软件才连上线。", "Linked once you said it yourself."))}</p><div class="ypicked">${Object.entries(byP).sort((a, b) => b[1].length - a[1].length).map(([w, ii]) => `<div class="ypk" dir="auto"><div class="hd2"><img src="${esc(bf(w))}" alt=""><span>${esc(UZ() ? `从 ${nmShort(w)} 借了 ${ii.length} 个说法` : `${ii.length} borrowed from ${nmShort(w)}`)}${whoSub(w) ? ` <small>· ${esc(whoSub(w))}</small>` : ""}</span></div>${ii.map(i => `<button data-ybor="${i}">${esc(items[i].b.t)}<small>${esc(UZ() ? `你 ${fd(items[i].d)} 用上了` : `you used it ${fd(items[i].d)}`)}</small></button>`).join("")}</div>`).join("")}</div></div>` : "";
+  const un = S.phrases.filter(p => !p.gone && heardBy(p.id) && !used(p));
+  const shelf = un.map(p => `<div class="lay" data-lay="${p.id}"><img src="${face(heardBy(p.id))}" alt=""><div class="lt"><b data-p="${p.id}">${esc(p.short || p.t)}</b><small>${esc(p.m)} · ${esc(T.heardIn(whoName(heardBy(p.id))))}</small></div>${PRACTICE_ON ? `<button class="use" data-use="${p.id}">${esc(T.useS)} →</button>` : ""}</div>`).join("");
+  const zhint = VIEW !== "mean" ? (VIEW === "form" ? (ZHL() ? UT("你写过的字，按偏旁连起来", "The characters you've used, linked by their parts") : UT("你说得越多，这张网越密", "The more you say, the denser this web gets")) : UT("你话里的音", "The sounds in your own words"))
+    : FAR ? (PHONE() ? UT("点泡，看这个抽屉的句子", "Tap a bubble to see its lines") : UT("点泡，句子散开", "Tap a bubble to open it")) : PHONE() ? UT("两指捏小，收成泡", "Pinch in to fold into bubbles") : "";
+  const net = !items.length ? `<div class="netempty">${esc(UT("你说的第一句，会长在这里。", "Your first line will grow here."))}</div>` : netSVG(items, {fresh: opt.fresh, seq: opt.seq, scat: opt.scat});
+  const keyName = VIEW === "mean" ? UT("抽屉", "Drawer") : VIEW === "form" ? (ZHL() ? UT("偏旁", "Radical") : UT("词根、词缀", "Word part")) : UT("音", "Sound");
   scr.innerHTML = `
-   <div class="hd"><h1>${esc(T.youTitle)}</h1><p class="lead2">${esc(T.sorted)}</p><p>${esc(d.lead)}</p><div class="me"><i>${esc(T.youTag)}</i></div>${mineL.length ? `<p style="font-size:12px;color:var(--soft);margin:6px 0 0">${esc(T.demoNote)}</p>` : ""}</div>
-   <div class="netcard"><span class="nethint">${esc(T.net)}</span>${drawNet(newIds)}
-    <div class="legend"><span><i class="d"></i>${esc(T.lgOwn)}</span><span><i class="d demo"></i>${esc(T.lgDemo)}</span><span><i class="t"></i>${esc(T.lgUsed)}</span><span><i class="t u"></i>${esc(T.lgUn)}</span><span><i class="f"></i>${esc(T.lgWho)}</span></div></div>
-   <div class="sec" id="youSec"><h3>${esc(T.myH)}</h3><p class="sub">${esc(T.myS)}</p><div class="said">${youH}</div></div>
+   <div class="yhd" dir="auto"><div class="av">${esc([...me.name][0] || "·")}</div><div><h1>${esc(T.youTitle)}</h1><p>${esc(sub)}</p></div></div>
+   <div class="ylike" dir="auto">${top.length ? `<span class="faces">${top.map(w => `<img src="${esc(bf(w))}" alt="">`).join("")}</span>` : ""}<span>${likeTxt}</span></div>
+   <div class="ytabs">${[["mean", "🗂️", "意思", "Meaning"], ["form", "🌱", "字形", "Shape"], ["sound", "🔊", "声音", "Sound"]].map(v => `<button data-view="${v[0]}" class="${VIEW === v[0] ? "on" : ""}">${v[1]} ${esc(UT(v[2], v[3]))}</button>`).join("")}</div>
+   <div class="netcard" id="netcard">${items.length && (canFar || VIEW !== "mean") ? `<div class="zoomrow" dir="auto">${zhint ? `<span class="nethint2">${esc(zhint)}</span>` : canFar && !FAR ? `<button class="nethint2 lk" data-z="far">${esc(UT("点这里收起", "Tap here to fold up"))}</button>` : ""}${canFar ? `<div class="zoom"><button data-z="far" class="${FAR ? "on" : ""}">${esc(UT("远看", "Zoom out"))}</button><button data-z="near" class="${FAR ? "" : "on"}">${esc(UT("近看", "Zoom in"))}</button></div>` : ""}</div>` : ""}
+    ${net}
+    ${items.length ? `<div class="legend" dir="auto"><span><i class="d"></i>${esc(UT("你说过的话", "Things you said"))}</span>${Object.keys(byP).length && VIEW === "mean" ? `<span><i class="b"></i>${esc(UT("听来、你用上了的说法", "Phrases you picked up"))}</span>` : ""}${items.some(x => x.n > 1) ? `<span><i class="d ripe"></i>${esc(UT("熟了（说过好几次）", "Said many times"))}</span>` : ""}<span><i class="t"></i>${esc(keyName)}</span>${FAR && VIEW === "mean" && LASTPN.length ? `<div class="pnrow">${LASTPN.map(o => `<button class="pnchip" data-pnl="${esc((o.whos || [o.who]).join(","))}" data-pg="${o.g}" dir="auto"><span class="fc">${(o.whos || [o.who]).map(w => `<img src="${esc(bf(w))}" alt="">`).join("")}</span>${esc(pnLabel(o))}</button>`).join("")}</div>` : ""}</div>` : ""}</div>
+   ${hint}
+   ${items.length ? `<div class="sec" id="drSec"><h3>${esc(UT("你的抽屉", "Your drawers"))}</h3><p class="sub" dir="auto">${esc(UT("软件替你放好；放错了点开能挪。", "Filed for you. Tap a line to move it if it's in the wrong one."))}</p><div class="ydrw">${drHtml}</div>${drs.length < 4 ? `<div class="yinvite" dir="auto">${esc(UT("说到别的事，别的抽屉就会打开。", "Other drawers open when you say something that fits."))}</div>` : ""}</div>` : ""}
+   ${pkHtml}
    ${shapeSection()}
    ${soundSection()}
-   ${Object.keys(cnt).length ? `<div class="sec"><h3>${esc(T.voiceH)}</h3><p class="sub">${esc(T.voiceS)}</p>
-    <div class="voice"><div class="like">${top.length > 1 ? T.likeA(esc(nm(top[0])), esc(nm(top[1]))) : top.length ? T.likeOne(esc(nm(top[0]))) : ""}</div>
-     <div class="blobs">${blobs}</div>
-     <div class="mine">${esc(T.mine)}</div><div class="go">${hangBtns}</div></div></div>` : ""}
+   ${un.length ? `<div class="sec"><h3>${esc(T.shelfH)}</h3><p class="sub" dir="auto">${esc(T.shelfS2)}</p><div class="shelf">${shelf}</div></div>` : ""}
    ${uniSection()}
-   <div class="sec" id="drSec"><h3>${esc(T.drH)}</h3><p class="sub">${esc(T.drS)}</p>${drawerHtml()}</div>
-   ${un.length ? `<div class="sec"><h3>${esc(T.shelfH)}</h3><p class="sub">${esc(T.shelfS2)}</p><div class="shelf">${shelf}</div></div>` : ""}
-   <div class="sec ${narrow() && !S.showLucas ? "lucas-shut" : ""}" id="lucasSec"><button class="lucasT" data-lucas="1"><h3>${esc(T.lucasH)} <span class="car">▾</span></h3></button><p class="sub">${esc(T.lucasS)}</p><div class="said">${said}</div></div>
-   <div class="sec start"><h3>${esc(T.startH)}</h3><p>${esc(T.startP)}</p><button class="btn" id="startBtn">${esc(T.startB)}</button></div>
    <div class="sec mefoot"><button data-mego="again">🔁 <b>${esc(UT("今天再说一遍", "Say these again today"))}</b><small>${esc(UT("1、3、7 天前说过的，再说一遍", "What you said 1, 3 and 7 days ago"))}</small></button><button data-mego="walk">👣 <b>${esc(UT("你走过的路", "Where you've been"))}</b><small>${esc(UT("去过的岛、说过话的人、盖过的章", "Islands, people and stamps so far"))}</small></button><button data-mego="set">⚙️ <b>${esc(UT("设置、账号和记录", "Settings, account & records"))}</b><small>${esc(UT("界面语言、在学的语言、登录、提醒", "App language, learning language, sign-in, reminders"))}</small></button></div>`;
-  const tbl = $("srcTbl"); if (tbl) tbl.innerHTML = "<tr><th>说法</th><th>谁说的</th><th>在网上哪儿</th></tr>" + S.phrases.map(p => `<tr><td><b>${esc(p.t)}</b></td><td>${esc(person(p.who).nm)}${p.also ? "、" + esc(p.also.nm) : ""}</td><td>${esc(p.where)}</td></tr>`).join("");
+  bindNet();
 }
 
-/* 你说过的一句：在哪儿说的（点了回去）、哪天、放进了哪个抽屉、谁回了你、用上了谁的说法 */
-function srcHtml(it){
-  const T = TT(), url = HV.url(it.src), w = it.where ? (it.where[UIk()] || it.where.en) : "";
-  const when = HV.when(it.when, UIk()), via = it.via === "voice" ? T.viaVoice : T.viaTyped;
-  return `${url ? `<a class="srcl" href="${esc(url)}">${esc(w)}</a>` : `<span class="srcn">${esc(w || T.here)}</span>`} · ${esc(when)} · ${esc(via)}`;
+/* ───────── 拉起来的卡：一句、借来的、一个人、一个泡 ───────── */
+const pyLine = p => p && ZHL() ? `<p class="ypy" dir="auto">${esc(p)}</p>` : "";
+const liPM = l => `${ZHL() && l.p ? `<i>${esc(l.p)}</i>` : ""}${l.m ? `<em>${esc(l.m)}</em>` : ""}`;
+const liHtml = (l, i, extra) => `<button class="yli" dir="auto" data-yi="${i}"><b>${esc(l.t)}</b>${liPM(l)}<span>${esc(srcLine(l))}${l.n > 1 ? " · " + esc(UZ() ? `说过 ${l.n} 次` : `said ${l.n}×`) : ""}${extra || ""}</span></button>`;
+function openMore(list){   // 「还有 N 个」：没放进网里的泡，列出来
+  openSheet(`<span class="ysrc" dir="auto">${esc(UZ() ? `还有 ${list.length} 个` : `${list.length} more`)}</span><div class="ylist">${list.map(gidx => { const g = LASTG[gidx]; return g ? `<button class="yli" dir="auto" data-yg="${gidx}"><b>${esc((g.cab ? g.cab + " " : "") + g.wname)}</b><span>${esc(UZ() ? `${g.items.length} 句` : `${g.items.length} ${g.items.length > 1 ? "lines" : "line"}`)}</span></button>` : ""; }).join("")}</div>`);
 }
-function drLine(it){ const T = TT(); return `<span class="drl">🗄️ ${esc(T.inDr)} ${(it.dr || []).map(n => (UIk() === "zh" ? "『" : "“") + esc(HV.drName(n, UIk())) + (UIk() === "zh" ? "』" : "”")).join(" ")}<button data-chdr="${it.id}">${esc(T.change)}</button></span>`; }
+function openGroupList(gidx){
+  const g = LASTG && LASTG[gidx]; if (!g) return;
+  if (VIEW === "mean") return drawerSheet("d" + g.k);
+  openSheet(`<span class="ysrc" dir="auto">${esc(g.label)}</span><div class="ylist">${g.items.slice().reverse().map(i => liHtml(S.lines[i], i)).join("")}</div>`);
+}
+function openPerson(list, pg){
+  const only = pg != null && LASTG && LASTG[pg] ? new Set(LASTG[pg].items) : null;   // 点的是哪个泡旁边的脸，就只列这个泡里的（脸最多画 3 张，这里列全）
+  const ws = only ? [...new Set([...only].map(i => S.lines[i] && S.lines[i].b && S.lines[i].b.who).filter(Boolean))] : String(list).split(",");
+  openSheet(ws.map(w => { const ii = S.lines.map((l, i) => [l, i]).filter(x => x[0].b && x[0].b.who === w && (!only || only.has(x[1])));
+    return `<div class="yfrom"><img src="${esc(bf(w))}" alt=""><div class="tx"><div class="k">${esc(UZ() ? `从 ${whoInfo(w).nm} 借了 ${ii.length} 个说法` : `${ii.length} ${ii.length > 1 ? "phrases" : "phrase"} borrowed from ${whoInfo(w).nm}`)}</div>${esc(whoSub(w))}</div></div>
+    <div class="ylist">${ii.map(([l, i]) => `<button class="yli" dir="auto" data-ybor="${i}"><b>${esc(l.b.t)}</b><span>${esc(UZ() ? `你 ${fd(l.d)} 说：${l.t}` : `You, ${fd(l.d)}: ${l.t}`)}</span></button>`).join("")}</div>`; }).join(""));
+}
+const fromCard = (b, extra) => `<div class="yfrom"><img src="${esc(bf(b.who))}" alt=""><div class="tx"><div class="k">${extra || esc(whoInfo(b.who).nm)}</div>${esc([whoSub(b.who), b.src === "hab" ? srcName("hab") : b.src === "pod" ? srcName("pod") : srcName("net"), UZ() ? b.w[0] : b.w[1], fd(b.d)].filter(Boolean).join(" · "))}
+  ${b.full ? `<div class="l">${String(b.full).split(/(<u>|<\/u>)/).map(x => x === "<u>" || x === "</u>" ? x : esc(x)).join("")}</div>` : ""}${ZHL() && b.fullp ? `<div class="bp">${esc(b.fullp)}</div>` : ""}${b.fullm ? `<div>${esc(b.fullm)}</div>` : ""}
+  ${b.full ? `<button class="ymini" data-say="${esc(strip(b.full))}">▶ ${esc(UZ() ? "听 TA 说" : "Hear " + nmShort(b.who))}</button>` : ""}</div></div>`;
+function openOwn(i){
+  const l = S.lines[i]; if (!l) return;
+  const toLine = l.to ? `<div class="yinbox" dir="auto">💬 ${UZ() ? `你${l.ask ? "问" : "回给"} <b>${esc(nmShort(l.to))}</b> 的话${l.own ? "（✏️ 自己说的）" : ""}` : `You → <b>${esc(nmShort(l.to))}</b>${l.own ? " (in your own words)" : ""}`}</div>` : "";
+  const firstLine = i === 0 ? `<div class="yinbox" dir="auto">🌱 <b>${esc(UT("你的第一句。网从这里开始长。", "Your first line. The web grows from here."))}</b></div>` : "";
+  const ripe = l.n > 1 ? `<div class="yinbox" dir="auto"><span class="ripeTag">✓ ${esc(UZ() ? `说过 ${l.n} 次 · 熟了` : `Said ${l.n} times · it's yours now`)}</span></div><div class="yalso" dir="auto">${esc(l.also.map(a => (UZ() ? `${fd(a.d)} 又说了一次` : `again on ${fd(a.d)}`) + (a.to ? (UZ() ? `（对 ${nmShort(a.to)}）` : ` (to ${nmShort(a.to)})`) : "")).join(" · "))}</div>` : "";
+  const reply = l.reply && l.reply.t ? `<div class="yinbox" dir="auto">🎭 ${esc(TT().replyBy(whoInfo(l.reply.by).nm))}${UZ() ? "：" : ": "}${esc(l.reply.t)}</div>` : "";
+  const from = l.b ? fromCard(l.b, esc(UZ() ? `「${l.b.t}」是你从 ${whoInfo(l.b.who).nm} 那儿听来的` : `You picked up “${l.b.t}” from ${whoInfo(l.b.who).nm}`)) : "";
+  openSheet(`<span class="ysrc" dir="auto">${esc(srcLine(l))}</span>${firstLine}${toLine}
+    <div class="ybig" dir="auto">${esc(l.t)}</div>${pyLine(l.p)}${l.m ? `<p class="ymn" dir="auto">${esc(l.m)}</p>` : ""}${ripe}${reply}
+    <div class="yrow"><button class="ybtn" data-say="${esc(l.t)}" data-mine="1">▶ ${esc(UT("听", "Listen"))}</button><button class="ybtn pri" data-there="${i}">↩ ${esc(UT("回到那里", "Go back there"))}</button></div>
+    <div class="yinbox" dir="auto">🗂️ <span>${UZ() ? `放在 <b>${CABI[netDr(l.dr)[1]]} ${esc(HV.drName(l.dr, UIk()))}</b> 抽屉` : `In the <b>${CABI[netDr(l.dr)[1]]} ${esc(HV.drName(l.dr, UIk()))}</b> drawer`}</span> · <button class="ylk" data-ymv="${i}" dir="auto">${esc(UT("放错了？", "Wrong drawer?"))}</button></div>
+    ${from}`);
+}
+function openBor(i){
+  const l = S.lines[i]; if (!l || !l.b) return; const b = l.b;
+  openSheet(`<span class="ysrc" dir="auto">${esc([b.src === "hab" ? "🌍 " + srcName("hab") : b.src === "pod" ? "🎧 " + srcName("pod") : "🕸️ " + srcName("net"), UZ() ? b.w[0] : b.w[1], fd(b.d)].filter(Boolean).join(" · "))}</span>
+    ${fromCard(b)}
+    <div class="ybig" style="font-size:18px">${esc(UZ() ? `「${b.t}」是你从 ${nmShort(b.who)} 那儿听来的` : `You heard “${b.t}” from ${nmShort(b.who)}`)}</div>
+    ${pyLine(b.p)}${b.m ? `<p class="ymn" dir="auto">${esc(b.m)}</p>` : ""}
+    <div class="yrow"><button class="ybtn pri" data-yi="${i}">${esc(UT("你用上它的那句 →", "Where you used it →"))}</button></div>
+    <div class="yinbox" dir="auto">${esc(UZ() ? `你 ${fd(l.d)} 说：` : `You, ${fd(l.d)}:`)} <b class="serif">${esc(l.t)}</b></div>`);
+}
+/* 放错抽屉：hv.mylang.v1 里的那句直接改；别处说的话记在 hv.mylang.v1 的 drOv 里（同步），不动别的模块 */
+function moveDr(i){
+  const l = S.lines[i]; if (!l) return;
+  HV.pickDrawers(phone, l.drs || [l.dr], UIk(), ns => {
+    if (!ns || !ns.length) return;
+    if (l.it) HV.update(l.it.id, {dr: ns, drAuto: 0});
+    else { const st = HV.load(); st.drOv = st.drOv || {}; st.drOv[l.key] = ns; HV.save(st); }
+    closeSheet(); sync(); render();
+    toast(TT().sortedT(ns.map(n => HV.drName(n, UIk())).join(" · ")));
+  });
+}
+
+/* ───────── 回到那里：世界的网、地图上的线直接打开那一页；别处说的，把当时那一页摆出来 ───────── */
+function goThere(i){
+  const l = S.lines[i]; if (!l) return;
+  if (l.url) { closeSheet(); HV.nav(l.url); return; }
+  const me = ME(), mine = `<div class="msg me"><div class="av">${esc([...me.name][0] || "·")}</div><div class="bub" dir="auto"><div class="n">${esc(me.name)} · ${esc(fd(l.d))}</div><div class="l">${esc(l.t)}</div>${l.p && ZHL() ? `<div class="bp">${esc(l.p)}</div>` : ""}${l.m ? `<div class="bm">${esc(l.m)}</div>` : ""}<span class="here">● ${esc(UT("你说的这句", "This is the line"))}</span></div></div>`;
+  const npcBub = (w, t, py, m, extra) => `<div class="msg"><img src="${esc(bf(w))}" alt=""><div class="bub" dir="auto"><div class="n">${esc(whoInfo(w).nm)}${whoSub(w) ? " · " + esc(whoSub(w)) : ""}</div><div class="l">${String(t).split(/(<u>|<\/u>)/).map(x => x === "<u>" || x === "</u>" ? x : esc(x)).join("")}</div>${py && ZHL() ? `<div class="bp">${esc(py)}</div>` : ""}${m ? `<div class="bm">${esc(m)}</div>` : ""}${extra || ""}</div></div>`;
+  const head = `${(SRC[l.s] || SRC.me)[0]} ${esc(srcName(l.s))}${(UZ() ? l.w[0] : l.w[1]) ? " · " + esc(UZ() ? l.w[0] : l.w[1]) : ""} · ${esc(fd(l.d))}`;
+  let body = `<div class="qcard" dir="auto"><div class="k">${head}</div>${l.q ? `<div class="q">${esc(l.q)}</div>${ZHL() && l.qp ? `<div class="qp">${esc(l.qp)}</div>` : ""}${l.qm ? `<div class="qm">${esc(l.qm)}</div>` : ""}` : ""}</div>`;
+  if (l.ctx) body += (l.ctx.t ? npcBub(l.ctx.who, l.ctx.t, l.ctx.p, l.ctx.m) : "") + mine + (l.ctx.r ? npcBub(l.ctx.who, l.ctx.r[0], l.ctx.r[1], l.ctx.r[2]) : "");
+  else { if (l.b && l.b.full) body += npcBub(l.b.who, l.b.full, l.b.fullp, l.b.fullm, `<span class="here soft">${esc(UT("你从这儿听来的", "You heard it here"))}${l.b.d ? " · " + esc(fd(l.b.d)) : ""}</span>`); body += mine; }
+  let act = "";
+  if (l.go.k === "hab" && window.HOWABOUT && l.go.date === effDay()) act = `<button class="ybtn pri" data-hint="hab">🌍 ${esc(UT("打开今天的「你那边呢」", "Open today's How About Yours?"))}</button>`;
+  if (l.go.k === "pod" && window.PODCAST) act = `<button class="ybtn pri" data-pod="${esc(l.go.id)}">🎧 ${esc(UT("再听这一期", "Play this episode again"))}</button>`;
+  if (l.go.k === "wel") body += `<p class="ymn" style="margin:12px 2px">${esc(UT("你来的第一天，跟大家打的招呼。", "Your first day — how you said hi to everyone."))}</p>`;
+  $("there").innerHTML = `<div class="tb" dir="auto"><button data-thback="1">← ${esc(UT("回到你的网", "Back to your web"))}</button><span>${(SRC[l.s] || SRC.me)[0]} ${esc(srcName(l.s))}</span></div><div class="bd" dir="auto">${body}${act ? `<div class="yrow" style="margin-top:14px">${act}</div>` : ""}</div>`;
+  closeSheet();
+  $("there").classList.add("on");
+}
+
+/* ───────── 说一句，长一个点：回到这一页时，新说的那几句从抽屉那儿长出来 ───────── */
+const SEENK = "hv.mylang.seen";   // 这台手机上看过哪几句（只为了动画，不同步）
+function seenGet(){ const v = LSJ(SEENK); return Array.isArray(v) ? new Set(v) : null; }
+function seenPut(){ try { localStorage.setItem(SEENK, JSON.stringify(S.lines.map(l => l.key).slice(-3000))); } catch (e) {} }
+function grow(opt){
+  const seen = seenGet(), items = S.lines;
+  if (!seen) { render({seq: 1}); seenPut(); return; }
+  const neu = items.map((l, i) => seen.has(l.key) ? -1 : i).filter(i => i >= 0);
+  if (!neu.length) { render(opt && opt.seq ? {seq: 1} : {}); return; }
+  const oldDr = new Set(items.filter(l => seen.has(l.key)).map(l => l.dr)), oldN = items.length - neu.length;
+  render({fresh: new Set(neu)});
+  seenPut();
+  setTimeout(() => {
+    const l = items[neu[neu.length - 1]]; blip(990);
+    const bTxt = l.b ? (UZ() ? `；「${l.b.t}」是从 ${nmShort(l.b.who)} 那儿听来的` : ` · “${l.b.t}” — picked up from ${nmShort(l.b.who)}`) : "";
+    toast(UZ() ? `${neu.length > 1 ? `长出 ${neu.length} 个点 · 最新的` : "长出一个点 · "}放进「${HV.drName(l.dr, UIk())}」抽屉 · ${srcName(l.s)} ${fd(l.d)}${bTxt}` : `${neu.length > 1 ? `${neu.length} new points · latest` : "New point —"} in the “${HV.drName(l.dr, UIk())}” drawer · ${srcName(l.s)}, ${fd(l.d)}${bTxt}`);
+    const nd = neu.map(i => items[i].dr).find(n => !oldDr.has(n));
+    if (oldN === 1) { stamp(UT("长出来了", "IT'S GROWING"), UT("第二个点", "your second point")); confetti(40); }
+    else if (oldN > 1 && nd) { stamp(UT("新抽屉", "NEW DRAWER"), HV.drName(nd, UIk())); confetti(30); }
+  }, 350);
+}
+
 /* 一个说法，用户是从谁那儿听来的：回过你的那些话里真出现过，才算听过 */
 function heardBy(pid){
   const p = P(pid); if (!p) return null;
@@ -3433,56 +4119,7 @@ function heardBy(pid){
 function whoName(w){ if (!w) return ""; if (person(w)) return person(w).nm; return personTag(w).split(" · ")[0]; }
 function heardHtml(l){ const T = TT(); return l.uses.map(pid => { const p = P(pid); if (!p) return ""; const by = heardBy(pid);
   return `<span class="heardf" data-p="${pid}">🔗 ${esc(by ? T.heardFrom(p.short || p.t, whoName(by)) : T.alsoSays2(p.short || p.t, person(p.who).nm))}</span>`; }).join(""); }
-function youCard(l, newIds){
-  const T = TT(), it = l.it, P_ = NET.people || {};
-  const rb = it.reply && P_[it.reply.by] ? (typeof P_[it.reply.by].nm === "string" ? P_[it.reply.by].nm : (UIk() === "zh" ? P_[it.reply.by].nm.zh : P_[it.reply.by].nm.en)) : "";
-  return `<div class="s1 you ${newIds && newIds.includes("o:" + l.id) ? "newin" : ""}" data-line="${l.id}">
-    <div class="k">${srcHtml(it)}</div>
-    <div class="tx">${markText(l.t, marks(l))}</div>
-    ${it.reply ? `<div class="tr">${esc(T.replyBy(rb))}${it.reply.away ? esc(T.awayTag) : ""}${UIk() === "zh" ? "：" : ": "}${esc(it.reply.t)}</div>` : ""}
-    <div>${drLine(it)} ${heardHtml(l)}</div>
-  </div>`;
-}
-
-/* ───────── 抽屉：六个柜子 ───────── */
-const hasMine = id => (S.mine[id] || []).length > 0;
-function shownIn(cab){
-  const all = DR40.filter(r => r[1] === cab.id).map(r => "d" + r[0]);
-  const filled = all.filter(id => hasMine(id) || S.grown[id]);
-  const common = cab.common.map(n => "d" + n).filter(id => !filled.includes(id)).slice(0, 1);   // 空抽屉每个柜子最多露一个
-  const shown = all.filter(id => filled.includes(id) || common.includes(id));
-  return {shown, hidden: all.filter(id => !shown.includes(id)), filled};
-}
 const narrow = () => matchMedia("(max-width:600px)").matches;
-function drawerHtml(){
-  const d = d_(), T = TT(), zhUI = d.ui === "zh";
-  const cabs = CABS.map(cab => {
-    const {shown, hidden, filled} = shownIn(cab);
-    const chips = shown.map(id => {
-      const D = drInfo(id), m = S.mine[id] || [], full = m.length > 0;
-      const slips = full ? `<span class="sl">${m.slice(0, 4).map(x => `<i style="${x.demo ? "background:#e9b4a3" : ""}"></i>`).join("")}</span>` : "";
-      return `<button class="dw ${full ? "full" : "empty"} ${S.newDr === id ? "grow" : ""}" data-dw="${id}"><b>${esc(D.n)}</b>${slips}<span class="kn"></span></button>`;
-    }).join("");
-    const shut = narrow() && !S.cabOpen[cab.id];
-    const dots = filled.map(id => `<i class="${(S.mine[id] || []).some(x => x.user) ? "" : "demo"}"></i>`).join("");
-    return `<div class="cab ${shut ? "shut" : ""}" id="cab_${cab.id}"><button class="cabh tg" data-cab="${cab.id}"><span>${cab.i}</span>${esc(zhUI ? cab.zh : cab.en)}<span class="dots">${dots}</span><span class="car">▾</span></button>
-      <div class="dws">${chips}</div>
-      ${hidden.length ? `<div class="more">${esc(T.moreDr)}</div>` : ""}</div>`;
-  }).join("");
-  const g = d.grow;
-  const demo = S.grewDemo ? "" : `<div class="growdemo"><b>${esc(T.drDemoH)}</b><div>${esc(T.drDemoP(g.word))}</div><button class="btn ghost" data-growdemo="1">${esc(T.drDemoB)}</button></div>`;
-  return demo + cabs;
-}
-function redrawDrawer(){ const sec = $("drSec"); if (!sec) return; const T = TT(); sec.innerHTML = `<h3>${esc(T.drH)}</h3><p class="sub">${esc(T.drS)}</p>${drawerHtml()}`; }
-function addMine(drId, item){
-  if (!hasMine(drId) && !S.grown[drId] && drInfo(drId)){
-    const cab = CABS.find(c => c.id === drInfo(drId).cab);
-    if (!shownIn(cab).shown.includes(drId)) S.newDr = drId;   // 原来藏着的抽屉：长出来
-  }
-  S.grown[drId] = 1;
-  (S.demoMine[drId] = S.demoMine[drId] || []).push(item);
-  sync();
-}
 /* 网上的一句话在哪儿：找到那段公开聊，就能点回去 */
 let MSGS = null;
 function allMsgs(){
@@ -3528,7 +4165,7 @@ function wordsHtml(n){
 function uniSection(){
   const T = TT(), U = DW.universal || []; if (!U.length) return "";
   const tl = TLg();
-  return `<div class="sec" id="uniSec"><h3>🌍 ${esc(T.uniH)}</h3><p class="sub">${esc(T.uniS)}</p>
+  return `<div class="sec" id="uniSec"><h3>🌍 ${esc(T.uniH)}</h3><p class="sub" dir="auto">${esc(T.uniS)}</p>
     <div class="unichips">${U.map((w, i) => `<button class="uc" data-uw="${i}">${esc(tl === "zh" ? w.zh : en1(w.en))}</button>`).join("")}</div>
     ${(DW.split || []).length ? `<div class="split"><b>${esc(T.splitH)}</b>${DW.split.map(x => `<div class="sp"><span>${esc(UIk() === "zh" ? x.zh : (x.en || x.zh))}</span><small>${esc(UIk() === "zh" ? x.why : (x.why_en || x.why))}</small></div>`).join("")}</div>` : ""}</div>`;
 }
@@ -3571,7 +4208,7 @@ function rootsOf(word){
 /* 所有用户说过的词（只算用户自己的话，软件整理，不用收） */
 function myWords(){
   const out = [];
-  HV.items(TLg()).forEach(it => {
+  S.lines.forEach(it => {   // 全软件里你说过的话
     if (TLg() === "zh") [...it.t].filter(isZh).forEach(c => out.push({w: c, it}));
     else (it.t.match(/[A-Za-z'-]+/g) || []).forEach(w => out.push({w: w.toLowerCase(), it}));
   });
@@ -3592,7 +4229,7 @@ function segment(t){
   while (i < cs.length) { if (!isZh(cs[i])) { i++; continue; } let L = 0; for (let k = Math.min(6, cs.length - i); k > 1; k--) if (dict.has(cs.slice(i, i + k).join(""))) { L = k; break; } out.push(cs.slice(i, i + (L || 1)).join("")); i += L || 1; }
   return out;
 }
-const myPieces = () => { const set = new Set(); HV.items(TLg()).forEach(it => segment(it.t).forEach(w => set.add(w))); return [...set]; };
+const myPieces = () => { const set = new Set(); S.lines.forEach(it => segment(it.t).forEach(w => set.add(w))); return [...set]; };
 function tapText(t){
   // 你自己的句子里，每个字（中文）或每个词（英文）都点得开
   if (TLg() === "zh") {   // 先拿抽屉词表做最长匹配，匹配不上的才按单字
@@ -3704,7 +4341,7 @@ function shapeSection(){
   const chip = (k, ws) => { const id = k.slice(2), lab = k[0] === "r" ? radLook(RAD[id]) : k[0] === "p" ? id : idShow(id);
     const sub = k[0] === "r" ? (ui === "zh" ? RAD[id].zh : RAD[id].en) : k[0] === "p" ? (PHON[id].match === "drifted" ? T.pDrift : T.pSound(PHON[id].py)) : (ui === "zh" ? ENR[id].zh : ENR[id].en);
     return `<button class="shp ${k[0]}" data-rn="${esc(k)}"><b class="${k[0] === "e" ? "en" : ""}">${esc(lab)}</b><small>${esc(sub)}</small><span class="sw">${[...ws].slice(0, 4).map(esc).join(" ")}</span></button>`; };
-  return `<div class="sec" id="shapeSec"><h3>🌱 ${esc(T.shapeH)}</h3><p class="sub">${esc(T.shapeS)}</p><div class="shps">${[...found.entries()].map(([k, ws]) => chip(k, ws)).join("")}</div></div>`;
+  return `<div class="sec" id="shapeSec"><h3>🌱 ${esc(T.shapeH)}</h3><p class="sub" dir="auto">${esc(T.shapeS)}</p><div class="shps">${[...found.entries()].map(([k, ws]) => chip(k, ws)).join("")}</div></div>`;
 }
 
 /* ───────── 🔊 声音网：读音一样或很像（share）· 只差一点（pair） ───────── */
@@ -3764,7 +4401,7 @@ function sayIt(t){ if (!ttsOK()) { toast(TT().noTts); return; } say(t, TLg() ===
 const partLabel = l => { const T = TT(); if (l.by === "tone") { const k = /轻/.test(l.part) ? 5 : "一二三四".indexOf(String(l.part).charAt(1)) + 1; return T.toneN(k || l.part); } if (l.by === "sound") return "/" + l.part + "/"; if (l.by === "phonetic") return l.comp + " · " + ((PHON[l.comp] && PHON[l.comp].py) || pyOf(l.comp) || l.part); if (l.by === "spelling" && l.sound) return l.part + " /" + l.sound + "/"; return l.part; };
 const pairSide = x => `<span class="ps"><b>${esc(x.w)}</b><small>${esc(x.py || (x.ipa ? "/" + x.ipa + "/" : ""))}</small><button class="play" data-sayw="${esc(x.w)}">▶</button></span>`;
 const pNote = l => UIk() === "zh" ? (l.note || "") : (l.note_en || l.note || "");
-const myNative = () => M === "zh" ? ["pt", "en"] : ["zh"];   // 演示的人：说得好的语言（Lucas 葡语、英语；苏苏 中文）
+const myNative = () => [HV.appUI()];   // 你说得好的语言：先按界面语言算
 const hardForMe = l => (l.hard_for || []).some(x => myNative().includes(x));
 function soundRow(w){
   const T = TT(), ui = UIk(), ls = soundLinks(w);
@@ -3824,7 +4461,7 @@ function soundSection(){
   pairs.sort((a, b) => hardForMe(b.l) - hardForMe(a.l));
   const order = {syllable: 0, phonetic: 1, tone: 2, initial: 3, final: 4, sound: 0, spelling: 1};
   const sh = [...share.entries()].map(([id, ws]) => ({l: SL[id], ws})).sort((a, b) => b.ws.size - a.ws.size || (order[a.l.by] || 9) - (order[b.l.by] || 9)).slice(0, 10);
-  return `<div class="sec" id="soundSec"><h3>🔊 ${esc(T.soundH)}</h3><p class="sub">${esc(T.soundS)}</p>
+  return `<div class="sec" id="soundSec"><h3>🔊 ${esc(T.soundH)}</h3><p class="sub" dir="auto">${esc(T.soundS)}</p>
     <div class="shps">${sh.map(x => `<button class="shp snd ${x.l.by}" data-sn="${esc(x.l.id)}"><b class="${isZh(x.l.part) ? "" : "en"}">${esc(partLabel(x.l))}</b><small>${esc(T.byName[x.l.by] || "")}</small><span class="sw">${[...x.ws].slice(0, 4).map(esc).join(" ")}</span></button>`).join("")}</div>
     ${pairs.slice(0, 4).map((p, i) => `<div class="pairc ${i === 0 && hardForMe(p.l) ? "hardp" : ""}" data-sn="${esc(p.l.id)}">${pairSide(p.l.a)}<span class="vs">${esc(ui === "zh" ? p.l.diff : (p.l.diff_en || p.l.diff))}</span>${pairSide(p.l.b)}${i === 0 && hardForMe(p.l) ? `<div class="hard">${esc(T.hardTip)}</div>` : ""}</div>`).join("")}</div>`;
 }
@@ -3874,16 +4511,10 @@ function drawerSheet(id){
   const D = drInfo(id), T = TT(), d = d_(), c = (d.dr || {})[id] || {others: []}, n = +id.slice(1), tl = TLg(), ui = UIk();
   S.openDr = id;
   const cab = CABS.find(x => x.id === D.cab);
-  const mine = S.mine[id] || [];
-  const items = HV.items(tl);
-  const mineU = mine.filter(m => m.user), mineD = mine.filter(m => !m.user);
-  const demoH = mineD.map(m => `<div class="dm" style="opacity:.8;border-left-color:#e9b4a3;background:#fbf7ee" ${m.src ? `data-line="${m.src}"` : ""}><div class="dt">${esc(m.t)}</div><div class="qtr">${esc(m.tr || "")}</div><button class="play" data-say="${esc(m.t)}">${esc(T.hear)}</button></div>`).join("");
-  const mineH = mineU.length ? mineU.map(m => {
-      if (m.user) { const it = items.find(x => x.id === m.id); if (!it) return "";
-        return `<div class="dm"><div class="dt">${tapText(m.t)}</div><div class="qtr">${srcHtml(it)}</div><div>${drLine(it)}</div><button class="play" data-say="${esc(m.t)}" data-mine="1">${esc(T.playYou)}</button></div>`; }
-      return `<div class="dm" style="opacity:.8;border-left-color:#e9b4a3;background:#fbf7ee" ${m.src ? `data-line="${m.src}"` : ""}><div class="dt">${esc(m.t)}</div><div class="qtr">${esc(m.tr || "")} · <span class="dtag">${esc(T.demoTag)} · ${esc(d.me)}</span></div><button class="play" data-say="${esc(m.t)}" data-mine="1">${esc(T.playDemo)}</button></div>`; }).join("")
+  /* 你自己在这个抽屉里的话（全软件里说过的，一句一行；点开看在哪儿说的、回到那里） */
+  const ii = S.lines.map((l, i) => [l, i]).filter(x => (x[0].drs || [x[0].dr]).includes(n)).reverse();
+  const mineH = ii.length ? `<div class="ylist">${ii.map(([l, i]) => liHtml(l, i)).join("")}</div>`
     : `<div class="dinv">${esc(c.others.length ? T.drInvA(D.q) : T.drInvB(D.q))}</div>`;
-  const demoBlock = demoH ? `<div class="lab2">${esc(T.demoMine(d.me))}</div><div class="dmine">${demoH}</div>` : "";
   // 别人这么说：同一种语言（在学的），只是放在旁边听，不用收
   const seen = new Set();
   const others = c.others.map(o => ({...o, m: findMsg(o.t)}));
@@ -3898,23 +4529,18 @@ function drawerSheet(id){
     const ss = tx.split(/(?<=[。！？.!?])\s*/).filter(Boolean), keep = ss.filter(x => !(ui === "zh" ? /「[^」]*[\u4e00-\u9fff][^」]*」/ : /[\u4e00-\u9fff]/).test(x));
     if (!keep.length) return null; if (keep.length === ss.length) return note0; return {[ui]: keep.join(ui === "zh" ? "" : " "), en: keep.join(" ")}; })();
   const sameH = same.length || note ? `<div class="same"><div class="h">🌍 ${esc(T.sameH)}</div><div class="sub2">${esc(T.sameS)}</div>
-    ${same.map(m => `<div class="do"><img src="${m.demo ? face("lucas") : face(m.by)}" alt=""><div class="dob"><div class="don">${m.demo ? `<b>Lucas</b> · São Paulo · <span class="dtag">${esc(T.demoTag)}</span>` : `🎭 <b>${esc(personTag(m.by))}</b> · ${msgSrc(m)}`}<span class="lg">${esc((LGN[m.lg] || [m.lg, m.lg])[ui === "zh" ? 0 : 1])}</span></div><div class="dt">${esc(HV.plain(m.text))}</div><div class="qtr">${esc(m.tr ? (m.tr[ui] || m.tr.en || "") : "")}</div>
+    ${same.map(m => `<div class="do"><img src="${face(m.by)}" alt=""><div class="dob"><div class="don">🎭 <b>${esc(personTag(m.by))}</b> · ${msgSrc(m)}<span class="lg">${esc((LGN[m.lg] || [m.lg, m.lg])[ui === "zh" ? 0 : 1])}</span></div><div class="dt">${esc(HV.plain(m.text))}</div><div class="qtr">${esc(m.tr ? (m.tr[ui] || m.tr.en || "") : "")}</div>
       <div class="row" style="display:flex;gap:6px;margin-top:5px"><button class="play" data-say="${esc(HV.plain(m.text))}" data-lang="${m.lg}">▶</button></div></div></div>`).join("")}
     ${note ? `<div class="nt">💡 ${esc(note[ui] || note.en)}${note.src ? `<span style="display:block;font-size:11px;color:var(--soft);margin-top:2px">${esc(ui === "zh" ? "依据：" : "Based on: ")}${esc(ui === "zh" ? note.src : (note.src_en || srcEn(note.src)))}</span>` : ""}</div>` : ""}</div>` : "";
   openSheet(`<div class="lab" style="font-size:12px;color:var(--soft);font-weight:800;margin-top:10px">${cab.i} ${esc(d.ui === "zh" ? cab.zh : cab.en)}</div>
     <div class="drh" style="font-size:21px;margin:2px 0 4px">${esc(D.n)}</div>
-    <div class="lab2">${esc(T.drMine)}</div><div class="dmine" id="dmine">${mineH}</div>${demoBlock}
+    <div class="lab2">${esc(T.drMine)}</div><div class="dmine" id="dmine">${mineH}</div>
     ${oth ? `<div class="lab2">${esc(T.drOthers)}</div>${oth}` : ""}
     ${wordsHtml(n)}
     ${sameH}`);
 }
-function growFx(id, still){
-  setTimeout(() => {
-    const el = SR.querySelector(`[data-dw="${id}"]`);
-    if (el && !still){ const cab = el.closest(".cab"); scr.scrollTop = cab.offsetTop - 60; }
-    stamp(TT().drGrew, drInfo(id).n); confetti(30);
-    setTimeout(() => { S.newDr = null; }, 1500);
-  }, 450);
+function growFx(id){
+  setTimeout(() => { const el = SR.querySelector(`[data-ydr="${String(id).replace(/^d/, "")}"]`); if (el) el.classList.add("new"); stamp(TT().drGrew, HV.drName(String(id).replace(/^d/, ""), UIk())); confetti(30); }, 450);
 }
 
 /* ───────── 底下的纸 ───────── */
@@ -3932,8 +4558,8 @@ function whoCard(id, alt){
 }
 function phraseSheet(pid){
   const p = P(pid), T = TT(), d = d_();
-  focusNet(keysForPhrase(pid));
-  const uses = S.lines.filter(l => l.uses.includes(pid));
+  focusNet();
+  const uses = S.lines.map((l, i) => [l, i]).filter(x => x[0].uses.includes(pid));
   const one = {uses:[pid], mk:{}}; one.mk[pid] = p.mk;
   let h = `<div class="big">${esc(p.t)}</div>${p.py ? `<div class="py">${esc(p.py)}</div>` : ""}<div class="mean">${esc(p.m)}</div>
    <button class="play" style="margin-top:8px" data-say="${esc(p.t)}">${esc(T.hear)}</button>
@@ -3943,48 +4569,20 @@ function phraseSheet(pid){
     <div class="where">${esc(p.where)}</div></div>`;
   if (p.also) h += `<div class="card"><div class="lab">${esc(T.alsoSays)}</div>${whoCard(null, p.also)}<div class="quote">${markText(p.also.q, p.mk.map(m => [m, pid]))}</div><div class="qtr">${esc(p.also.qtr)}</div><div class="row" style="margin-top:6px"><button class="play" data-say="${esc(p.also.q)}">${esc(T.hearOrig)}</button></div><div class="where">${esc(p.also.where)}</div></div>`;
   if (uses.length){
-    h += `<div class="card"><div class="lab">${esc(T.usedIn)}</div>` + uses.map(l => `<div class="quote mine">${markText(l.t, marks(l))}</div><div class="qtr">${esc(l.tr)}</div><div class="where">${esc(d.kinds[l.k])} · ${esc(l.at)}</div><button class="play" style="margin:6px 0 4px" data-play="${l.id}">${esc(T.playDemo)}</button>`).join("") + `</div>`;
+    h += `<div class="card"><div class="lab">${esc(T.usedIn)}</div><div class="ylist">${uses.map(([l, i]) => liHtml(l, i)).join("")}</div></div>`;
   } else {
     h += `<div class="card" style="background:#fbf7ee;border:1.5px dashed #d6ccb6;box-shadow:none"><div class="lab">${esc(T.notYet)}</div><div style="font-size:13.5px;color:#4b5563">${esc(T.notYetP)}</div>
-      ${p.prac ? `<button class="btn" data-use="${pid}">${esc(T.use)} →</button>` : ""}
+      ${p.prac && PRACTICE_ON ? `<button class="btn" data-use="${pid}">${esc(T.use)} →</button>` : ""}
       <button class="letgo" data-letgo="${pid}">${esc(T.letgo)}</button></div>`;
   }
   openSheet(h);
 }
-function personSheet(who){
-  const T = TT(); focusNet(keysForPerson(who));
-  const ps = visible().filter(p => p.who === who);
-  const nm = person(who).nm;
-  openSheet(`<div style="margin-top:8px">${whoCard(who)}</div>
-   <div class="card"><div class="lab">${esc(T.personBorrow)}</div><div class="chips">${ps.map(p => `<button class="chip" data-p="${p.id}">${esc(p.short || p.t)}<small>${used(p) ? "✓" : "…"}</small></button>`).join("")}</div></div>
-   <button class="btn ghost" data-hangp="${who}">${esc(T.hangWith(nm))}</button>`);
-}
-function lineSheet(lid){
-  const l = S.lines.find(x => x.id === lid), T = TT(), d = d_();
-  focusNet(keysForLine(lid));
-  if (l.user) { const it = l.it, url = HV.url(it.src);
-    return openSheet(`<div class="lab" style="font-size:12px;color:var(--soft);font-weight:800;margin-top:10px">${esc(T.youSaidIt)}</div>
-     <div class="quote mine" style="font-size:19px">${markText(l.t, marks(l))}</div>
-     ${it.q ? `<div class="qtr" style="margin-top:4px">❓ ${esc(it.q.t)}${it.q.tr ? " · " + esc(it.q.tr) : ""}</div>` : ""}
-     <button class="play" style="margin-top:8px" data-say="${esc(l.t)}" data-mine="1">${esc(T.playYou)}</button>
-     <div class="card"><div class="lab">${esc(T.ownWhere)}</div><div style="font-size:14px">${srcHtml(it)}</div>${url ? `<a class="btn ghost" style="display:block;text-align:center;text-decoration:none;margin-top:10px" href="${esc(url)}">↩ ${esc(it.where ? (it.where[UIk()] || it.where.en) : "")}</a>` : ""}</div>
-     <div class="card"><div class="lab">🗄️</div>${drLine(it)}</div>
-     ${it.reply ? `<div class="card"><div class="lab">🎭</div><div style="font-size:14px">${esc(it.reply.t)}</div><div class="qtr">${esc(it.reply.tr || "")}</div></div>` : ""}
-     ${l.uses.length ? `<div class="card"><div class="lab">${esc(T.ownUses)}</div>${heardHtml(l)}</div>` : ""}`); }
-  const fs = l.uses.map(pid => P(pid)).filter(Boolean);
-  openSheet(`<div class="lab" style="font-size:12px;color:var(--soft);font-weight:800;margin-top:10px">${esc(d.kinds[l.k])}</div>
-   <div class="quote mine" style="font-size:19px">${markText(l.t, marks(l))}</div><div class="qtr">${esc(l.tr)}</div>
-   <button class="play on" style="margin-top:8px" data-play="${l.id}">${esc(T.playDemo)}</button> <small style="color:var(--soft);font-size:11px">${esc(T.voiceDemo)}</small>
-   <div class="card"><div class="lab">${esc(T.ownWhere)}</div><div style="font-size:14px;color:var(--ink)">${esc(l.at)}</div>${l.pend ? `<div class="where"><span class="pend">${esc(l.pend)}</span></div>` : ""}</div>
-   <div class="card"><div class="lab">${esc(T.ownUses)}</div>${fs.map(p => `<div class="who" style="margin:6px 0;cursor:pointer" data-p="${p.id}"><img src="${face(p.who)}" alt=""><div><b>${esc(p.t)}</b><small>${esc(p.m)} · ${esc(T.from)} ${esc(person(p.who).nm)}</small></div></div>`).join("")}</div>`);
-}
-
 /* ───────── 用它说一句你自己的事：选 → 填空 → 自己说 ───────── */
 let PR;
 function practice(pid, lv){
   const p = P(pid), T = TT(); if (!p || !p.prac) return;
   PR = {pid, lv: lv || 0, pick: null, fill: null, out: null};
-  focusNet(keysForPhrase(pid));
+  focusNet();
   drawPractice();
   say(p.prac.ask);
 }
@@ -4006,9 +4604,9 @@ function drawPractice(){
       <div class="two"><button class="btn ${PR.route === "nat" ? "ghost" : ""}" data-route="tl">${esc(T.sayTl)}</button><button class="btn ${PR.route === "nat" ? "" : "ghost"}" data-route="nat">${esc(T.nat1 || T.sayNat)}</button></div>
       <div id="natOut"></div><div id="sbx"></div>`;
   }
-  openSheet(`<div class="who" style="margin-top:8px"><img src="${face(p.who)}" alt=""><div><b style="font:700 18px 'Noto Serif SC',Georgia,serif">${esc(p.t)}</b><small>${esc(p.m)} · ${esc(T.from)} ${esc(person(p.who).nm)}</small></div></div>
+  openSheet(`<div class="who" style="margin-top:8px"><img src="${face(p.who)}" alt=""><div><b style="font:700 18px 'Noto Serif SC',Georgia,serif">${esc(p.t)}</b><small>${esc(p.m)} · ${esc(UZ() ? `${person(p.who).nm} 这么说` : `${person(p.who).nm} says it`)}</small></div></div>
    <div class="lab" style="font-size:12px;color:var(--soft);font-weight:800;margin-top:12px">${esc(T.someone)}</div>
-   <div class="ask"><img class="mini" style="width:30px;height:30px" src="${face(p.who)}" alt=""><div class="bub">${esc(x.ask)}<small>${esc(x.askTr)}</small></div><button class="play" data-say="${esc(x.ask)}">🔊</button></div>
+   <div class="ask"><img class="mini" style="width:30px;height:30px" src="${face(p.who)}" alt=""><div class="bub" dir="auto">${esc(x.ask)}<small>${esc(x.askTr)}</small></div><button class="play" data-say="${esc(x.ask)}">🔊</button></div>
    <div class="lv">${T.lv.map((l, i) => `<button class="${PR.lv === i ? "on" : ""}" data-lv="${i}">${esc(l[0])}<small>${esc(l[1])}</small></button>`).join("")}</div>
    <div class="lvnote">${esc(T.lvNote)}</div>${body}`);
   const box = $("sbx"); if (!box) return;
@@ -4070,94 +4668,13 @@ function growInto(el, html, done){
 }
 
 /* ───────── 整理进网里 ───────── */
-function keepLine(t, meta, fromEl){
+function keepLine(t, meta){
   const T = TT();
-  const before = new Set(CABS.flatMap(c => shownIn(c).shown));
-  const was = new Set(S.phrases.filter(p => !used(p)).map(p => p.id));
-  const hid = new Set(S.phrases.filter(p => p.hidden).map(p => p.id));
   const it = HV.add({t, lg: TLg(), kind: "practice", via: meta.via || "voice", ...meta});
-  sync();
-  const id = "u_" + it.id, line = S.lines.find(l => l.id === id);
-  const flipped = line.uses.filter(pid => was.has(pid)), newPhr = line.uses.filter(pid => hid.has(pid));
-  const grew = (it.dr || []).map(n => "d" + n).find(d => !before.has(d));
-  if (grew) S.newDr = grew;
-  const from = fromEl ? fromEl.getBoundingClientRect() : null;
-  closeSheet();
-  render([...flipped.map(p => "p:" + p), "o:" + id]);
-  scr.scrollTop = 0;
-  const svg = $("net");
-  flipped.forEach((pid, i) => {
-    const g = svg.querySelector(`[data-k="p:${pid}"]`); if (!g || !from) return;
-    const to = g.getBoundingClientRect();
-    const f = document.createElement("div"); f.className = "flyer"; f.textContent = P(pid).short || P(pid).t;
-    f.style.left = from.left + "px"; f.style.top = from.top + "px"; phone.appendChild(f);
-    requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transform = `translate(${to.left - from.left}px,${to.top - from.top}px) scale(.85)`; f.style.opacity = ".2"; }));
-    setTimeout(() => f.remove(), 900 + i * 100);
-  });
-  setTimeout(() => {
-    focusNet(keysForLine(id));
-    stamp(T.stamp, T.sortedT((it.dr || []).map(n => HV.drName(n, UIk())).join(" · ")));
-    if (S.first){ confetti(46); S.first = false; } else confetti(16);
-    const p0 = line.uses[0] && P(line.uses[0]);
-    setTimeout(() => toast(p0 ? (heardBy(p0.id) ? T.heardFrom(p0.short || p0.t, whoName(heardBy(p0.id))) : T.alsoSays2(p0.short || p0.t, person(p0.who).nm)) : T.kept), 900);
-    setTimeout(() => focusNet(null), 2600);
-    if (grew) setTimeout(() => growFx(grew), 2700);
-  }, 650);
-}
-
-/* ───────── 从你自己开始 ───────── */
-let ST;
-function startFlow(){ ST = {step:0, a1:null, a2:null, nat:""}; drawStart(); }
-function stSteps(n){ return `<div class="steps">${[0,1,2,3].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>`; }
-function stTarget(){
-  const s = d_().start, a1 = s.a1[ST.a1], a2 = s.a2[ST.a2];
-  const g = [];
-  if (s.pre) s.pre.forEach(x => g.push(x));
-  if (M === "zh") g.push([a1.t]); else g.push([a1.t]);
-  a2.g.forEach(x => g.push([x[0].replace("{done}", a1.done || ""), x[1]]));
-  return g;
-}
-function drawStart(){
-  const s = d_().start, T = TT(), d = d_();
-  let h = "";
-  if (ST.step === 0){
-    h = `${stSteps(0)}<div class="lab" style="font-size:12px;color:var(--soft);font-weight:800">${esc(T.s1)}</div><h3 style="font:700 20px Georgia,'Noto Serif SC',serif;color:var(--ink);margin:4px 0 6px">${esc(s.q1)}</h3>
-     <div class="q1">${s.a1.map((a, i) => `<button class="opt" data-a1="${i}"><span class="em">${a.em}</span><b>${esc(a.l)}</b></button>`).join("")}</div>`;
-  } else if (ST.step === 1){
-    h = `${stSteps(1)}<div class="lab" style="font-size:12px;color:var(--soft);font-weight:800">${esc(T.s1)}</div><h3 style="font:700 20px Georgia,'Noto Serif SC',serif;color:var(--ink);margin:4px 0 6px">${esc(s.q2)}</h3>
-     ${s.a2.map((a, i) => `<button class="opt" data-a2="${i}"><b>${esc(a.l)}</b></button>`).join("")}`;
-  } else if (ST.step === 2){
-    const a1 = s.a1[ST.a1], a2 = s.a2[ST.a2];
-    ST.nat = ST.nat || (a1.n + " " + a2.n);
-    h = `${stSteps(2)}<h3 style="font:700 20px Georgia,'Noto Serif SC',serif;color:var(--ink);margin:4px 0 2px">${esc(T.s3)}</h3><p class="sub" style="margin:0 0 6px;color:var(--soft);font-size:13px">${esc(T.s3P)}</p>
-     <textarea class="own-in" id="natIn" placeholder="${esc(ST.nat)}"></textarea>
-     <button class="mic" data-mic="st" aria-label="mic">🎙️</button><div class="bars" id="bars"><i></i><i></i><i></i><i></i><i></i></div><div class="micl" id="micl">${esc(T.tapMic)}</div><div class="micerr" id="sterr" hidden style="font-size:12.5px;color:#8a3a14;background:#fff1d6;border-radius:10px;padding:6px 10px"></div>
-     <button class="btn" data-stgo="3">${esc(T.grow)}</button>`;
-  } else {
-    h = `${stSteps(3)}<h3 style="font:700 20px Georgia,'Noto Serif SC',serif;color:var(--ink);margin:4px 0 2px">${esc(T.s4)}</h3><p class="sub" style="margin:0 0 6px;color:var(--soft);font-size:13px">${esc(T.s4P)}</p>
-     <div class="native">${esc(ST.nat)}</div><div class="grow locked" id="g1"></div><div class="src" id="src"></div><div class="qtr" id="gtr" style="margin-top:6px"></div><div class="aihelp">🔒 ${esc(T.startLocked)}</div>
-     <div id="stEnd"></div>`;
-  }
-  openSheet(h);
-  if (ST.step === 3) growStart();
-}
-function growStart(){
-  const g = stTarget(), T = TT(), s = d_().start;
-  const html = g.map(x => x[1] ? `<u class="ph" data-p="${x[1]}">${esc(x[0])}</u>` : esc(x[0])).join("");
-  const ids = g.filter(x => x[1]).map(x => x[1]).filter((v, i, a) => a.indexOf(v) === i);
-  growInto($("g1"), html, () => {
-    $("src").innerHTML = ids.map(pid => { const p = P(pid); return `<span><img src="${face(p.who)}" alt="">${esc(p.short || p.t)} · ${esc(person(p.who).nm)}</span>`; }).join("");
-    $("src").querySelectorAll("span").forEach((e, i) => setTimeout(() => { e.classList.add("gin"); blip(880); }, 200 * i));
-    const tr = M === "zh" ? s.a1[ST.a1].tr + " " + s.a2[ST.a2].tr : s.a1[ST.a1].tr + s.a2[ST.a2].tr;
-    $("gtr").textContent = tr;
-    const text = g.map(x => x[0]).join("").trim();
-    say(text);
-    $("stEnd").innerHTML = `<p class="lvnote" style="margin-top:10px">${esc(T.sayNow)} · ${esc(T.sayItP)}</p><div id="sbx"></div>`;
-    sayBox($("sbx"), TLg(), (t, v) => keepLine(t, {via: v, page: "mylang", src: {page: "mylang", start: 1}, where: {zh: "🌱 在《你的语言》里「从你开始」", en: "🌱 “Start from you” in My language"}, borrowed: ids.map(pid => ({who: P(pid).who, t: P(pid).t})), dr: HV.classify(t, TLg()).slice(0, 2)}, $("sbx")), false, text);
-    ST.text = text; ST.tr = tr; ST.ids = ids;
-    const mk = {}; g.forEach(x => { if (x[1]){ (mk[x[1]] = mk[x[1]] || []).push(x[0].trim().replace(/^[，,]/, "")); } });
-    ST.mk = mk;
-  });
+  closeSheet(); sync(); scr.scrollTop = 0;
+  grow();   // 新说的这句从抽屉那儿长出来
+  const line = S.lines.find(l => l.it && l.it.id === it.id), p0 = line && line.uses[0] && P(line.uses[0]);
+  setTimeout(() => toast(p0 ? (heardBy(p0.id) ? T.heardFrom(p0.short || p0.t, whoName(heardBy(p0.id))) : T.alsoSays2(p0.short || p0.t, person(p0.who).nm)) : T.kept), 2600);
 }
 
 /* ───────── 点击 ───────── */
@@ -4170,20 +4687,21 @@ SR.addEventListener("click", ev => {
 
   if (ev.target.closest("a[href]")) return;
   if (ds.url){ HV.nav(ds.url); return; }
-  if (ds.chdr){ const it = HV.items().find(x => x.id === ds.chdr); if (!it) return;
-    HV.pickDrawers(phone, it.dr || [], UIk(), ns => { const before = new Set(CABS.flatMap(c => shownIn(c).shown)); HV.update(it.id, {dr: ns, drAuto: 0}); sync(); const g = ns.map(n => "d" + n).find(d => !before.has(d)); if (g) S.newDr = g; closeSheet(); render(); toast(TT().sortedT(ns.map(n => HV.drName(n, UIk())).join(" · "))); if (g) growFx(g); }); return; }
-  if (ds.cab){ S.cabOpen[ds.cab] = !S.cabOpen[ds.cab]; redrawDrawer(); return; }
-  if (ds.moreyou){ S.showAllYou = 1; const sc = scr.scrollTop; render(); scr.scrollTop = sc; return; }
-  if (ds.lucas){ S.showLucas = !S.showLucas; $("lucasSec").classList.toggle("lucas-shut", narrow() && !S.showLucas); return; }
+  /* 你的网：三张网、远看近看、去说一句、抽屉、借来的、一句、回到那里 */
+  if (ds.view){ if (VIEW !== ds.view){ VIEW = ds.view; OPEN.clear(); render({seq: 1}); } return; }
+  if (ds.z){ setFar(ds.z === "far"); return; }
+  if (ds.hint){ closeSheet(); goHint(ds.hint); return; }
+  if (ds.pod){ if (window.PODCAST) window.PODCAST.open({id: ds.pod}); return; }
+  if (ds.ydr){ return drawerSheet("d" + ds.ydr); }
+  if (ds.ybor){ return openBor(+ds.ybor); }
+  if (ds.pnl){ return openPerson(ds.pnl, ds.pg); }
+  if (ds.yi){ return openOwn(+ds.yi); }
+  if (ds.yg){ return openGroupList(+ds.yg); }
+  if (ds.there){ return goThere(+ds.there); }
+  if (ds.ymv){ return moveDr(+ds.ymv); }
+  if (ds.thback){ $("there").classList.remove("on"); return; }
   if (ds.route){ PR.route = ds.route; drawPractice(); return; }
-  if (ds.k){
-    const [kind, id] = ds.k.split(":");
-    if (kind === "s"){ const el = t.closest("[data-url]"); if (el && el.dataset.url) HV.nav(el.dataset.url); return; }
-    if (kind === "p") return phraseSheet(id);
-    if (kind === "w") return personSheet(id);
-    if (kind === "o") return lineSheet(id);
-  }
-  if (ds.use){ return practice(ds.use, 0); }
+  if (ds.use){ return PRACTICE_ON ? practice(ds.use, 0) : null; }
   if (ds.letgo){
     const p = P(ds.letgo); const lay = SR.querySelector(`[data-lay="${p.id}"]`);
     p.gone = true; closeSheet(); toast(TT().letgoT);
@@ -4195,17 +4713,6 @@ SR.addEventListener("click", ev => {
   if (ds.fill){ PR.fill = ds.fill; drawPractice(); say(practiceText()[0]); toast(rx()); return; }
   if (ds.dw){ return drawerSheet(ds.dw); }
   if (ds.uw != null && ds.uw !== ""){ return uniSheet(+ds.uw); }
-  if (ds.growdemo){
-    const g = d_().grow; S.grewDemo = true;
-    toast(TT().listen); blip(660);
-    setTimeout(() => {
-      const id = "n" + (++S.seq);
-      S.demoLines.push({id, k:"answer", at:g.at, t:g.t, tr:g.tr, uses:[], demo:1});
-      addMine(g.dr, {t:g.t, tr:g.tr, src:id, fresh:true, demo:1});
-      render(["o:" + id]); say(g.t, null, true); growFx(g.dr);
-    }, 1300);
-    return;
-  }
   // 一个词三张网：点词开词卡，点根开小网，‹ 回到上一张
   const inSheet = !!t.closest("#sin");
   if (ds.back){ const [k, v] = [ds.back.split(":")[0], ds.back.slice(ds.back.indexOf(":") + 1)]; if (k === "dr") return drawerSheet(v); if (k === "card") return wordCard(v, S.cardBack || ""); if (k === "rn") return rootSheet(v, S.rnBack || ""); if (k === "sn") return soundSheet(v, S.snBack || ""); return; }
@@ -4221,25 +4728,10 @@ SR.addEventListener("click", ev => {
   if (ds.gonet){ if (window.WNET) window.WNET.open({}); return; }
   if (ds.gomap){ if (window.MAPL) window.MAPL.open({}); return; }
   if (ds.mego){ const g = ds.mego, P_ = window.hvPage || {}; if (g === "set" && P_.settings) P_.settings(); else if (g === "walk" && P_.walk) P_.walk(); else if (g === "again" && P_.review) P_.review(); return; }
-  if (t.id === "startBtn"){ startFlow(); return; }
-  if (ds.a1 != null && ds.a1 !== ""){ ST.a1 = +ds.a1; t.classList.add("on"); toast(rx()); setTimeout(() => { ST.step = 1; drawStart(); }, 380); return; }
-  if (ds.a2 != null && ds.a2 !== ""){ ST.a2 = +ds.a2; t.classList.add("on"); toast(rx()); setTimeout(() => { ST.step = 2; ST.nat = ""; drawStart(); }, 380); return; }
-  if (ds.mic === "st"){
-    // 先用母语说：真的听，说的话写进框里（可以改）
-    const ni = $("natIn"), ml = $("micl"), bars = $("bars"), er = $("sterr");
-    if (ST.rec){ ST.rec.stop(); ST.rec = null; t.classList.remove("rec"); bars.classList.remove("on"); return; }
-    ST.rec = HV.listen(d_().natLang.slice(0, 2), {start: () => { t.classList.add("rec"); bars.classList.add("on"); ml.textContent = TT().listen.replace(/（.*?）|\(.*?\)/g, ""); },
-      text: x => { ni.value = x; }, end: f => { ST.rec = null; t.classList.remove("rec"); bars.classList.remove("on"); if (f) { ni.value = f; ml.textContent = TT().heardYou; } else ml.textContent = TT().tapMic; },
-      fail: c => { ST.rec = null; t.classList.remove("rec"); bars.classList.remove("on"); er.hidden = false; er.textContent = HV.micErr(c, UIk()); ni.focus(); }});
-    if (!ST.rec && !HV.micOK()) { er.hidden = false; er.textContent = HV.micErr("unsupported", UIk()); }
-    return;
-  }
-  if (ds.stgo){ const ni = $("natIn"); const v = ni ? ni.value.trim() : ""; if (!v){ ni && ni.focus(); toast(TT().sayItP); return; } ST.nat = v; ST.step = 3; drawStart(); return; }
   // 句子里画线的说法 / 小标签
   if (t.matches("u.ph") || ds.p){
     const pid = ds.p; if (P(pid)) return phraseSheet(pid);
   }
-  if (ds.line && !ev.target.closest("button")) return lineSheet(ds.line);
 });
 SR.addEventListener("input", ev => {
   if (ev.target.id === "ownIn" && PR){
@@ -4254,18 +4746,14 @@ $("veil").addEventListener("click", closeSheet);
 
 function enter(o){
   o = o || {};
-  closeSheet(); fresh(); render();
-  const st = HV.load(), seen = new Set(st.seenDr || []);
-  const fresh_ = HV.items(TLg()).flatMap(it => (it.dr || []).map(n => "d" + n)).filter(d => !seen.has(d));
-  const demoOnly = new Set(Object.keys(S.demoMine));
-  const g = fresh_.find(d => !demoOnly.has(d) && !CABS.find(c => c.id === drInfo(d).cab).common.map(n => "d" + n).includes(d)) || null;
-  if (fresh_.length) { st.seenDr = [...seen, ...fresh_]; HV.save(st); }
+  closeSheet(); $("there").classList.remove("on"); fresh();
+  FAR = S.lines.length > 24; OPEN.clear();   // 句子多了先远看：一张蜘蛛网
   scr.scrollTop = 0;
-  if (o.dr && drInfo(o.dr)) { setTimeout(() => { const el = SR.querySelector(`[data-dw="${o.dr}"]`); if (el) { S.cabOpen[drInfo(o.dr).cab] = 1; redrawDrawer(); } drawerSheet(o.dr); }, 300); }
-  else if (g) { S.newDr = g; redrawDrawer(); growFx(g, true); }
-  else if (o.fresh) setTimeout(() => { const y = $("youSec"); if (y) scr.scrollTo({top: y.offsetTop - 8, behavior: "smooth"}); }, 250);
+  grow({seq: 1});   // 上次以后在别处新说的话：从抽屉那儿长出来
+  if (o.dr && drInfo(o.dr)) setTimeout(() => drawerSheet(o.dr), 300);
+  else if (o.fresh) { const i = S.lines.findIndex(l => l.it && l.it.id === o.fresh); if (i >= 0) setTimeout(() => highlightG(SR.querySelector(`#netcard .own[data-i="${i}"]`) ? +SR.querySelector(`#netcard .own[data-i="${i}"]`).dataset.g : -1), 900); }
 }
-return {enter, close: closeSheet};
+return {enter, close: closeSheet, count: () => { if (!S) fresh(); const L = gather(); return {lines: L.length, times: L.reduce((a, l) => a + l.n, 0)}; }};
 
 }
 })();

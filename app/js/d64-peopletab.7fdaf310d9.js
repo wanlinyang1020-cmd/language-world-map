@@ -262,10 +262,12 @@ function person(id, away){   // away：从别处（比如「今天」）点进�
     <div class="pt-hero${p.ph ? " ph" : ""}"><img src="${p.img}" alt=""><h1>${esc(p.nm)} <span class="pt-tag">🎭 ${T("角色", "character")}</span></h1><div class="pt-j">${esc(p.job)}</div>${p.ph ? `<div class="pt-aiph">${T("🎭 角色 · AI 生成的形象", "🎭 Character · AI-generated look")}</div>` : ""}</div>
     ${p.ph && p.ph.s.length ? `<div class="pt-days">${p.ph.s.map(s => `<figure><img src="${NPC_U + p.ph.d + "/" + s[0]}" alt="" loading="lazy">${ZHUI() && s[1] ? `<figcaption>${esc(s[1])}</figcaption>` : ""}</figure>`).join("")}</div>` : ""}
     <div class="pt-acts"><button class="pt-btn pri" id="ptK">${isK(id) ? "✓ " + T("已认识", "Know them") : "＋ " + T("认识 TA", "Get to know")}</button>${canChat ? `<button class="pt-btn" id="ptChat">💬 ${T("聊聊", "Chat")}</button>` : ""}${p.standup && window.SU ? `<button class="pt-btn" id="ptSu">🎤 ${T("听 TA 的脱口秀", "Her stand-up")}</button>` : ""}</div>
+    ${window.NPCMEM ? window.NPCMEM.profSlot(id) : ""}
     ${p.story ? `<div class="pt-story">${esc(p.story)}</div>` : ""}${p.why && p.why !== p.story && ZHUI() ? `<div class="pt-story pt-mut">${esc(p.why)}</div>` : ""}
     ${p.ties.length ? `<h2>${T("TA 身边的人", "People around them")}</h2><div class="pt-row">${p.ties.map(([t, w]) => { const q = P(t); return q ? `<div class="pt-pc" data-open="${esc(t)}"><img src="${q.img}" alt=""><b>${esc(q.nm)}</b><span class="pt-j">${esc(w)}</span></div>` : ""; }).join("")}</div>` : ""}
     <h2>${T("TA 的动态", "Posts")} <small>${vis(p).length}</small></h2>${vis(p).map(i => postHtml(p, i)).join("") || `<div class="pt-empty">${T("TA 还没发过动态。", "No posts yet.")}</div>`}</div>`;
   pg.hidden = false; pg.scrollTop = 0;
+  if (window.NPCMEM) window.NPCMEM.mountProf(pg, id);   // 💭 TA 记得你的事 + TA 的新鲜事（npc_mem.js，2026-11-13）
   pg.querySelector("#ptX").onclick = closePerson;
   pg.querySelector("#ptK").onclick = e => { setK(id, !isK(id)); e.currentTarget.textContent = isK(id) ? "✓ " + T("已认识", "Know them") : "＋ " + T("认识 TA", "Get to know"); };
   const ch = pg.querySelector("#ptChat"); if (ch) ch.onclick = () => { stop(); (p.learn === "zh" ? window.PZ : window.PP).person(p.city, id.split(".")[1]); };
