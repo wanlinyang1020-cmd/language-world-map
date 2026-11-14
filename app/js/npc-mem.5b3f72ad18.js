@@ -27,6 +27,9 @@ const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage
 const ST = () => { const o = ls(LSK) || {}; ["del", "chat", "seen", "met", "hrs", "news"].forEach(k => o[k] = o[k] || {}); o.said = o.said || []; return o; };
 const SAVE = o => { ls(LSK, o); try { window.hvSyncMark && window.hvSyncMark(LSK); } catch(e){} };
 const HA = () => ls("howabout.v1") || {};
+// 「你那边呢」的回话键：2026-11-13（b4cb248b）起按语言存 ha:日期:人|语言，老的是 ha:日期:人。只认当前在学的那门语言那一份（老的不带语言，照旧认）
+const haKey = key => { const m = String(key).match(/^ha:(\d{4}-\d\d-\d\d):([^|]+)(?:\|(\w+))?$/); return m && (!m[3] || m[3] === LEARN()) ? {date: m[1], id: m[2]} : null; };
+const haRe = (R, date, id) => R["ha:" + date + ":" + id + "|" + LEARN()] || R["ha:" + date + ":" + id];
 const PEO = id => (((window.HA_DATA || {}).people || {})[id]) || {};
 const nmOf = id => { const n = String(PEO(id).nm || id); return ZH() ? n : (n.replace(/\s*[㐀-鿿]+\s*/g, " ").trim() || n); };
 const isF = id => String(PEO(id).g || "f").toLowerCase().startsWith("f");
@@ -45,7 +48,7 @@ const hash = s => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + 
 // —— TA 记得什么：只从你送出的话里来 ——
 // howabout.v1.re["ha:<日期>:<人物>"].sent = [{o: m1 / m1.f0 / own, t, p, m, l, ts}]
 function memsOf(id){ const o = ST(), R = HA().re || {}, out = [];
-  for (const key in R){ const m = key.match(/^ha:(\d{4}-\d\d-\d\d):(.+)$/); if (!m || m[2] !== id) continue; const date = m[1], sent = (R[key] && R[key].sent) || [];
+  for (const key in R){ const m = haKey(key); if (!m || m.id !== id) continue; const date = m.date, sent = (R[key] && R[key].sent) || [];
     sent.forEach((s, i) => { if (!s || !s.t || (s.l && s.l !== LEARN())) return; const mk = `${date}|${id}|${s.o}|${i}`; if (o.del[mk]) return;
       const C = window.NPC_LATER && window.NPC_LATER[`${date}|${s.l || LEARN()}|${id}`], op0 = C && s.o !== "own" ? C.opts[s.o] : null;
       if (op0 && op0.you && op0.you.t !== s.t) return;   // 按第几句（m0 / m0.f1）找到的，还要跟你存下的原句对一遍；对不上就不记
@@ -62,9 +65,9 @@ const mainMem = (id, date) => { const L = memsOf(id).filter(m => m.date === date
 // —— 谁来找你：每个人按自己的时间来，一天只来一次 ——
 const LOADT = Date.now();   // 这次打开软件的时候
 function items(){ const o = ST(), R = HA().re || {}, now = Date.now(), td = today(), out = [], due = [];
-  const pairs = {}; for (const key in R){ const m = key.match(/^ha:(\d{4}-\d\d-\d\d):(.+)$/); if (m && ((R[key] || {}).sent || []).length) pairs[m[1] + "|" + m[2]] = {date: m[1], id: m[2]}; }
+  const pairs = {}; for (const key in R){ const m = haKey(key); if (m && ((R[key] || {}).sent || []).length) pairs[m.date + "|" + m.id] = {date: m.date, id: m.id}; }
   for (const ck in pairs){ const {date, id} = pairs[ck], C = window.NPC_LATER && window.NPC_LATER[`${date}|${LEARN()}|${id}`]; if (!C) continue;
-    const ch = o.chat[ck] || {}, mm = mainMem(id, date), first = ((R["ha:" + date + ":" + id] || {}).sent || [])[0] || {};
+    const ch = o.chat[ck] || {}, mm = mainMem(id, date), first = ((haRe(R, date, id) || {}).sent || [])[0] || {};
     const H = usualHour(first.ts ? new Date(first.ts).getHours() + new Date(first.ts).getMinutes() / 60 : 19), off = (hash(id) % 90) / 60;
     // 什么时候算起：按你回答的那一天（「以前的题」补做的：从你补做那天算，过两天照样有人来）
     const ansD = first.ts ? ymd(new Date(first.ts)) : date, base = ansD > date ? ansD : date;

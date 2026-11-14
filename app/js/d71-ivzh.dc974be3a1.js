@@ -88,6 +88,11 @@ const ago = s => md(s) + " " + WK(s);
 const run = a => { const t = today(), S = (a.starts || []).slice().sort(); let cur = null, next = null;
   S.forEach(s => { if (s <= t && dayDiff(s, t) < a.days) cur = s; if (s > t && !next) next = s; }); return {cur, next}; };
 const joined = id => ST().j[id];
+// 🙈 不在今天显示（2026-11-14，用户：「只是想在今天的界面上不想看到这个活动而已啊……这个活动的入口在世界里面也会有啊」）：j[id].hideToday = 那天。
+// 只管「今天」：今天页小条（todayBar）、今天页那张活动小卡（world_net.js）、提醒都不提它；活动本身还参加着，「你在参加的」、进度、「我」页记录、复习都照常。
+// 今天页小条和小卡上有个小 ×，活动页底下一行小字「不在今天显示 / 在今天显示」来回切。（之前试过的 gone / off 也当 hideToday）
+const hidT = J => !!(J && (J.hideToday || J.gone || J.off));
+const live = id => ST().j[id];
 // 你在这个活动的第几天：从你加入那天算，一天开一步
 // free: true（签证面试，2026-11-11）：做完一天就能直接开下一天，不用等到明天
 const myDay = (a, J) => Math.min(a.days - 1, Math.max(0, dayDiff(J.d0, today()), a.free ? Object.keys(J.done || {}).length : 0));
@@ -213,7 +218,7 @@ function askHow(a, d, box){ if (!box || box.querySelector(".acx-how")) return; c
 // 🔔 活动的提醒（2026-11-10）：往后 8 天，哪天开了新的一步还没做，告诉网页推送（App 里 app_notify.js 自己会读 act.v1）
 function syncActs(){ try { const H = window.HVI || {}; if (!H.pushActs || !H.pushOn || !H.pushOn()) return; const o = ST(), out = {};
   for (let k = 0; k < 8; k++){ const dd = new Date(); dd.setDate(dd.getDate() + k); const day = dstr(dd); if (out[day]) continue;
-    for (const id in o.j){ const a = ALL.find(x => x.id === id), J = o.j[id]; if (!a || !J.d0) continue; const i = dayDiff(J.d0, day); if (i < 0 || i >= a.days || (J.done || {})[i] != null) continue;
+    for (const id in o.j){ const a = ALL.find(x => x.id === id), J = o.j[id]; if (!a || !J.d0 || hidT(J)) continue; const i = dayDiff(J.d0, day); if (i < 0 || i >= a.days || (J.done || {})[i] != null) continue;
       const D = a.D[i] || {}, nm = who(a.host).nm; out[day] = {zh: [`🎪 ${a.t.zh} · 第 ${i + 1} 天开了`, nm + "：" + String((D.say || [])[1] || "").slice(0, 90)], en: [`🎪 ${a.t.en} · Day ${i + 1} is open`, nm + ": " + String((D.say || [])[0] || "").slice(0, 90)], id}; break; } }
   H.pushActs(out); } catch(e){} }
 const remindHtml = () => { const H = window.HVI || {}, app = window.HVN && window.HVN.app && window.HVN.app();
@@ -232,12 +237,12 @@ async function realShout(a, d){ if (d < 1) return; await loadReal(a, d - 1); if 
   const hs = box.querySelector(".acx-hs"); hs ? hs.after(el) : box.prepend(el); const old = box.querySelector(".acx-shout:not(.real)"); if (old) old.remove();
   el.querySelector("[data-rsp]").onclick = e => { e.stopPropagation(); rvPlay(rvUrl(v)); }; }
 // ── 卡片 ──
-const card = a => { const R = run(a), J = joined(a.id), host = who(a.host);
+const card = a => { const R = run(a), J = live(a.id), host = who(a.host);
   const tag = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("进行中 · 第 ", "On · day ") + (myDay(a, J) + 1) + T(" 天", "")) : T("一直开着", "Always open");
   return `<div class="acx-c" data-act="${esc(a.id)}"><div class="acx-pic" style="background-image:url('${esc(pic(a))}')"><span>${a.days === 1 ? T("一次", "One day") : a.days + T(" 天", " days")}${tag ? " · " + esc(tag) : ""}</span></div>
     <div class="acx-b"><h3>${esc(T(a.t.zh, a.t.en))}</h3>${ZH() ? `<div class="acx-en">${esc(a.t.en)}</div>` : ""}<div class="acx-h">${av(a.host, 24)}<b>${esc(host.nm)}</b><span>${esc(host.home || "")}</span></div></div></div>`; };   // 2026-11-11：写死的「N 人在做」不显示了（冷启动不写假人数；a.n 留在数据里）
 // ── 海报 ──
-const poster = (a, i, col) => { const R = run(a), J = joined(a.id), host = who(a.host), L_ = "ABC"[i % 3], showD = DAYS_ID.has(a.id) || !!a.showDays;
+const poster = (a, i, col) => { const R = run(a), J = live(a.id), host = who(a.host), L_ = "ABC"[i % 3], showD = DAYS_ID.has(a.id) || !!a.showDays;
   const when = J ? (finished(a, J) ? T("✓ 做完了", "✓ Done") : T("你在第 ", "You're on day ") + (myDay(a, J) + 1) + T(" 天", "")) : T("一直开着", "Always open");
   const hb = `${av(a.host, 26)}<span><b>${esc(host.nm)}</b> ${T("带", "hosts")}<br>${esc(host.job || host.home || "")}</span>`;   // 写死的人数不显示（同上）
   return `<div class="acx-po ${L_}" style="--k:${col}" data-act="${esc(a.id)}"><div class="acx-ph" style="background-image:url('${esc(pic(a))}')"></div><div class="acx-tint"></div><div class="acx-grad"></div>
@@ -260,7 +265,7 @@ function openNext(id){ const x = NEXT.find(n => n.id === id); if (!x) return; mo
   pg.querySelector("[data-rem]").onclick = () => { const o2 = ST(); o2.rem = o2.rem || {}; if (o2.rem[id]) delete o2.rem[id]; else o2.rem[id] = today(); SAVE(o2); openNext(id); }; }
 // ── 「活动」那一栏的上半截 ──
 function html(){ mode(); if (!L.length) return "";
-  const mine = L.filter(a => joined(a.id) && !finished(a, joined(a.id)));
+  const mine = L.filter(a => live(a.id) && !finished(a, live(a.id)));
   const t = today(), week = []; for (let k = 0; k < 7; k++){ const d = new Date(); d.setDate(d.getDate() + k); week.push(dstr(d)); }
   const pool = L.filter(a => run(a).cur || (a.starts || []).some(s => week.includes(s)));
   const feat = (pool.length ? pool : L).slice()[new Date().getDate() % Math.max(1, Math.min(3, (pool.length || L.length)))];
@@ -301,7 +306,7 @@ function open(id, day){ mode(); const a = ALL.find(x => x.id === id); if (!a) re
      ${langHtml(a, d, D, host)}${talkHtml(a, d, host)}
      <div class="acx-crowd"><div class="acx-real"></div><h4>${T("大家今天交的", "What people sent today")}<small>${(D.crowd || []).length ? T("点一下听", "tap to hear") : ""}</small></h4>
        ${J && (J.done || {})[d] ? `<div class="acx-it2 you"><span class="acx-av acx-avt" style="width:34px;height:34px;background:var(--acx-ok)">${T("你", "You")[0]}</span><div><div class="acx-q">${esc(J.done[d] || plain(D.line || ""))}</div><small>${T("你 · 刚才", "You · just now")}</small></div></div>` : ""}
-       ${(D.crowd || []).map(c => { const p = who(c[0]); return `<div class="acx-it2" data-say="${esc(c[1])}" data-lang="${esc(ZHL() ? "zh-CN" : p.lang || "en-US")}">${av(c[0], 34)}<div><div class="acx-q">${esc(c[1])}</div><small>${esc(p.nm)}${ZHL() ? " · " + (/^zh/.test(p.lang || "") ? "native" : "learning Chinese") : p.home ? " · " + esc(p.home) : ""}${SUB() ? " · " + esc(ZH() ? c[2] : TR(c[2])) : ""}</small></div></div>`; }).join("")}</div></div>`}</div>`;
+       ${(D.crowd || []).map(c => { const p = who(c[0]); return `<div class="acx-it2" data-say="${esc(c[1])}" data-lang="${esc(ZHL() ? "zh-CN" : p.lang || "en-US")}">${av(c[0], 34)}<div><div class="acx-q">${esc(c[1])}</div><small>${esc(p.nm)}${ZHL() ? " · " + (/^zh/.test(p.lang || "") ? "native" : "learning Chinese") : p.home ? " · " + esc(p.home) : ""}${SUB() ? " · " + esc(ZH() ? c[2] : TR(c[2])) : ""}</small></div></div>`; }).join("")}</div></div>`}${J && !fin ? `<div class="acx-off"><a href="#" data-hidet>${hidT(J) ? T("在今天显示", "Show on Today") : T("不在今天显示", "Hide from Today")}</a></div>` : ""}</div>`;
   pg.hidden = false; pg.scrollTop = 0; wireOpen(a, d); wireLang(a, d);
   if (d > 0 && !(fin && day == null)) realShout(a, d); if (J) syncActs();
   if (WELCOME === a.id){ WELCOME = null; welcome(a); }
@@ -324,10 +329,15 @@ function wireOpen(a, d){ const $ = s => pg.querySelector(s), host = who(a.host);
   pg.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { if (b.classList.contains("lock")) return; open(a.id, +b.dataset.d); });
   const hp = $("[data-ppl]"); if (hp) hp.onclick = () => { if (window.PTAB_PERSON){ close(); try { window.HVI && window.HVI.ptOpen ? window.HVI.ptOpen() : 0; } catch(e){} window.PTAB_PERSON(a.host); } };
   const jb = $("[data-join]"); if (jb) jb.onclick = () => { const o = ST(); o.j[a.id] = {d0: today(), done: {}}; SAVE(o); try { window.hvPx && window.hvPx({k: "actjoin", act: a.id}); } catch(e){} WELCOME = a.id; open(a.id); };
+  const ht = $("[data-hidet]"); if (ht) ht.onclick = e => { e.preventDefault(); const on = !hidT(ST().j[a.id]); hideToday(a.id, on); ht.textContent = on ? T("在今天显示", "Show on Today") : T("不在今天显示", "Hide from Today"); blip("ok"); };
   const nx = $("[data-act-nx]"); if (nx) nx.onclick = () => open(nx.dataset.actNx);
   const sa = $("[data-sayall]"); if (sa) sa.onclick = () => speak(pg.querySelector(".acx-para").textContent, TGT(a)[2]);
   wireTask(a, d);
 }
+// 🙈 在今天显示 / 不在今天显示（一点就生效，不弹窗）
+function hideToday(id, on){ const o = ST(), J = o.j[id]; if (!J) return; delete J.gone; delete J.off; if (on) J.hideToday = today(); else delete J.hideToday; SAVE(o); syncActs(); try { window.hvPx && window.hvPx({k: on ? "acthide" : "actshow", act: id}); } catch(e){} }
+// 今天页小条、小卡上的小 ×：先于点开那张卡的处理（捕获阶段），收起这一张
+document.addEventListener("click", e => { const x = e.target.closest && e.target.closest("[data-acthide]"); if (!x) return; e.preventDefault(); e.stopImmediatePropagation(); const id = x.dataset.acthide; hideToday(id, true); blip("ok"); document.querySelectorAll(`.acx-tbar[data-act="${id}"],[data-wnact="${id}"]`).forEach(c => c.remove()); }, true);
 // ── 零件：「今天这一步」的 12 种玩法（D.type，不写就是 say）──
 // 每种 = 前半截（做点什么：跟着动、拍照、选、走、猜……）+ 后半截那一句说三遍（timed 自己就是说）。做完都存 done[天] = 说的话。
 const imgU = s => !s ? "" : /^https?:/.test(s) ? s : NPC + String(s).replace(/^npc:/, "") + ".webp";
@@ -779,9 +789,9 @@ function starter(){ mode(); const o = ST(); if (Object.keys(o.j || {}).length) r
 document.addEventListener("click", e => { const s = e.target.closest("[data-acxstart]"); if (s){ e.preventDefault(); open(s.dataset.acxstart); return; }
   if (e.target.closest("[data-acxall]")){ if (window.WNET) window.WNET.open({acts: 1}); else { const b = document.querySelector('#galTabs [data-galtab="home"]'); if (b) b.click(); } } });   // 2026-11-13：「活动」那一格搬进了世界，跳到世界最上面的活动
 // 「今天」页上的一条：你在参加的，今天这一步
-function todayBar(){ mode(); const A = L.filter(a => joined(a.id) && !finished(a, joined(a.id))); if (!A.length) return "";
-  const a = A[0], J = joined(a.id), n = nextStep(a, J); if (n < 0) return "";
-  return `<div class="acx-tbar" data-act="${esc(a.id)}">${av(a.host, 44)}<div><b>${T("你在参加 · ", "You're in · ")}${esc(who(a.host).nm)}${T(" 的「", "'s “")}${esc(T(a.t.zh, a.t.en))}${T("」", "”")}</b><small>${T("第 " + (n + 1) + " 天", "Day " + (n + 1))} · ${esc(lead(a.D[n]))}</small></div><button>${T("做今天这一步 →", "Today's step →")}</button></div>`; }
+function todayBar(){ mode(); const A = L.filter(a => live(a.id) && !finished(a, live(a.id)) && !hidT(live(a.id))); if (!A.length) return "";
+  const a = A[0], J = live(a.id), n = nextStep(a, J); if (n < 0) return "";
+  return `<div class="acx-tbar" data-act="${esc(a.id)}">${av(a.host, 44)}<div><b>${T("你在参加 · ", "You're in · ")}${esc(who(a.host).nm)}${T(" 的「", "'s “")}${esc(T(a.t.zh, a.t.en))}${T("」", "”")}</b><small>${T("第 " + (n + 1) + " 天", "Day " + (n + 1))} · ${esc(lead(a.D[n]))}</small></div><button>${T("做今天这一步 →", "Today's step →")}</button><span class="acx-tx" role="button" tabindex="0" data-acthide="${esc(a.id)}" aria-label="${T("不在今天显示", "Hide from Today")}" title="${T("不在今天显示", "Hide from Today")}">×</span></div>`; }
 function mount(){ if (!document.getElementById("acxCss")){ const s = document.createElement("style"); s.id = "acxCss"; s.textContent = CSS; document.head.appendChild(s); }
   if (!pg){ pg = document.createElement("div"); pg.id = "acxPg"; pg.hidden = true; document.body.appendChild(pg);
     pg.addEventListener("pointerdown", e => { const b = e.target.closest("button,[data-say],.acx-it2"); if (!b || b.disabled || b.classList.contains("lock")) return; b.classList.remove("acx-sq"); void b.offsetWidth; b.classList.add("acx-sq"); if (b.matches("[data-say],[data-sayown],[data-sayall],.acx-sp")) floatUp(b, "♪"); blip("tap"); }); } }
@@ -842,7 +852,7 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 .acx-host{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:13.5px;color:var(--acx-mute);cursor:pointer}.acx-host b{color:var(--acx-ink)}
 .acx-why{margin-top:10px;background:#fff;border-radius:4px 14px 14px 14px;padding:10px 12px;box-shadow:0 1px 3px rgba(20,48,92,.08)}.acx-q{font:15px/1.5 Georgia,serif}.acx-why small,.acx-hs small,.acx-shout small,.acx-it2 small{display:block;color:var(--acx-mute);font-size:12.5px}
 .acx-join{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}.acx-btn{all:unset;cursor:pointer;border-radius:99px;padding:8px 16px;font-size:14px;font-weight:700;background:var(--acx-ink);color:#fff}.acx-btn.say{background:var(--acx-say)}.acx-btn.lt{background:#fff;color:var(--acx-ink);box-shadow:0 0 0 1px rgba(20,48,92,.2) inset}
-.acx-in{font-weight:800;color:var(--acx-ok)}.acx-cnt{font-size:12.5px;color:var(--acx-mute)}
+.acx-in{font-weight:800;color:var(--acx-ok)}.acx-off{text-align:center;padding:26px 16px 34px}.acx-off a{font-size:12.5px;color:var(--acx-mute);text-decoration:underline;text-underline-offset:3px}.acx-cnt{font-size:12.5px;color:var(--acx-mute)}
 .acx-days{display:flex;gap:8px;padding:14px;flex-wrap:wrap}.acx-dy{all:unset;cursor:pointer;width:76px;box-sizing:border-box;text-align:center;border-radius:12px;padding:6px 4px;font-size:11.5px;color:var(--acx-mute);background:#fff}.acx-dy b{display:block;font:700 18px Georgia,serif;color:var(--acx-ink)}.acx-dyk{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.3;overflow-wrap:normal;word-break:normal}
 .acx-dy.done{background:#e3efe9}.acx-dy.done b::after{content:" ✓";color:var(--acx-ok);font-size:12px}.acx-dy.on{outline:2px solid var(--acx-say)}.acx-dy.lock{opacity:.45;cursor:default}
 .acx-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px;padding:0 14px}.acx-body h4{margin:0 0 8px;font:700 16px "Noto Serif SC",serif;color:var(--acx-ink)}.acx-body h4 small{font:12px -apple-system,sans-serif;color:var(--acx-mute);margin-left:6px}
@@ -856,7 +866,7 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 .acx-heard{font:italic 14px Georgia,serif;color:#4a5566;margin-top:6px;min-height:1em}.acx-task .acx-mine{display:none;margin-top:10px;font-size:13.5px;background:#e3efe9;border-radius:10px;padding:8px 10px}.acx-task .acx-mine.on{display:block}
 .acx-it2{display:flex;gap:9px;background:#fff;border-radius:12px;padding:9px 11px;margin-bottom:8px;box-shadow:0 1px 3px rgba(20,48,92,.07);cursor:pointer}.acx-it2.you{background:#e3efe9}
 .acx-end{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center;margin:4px 14px;background:var(--acx-paper);border-radius:18px;padding:18px 20px}.acx-end h3{margin:0 0 8px;font:700 19px "Noto Serif SC",serif;color:var(--acx-ink)}.acx-para{font:17px/1.6 Georgia,serif;background:#fff;border-radius:12px;padding:12px 14px}
-.acx-tbar{display:flex;gap:12px;align-items:center;background:#14305c;color:#fff;border-radius:16px;padding:12px 16px;margin:0 0 16px;cursor:pointer}.acx-tbar small{display:block;opacity:.75}.acx-tbar button{all:unset;margin-left:auto;background:var(--acx-say);border-radius:99px;padding:7px 14px;font-weight:800;font-size:13px;white-space:nowrap}
+.acx-tbar{display:flex;gap:12px;align-items:center;background:#14305c;color:#fff;border-radius:16px;padding:12px 16px;margin:0 0 16px;cursor:pointer;position:relative}.acx-tx{position:absolute;top:0;right:0;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:rgba(255,255,255,.55);cursor:pointer;-webkit-tap-highlight-color:transparent}.acx-tx:hover{color:#fff}.acx-tbar small{display:block;opacity:.75}.acx-tbar button{all:unset;margin-left:auto;background:var(--acx-say);border-radius:99px;padding:7px 14px;font-weight:800;font-size:13px;white-space:nowrap}
 .acx-say.lk{opacity:.35;pointer-events:none;filter:grayscale(.6)}.acx-pre .acx-q.big{font-size:19px;color:var(--acx-ink);margin-top:4px}.acx-zh{display:block;color:var(--acx-mute);font-size:12.5px}
 .acx-fl{margin-top:8px}.acx-fc{background:#14305c;color:#fff;border-radius:14px;padding:16px;text-align:center}.acx-fc b{display:block;font:700 24px Georgia,serif}.acx-fc small{opacity:.8}.acx-fc span{font-size:12px;opacity:.7}
 .acx-fbar{height:6px;background:rgba(255,255,255,.2);border-radius:3px;margin:10px 0 6px;overflow:hidden}.acx-look .acx-fbar{background:#e6dfcf}.acx-fbar i{display:block;height:100%;width:0;background:var(--acx-say)}
@@ -941,8 +951,8 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 .acx-ivend{text-align:center;margin-top:12px}.acx-ivend .acx-btn{display:block;width:fit-content;margin:10px auto 0}.acx-ivstamp{display:inline-block;border:4px solid var(--acx-say);color:var(--acx-say);border-radius:12px;padding:6px 14px;font:900 20px Georgia,"Noto Serif SC",serif;transform:rotate(-8deg);animation:acxIvS .5s}@keyframes acxIvS{from{transform:rotate(-8deg) scale(2.6);opacity:0}}.acx-ivstamp small{display:block;font-size:12px}
 `;
 // 🌍 世界那一页的海报（world_net.js，2026-11-13）：一个活动的名字、主持人、几天、参加了没有
-const meta = id => { mode(); const a = ALL.find(x => x.id === id); if (!a) return null; const h = who(a.host); return {id, t: T(a.t.zh, a.t.en), en: a.t.en, days: a.days, n: a.n || 0, pic: pic(a), cat: a.cat, host: {nm: h.nm, job: h.job || "", img: h.img || ""}, joined: !!joined(id) && !finished(a, joined(id)) ? 1 : 0}; };
-window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta};
+const meta = id => { mode(); const a = ALL.find(x => x.id === id); if (!a) return null; const h = who(a.host); return {id, t: T(a.t.zh, a.t.en), en: a.t.en, days: a.days, n: a.n || 0, pic: pic(a), cat: a.cat, host: {nm: h.nm, job: h.job || "", img: h.img || ""}, joined: !!live(id) && !finished(a, live(id)) ? 1 : 0, hideToday: hidT(joined(id)) ? 1 : 0, hideNow: (joined(id) || {}).hideToday === today() ? 1 : 0}; };   // 世界页「今天」那张小卡、排序都看它；hideToday = 不在今天页那张小卡上出现
+window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta, hideToday};
 })();
 
 /* world_feed.js */
