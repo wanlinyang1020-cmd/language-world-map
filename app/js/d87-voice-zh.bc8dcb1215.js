@@ -284,11 +284,14 @@ window.HVAudio = {async up(blob){ try { const sb = typeof HV !== "undefined" && 
 })();
 
 /* today_hide.js */
-// 🙈 「今天」页上的东西都能移除（2026-11-14，用户：「今天这个界面是属于用户的今天啊，用户有这个自由啊」「而且今天里面的内容都是可以移除的」）
-// 每一样卡片右上角一个安静的小 ×：点一下马上不见，不弹窗、不问原因、不撤销。移除的是「这一类不在今天页出现」，功能、记录、奖章、复习都照常。
-// 想加回来：打开那样东西自己的地方（播客、你那边呢、今日世界、话题页……），标题下面有一行安静的小字「＋ 在今天显示 · 名字」。不另做设置页，「我」页一点不变。
-// 存 today.hide.v1 = {类: 移除那天}（在 SYNC_KEYS 里，跟着账号）。活动是按单个的：j[id].hideToday 存在 act.v1（activities.js 的 ×）。
-// 对外 window.TODAYHIDE = {off(k), wrap(k, html), hide(k), show(k), name(k)}
+// 🙈 「今天」页上的内容能单个移除（2026-11-14 改，用户：「不是用户可以删掉今天的这个界面里面的骨架，而是骨架里面的内容。比如说某个话题、某个活动。
+//   朋友和大家正在说和我的地球这种都是不可以删的。」）
+// 骨架一律留着、没有 ×：今日世界、朋友今天、大家正在说、刷世界、地球、我的船、记得你的人、播客、世界回你了，还有「今天的话题」「从一个活动开始」「正在热闹」这几块的外框和标题。
+// 单个内容才有小 ×（看起来 22px，能点 36×36）：每一张话题卡、每一张活动卡（世界街拍、你那边呢也算一个活动）。点一下马上没，不弹窗、不问原因；那个位置空着，不补别的。
+// 存 today.hide.v1（在 SYNC_KEYS 里）：话题 topic:<岛>_<话题>、没参加的活动 act:<活动 id>（街拍 act:snap，你那边呢 act:howabout）= 那天。
+//   在参加的活动沿用 act.v1 的 j[id].hideToday（activities.js）。以前存的整类键（tw、friends、live、boat……）读的时候不管，骨架全回来。
+// 放回来：打开那个话题、那个活动（街拍、你那边呢）的页，标题下面一行安静的小字「＋ 在今天显示」。「我」页、记录、奖章、复习都不动。
+// 对外 window.TODAYHIDE = {off(k), wrap(k, html), hide(k), show(k), t(zh, en)}
 (function(){
 const KEY = "today.hide.v1";
 const get = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e){ return {}; } };
@@ -299,65 +302,74 @@ const TR = en => { try { const D = (window.ACTS_I18N || {})[UIL()] || {}; return
 const T = (z, en) => zh() ? z : TR(en);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;"}[c]));
 const ymd = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-// 每一类：名字 + 它自己那一页上「标题那一块」在哪儿（页开着才有）。移除了、那一页又开着，就在标题下面加一行安静的小字「＋ 在今天显示 · 名字」，跟着页面一起滚
-const on = e => !!(e && !e.hidden && e.getClientRects().length && getComputedStyle(e).display !== "none");
-const $id = id => document.getElementById(id);
-const inS = (id, sel) => { const h = $id(id); return on(h) && h.shadowRoot ? h.shadowRoot.querySelector(sel) : null; };
-const at = (el, how, css) => el ? {el, how, css: css || ""} : null;
-// 话题页：标题和副标题那一行下面（放在标题条后面会压到「活动」两个字）
-const galAt = () => { const g = $id("gal"); if (!on(g)) return null; const c = g.querySelector(".acx .acx-sub"); return c ? at(c, "after") : at(g.querySelector(".gal-top"), "after"); };
-const KINDS = {
-  tw:       [["今日世界", "Today's world"], () => on($id("twSheet")) ? at($id("twSheet").querySelector(".tw-top"), "after") : null],
-  npcmem:   [["记得你的人", "People who remember you"], () => at(inS("nmPg", "#hd"), "after") || (on($id("ppPerson")) ? at($id("ppPerson").querySelector(".pt-hero"), "after") : null)],   // TA 的聊天页：名字那一条下面；人物页：名字那一块下面
-  howabout: [["你那边呢", "How about you"], () => on($id("haPg")) ? at($id("haPg").querySelector(".ha-in"), "prepend") : null],
-  podcast:  [["播客", "Podcast"], () => { const ph = inS("podPg", "#ph"); return ph ? at(ph.firstElementChild, "after") : null; }],
-  echo:     [["世界回你了", "The world wrote back"], () => on($id("hveSheet")) ? at($id("hveSheet").querySelector(".top"), "after") : null],
-  actstart: [["从一个活动开始", "Start with an activity"], () => on($id("acxPg")) ? at($id("acxPg").querySelector(".acx-pg"), "append") : null],
-  actrec:   [["正在热闹的活动", "Busy activities"], () => on($id("acxPg")) ? at($id("acxPg").querySelector(".acx-pg"), "append") : null],
-  // 刷世界：顶栏浮在视频上，挂在标题下面；浅色字加半透明深色底，视频亮的地方也看得清
-  wfeed:    [["刷世界", "Watch the world"], () => on($id("wfPg")) ? at($id("wfPg").querySelector(".wf-top"), "append", "position:absolute;top:100%;left:50%;transform:translateX(-50%);margin:0;white-space:nowrap;pointer-events:auto;color:#f3f1ea;background:rgba(0,0,0,.5);border-radius:99px;padding:5px 14px;text-shadow:none") : null],
-  snap:     [["世界街拍", "World street snap"], () => on($id("snapPg")) ? at($id("snapPg").querySelector(".sn-in"), "prepend") : null],
-  topics:   [["今天的话题", "Today's topics"], () => galAt()],
-  live:     [["大家正在说", "People are saying"], () => galAt()],
-  friends:  [["朋友今天", "Friends today"], () => on($id("ppPg")) && !on($id("ppPerson")) ? at($id("ppPg").querySelector(".pt-top"), "after") : null],   // 「人 / People」标题那一行下面
-  // 我的船：电脑上点「开始练」打开的我的船整页；手机上是「今天再说一遍」那一页（复习，🔁）。不放「我」页
-  boat:     [["我的船 · 今天要练的", "My boat · today's practice"], () => { const bp = $id("boatPg"); if (window.__deskBoat && on(bp)) return at(bp.querySelector(".bp-wrap"), "prepend");
-    const c = $id("card"); if (on(c) && !document.body.classList.contains("me-page")){ const e = c.querySelector(".c-top .c-emo"); if (e && /🔁/.test(e.textContent)) return at(c.querySelector(".c-top"), "after"); } return null; }]
-};
-const off = k => !!get()[k];
-const name = k => KINDS[k] ? T(...KINDS[k][0]) : k;
-function hide(k){ const o = get(); o[k] = ymd(); put(o); try { window.hvPx && window.hvPx({k: "todayhide", what: k}); } catch(e){} }
+const item = k => /^(topic|act):/.test(String(k));   // 只认单个内容的键；整类的老键（tw、friends、boat……）一律不管
+const off = k => item(k) && !!get()[k];
+function hide(k){ if (!item(k)) return; const o = get(); o[k] = ymd(); put(o); try { window.hvPx && window.hvPx({k: "todayhide", what: k}); } catch(e){} }
 function show(k){ const o = get(); delete o[k]; put(o); try { window.hvPx && window.hvPx({k: "todayshow", what: k}); } catch(e){} }
-// 包一层：移除了 → 什么都不出；有内容 → 外面一层 + 右上角小 ×
-function wrap(k, html){ if (off(k) || !html || !String(html).trim()) return ""; css();
-  return `<div class="th-w" data-thk="${k}">${html}<span class="th-x" role="button" tabindex="0" data-thx="${k}" aria-label="${esc(T("不在今天显示", "Hide from Today"))}" title="${esc(T("不在今天显示", "Hide from Today"))}">×</span></div>`; }
+const tKey = key => "topic:" + String(key).replace("|", "_");   // 话题的 key 是「岛|话题」
+// 骨架：原样放，没有 ×（主程序和杂志版照旧叫 wrap，这里不再包）
+const wrap = (k, html) => html || "";
 let CSSOK = false;
 function css(){ if (CSSOK) return; CSSOK = true; const s = document.createElement("style"); s.id = "thCss";
-  s.textContent = `.th-w{position:relative}.th-x{position:absolute;top:0;right:0;z-index:3;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font:400 15px/1 -apple-system,sans-serif;color:#8a93a3;cursor:pointer;opacity:.75;-webkit-tap-highlight-color:transparent}
-.th-x::before{content:"";position:absolute;left:7px;top:7px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.72);z-index:-1}.th-x:hover{opacity:1;color:#24303a}
-[dir=rtl] .th-x{right:auto;left:0}.th-w>.dk-tw~.th-x{top:-14px;right:-14px}.th-w>.dk-tw~.th-x::before{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15)}.th-w[data-thk=echo]:has(.hv-echo-slot:empty){display:none}
+  s.textContent = `.th-x{position:absolute;top:0;right:0;z-index:3;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font:400 15px/1 -apple-system,sans-serif;color:#8a93a3;cursor:pointer;opacity:.8;-webkit-tap-highlight-color:transparent}
+.th-x::before{content:"";position:absolute;left:7px;top:7px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.78);z-index:-1}.th-x:hover{opacity:1;color:#24303a}
+[dir=rtl] .th-x{right:auto;left:0}.th-host{position:relative}
 .th-empty{text-align:center;color:#8a93a3;font-size:14px;padding:48px 16px}`;   /* 看起来还是 22px 的小圆，能点的范围 36×36 */
   document.head.appendChild(s); }
-// 今天页移空了：一行安静的话
-function empty(){ const bp = document.getElementById("boatPg"); if (!bp || bp.hidden || window.__deskBoat) return; const w = bp.querySelector(".bp-wrap, .dm"); if (!w) return;
-  const any = [...w.querySelectorAll(".th-w, .acx-tbar, [data-wnact]")].some(e => e.offsetHeight > 0), note = w.querySelector(".th-empty");
+// 今天页上哪些是「单个内容」：每张话题卡、每张活动卡、街拍、你那边呢
+function items(box){ const out = [];
+  box.querySelectorAll("[data-mttp], .dm-tc[data-dmt]").forEach(e => out.push([e, tKey(e.dataset.mttp || e.dataset.dmt)]));
+  box.querySelectorAll("[data-acxstart]").forEach(e => out.push([e, "act:" + e.dataset.acxstart]));
+  box.querySelectorAll("[data-wnact]").forEach(e => { if (!e.querySelector("[data-acthide]")) out.push([e, "act:" + e.dataset.wnact]); });   // 在参加的那张自己有 ×（act.v1 的 hideToday）
+  box.querySelectorAll(".sn-entry").forEach(e => out.push([e, "act:snap"]));
+  box.querySelectorAll(".ha-card").forEach(e => out.push([e, "act:howabout"]));
+  return out; }
+// 移除了的直接拿掉（位置空着，不补别的）；没移除的右上角加小 ×
+function decorate(){ const bp = document.getElementById("boatPg"); if (!bp || bp.hidden) return; css(); const H = get();
+  for (const [e, k] of items(bp)){ if (H[k]){ e.remove(); continue; } if (e.querySelector(":scope > [data-thx]")) continue;
+    if (getComputedStyle(e).position === "static") e.classList.add("th-host");
+    const x = document.createElement("span"); x.className = "th-x"; x.setAttribute("role", "button"); x.tabIndex = 0; x.dataset.thx = k; x.setAttribute("aria-label", T("不在今天显示", "Hide from Today")); x.title = T("不在今天显示", "Hide from Today"); x.textContent = "×"; e.appendChild(x); }
+  empty(bp); }
+// 今天页真的什么都没有：一行安静的话（骨架都在，基本不会出）
+function empty(bp){ if (window.__deskBoat) return; const w = bp.querySelector(".bp-wrap, .dm"); if (!w) return;
+  const any = [...w.children].some(e => !e.classList.contains("th-empty") && !e.classList.contains("dm-top") && e.offsetHeight > 0), note = w.querySelector(".th-empty");
   if (any){ if (note) note.remove(); return; }
-  if (!note){ css(); const p = document.createElement("p"); p.className = "th-empty"; p.textContent = T("今天很清净。想加点什么，去世界看看。", "A quiet day. Want something here? Have a look around World."); const top = w.querySelector(".dm-top"); top ? top.after(p) : w.append(p); } }
+  if (!note){ const p = document.createElement("p"); p.className = "th-empty"; p.textContent = T("今天很清净。想加点什么，去世界看看。", "A quiet day. Want something here? Have a look around World."); w.append(p); } }
 // 点 ×：捕获阶段先拦下来（卡片本身点了会打开东西）
 document.addEventListener("click", e => { const x = e.target.closest && e.target.closest("[data-thx]"); if (!x) return; e.preventDefault(); e.stopImmediatePropagation();
-  const k = x.dataset.thx; hide(k); const c = x.closest(".th-w") || x.closest("[data-wnact]"); if (c) c.remove(); setTimeout(empty, 0); }, true);
-// 那样东西自己的地方开着、它又被移除了：标题那一块下面加一行安静的小字（跟活动页底下「不在今天显示 / 在今天显示」一个样子）；
-// 那一页重画了就再加上；一页收起了两类（比如话题页的「今天的话题」「大家正在说」）就两行，各写各的名字
+  hide(x.dataset.thx); const c = x.parentElement; if (!c) return;
+  // 电脑头版的话题大卡移掉了：下面那一排的第一张升上去当头版，那一排少一张（不从外面拿新话题）
+  if (c.classList.contains("dm-lead")){ const nx = document.querySelector("#boatPg .dm-rail .dm-tc"); if (nx){ c.replaceWith(nx); nx.classList.add("dm-lead"); const v = nx.querySelector("video"); if (v && v.dataset.src && !v.getAttribute("src")) v.src = v.dataset.src; try { v && v.play && v.play().catch(() => {}); } catch(e){} return; } }
+  c.remove(); }, true);
+// 今天页一画好就整理（不等，免得移除了的闪一下）
+let RAF = 0; new MutationObserver(() => { if (RAF) return; RAF = requestAnimationFrame(() => { RAF = 0; decorate(); }); }).observe(document.documentElement, {childList: true, subtree: true});
+
+// ── 放回来：那个话题页、那个活动页标题下面一行安静的小字 ──
+// 正在开着的话题：话题竖着刷 / 练习册 / 越聊越深 打开时记下来
+let CUR_T = null;
+const hook = (n, f) => { const o = window[n]; if (!o || !o[f] || o[f].__th) return; const g = o[f]; o[f] = function(id, k){ if (id && k) CUR_T = id + "|" + k; return g.apply(this, arguments); }; o[f].__th = 1; };
+document.addEventListener("click", e => { const c = e.target.closest && e.target.closest("[data-mttp], .dm-tc[data-dmt]"); if (c) CUR_T = c.dataset.mttp || c.dataset.dmt; }, true);
+const on = e => !!(e && !e.hidden && e.getClientRects().length && getComputedStyle(e).display !== "none");
+const $id = id => document.getElementById(id);
+const first = (root, sels) => { for (const s of sels){ const e = root.querySelector(s); if (e && e.getClientRects().length) return e; } return null; };
+// 每一种页：[那一页开着没、是哪一个（键）、标题那一块]
+function places(){ const out = [];
+  // 竖着刷（深色、浮在视频上）：顶上那一条的最下面，浅色字加半透明深色底；练习册、越聊越深：标题条下面
+  const DARK = "width:max-content;max-width:90%;margin:6px auto 0;color:#f3f1ea;background:rgba(0,0,0,.5);border-radius:99px;padding:5px 14px;text-shadow:none;pointer-events:auto";
+  const tf = $id("tfX"); if (on(tf) && CUR_T){ const h = tf.querySelector(".hud"); if (h) out.push([tKey(CUR_T), h, "append", DARK]); }
+  for (const [id, sels] of [["wbX", [".wbar"]], ["dpX", [".wbar", ".dbar", ".dp-bar", ".bar"]]]){ const p = $id(id); if (on(p) && CUR_T){ const h = first(p, sels) || p.firstElementChild; if (h) out.push([tKey(CUR_T), h, "after"]); } }
+  const ap = $id("acxPg"); if (on(ap) && window.ACT && ACT.cur && ACT.cur()){ const h = ap.querySelector(".acx-top"); if (h) out.push(["act:" + ACT.cur(), h, "after"]); }
+  const sp = $id("snapPg"); if (on(sp)){ const h = sp.querySelector(".sn-in"); if (h) out.push(["act:snap", h, "prepend"]); }
+  const hp = $id("haPg"); if (on(hp)){ const h = hp.querySelector(".ha-in"); if (h) out.push(["act:howabout", h, "prepend"]); }
+  return out; }
 const LINK_CSS = "display:block;margin:6px auto 4px;padding:6px 16px;background:none;border:0;cursor:pointer;font:400 12.5px/1.4 -apple-system,'PingFang SC',sans-serif;color:#8a93a3;text-decoration:underline;text-underline-offset:3px;text-align:center";
-function tick(){ const H = get();
-  for (const k of Object.keys(KINDS)){ let a = null; try { a = KINDS[k][1](); } catch(e){} if (!a || !a.el) continue; const root = a.el.getRootNode();
-    const have = root.querySelector ? root.querySelector(`[data-thback="${k}"]`) : null; if (have || !H[k]) continue;
-    const b = document.createElement("button"); b.type = "button"; b.dataset.thback = k; b.setAttribute("style", LINK_CSS + ";" + a.css); b.textContent = "＋ " + T("在今天显示", "Show on Today") + " · " + name(k);
-    b.onclick = e => { e.stopPropagation(); show(k); b.textContent = "✓ " + T("会在今天显示", "Back on Today") + " · " + name(k); b.disabled = true; b.style.cursor = "default"; b.style.textDecoration = "none"; };
-    if (a.how === "prepend"){ let last = null; for (const c of a.el.children){ if (c.dataset && c.dataset.thback) last = c; else break; } last ? last.after(b) : a.el.prepend(b); } else if (a.how === "append") a.el.append(b);
-    else { let last = a.el; while (last.nextElementSibling && last.nextElementSibling.dataset && last.nextElementSibling.dataset.thback) last = last.nextElementSibling; last.after(b); } } }
-setInterval(() => { tick(); empty(); }, 500);
-window.TODAYHIDE = {off, wrap, hide, show, name, t: T, kinds: () => Object.keys(KINDS)};
+function tick(){ ["TFEED", "WB", "DEEP"].forEach(n => hook(n, "open")); const H = get();
+  for (const [k, el, how, css] of places()){ if (!H[k] || el.parentNode.querySelector(`[data-thback="${k}"]`) || el.querySelector(`[data-thback="${k}"]`)) continue;
+    const b = document.createElement("button"); b.type = "button"; b.dataset.thback = k; b.setAttribute("style", LINK_CSS + ";" + (css || "")); b.textContent = "＋ " + T("在今天显示", "Show on Today");
+    b.onclick = e => { e.stopPropagation(); show(k); b.textContent = "✓ " + T("会在今天显示", "Back on Today"); b.disabled = true; b.style.cursor = "default"; b.style.textDecoration = "none"; };
+    how === "prepend" ? el.prepend(b) : how === "append" ? el.append(b) : el.after(b); } }
+setInterval(tick, 500);
+window.TODAYHIDE = {off, wrap, hide, show, t: T, topicOff: key => off(tKey(key))};
 })();
 
 /* zh_tool.js */

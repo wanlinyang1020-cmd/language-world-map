@@ -952,7 +952,7 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 `;
 // 🌍 世界那一页的海报（world_net.js，2026-11-13）：一个活动的名字、主持人、几天、参加了没有
 const meta = id => { mode(); const a = ALL.find(x => x.id === id); if (!a) return null; const h = who(a.host); return {id, t: T(a.t.zh, a.t.en), en: a.t.en, days: a.days, n: a.n || 0, pic: pic(a), cat: a.cat, host: {nm: h.nm, job: h.job || "", img: h.img || ""}, joined: !!live(id) && !finished(a, live(id)) ? 1 : 0, hideToday: hidT(joined(id)) ? 1 : 0, hideNow: (joined(id) || {}).hideToday === today() ? 1 : 0}; };   // 世界页「今天」那张小卡、排序都看它；hideToday = 不在今天页那张小卡上出现
-window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta, hideToday};
+window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta, hideToday, cur: () => (pg && !pg.hidden ? curId : null)};
 })();
 
 /* world_feed.js */
