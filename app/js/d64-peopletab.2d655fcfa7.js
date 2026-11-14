@@ -15,14 +15,16 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&am
 // 以前存在 hv.posts.* / hv.ptab.* 的，第一次打开时搬进来
 const ST = () => { let o = ls("ptab.v1"); if (!o){ o = {r: {}, fol: ls("hv.ptab.fol") || [], unf: ls("hv.ptab.unf") || [], seen: {}};
     try { for (let n = 0; n < localStorage.length; n++){ const k = localStorage.key(n); if (k && k.startsWith("hv.posts.")){ const v = ls(k); if (v && v.text) o.r[k.slice(9)] = v; } } } catch(e){}
-    ls("ptab.v1", o); } o.r = o.r || {}; o.fol = o.fol || []; o.unf = o.unf || []; o.seen = o.seen || {}; return o; };
+    ls("ptab.v1", o); } o.r = o.r || {}; o.fol = o.fol || []; o.unf = o.unf || []; o.seen = o.seen || {};
+  if (o.seenP){ delete o.seenP; SAVE(o); }   // 旧规则（画出来就算看过）记下的，2026-11-14 起不要了，也不再跟着账号同步
+  return o; };
 const SAVE = o => { ls("ptab.v1", o); try { window.hvSyncMark && window.hvSyncMark("ptab.v1"); } catch(e){} };
 const ui = () => (document.documentElement.lang || lsRaw("hv.ui") || "zh").slice(0, 2);
 const learn = () => { const l = lsRaw("hv.learn"); return l && !(l === "zh" && ui() === "zh") ? l : ui() === "en" ? "zh" : "en"; };
 const ZHUI = () => ui() === "zh";
 // 西语、日语、阿拉伯语界面：按中文查这张表，没有的退回英文（2026-11-06：原来这一页只有中文和英文）
 const PT_L = {"es": {"今天": "Hoy", "昨天": "Ayer", "角色": "personaje", "听这段对话": "Escuchar la conversación", "这件事讲成了脱口秀 · 去听 →": "Esto se convirtió en un monólogo · escúchalo →", "你也回一句（点一下先听，说出来或打字都行）": "Responde con una frase (tócala para oírla y luego dila o escríbela)", "或者写你自己的话…": "O escribe lo tuyo…", "发送": "Enviar", "你": "Tú", "明天会回你": "te responderá mañana", "这个浏览器听不了，打字也行": "Este navegador no puede escuchar; también puedes escribir", "在听…": "Escuchando…", "到处走的人": "Siempre de viaje", "旅行博主、语言老师": "bloguera de viajes, profesora de idiomas", "世界各地": "Por todo el mundo", "英语不是母语，也在用英语过日子": "El inglés no es su lengua materna, pero lo usan cada día", "条动态": "publicaciones", "朋友": "Amigos", "你认识的人": "Gente que conoces", "还没认识谁。去地图上跟人说一句，TA 就会出现在这里。": "Aún no conoces a nadie. Saluda a alguien en el mapa y aparecerá aquí.", "今天的动态": "Hoy", "听一串，回一句，明天 TA 回你": "Escucha, responde con una frase y mañana te contestan", "认识的人今天还没发。": "Hoy aún no ha publicado nadie que conozcas.", "还可以认识": "Gente por conocer", "已认识": "Ya os conocéis", "认识 TA": "Conocer", "聊聊": "Charlar", "听 TA 的脱口秀": "Escuchar su monólogo", "TA 身边的人": "Gente a su alrededor", "TA 的动态": "Publicaciones", "TA 还没发过动态。": "Todavía no hay publicaciones.", "@more": "{n} personas más publicaron hoy"}, "ja": {"今天": "今日", "昨天": "昨日", "角色": "キャラクター", "听这段对话": "会話を聞く", "这件事讲成了脱口秀 · 去听 →": "この話はスタンダップになった · 聞く →", "你也回一句（点一下先听，说出来或打字都行）": "あなたもひとこと返そう（タップして聞いてから、話しても打ってもOK）", "或者写你自己的话…": "または自分の言葉で…", "发送": "送信", "你": "あなた", "明天会回你": "明日返事をくれます", "这个浏览器听不了，打字也行": "このブラウザは音声を聞けません。入力でもOK", "在听…": "聞いています…", "到处走的人": "旅する人たち", "旅行博主、语言老师": "旅行ブロガー、語学の先生", "世界各地": "世界のあちこち", "英语不是母语，也在用英语过日子": "英語は母語じゃないけれど、毎日英語で暮らしている", "条动态": "件の投稿", "朋友": "友だち", "你认识的人": "知り合い", "还没认识谁。去地图上跟人说一句，TA 就会出现在这里。": "まだ知り合いはいません。地図でだれかにひとこと話しかけると、ここに出てきます。", "今天的动态": "きょうの投稿", "听一串，回一句，明天 TA 回你": "聞いて、ひとこと返すと、明日返事が来ます", "认识的人今天还没发。": "知り合いはきょうまだ投稿していません。", "还可以认识": "ほかにも知り合える人", "已认识": "知り合い", "认识 TA": "知り合いになる", "聊聊": "話す", "听 TA 的脱口秀": "スタンダップを聞く", "TA 身边的人": "まわりの人", "TA 的动态": "投稿", "TA 还没发过动态。": "まだ投稿はありません。", "@more": "ほかに {n} 人がきょう投稿しました"}, "ar": {"今天": "اليوم", "昨天": "أمس", "角色": "شخصية", "听这段对话": "استمع إلى المحادثة", "这件事讲成了脱口秀 · 去听 →": "تحوّلت هذه القصة إلى عرض كوميدي · استمع ←", "你也回一句（点一下先听，说出来或打字都行）": "ردّ بجملة (اضغط لتسمعها أولًا، ثم قلها أو اكتبها)", "或者写你自己的话…": "أو اكتب كلامك…", "发送": "إرسال", "你": "أنت", "明天会回你": "سيردّ عليك غدًا", "这个浏览器听不了，打字也行": "هذا المتصفح لا يستطيع الاستماع، يمكنك الكتابة أيضًا", "在听…": "أستمع…", "到处走的人": "دائمو الترحال", "旅行博主、语言老师": "مدوّنة سفر، معلّمة لغات", "世界各地": "حول العالم", "英语不是母语，也在用英语过日子": "الإنجليزية ليست لغتهم الأم، لكنهم يستخدمونها كل يوم", "条动态": "منشورات", "朋友": "أصدقاء", "你认识的人": "من تعرفهم", "还没认识谁。去地图上跟人说一句，TA 就会出现在这里。": "لا تعرف أحدًا بعد. قل كلمة لشخص على الخريطة وسيظهر هنا.", "今天的动态": "اليوم", "听一串，回一句，明天 TA 回你": "استمع، ردّ بجملة، وسيردّون عليك غدًا", "认识的人今天还没发。": "لم ينشر أحد ممن تعرفهم اليوم بعد.", "还可以认识": "أشخاص يمكنك التعرّف عليهم", "已认识": "تعرفه", "认识 TA": "تعرّف عليه", "聊聊": "دردشة", "听 TA 的脱口秀": "استمع إلى عرضه الكوميدي", "TA 身边的人": "من حوله", "TA 的动态": "المنشورات", "TA 还没发过动态。": "لا توجد منشورات بعد.", "@more": "نشر {n} أشخاص آخرون اليوم"}};
-[["es",{"都看完了 · ": "Ya lo viste todo · ", "下一条": "Siguiente a las", "发": "", "，": ", ", "今天的都看完了，明天早上再来看看": "Eso es todo por hoy; vuelve mañana por la mañana", "回了你": "te respondió", "条新的": "nuevas", "今天可以认识": "Gente para conocer hoy", "每天换": "cambia cada día", "你可能想认识": "Quizá quieras conocer", "看过了": "Visto", "收起": "Ver menos", "看看所有人": "Ver a todos"}],["ja",{"都看完了 · ": "全部見ました · ", "下一条": "次の投稿は", "发": "", "，": "、", "今天的都看完了，明天早上再来看看": "きょうの分はおしまい。また明日の朝にどうぞ", "回了你": "さんから返事", "条新的": "件の新着", "今天可以认识": "きょう知り合える人", "每天换": "毎日かわります", "你可能想认识": "知り合いになれるかも", "看过了": "見た", "收起": "閉じる", "看看所有人": "みんなを見る"}],["ar",{"都看完了 · ": "شاهدت كل شيء · ", "下一条": "المنشور التالي في", "发": "", "，": "، ", "今天的都看完了，明天早上再来看看": "هذا كل شيء اليوم، عد صباح الغد", "回了你": "ردّ عليك", "条新的": "جديدة", "今天可以认识": "أشخاص للتعرّف عليهم اليوم", "每天换": "يتغيّر يوميًا", "你可能想认识": "قد ترغب في التعرّف", "看过了": "شوهد", "收起": "عرض أقل", "看看所有人": "عرض الجميع"}]].forEach(([l, o]) => Object.assign(PT_L[l], o));   // 朋友页会动（2026-11-06）用到的字
+[["es",{"都看完了 · ": "Ya lo viste todo · ", "下一条": "Siguiente a las", "发": "", "，": ", ", "今天的都看完了，明天早上再来看看": "Eso es todo por hoy; vuelve mañana por la mañana", "回了你": "te respondió", "条新的": "nuevas", "今天可以认识": "Gente para conocer hoy", "每天换": "cambia cada día", "你可能想认识": "Quizá quieras conocer", "看过了": "Visto", "看过": "Visto", "收起": "Ver menos", "看看所有人": "Ver a todos"}],["ja",{"都看完了 · ": "全部見ました · ", "下一条": "次の投稿は", "发": "", "，": "、", "今天的都看完了，明天早上再来看看": "きょうの分はおしまい。また明日の朝にどうぞ", "回了你": "さんから返事", "条新的": "件の新着", "今天可以认识": "きょう知り合える人", "每天换": "毎日かわります", "你可能想认识": "知り合いになれるかも", "看过了": "見た", "看过": "見た", "收起": "閉じる", "看看所有人": "みんなを見る"}],["ar",{"都看完了 · ": "شاهدت كل شيء · ", "下一条": "المنشور التالي في", "发": "", "，": "، ", "今天的都看完了，明天早上再来看看": "هذا كل شيء اليوم، عد صباح الغد", "回了你": "ردّ عليك", "条新的": "جديدة", "今天可以认识": "أشخاص للتعرّف عليهم اليوم", "每天换": "يتغيّر يوميًا", "你可能想认识": "قد ترغب في التعرّف", "看过了": "شوهد", "看过": "شوهد", "收起": "عرض أقل", "看看所有人": "عرض الجميع"}]].forEach(([l, o]) => Object.assign(PT_L[l], o));   // 朋友页会动（2026-11-06）用到的字
 [["es", {"你是做什么的？": "¿A qué te dedicas?", "给你配几个同行，听 TA 们聊你自己学习和工作里的话": "Te presentamos a gente que hace lo mismo, para oír cómo hablan de tu día a día", "我是": "Soy:", "学生": "Estudiante", "程序员 · 科技": "Tecnología", "医生 · 护士": "Salud", "设计": "Diseño", "上班族": "Oficina", "做生意": "Negocio propio", "老师": "Docente", "其他": "Otro"}],
  ["ja", {"你是做什么的？": "お仕事は？", "给你配几个同行，听 TA 们聊你自己学习和工作里的话": "同じ仕事の人を何人か紹介します。あなたの毎日の言葉が聞けます", "我是": "わたし：", "学生": "学生", "程序员 · 科技": "IT・エンジニア", "医生 · 护士": "医療", "设计": "デザイン", "上班族": "会社員", "做生意": "自営業", "老师": "先生", "其他": "その他"}],
  ["ar", {"你是做什么的？": "ماذا تعمل؟", "给你配几个同行，听 TA 们聊你自己学习和工作里的话": "سنعرّفك على أشخاص يعملون مثلك، لتسمع كلام يومك", "我是": "أنا:", "学生": "طالب", "程序员 · 科技": "تقنية", "医生 · 护士": "صحة", "设计": "تصميم", "上班族": "موظف مكتب", "做生意": "عمل حر", "老师": "معلّم", "其他": "غير ذلك"}]].forEach(([l, o]) => Object.assign(PT_L[l], o));   // 你是做什么的（2026-11-06）
@@ -121,27 +123,31 @@ const placeOf = (p, x) => { if (!x[2]) return p.home; const C = (ZH_C.includes(x
 const noteOf = (p, x) => x[7] ? (p.learn === "zh" ? x[7][0] : ZHUI() ? x[7][1] : x[7][0]) : "";
 function postHtml(p, i, extra){
   const x = p.posts[i], so = subOk(p);
-  const line = (t, s) => `<div class="pt-en">${esc(t)}</div>${so && s ? `<div class="pt-zh pt-hide">${esc(s)}</div>` : ""}`;
+  const line = (t, s) => `<div class="pt-en" dir="auto">${esc(t)}</div>${so && s ? `<div class="pt-zh pt-hide" dir="auto">${esc(s)}</div>` : ""}`;
   return `<div class="pt-post" data-p="${esc(p.id)}" data-i="${i}"><div class="pt-ph"><img src="${p.img}" alt="" data-open="${esc(p.id)}"><div><b data-open="${esc(p.id)}">${esc(p.nm)}</b><span class="pt-tag">🎭 ${T("角色", "character")}</span>${extra || ""}<div class="pt-mut">${esc(placeOf(p, x))} · ${esc(dLabel(x[12]))} ${esc(tPart(ZHUI() ? x[1] || x[0] : x[0] || x[1]))}</div></div></div>` +
     (x[3] ? `<div class="pt-pw"><img class="pt-pic" src="${pic(x[3][0])}" alt="" loading="lazy"><a class="pt-cr" href="https://www.pexels.com/photo/${x[3][0]}/" target="_blank" rel="noopener">📷 ${esc(x[3][1])} · Pexels</a></div>` : "") +
     `<div class="pt-body"><div class="pt-cm pt-first" data-who="0"><div>${line(x[4], x[5])}</div></div>` +
     `<button class="pt-btn pri" data-thread>▶ ${T("听这段对话", "Listen to the thread")}</button><button class="pt-btn" data-like>♥ <span>${x[6]}</span></button>` +
-    (noteOf(p, x) ? `<div class="pt-fact">💡 ${esc(noteOf(p, x))}</div>` : "") +
+    (noteOf(p, x) ? `<div class="pt-fact" dir="auto">💡 ${esc(noteOf(p, x))}</div>` : "") +
     (x[8] && window.SU ? `<button class="pt-su" data-su>🎤 ${T("这件事讲成了脱口秀 · 去听 →", "Hear the stand-up about this →")}</button>` : "") +
-    `<div>${x[9].map((c, j) => { const q = P(c[0]); if (!q) return ""; return `<div class="pt-cm" data-who="${j + 1}"><img src="${q.img}" alt="" data-open="${esc(q.id)}"><div><b data-open="${esc(q.id)}">${esc(q.nm)}</b> <span class="pt-mut">${esc(q.home)}</span> <span class="pt-t">${esc(c[1])}</span>${so && c[2] ? `<div class="pt-zh pt-hide">${esc(c[2])}</div>` : ""}</div></div>`; }).join("")}</div>` +
+    `<div>${x[9].map((c, j) => { const q = P(c[0]); if (!q) return ""; return `<div class="pt-cm" data-who="${j + 1}"><img src="${q.img}" alt="" data-open="${esc(q.id)}"><div><b data-open="${esc(q.id)}">${esc(q.nm)}</b> <span class="pt-mut">${esc(q.home)}</span> <span class="pt-t" dir="auto">${esc(c[1])}</span>${so && c[2] ? `<div class="pt-zh pt-hide" dir="auto">${esc(c[2])}</div>` : ""}</div></div>`; }).join("")}</div>` +
     `<div class="pt-mine"></div>` +
     `<div class="pt-rep"><small>${T("你也回一句（点一下先听，说出来或打字都行）", "Reply with one line (tap to hear it first, then say it or type)")}</small>` + x[10].map(r => `<button class="pt-btn" data-r="${esc(r[0])}">${esc(r[0])}${so && r[1] ? ` <span class="pt-mut">${esc(r[1])}</span>` : ""}</button>`).join("") +
     `<div class="pt-inp"><input placeholder="${T("或者写你自己的话…", "Or write your own…")}"><button class="pt-btn" data-mic>🎤</button><button class="pt-btn" data-send>${T("发送", "Send")}</button></div></div></div></div>`;
 }
+// ✓ 看过（2026-11-14，用户：「明明没有看过啊！」）：只有真的碰了这一条（▶ 听、点开意思、回一句、赞、去听脱口秀）才算；光是画出来、划过去不算。
+// 记在 ptab.v1 的 seenP2（旧的 seenP 是「画出来就算看过」记下的，不再读）
+const touch = (po, key) => { const o = ST(); o.seenP2 = o.seenP2 || {}; if (!o.seenP2[key]){ o.seenP2[key] = Date.now(); SAVE(o); }
+  const h = po.querySelector(".pt-ph > div > .pt-tag"); if (h && !po.querySelector(".pt-heard")) h.insertAdjacentHTML("afterend", `<span class="pt-heard">✓ ${T("看过", "Seen")}</span>`); };   // 紧跟「🎭 角色」，跟重新打开后的位置一样
 function wire(el){
   el.querySelectorAll("[data-open]").forEach(b => b.onclick = e => { e.stopPropagation(); person(b.dataset.open); });
   el.querySelectorAll(".pt-post").forEach(po => {
-    const p = P(po.dataset.p), i = +po.dataset.i, x = p.posts[i], inp = po.querySelector("input"), mineEl = po.querySelector(".pt-mine"), key = p.id + "." + i, getR = () => ST().r[key] || null;
-    po.querySelectorAll(".pt-hide").forEach(z => z.onclick = () => z.classList.remove("pt-hide"));
-    po.querySelector("[data-like]").onclick = e => { const b = e.currentTarget; if (b.classList.contains("on")) return; b.classList.add("on"); b.querySelector("span").textContent = x[6] + 1; };
-    const su = po.querySelector("[data-su]"); if (su) su.onclick = () => { stop(); window.SU.open(); };
+    const p = P(po.dataset.p), i = +po.dataset.i, x = p.posts[i], inp = po.querySelector("input"), mineEl = po.querySelector(".pt-mine"), key = p.id + "." + i, getR = () => ST().r[key] || null, tc = () => touch(po, key);
+    po.querySelectorAll(".pt-hide").forEach(z => z.onclick = () => { z.classList.remove("pt-hide"); tc(); });
+    po.querySelector("[data-like]").onclick = e => { const b = e.currentTarget; if (b.classList.contains("on")) return; tc(); b.classList.add("on"); b.querySelector("span").textContent = x[6] + 1; };
+    const su = po.querySelector("[data-su]"); if (su) su.onclick = () => { tc(); stop(); window.SU.open(); };
     po.querySelector("[data-thread]").onclick = () => {
-      stop(); const run = playing;
+      tc(); stop(); const run = playing;
       const seq = [[x[4], p.nm, po.querySelector('[data-who="0"]'), p.lang, p.id]].concat(x[9].map((c, j) => { const q = P(c[0]) || {}; return [c[1], q.nm || "x", po.querySelector('[data-who="' + (j + 1) + '"]'), q.lang || p.lang, c[0]]; }));
       const m = getR(); if (m){ seq.push([m.text, "you", mineEl.querySelector(".pt-me"), p.lang]); if (m.day < dayN() && x[11]) seq.push([x[11][0], p.nm, mineEl.querySelector(".pt-back"), p.lang, p.id]); }
       const step = k => { po.querySelectorAll(".pt-cm").forEach(c => c.classList.remove("now")); if (run !== playing || k >= seq.length) return; const [t, n, row, lg, sid] = seq[k]; if (row) row.classList.add("now"); say(t, lg, n, () => setTimeout(() => step(k + 1), 350), sid); };
@@ -150,13 +156,13 @@ function wire(el){
     const drawMine = () => {
       const m = getR(); if (!m){ mineEl.innerHTML = ""; return; }
       const back = m.day < dayN() && x[11];
-      mineEl.innerHTML = `<div class="pt-cm pt-me"><span class="pt-you">${T("你", "You")}</span><div><span class="pt-t">${esc(m.text)}</span></div></div>` +
-        (back ? `<div class="pt-cm pt-back"><img src="${p.img}" alt=""><div><b>${esc(p.nm)}</b> <span class="pt-t">${esc(x[11][0])}</span>${subOk(p) && x[11][1] ? `<div class="pt-zh pt-hide">${esc(x[11][1])}</div>` : ""}</div></div>`
+      mineEl.innerHTML = `<div class="pt-cm pt-me"><span class="pt-you">${T("你", "You")}</span><div><span class="pt-t" dir="auto">${esc(m.text)}</span></div></div>` +
+        (back ? `<div class="pt-cm pt-back"><img src="${p.img}" alt=""><div><b>${esc(p.nm)}</b> <span class="pt-t" dir="auto">${esc(x[11][0])}</span>${subOk(p) && x[11][1] ? `<div class="pt-zh pt-hide" dir="auto">${esc(x[11][1])}</div>` : ""}</div></div>`
               : `<div class="pt-wait">${esc(p.nm)} ${T("明天会回你", "will reply tomorrow")}</div>`);
-      mineEl.querySelectorAll(".pt-hide").forEach(z => z.onclick = () => z.classList.remove("pt-hide"));
+      mineEl.querySelectorAll(".pt-hide").forEach(z => z.onclick = () => { z.classList.remove("pt-hide"); tc(); });
     };
-    const post = t => { if (!t) return; const o = ST(); o.r[key] = {text: t, day: dayN(), ts: Date.now()}; SAVE(o); try { window.hvPx && window.hvPx({k: "reply", npc: p.id, city: p.city || "", post: i, say: t.slice(0, 200), from: "people"}); } catch(e){} inp.value = ""; drawMine(); try { window.HVN && window.HVN.ask(); } catch(e){} };
-    po.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { stop(); say(b.dataset.r, p.lang, "you", null, /[\u4e00-\u9fff]/.test(b.dataset.r) ? "you.zh" : "you.en"); inp.value = b.dataset.r; });
+    const post = t => { if (!t) return; tc(); const o = ST(); o.r[key] = {text: t, day: dayN(), ts: Date.now()}; SAVE(o); try { window.hvPx && window.hvPx({k: "reply", npc: p.id, city: p.city || "", post: i, say: t.slice(0, 200), from: "people"}); } catch(e){} inp.value = ""; drawMine(); try { window.HVN && window.HVN.ask(); } catch(e){} };
+    po.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { tc(); stop(); say(b.dataset.r, p.lang, "you", null, /[\u4e00-\u9fff]/.test(b.dataset.r) ? "you.zh" : "you.en"); inp.value = b.dataset.r; });
     po.querySelector("[data-send]").onclick = () => post(inp.value.trim());
     po.querySelector("[data-mic]").onclick = () => { const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SR){ inp.placeholder = T("这个浏览器听不了，打字也行", "This browser can't listen — typing works too"); return; }
       const r = new SR(); r.lang = p.lang; r.interimResults = true; let t = ""; r.onresult = ev => { t = [...ev.results].map(q => q[0].transcript).join(" "); inp.value = t; }; r.onend = () => post(t); inp.placeholder = T("在听…", "Listening…"); try { r.start(); } catch(e){} };
@@ -210,11 +216,17 @@ function render(){
   if (!items.length) K.forEach(p => { const v = vis(p); if (v.length) items.push([p, v[0], 0]); });
   others.forEach(p => { const v = vis(p).filter(i => p.posts[i][12] === t); if (v.length) items.push([p, v[0], 1]); });
   const key = ([p, i]) => p.id + "." + i;
-  let nMeet = 0; const fresh = items.filter(it => !seenSnap[key(it)]).sort((a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]])).filter(it => !it[2] || ++nMeet <= 4);   // 不认识的人一次最多冒 4 条新的，其余下次打开再出来
+  // 不认识的人一次最多冒 4 条新的；每打开一次换下一批（轮换位置记在 ptab.v1 的 mr，一天一换头），没轮到的下次打开再出来
+  const byT = (a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]]);
+  const unk = items.filter(it => it[2] && !seenSnap[key(it)]).sort(byT), mr = ST().mr, off = unk.length && mr && mr.d === dayN() ? mr.n % unk.length : 0;
+  const pick = new Set(unk.concat(unk).slice(off, off + Math.min(4, unk.length)).map(key));
+  const fresh = items.filter(it => !seenSnap[key(it)] && (!it[2] || pick.has(key(it)))).sort(byT);
   const old = items.filter(it => seenSnap[key(it)]).sort((a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]]));
+  // 「都看完了」只算这次看得到的：没轮到的不算（没轮到的还在，就一定有几条在 fresh 里）
+  const allDone = items.length > 0 && !fresh.length;
   // 下一条几点发
   let nx = null; [...K, ...others].forEach(p => p.posts.forEach(x => { if (x[12] === t){ const at = postAt(x); if (at > now && (!nx || at < nx[0])) nx = [at, p]; } }));
-  const nextLine = nx ? `${fresh.length ? "" : T("都看完了 · ", "All caught up · ")}${T("下一条", "Next post at")} <b>${hm(nx[0])}</b> ${T("发", "")}（${esc(nx[1].nm)}${nx[1].home ? T("，", ", ") + esc(nx[1].home) : ""}）` : (fresh.length ? "" : T("今天的都看完了，明天早上再来看看", "That's everything for today — come back tomorrow morning"));
+  const nextLine = nx ? `${allDone ? T("都看完了 · ", "All caught up · ") : ""}${T("下一条", "Next post at")} <b>${hm(nx[0])}</b> ${T("发", "")}（${esc(nx[1].nm)}${nx[1].home ? T("，", ", ") + esc(nx[1].home) : ""}）` : (!allDone ? "" : T("今天的都看完了，明天早上再来看看", "That's everything for today — come back tomorrow morning"));
   // 谁回了你：你回过的帖子，第二天 TA 回你
   const o = ST(); o.ack = o.ack || {};
   const pings = Object.entries(o.r).filter(([k, m]) => m && m.day < dayN() && (!o.ack[k] || o.ack[k] === dayN())).map(([k, m]) => { const j = k.lastIndexOf("."), p = P(k.slice(0, j)), x = p && p.posts[+k.slice(j + 1)]; return x && x[11] ? [k, p, x] : null; }).filter(Boolean).slice(0, 3);
@@ -234,8 +246,8 @@ function render(){
     <div class="pt-row pt-known">${K.map(p => `<div class="pt-av${newest(p) && newest(p) > (o.seen[p.id] || "") ? " new" : ""}" data-open="${esc(p.id)}"><div class="pt-ring"><img src="${p.img}" alt=""></div><span>${esc(p.nm)}</span></div>`).join("") || `<div class="pt-empty">${T("还没认识谁。去地图上跟人说一句，TA 就会出现在这里。", "No one yet. Say hi to someone on the map and they'll show up here.")}</div>`}</div>
     <h2>${T("今天的动态", "Today")} <small>${fresh.length ? fresh.length + " " + T("条新的", "new") : T("听一串，回一句，明天 TA 回你", "Listen, reply with one line, they answer tomorrow")}</small></h2>
     <div id="ptFeed">${fresh.map(([p, i, m]) => postHtml(p, i, (m ? meetTag : "") + festTag(p.posts[i]) + topicTag(p.posts[i]))).join("")}
+      ${old.map(([p, i, m]) => postHtml(p, i, `<span class="pt-heard">✓ ${T("看过", "Seen")}</span>` + (m ? meetTag : "") + festTag(p.posts[i]) + topicTag(p.posts[i]))).join("")}
       ${nextLine ? `<div class="pt-next">${nextLine}</div>` : ""}
-      ${old.map(([p, i]) => `<div class="pt-oldrow" data-p="${esc(p.id)}" data-i="${i}"><img src="${p.img}" alt=""><b>${esc(p.nm)}</b><span class="pt-mut">${esc(dLabel(p.posts[i][12]))} ${hm(postAt(p.posts[i]))}</span><span class="pt-tag pt-seen">${T("看过了", "Seen")}</span>${topicTag(p.posts[i])}</div>`).join("")}
       ${!items.length ? `<div class="pt-empty">${T("认识的人今天还没发。", "Nothing new from people you know today.")}</div>` : ""}</div>
     ${meet.length ? `<h2>${T("今天可以认识", "People to meet today")} <small>${T("每天换", "changes daily")}</small></h2>
     <div class="pt-row pt-meetrow">${meet.map(p => `<div class="pt-pc" data-open="${esc(p.id)}"><img src="${p.img}" alt="" loading="lazy"><b>${esc(p.nm)}</b><span class="pt-j">${esc(p.job)}</span></div>`).join("")}</div>` : ""}
@@ -245,10 +257,9 @@ function render(){
   box.querySelectorAll("[data-job]").forEach(b => b.onclick = () => { const q = ST(); q.job = b.dataset.job; SAVE(q); render(); });
   { const re = box.querySelector("[data-jobre]"); if (re) re.onclick = () => { const q = ST(); delete q.job; SAVE(q); render(); }; }
   box.querySelector("#ptAllMeet").onclick =() => { const yy = box.scrollTop; showAllMeet = !showAllMeet; render(); box.scrollTop = yy; };
-  box.querySelectorAll(".pt-oldrow").forEach(r => r.onclick = () => { const w = document.createElement("div"); w.innerHTML = postHtml(P(r.dataset.p), +r.dataset.i); const el = w.firstElementChild; r.replaceWith(el); wire(el.parentElement); });
-  // 这次看到的记成「看过了」（这次打开里一直算新的，下次打开才沉下去）；回音看过一天就收起
-  o.seenP = o.seenP || {}; fresh.forEach(it => { o.seenP[key(it)] = now; }); pings.forEach(([k]) => { if (!o.ack[k]) o.ack[k] = dayN(); });
-  for (const k in o.seenP) if (now - o.seenP[k] > 12 * 864e5) delete o.seenP[k];
+  // 「看过」只在碰了那一条时记（见 touch）；回音看过一天就收起
+  pings.forEach(([k]) => { if (!o.ack[k]) o.ack[k] = dayN(); });
+  o.seenP2 = o.seenP2 || {}; for (const k in o.seenP2) if (now - o.seenP2[k] > 12 * 864e5) delete o.seenP2[k];
   SAVE(o);
   wire(box);
   box.querySelectorAll("[data-tyopen]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); const [i, k] = b.dataset.tyopen.split("|"); try { if (window.TFEED && window.TFEED.has(i, k)) window.TFEED.open(i, k); else if (window.HVI && window.HVI.blGo){ window.PTAB_CLOSE && window.PTAB_CLOSE(); window.HVI.blGo(i, k); } } catch(x){} });
@@ -302,7 +313,7 @@ window.PTAB_FIND = (nid, isle) => { const M = D.isle || {}; if (isle && M[isle.r
 window.PTAB_ISK = id => { try { return isK(id); } catch(e){ return false; } };
 window.PTAB_NEXT = id => { try { const t = todayS(); return (D.posts[id] || []).map(x => x[12]).filter(d => d && d > t).sort()[0] || null; } catch(e){ return null; } };
 let snapAt = 0;
-window.PTAB_OPEN = () => { if (Date.now() - snapAt > 4000) seenSnap = Object.assign({}, ST().seenP || {}); snapAt = Date.now(); showAllMeet = false; render(); box.scrollTop = 0; };
+window.PTAB_OPEN = () => { if (Date.now() - snapAt > 4000){ const o = ST(); seenSnap = Object.assign({}, o.seenP2 || {}); o.mr = o.mr && o.mr.d === dayN() ? {d: o.mr.d, n: o.mr.n + 4} : {d: dayN(), n: 0}; SAVE(o); } snapAt = Date.now(); showAllMeet = false; render(); box.scrollTop = 0; };
 window.PTAB_CLOSE = () => { stop(); const pg = document.getElementById("ppPerson"); if (pg) pg.hidden = true; if (box) box.hidden = true; };
 window.PTAB_BACK = closePerson;      // 返回键：先关人物页
 const CSS = `#ppPg,#ppPerson{position:fixed;inset:0;z-index:40;overflow-y:auto;background:#fbf8f0;color:#24303a;-webkit-overflow-scrolling:touch;font-family:var(--f-body,-apple-system,"PingFang SC",sans-serif);font-size:15px;line-height:1.55}
@@ -341,7 +352,7 @@ const CSS = `#ppPg,#ppPerson{position:fixed;inset:0;z-index:40;overflow-y:auto;b
 .pt-story{margin:8px 16px;background:#fff;border-radius:14px;padding:10px 12px;font-size:14px}.pt-acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 16px}
 .pt-mine{display:table;background:#f1e9d6;border-radius:8px;padding:2px 8px;margin:4px 0 3px;font-size:12.5px;color:#5d5444}.pt-tyav{flex:0 0 36px;height:36px;border-radius:50%;background:#efe1c4;display:grid;place-items:center;font-size:19px}.pt-ytag{background:#e6f0ff;color:#2a4f8a}
 .pt-ping{display:flex;gap:10px;align-items:center;margin:0 16px 10px;background:#fff4e6;border:1px solid #ffd8a8;border-radius:16px;padding:10px 12px;cursor:pointer}.pt-ping img{width:36px;height:36px;border-radius:50%}
-.pt-meet{background:#e7f5ff;color:#1c7ed6}.pt-seen{background:#f1ece0;color:#6b7680}
+.pt-meet{background:#e7f5ff;color:#1c7ed6}.pt-heard{font-size:11px;color:#2f9e44;margin-inline-start:6px;font-weight:400;white-space:nowrap}.pt-seen{background:#f1ece0;color:#6b7680}
 .pt-next{margin:0 16px 12px;text-align:center;color:#6b7680;font-size:13px;background:#f3eddf;border-radius:14px;padding:10px}.pt-next b{color:#24303a}
 .pt-oldrow{display:flex;gap:8px;align-items:center;margin:0 16px 8px;background:#fff;border-radius:14px;padding:8px 12px;opacity:.6;cursor:pointer;font-size:13px}.pt-oldrow img{width:28px;height:28px;border-radius:50%}
 .pt-job{margin:0 16px 10px;background:#fff;border:1px solid #e6dcc6;border-radius:16px;padding:12px}.pt-job b{display:block;font-size:16px}.pt-job small{display:block;color:#6b7680;font-size:12.5px;margin:2px 0 4px}
