@@ -333,7 +333,14 @@ function html(){ mode(); if (!L.length) return "";
     ${(() => { const U = L.filter(a => a.level === "up"); return U.length ? `<h2>⬆️ ${T("进阶 · 聊观点、聊工作", "Level up · opinions & work")} <small>${T("说的话更像大人：表态、讲理由、让步、讲清楚你的工作", "Sound like an adult: take a side, give reasons, concede a point, explain your work")}</small></h2><div class="acx-prow">${U.map((a, i) => poster(a, i, a.kind === "work" ? "#1f4f8b" : "#7b2d6e")).join("")}</div>` : ""; })()}
     ${doneL.length ? `<h2>${T("你做完的", "Finished")} <small>${T("每个章背后，是你那几天说过的话", "Behind every stamp: the lines you said")}</small></h2><div class="acx-shelf">${doneL.map((a, i) => `<div class="acx-stamp s${i % 3}" data-act="${esc(a.id)}"><div>${esc((a.end || {}).stamp || "")}<b>${a.days}/${a.days}</b>${esc(who(a.host).nm.toUpperCase())}</div></div>`).join("")}</div>` : ""}
     <h2 id="galIsles">🏝️ ${T("群岛", "Islands")} <small>${T("16 座岛、128 个话题 · 想自己翻、找灵感的时候来", "16 islands, 128 topics — browse on your own")}</small></h2></div>`; }
-function wire(box){ mount(); box.querySelectorAll("[data-act]").forEach(c => c.onclick = e => { e.stopPropagation(); open(c.dataset.act); });
+// B 型海报（标题在上半块）：标题超过 3 行、或者跟副标题一起放不下，就把标题字缩小；还放不下，副标题收成一行（都带省略号，不截半行）
+function fitPosters(root){ (root || document).querySelectorAll(".acx-po.B").forEach(p => { const b = p.querySelector(".acx-bt2"), t = p.querySelector(".acx-pt"), h = p.querySelector(".acx-hk"); if (!b || !t || !b.clientHeight) return;
+    t.style.fontSize = ""; if (h) h.style.webkitLineClamp = "";
+    let fs = parseFloat(getComputedStyle(t).fontSize); const lh = () => parseFloat(getComputedStyle(t).lineHeight) || fs * 1.15;
+    while (fs > 14 && (t.offsetHeight > lh() * 3 + 1 || b.scrollHeight > b.clientHeight + 1)){ fs -= 1; t.style.fontSize = fs + "px"; }
+    if (h && b.scrollHeight > b.clientHeight + 1) h.style.webkitLineClamp = "1"; }); }
+let FPT = 0; addEventListener("resize", () => { clearTimeout(FPT); FPT = setTimeout(() => fitPosters(document), 200); });
+function wire(box){ mount(); setTimeout(() => fitPosters(box), 30); box.querySelectorAll("[data-act]").forEach(c => c.onclick = e => { e.stopPropagation(); open(c.dataset.act); });
   box.querySelectorAll("[data-actn]").forEach(c => c.onclick = e => { e.stopPropagation(); openNext(c.dataset.actn); });
   const i = box.querySelector("[data-acxisl]"); if (i) i.onclick = e => { e.preventDefault(); const h = box.querySelector("#galIsles"); if (h) box.scrollTo({top: h.offsetTop - 10, behavior: "smooth"}); }; }
 // ── 一个活动 ──
@@ -348,7 +355,7 @@ const mxCtx = (a, d, J) => ({a, d, J, pg, host: who(a.host), st: ST, save: SAVE,
     const o = ST(); if (!o.j[a.id]) o.j[a.id] = {d0: today(), done: {}}; o.j[a.id].done[di] = txt; o.j[a.id].last = today(); const dt = o.j[a.id].dt = o.j[a.id].dt || {}; if (!dt[di]) dt[di] = today(); SAVE(o); syncActs();   // dt：哪天做完的（随到随开的「投完第二天揭晓」看它）
     try { window.hvPx && window.hvPx({k: "actday", act: a.id, day: di, type: a.mode, say: String(txt || "").slice(0, 200)}); } catch(e){}
     const b = pg.querySelector('.acx-dy[data-d="' + di + '"]'); if (b && !b.classList.contains("done")){ b.classList.add("done", "acx-thunk"); setTimeout(() => sparks(b, 16), 300); } }});
-function close(){ mxStop(); if (pg){ pg.hidden = true; try { speechSynthesis.cancel(); } catch(e){} } curId = null; const g = document.getElementById("gal"); if (g && !g.hidden){ const top = g.scrollTop; g.querySelector(".acx") && (g.querySelector(".acx").outerHTML = html()); wire(g); g.scrollTop = top; } }
+function close(){ mxStop(); if (pg){ pg.hidden = true; try { speechSynthesis.cancel(); } catch(e){} } curId = null; try { document.dispatchEvent(new Event("act:closed")); } catch(e){} const g = document.getElementById("gal"); if (g && !g.hidden){ const top = g.scrollTop; g.querySelector(".acx") && (g.querySelector(".acx").outerHTML = html()); wire(g); g.scrollTop = top; } }
 function open(id, day){ mode(); const a = ALL.find(x => x.id === id); if (!a) return; mount(); try { window.hvPulse && window.hvPulse("act"); } catch(e){} curId = id; const o = ST(), J = o.j[id], host = who(a.host);
   const nd = J ? nextStep(a, J) : 0, d = day != null ? day : J ? (a.fixed || nd < 0 ? myDay(a, J) : nd) : 0;   /* fixed（一起走古代中国）：打开停在当天那一站，错过的点格子补走 */ curDay = d; const D = a.D[d] || {}, R = run(a);
   const fin = finished(a, J), X = MX(a), mx = X ? mxCtx(a, d, J) : null; mxStop();
@@ -960,7 +967,7 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 .acx-po .acx-pt{margin:3px 0 5px;font:900 23px/1.15 "Noto Serif SC","Songti SC",serif;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35)}
 .acx-po .acx-hk{font-size:12px;line-height:1.4;opacity:.92}
 .acx-po .acx-ft{display:flex;align-items:center;gap:7px;margin-top:9px;padding-top:7px;border-top:1px solid rgba(255,255,255,.45);font-size:10.5px;line-height:1.3}.acx-po .acx-ft .acx-av,.acx-po .acx-bf .acx-av{border:2px solid #fff;flex:none}.acx-po .acx-ft em,.acx-po .acx-bf em{font-style:normal;margin-left:auto;text-align:right;font-weight:800}
-.acx-po.B .acx-ph,.acx-po.B .acx-tint,.acx-po.B .acx-grad{top:44%}.acx-po.B .acx-bt2{bottom:calc(56% + 8px)}.acx-po.B .acx-pt{font-size:26px;text-shadow:none}
+.acx-po.B .acx-ph,.acx-po.B .acx-tint,.acx-po.B .acx-grad{top:52%}.acx-po.B .acx-bt2{bottom:calc(48% + 6px);top:32px;overflow:hidden}.acx-po.B .acx-pt{font-size:21px;line-height:1.15;text-shadow:none}
 .acx-po.B .acx-bf{position:absolute;left:11px;right:11px;bottom:10px;display:flex;align-items:center;gap:7px;font-size:10.5px;line-height:1.3}.acx-po.B .acx-bf em{background:rgba(0,0,0,.45);padding:2px 7px;border-radius:3px}
 .acx-po.C{background:#f6f1e6;color:var(--k)}.acx-po.C .acx-ph,.acx-po.C .acx-tint{inset:9px 9px 38%}.acx-po.C .acx-tint{opacity:.22}.acx-po.C .acx-grad{display:none}.acx-po.C .acx-tp{color:#fff;left:18px;right:18px;top:16px}
 .acx-po.C .acx-pt{color:var(--k);text-shadow:none;font-size:24px}.acx-po.C .acx-pen{color:var(--k)}.acx-po.C .acx-hk{color:#3a3a3a}.acx-po.C .acx-ft{border-top-color:rgba(0,0,0,.18);color:#3a4250}.acx-po.C .acx-ft .acx-av{border-color:#f6f1e6}
@@ -1016,7 +1023,15 @@ html[dir=rtl] #acxPg .py-on,html[dir=rtl] .acx-start .py-on,html[dir=rtl] #acxPg
 // 🌍 世界那一页的海报（world_net.js，2026-11-13）：一个活动的名字、主持人、几天、参加了没有
 const meta = id => { mode(); const a = ALL.find(x => x.id === id); if (!a) return null; const h = a.noHost ? {nm: T((a.by || ["", ""])[0], (a.by || ["", ""])[1]), job: "", img: ""} : who(a.host); const W_ = a.wall && live(id) ? wallMine(a, live(id)) : null;   /* wall / noHost（过法分享、同一刻）：世界页海报写 by、tagL，按钮用玩法文件 mine() 给的；row = 世界页挂在哪一行 */
   return {id, t: T(a.t.zh, a.t.en), en: a.t.en, days: a.days, n: a.n || 0, pic: pic(a), cat: a.cat, row: a.row || "", noHost: a.noHost ? 1 : 0, by: a.by ? T(a.by[0], a.by[1]) : "", tag: a.tagL ? T(a.tagL[0], a.tagL[1]) : "", go: W_ ? W_.go : "", st: W_ ? W_.st : "", host: {nm: h.nm, job: h.job || "", img: h.img || ""}, joined: !!live(id) && !finished(a, live(id)) ? 1 : 0, hideToday: hidT(joined(id)) ? 1 : 0, hideNow: (joined(id) || {}).hideToday === today() ? 1 : 0}; };   // 世界页「今天」那张小卡、排序都看它；hideToday = 不在今天页那张小卡上出现
-window.ACT = {html, wire, open, close, todayBar, starter, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta, hideToday, cur: () => (pg && !pg.hidden ? curId : null)};
+// ☀️「今天」（friends_wall.js，2026-11-15 样板 样板/朋友过法墙样板.html）：接着玩 = 你在参加的每一个今天这一步（同一刻在最上面那一行，这里不重复）；全部活动的海报
+function playing(){ mode(); return L.filter(a => a.id !== "same_moment" && live(a.id) && !finished(a, live(a.id)) && !hidT(live(a.id)) && !(a.fixed && today() < a.starts[0])).map(a => { const J = live(a.id), col = (SOILS.find(x => x[0] === soilOf(a)) || [])[6] || "#14305c";
+    const base = {id: a.id, t: T(a.t.zh, a.t.en), en: a.t.en, col, avH: a.noHost ? `<span class="acx-av acx-avt" style="width:42px;height:42px;font-size:21px">${esc(a.ico || "🎭")}</span>` : av(a.host, 42)};
+    if (a.wall){ const W = wallMine(a, J); return Object.assign(base, {st: W.st, go: W.go, days: 0}); }
+    const md_ = myDay(a, J), n = a.fixed && !(J.done || {})[md_] ? md_ : nextStep(a, J); if (n < 0) return null;
+    return Object.assign(base, {st: T("第 " + (n + 1) + " " + dU(a), "Day " + (n + 1)) + " · " + (a.D[n] && a.D[n].ken ? kOf(a.D[n]) : lead(a.D[n])), go: T("开始", "Play") + " →", day: n, days: a.days, done: Object.keys(J.done || {}).length}); }).filter(Boolean); }
+function posters(){ mode(); if (!L.length) return ""; mount(); const A = L.filter(a => a.level !== "up");
+  return `<div class="acx-prow fwl-posters">${A.map((a, i) => poster(a, i, (SOILS.find(x => x[0] === soilOf(a)) || [])[6] || "#14305c")).join("")}</div>`; }
+window.ACT = {html, wire, open, close, todayBar, starter, playing, posters, fit: fitPosters, isOpen: () => !!(pg && !pg.hidden), list: () => (mode(), L), meta, hideToday, cur: () => (pg && !pg.hidden ? curId : null)};
 })();
 
 /* act_standup.js */

@@ -136,7 +136,9 @@ async function send(){ const ln = line(), withLine = !!(U.said && ln && ln.t);
   $("#send").disabled = true;
   let au = "", mime = ""; if (withLine && U.said.blob){ const x = await A.blobB64(U.said.blob); if (x && x.length < 230000){ au = x; mime = U.said.blob.type || "audio/webm"; } }
   const ll = (A.ls("snap.ll") || {}), off = -new Date(M.t).getTimezoneOffset();
-  const data = {k: "post", date: M.key, l: LG(), t: rec.t.slice(0, 280), p: rec.p.slice(0, 600), said: rec.said, late, quiet, off, city: (ll.place || "").slice(0, 60), img: (U.ph || "").split(",")[1] || "", pip: rec.selfie ? (U.pip || "").split(",")[1] || "" : "", au, mime};
+  // 照片压小、另存一张缩略图 th（朋友墙上只拿 th，点开再拿 img）；照片 + 小窗 + 录音不超过上限（AK.fit）
+  const pip = rec.selfie ? (U.pip || "").split(",")[1] || "" : "", F = U.ph ? await A.fit(U.ph, au + pip, 560000) : {img: "", th: ""}; if (F.drop){ au = ""; mime = ""; }
+  const data = {k: "post", date: M.key, l: LG(), t: rec.t.slice(0, 280), p: rec.p.slice(0, 600), said: rec.said, late, quiet, off, city: (ll.place || "").slice(0, 60), img: F.img || (U.ph || "").split(",")[1] || "", th: F.th || "", pip, au, mime};
   if (ll.ll){ data.lon = ll.ll[0]; data.lat = ll.ll[1]; }
   let rid = null; if (A.logged()) rid = await A.post("samemoment", data);
   rec.sent = rid ? 1 : 0; rec.rid = rid || ""; S.d[mineK()] = rec; save(); mPut(mineK(), {ph: U.ph, pip: rec.selfie ? U.pip : "", au: withLine && U.said.blob || null});
@@ -308,6 +310,15 @@ function enter(){ M = current(); if (!M){ go(0); drawStart(); return; }
   go(0); drawStart(); }
 function mountCss(){ if (document.getElementById("smxCss")) return; const s = document.createElement("style"); s.id = "smxCss"; s.textContent = CSS; document.head.appendChild(s); }
 let TK = 0;
+// ☀️「今天」最上面那一行要用（friends_wall.js，2026-11-15）：今天的同一刻现在是什么样。只读 act.v1 和日历，不动上面的东西
+//   st：before 还没响（yd = 昨天的还能补交）· now 正在响（left 还剩几秒）· late 响过了还没交（at 你这边几点响的）· done 交过了（sent = 送给世界了，没送出去的只在手机上）
+window.SMX_STATE = () => { try { if (!DATA()) return null; const m = current(), o = A.ls("act.v1") || {}, x = (((o.j || {})[AID] || {}).x) || {}, d = x.d || {};
+    if (!m) return {st: "before"};
+    const r = d[m.key + "|" + LG()], q = qText(qOf(m));
+    if (m.yday) return {st: "before", yd: !r, q};
+    if (r) return {st: "done", said: !!r.said, sent: !!r.sent, q};
+    const left = Math.ceil((m.t + 120e3 - now()) / 1e3);
+    return left > 0 ? {st: "now", left, q, sun8: !!m.e.sun8} : {st: "late", at: myLocal(m.t).s, q, sun8: !!m.e.sun8}; } catch(e){ return null; } };
 window.ACT_MODES = window.ACT_MODES || {};
 window.ACT_MODES.moment = {
   html(){ return DATA() ? SHELL() : ""; },

@@ -236,13 +236,27 @@ function render(){
   // 今天可以认识：每天换 3 个
   const pool = others.filter(p => vis(p).length), seed = dayN(), meet = pool.map((p, n) => [p, (n * 2654435761 + seed * 40503) % 1000]).sort((a, b) => a[1] - b[1]).slice(0, 3).map(a => a[0]);
   const meetTag = `<span class="pt-tag pt-meet">${T("你可能想认识", "You might like to meet")}</span>`;
-  box.innerHTML = `<div class="pt-app"><div class="pt-top"><h1>${T("人", "People")}</h1></div>
+  const pingH = `    ${pings.length || tyPings.length ? `<h2>💌 ${T("回你的", "Replies to you")} <small>${pings.length + tyPings.length}</small></h2>` : ""}
+    ${pings.map(([k, p, x]) => `<div class="pt-ping" data-open="${esc(p.id)}"><img src="${p.img}" alt=""><div><b>${esc(p.nm)} ${T("回了你", "replied to you")}</b>${o.r[k] && o.r[k].text ? `<div class="pt-mine">${T("你", "You")}：${esc(o.r[k].text)}</div>` : ""}<div class="pt-mut">“${esc(x[11][0])}”</div>${subOk(p) && x[11][1] ? `<div class="pt-mut pt-zh">${esc(x[11][1])}</div>` : ""}</div></div>`).join("")}
+    ${tyPings.map(e => `<div class="pt-ping" data-tyopen="${esc(e.i + "|" + e.th)}"><span class="pt-tyav">${esc(e.e || "🙂")}</span><div><b>${esc(e.nm || "")}${e.city ? " · " + esc(e.city) : ""} ${T("回了你", "replied to you")}</b><div class="pt-mine">${T("你", "You")}：${esc(e.say || "")}</div><div class="pt-mut">“${esc(e.back[0] || "")}”</div>${ZHUI() && e.back[1] ? `<div class="pt-mut pt-zh">${esc(e.back[1])}</div>` : ""}<div class="pt-mut" style="font-size:11px">${T("在话题", "In the topic")}${e.tt ? "「" + esc(e.tt) + "」" : ""}</div></div></div>`).join("")}`;
+  const jobH = `    ${o.job ? "" : `<div class="pt-job"><b>${T("你是做什么的？", "What do you do?")}</b><small>${T("给你配几个同行，听 TA 们聊你自己学习和工作里的话", "We'll add a few people who do the same — and talk about your kind of day")}</small><div>${JOBS.map(j => `<button class="pt-btn" data-job="${j[0]}">${esc(jobName(j))}</button>`).join("")}</div></div>`}`;
+  // 🧱 朋友 = 一面墙（2026-11-15，样板 样板/朋友过法墙样板.html，friends_wall.js）：动态、活动里送给世界的、真人的都流到一面墙上；「回你的」在墙上面，「看看所有人」在墙下面
+  if (window.FWALL && window.FWALL.on()){
+    box.innerHTML = `<div class="fwl-app">${window.FWALL.page(pingH)}<div class="fwl-foot">${K.length ? `<h2>${T("你认识的人", "People you know")} <small>${K.length}</small></h2><div class="pt-row pt-known">${K.map(p => `<div class="pt-av${newest(p) && newest(p) > (o.seen[p.id] || "") ? " new" : ""}" data-open="${esc(p.id)}"><div class="pt-ring"><img src="${p.img}" alt=""></div><span>${esc(p.nm)}</span></div>`).join("")}</div>` : ""}${window.CREW ? window.CREW.row() : ""}${jobH}<button class="pt-more" id="ptAllMeet">${showAllMeet ? T("收起", "Show less") : T("看看所有人", "See everyone")} ${showAllMeet ? "↑" : "›"}</button>${showAllMeet ? groups() : ""}</div></div>`;
+    box.hidden = false;
+    box.querySelectorAll("[data-job]").forEach(b => b.onclick = () => { const q = ST(); q.job = b.dataset.job; SAVE(q); render(); });
+    box.querySelector("#ptAllMeet").onclick = () => { const yy = box.scrollTop; showAllMeet = !showAllMeet; render(); box.scrollTop = yy; };
+    pings.forEach(([k]) => { if (!o.ack[k]) o.ack[k] = dayN(); }); SAVE(o);
+    wire(box); if (window.CREW) window.CREW.wire(box);
+    box.querySelectorAll("[data-tyopen]").forEach(b => b.onclick = e => { e.stopPropagation(); stop(); const [i, k] = b.dataset.tyopen.split("|"); try { if (window.TFEED && window.TFEED.has(i, k)) window.TFEED.open(i, k); else if (window.HVI && window.HVI.blGo){ window.PTAB_CLOSE && window.PTAB_CLOSE(); window.HVI.blGo(i, k); } } catch(x){} });
+    window.FWALL.wire(box);
+    return;
+  }
+  box.innerHTML = `<div class="pt-app"><div class="pt-top"><h1>${T("朋友", "Friends")}</h1></div>
     ${window.CREW ? window.CREW.row() : ""}
     ${festHtml()}
-    ${pings.length || tyPings.length ? `<h2>💌 ${T("回你的", "Replies to you")} <small>${pings.length + tyPings.length}</small></h2>` : ""}
-    ${pings.map(([k, p, x]) => `<div class="pt-ping" data-open="${esc(p.id)}"><img src="${p.img}" alt=""><div><b>${esc(p.nm)} ${T("回了你", "replied to you")}</b>${o.r[k] && o.r[k].text ? `<div class="pt-mine">${T("你", "You")}：${esc(o.r[k].text)}</div>` : ""}<div class="pt-mut">“${esc(x[11][0])}”</div>${subOk(p) && x[11][1] ? `<div class="pt-mut pt-zh">${esc(x[11][1])}</div>` : ""}</div></div>`).join("")}
-    ${tyPings.map(e => `<div class="pt-ping" data-tyopen="${esc(e.i + "|" + e.th)}"><span class="pt-tyav">${esc(e.e || "🙂")}</span><div><b>${esc(e.nm || "")}${e.city ? " · " + esc(e.city) : ""} ${T("回了你", "replied to you")}</b><div class="pt-mine">${T("你", "You")}：${esc(e.say || "")}</div><div class="pt-mut">“${esc(e.back[0] || "")}”</div>${ZHUI() && e.back[1] ? `<div class="pt-mut pt-zh">${esc(e.back[1])}</div>` : ""}<div class="pt-mut" style="font-size:11px">${T("在话题", "In the topic")}${e.tt ? "「" + esc(e.tt) + "」" : ""}</div></div></div>`).join("")}
-    ${o.job ? "" : `<div class="pt-job"><b>${T("你是做什么的？", "What do you do?")}</b><small>${T("给你配几个同行，听 TA 们聊你自己学习和工作里的话", "We'll add a few people who do the same — and talk about your kind of day")}</small><div>${JOBS.map(j => `<button class="pt-btn" data-job="${j[0]}">${esc(jobName(j))}</button>`).join("")}</div></div>`}
+    ${pingH}
+    ${jobH}
     <h2>${T("你认识的人", "People you know")} <small>${K.length}</small>${o.job ? `<button class="pt-jobset" data-jobre>${T("我是", "I'm in")} ${esc(jobName(JOBS.find(j => j[0] === o.job) || JOBS[7]))} ✎</button>` : ""}</h2>
     <div class="pt-row pt-known">${K.map(p => `<div class="pt-av${newest(p) && newest(p) > (o.seen[p.id] || "") ? " new" : ""}" data-open="${esc(p.id)}"><div class="pt-ring"><img src="${p.img}" alt=""></div><span>${esc(p.nm)}</span></div>`).join("") || `<div class="pt-empty">${T("还没认识谁。去地图上跟人说一句，TA 就会出现在这里。", "No one yet. Say hi to someone on the map and they'll show up here.")}</div>`}</div>
     <h2>${T("今天的动态", "Today")} <small>${fresh.length ? fresh.length + " " + T("条新的", "new") : T("听一串，回一句，明天 TA 回你", "Listen, reply with one line, they answer tomorrow")}</small></h2>
@@ -310,6 +324,24 @@ window.PTAB_SAY = (id, t, done) => { const p = P(id); if (!p){ done && done(); r
 window.PTAB_KNOW = id => { setK(id, true); };
 window.PTAB_KNOWN = () => { try { return known().map(p => ({id: p.id, nm: p.nm, img: p.img})); } catch(e){ return []; } };   // 「我」页的认识的人（2026-11-08）
 window.PTAB_PERSON = (id, away) => person(id, away);
+// 🧱 朋友墙（friends_wall.js）要用：今天的动态（认识的人昨天、今天的 + 还不认识的人今天的），带评论、能回的话、TA 回你
+window.PTAB_WALL = n => { try { const K = known(), kSet = new Set(K.map(p => p.id)), t = todayS(), y1 = new Date(Date.now() - 864e5), yS = y1.getFullYear() + "-" + String(y1.getMonth() + 1).padStart(2, "0") + "-" + String(y1.getDate()).padStart(2, "0"), items = [];
+    K.forEach(p => vis(p).forEach(i => { if (p.posts[i][12] >= yS) items.push([p, i, 1]); }));
+    if (!items.length) K.forEach(p => { const v = vis(p); if (v.length) items.push([p, v[0], 1]); });
+    Object.keys(D.posts).filter(id => !kSet.has(id)).map(P).filter(p => p && mine(p) && follow(p)).forEach(p => { const v = vis(p).filter(i => p.posts[i][12] === t); if (v.length) items.push([p, v[0], 0]); });
+    const o = ST();
+    // 编出来的地方（语言小镇）不上墙：作者、动态、评论里有的都去掉
+    const FAKE = /语言小镇|Language Town/i, fakeP = p => FAKE.test([p.home, p.job, p.story].join(" "));
+    return items.filter(([p, i]) => !fakeP(p) && !FAKE.test(String(p.posts[i][4] || "") + String(p.posts[i][5] || ""))).sort((a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]])).slice(0, n || 12).map(([p, i, k]) => { const x = p.posts[i], so = subOk(p), r = o.r[p.id + "." + i];
+      return {id: p.id, i, nm: p.nm, img: p.img, home: placeOf(p, x), job: p.job || "", lang: p.lang, known: !!k, when: dLabel(x[12]) + " " + hm(postAt(x)), ts: postAt(x), t: x[4] || "", sub: so ? x[5] || "" : "",
+        photo: x[3] ? pic(x[3][0]) : "", by: x[3] ? x[3][1] : "", pid: x[3] ? x[3][0] : 0, note: noteOf(p, x),
+        cm: (x[9] || []).filter(c => !FAKE.test(String(c[1] || "") + String(c[2] || ""))).map(c => { const q = P(c[0]); return q && !fakeP(q) ? {id: q.id, nm: q.nm, img: q.img, home: q.home, t: c[1], sub: so ? c[2] || "" : ""} : null; }).filter(Boolean),
+        rep: (x[10] || []).map(r0 => [r0[0], so ? r0[1] || "" : ""]), back: x[11] ? [x[11][0], so ? x[11][1] || "" : ""] : null, mine: r ? {text: r.text, back: r.day < dayN()} : null}; }); } catch(e){ return []; } };
+window.PTAB_SETK = (id, on) => { setK(id, on); };
+// 🍲 本周节日 = 每周的挑战（2026-11-07 用户定的）：朋友页成了一面墙以后，入口卡搬到「今天」，排在「接着玩」后面（friends_wall.js 叫这个）
+//   在学的那种语言里没有这个节日的内容（现在节日都是英语的），就不出这张卡：学中文的人不会看到学英语的岛
+window.PTAB_FEST = () => { try { const X = fest(); if (!X) return ""; const zhT = s => /[\u4e00-\u9fff]/.test(s || ""); if (learn() === "zh" ? !(X.F.posts || []).some(p => zhT(p.text)) : !(X.F.posts || []).some(p => p.text && !zhT(p.text))) return "";
+    if (!document.getElementById("ptCss")){ const st = document.createElement("style"); st.id = "ptCss"; st.textContent = CSS; document.head.appendChild(st); } return festHtml(); } catch(e){ return ""; } };
 window.PTAB_INFO = id => { const p = P(id); return p ? {nm: p.nm, img: p.img, job: p.job, home: p.home, lang: p.lang} : null; };   // 🎪 活动（activities.js）用：主持人和交作业的人的名字、照片
 // 岛上群聊里的人 = 朋友页里的人（2026-11-08）：posts_more/isle_<岛>.json 里的人，id 是 more.isle_<岛>.<群聊里的名字>；一屏接一屏里「认识 TA」「明天 TA 还会发」用
 window.PTAB_FIND = (nid, isle) => { const M = D.isle || {}; if (isle && M[isle.replace(/_club$/, "") + "|" + nid]) return M[isle.replace(/_club$/, "") + "|" + nid]; const k = Object.keys(M).find(x => x.endsWith("|" + nid)); return k ? M[k] : null; };

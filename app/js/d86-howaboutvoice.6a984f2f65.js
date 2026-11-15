@@ -964,7 +964,9 @@ async function send(world){ const c = lineNow(); if (!c.t){ toast(T("先说一�
   if (!cur.ll){ cur.needLamp = 1; draw(); const l = pg.querySelector(".ha-lamp"); if (l) l.scrollIntoView({block: "center", behavior: "smooth"}); return; }
   const b = pg.querySelector("[data-aksend='1']"); if (b){ b.disabled = true; b.innerHTML = "…"; }
   let au = "", mime = ""; if (cur.voice && cur.voice.blob){ const x = await A().blobB64(cur.voice.blob); if (x && x.length < 230000){ au = x; mime = cur.voice.blob.type || "audio/webm"; } }
-  const data = {k: "ans", date: O.date, wk: O.w.id, d: O.i, q: strip(qOf(O).q), l: LG(), t: c.t, p: c.p || "", nat: A().mother() || "", city: cur.place || "", lon: cur.ll[0], lat: cur.ll[1], img: cur.img || "", au, mime, pr: prOf(), late: cur.late || 0};
+  // 照片压小、另存一张缩略图 th（朋友墙上只拿 th，点开再拿 img）；照片 + 录音不超过上限（AK.fit）
+  let img = cur.img || "", th = cur.th || ""; if (cur.img){ const F = await A().fit(cur.img, au); if (F.drop){ au = ""; mime = ""; } img = F.img ? "data:image/jpeg;base64," + F.img : img; th = F.th ? "data:image/jpeg;base64," + F.th : th; }
+  const data = {k: "ans", date: O.date, wk: O.w.id, d: O.i, q: strip(qOf(O).q), l: LG(), t: c.t, p: c.p || "", nat: A().mother() || "", city: cur.place || "", lon: cur.ll[0], lat: cur.ll[1], img, th, au, mime, pr: prOf(), late: cur.late || 0};
   const id = await A().post("howabout", data), S = ST(); S.d[O.date] = Object.assign(rec0(c), {sent: !!id, id: id || ""}); SAVE(S); DRset(O.date, null);
   if (!id){ const S2 = ST(), r2 = S2.d[O.date];
     if (A().dupErr()){ r2.sent = true; r2.dup = 1; SAVE(S2); toast(PAST() ? T("这一题你已经送过一条了（一题一条）。这一句存在你的这一周里。", "You've already sent one for this question (one each). This line is saved in your week.") : T("今天已经送过一条了（一人一天一条）。这一句存在你的这一周里。", "You've already sent one today (one a day). This line is saved in your week.")); }
@@ -978,7 +980,7 @@ async function send(world){ const c = lineNow(); if (!c.t){ toast(T("先说一�
 //   下次打开「你那边呢」自动再送一次，成功了就清掉。ha.pend 存不下（太大）就去掉录音和大图再存；连这也没有，就照记录里的拼回去（小图代替照片）。
 function PNset(k, data){ const all = ls("ha.pend") || {}; all[k] = data; if (ls("ha.pend", all) === null){ all[k] = Object.assign({}, data, {img: "", au: "", mime: ""}); ls("ha.pend", all); } }
 function PNdel(k){ const all = ls("ha.pend") || {}; if (all[k]){ delete all[k]; ls("ha.pend", all); } }
-const recData = (r, date) => ({k: "ans", date, wk: r.w, d: r.i, q: r.q || "", l: r.l || "zh", t: r.t, p: r.p || "", nat: A().mother() || "", city: r.city || "", lon: r.ll ? r.ll[0] : null, lat: r.ll ? r.ll[1] : null, img: r.th || "", au: "", mime: "", pr: r.pr || null, late: r.late || 0});
+const recData = (r, date) => ({k: "ans", date, wk: r.w, d: r.i, q: r.q || "", l: r.l || "zh", t: r.t, p: r.p || "", nat: A().mother() || "", city: r.city || "", lon: r.ll ? r.ll[0] : null, lat: r.ll ? r.ll[1] : null, img: r.th || "", th: r.th || "", au: "", mime: "", pr: r.pr || null, late: r.late || 0});
 let RETRY = 0;
 async function retryPend(){ if (RETRY || !A().logged()) return; const S0 = ST(), ks = Object.keys(S0.dAll).filter(k => { const r = S0.dAll[k]; return r && r.pending && !r.sent && r.t; }); if (!ks.length) return;
   RETRY = 1; let ok = 0, dups = 0;

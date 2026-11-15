@@ -2489,9 +2489,21 @@ const blocked = () => { try { return new Set(JSON.parse(localStorage.getItem("so
 // 举报 / 藏起来 / 删掉（自己的）那一排小按钮
 const modHTML = (coll, it) => it.seed ? `<button class="ak-link" data-akhide="${esc(it.key || "")}">${esc(T("不想看这条", "Hide this"))}</button>` : it.own ? `<button class="ak-link" data-akdel="${esc(coll + "/" + it.id)}">🗑 ${esc(T("删掉", "Delete"))}</button>` : `<button class="ak-link" data-akhide="${esc(coll + "/" + it.id)}">${esc(T("藏起来", "Hide"))}</button> · <button class="ak-link" data-akrep="${esc(coll + "/" + it.id)}">${esc(T("举报", "Report"))}</button>`;
 // 读真人送给世界的（没登录也能读，要跑过对应的 SQL）：AK.load(coll, {eq: {字段: 值}, limit})
-async function load(coll, q){ const S = sb(); if (!S) return []; q = q || {}; try { let r = S.from("docs").select("id,owner,data").eq("coll", coll);
+// q.fields = ["t", "p", …]：只拿这几样（不拿大照片、录音；2026-11-15 朋友墙检查员：墙上用缩略图，点开再拿大图）
+async function load(coll, q){ const S = sb(); if (!S) return []; q = q || {}; const F = q.fields ? [...new Set(q.fields.concat(["hid"]))] : null;
+  try { let r = S.from("docs").select(F ? "id,owner," + F.map(f => f + ":data->>" + f).join(",") : "id,owner,data").eq("coll", coll);
     Object.entries(q.eq || {}).forEach(([k, v]) => { r = r.eq("data->>" + k, String(v)); }); r = r.order("created_at", {ascending: false}).limit(q.limit || 300);
-    const res = await r, bl = blocked(), me = uid(); return (res.data || []).filter(x => x.data && x.data.hid !== true && !bl.has(x.owner) && !hidden(coll + "/" + x.id)).map(x => Object.assign({id: x.id, owner: x.owner, own: !!me && x.owner === me, real: true}, x.data)); } catch(e){ return []; } }
+    const res = await r, bl = blocked(), me = uid(); const rows = (res.data || []).map(x => F ? {id: x.id, owner: x.owner, data: Object.fromEntries(F.filter(f => x[f] != null).map(f => [f, f === "hid" ? x[f] === "true" : x[f]]))} : x);
+    return rows.filter(x => x.data && x.data.hid !== true && !bl.has(x.owner) && !hidden(coll + "/" + x.id)).map(x => Object.assign({id: x.id, owner: x.owner, own: !!me && x.owner === me, real: true}, x.data)); } catch(e){ return []; } }
+// 点开一条再拿大的：AK.one(coll, id, ["img", "au"]) → {img, au}
+async function one(coll, id, fields){ const S = sb(); if (!S) return {}; try { const r = await S.from("docs").select(fields.map(f => f + ":data->>" + f).join(",")).eq("coll", coll).eq("id", id).maybeSingle(); return (r && r.data) || {}; } catch(e){ return {}; } }
+// 送出去之前把照片压小：照片 + 缩略图 + 录音一共不超过 limit（lifeshare 的规则是 40 万字节，留点余地）。ph = data:image 地址，au = base64 录音
+//   返回 {img, th}（都是不带前缀的 base64）；还是太大就先降照片，最后才不带录音（drop = true）
+function shrinkData(u, max, q){ return new Promise(ok => { const im = new Image(); im.onload = () => { const r = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement("canvas"); c.width = Math.round(im.width * r); c.height = Math.round(im.height * r); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); ok(c.toDataURL("image/jpeg", q)); }; im.onerror = () => ok(""); im.src = u; }); }
+async function fit(ph, au, limit){ limit = limit || 360000; au = au || ""; if (!ph) return {img: "", th: "", drop: au.length > limit};
+  const th = ((await shrinkData(ph, 240, .6)) || "").split(",")[1] || "";
+  for (const [m, q] of [[900, .8], [720, .72], [560, .66], [420, .6]]){ const img = ((await shrinkData(ph, m, q)) || "").split(",")[1] || ""; if (img.length + th.length + au.length < limit) return {img, th, drop: false}; }
+  const img = ((await shrinkData(ph, 420, .6)) || "").split(",")[1] || ""; return {img, th, drop: img.length + th.length + au.length >= limit}; }
 
 // ── 夜景地球（照 street_snap 的 map()）：能拖、能缩放；你的灯会亮起；点一盏灯看人和那句话；没有真人时只亮 🎭 ──
 // AK.globe({title, sub, items: [{lon, lat, l 语言, face, img, nm, city, st, t, p, m, seed, own, id, real, key}], coll, fly: [lon, lat], ns, actions(it) → HTML, onAct(动作, it, 按钮), onClose})
@@ -2671,7 +2683,7 @@ window.AK = {ls, esc, strip, today, ymd, UI, ZH, T, TR, TX, LG, uid, logged, log
   MOTHERS, mother, motherHTML, voices: VOICES, fnv, say, hush, sayable, blip, tap, toast, stamp, confetti, pop,
   face, photo, person, urls: URLS, meanOf, fixEn, fixZh, fixPy, fixFr, fix, build, buildP, joinB, clashes, tagsOf, pickClash, CLASH, zhNum, zhMoney, enMoney, frMoney, gram, LA, mutedFr,
   LEVELS, level, levelsHTML, opt, optM, chipsHTML, wordsHTML, refHTML, micHTML, mic,
-  sendKeepHTML, post, err: () => ERR, dupErr, del, report, hide, hidden, blocked, modHTML, load, globe, globeClose: gclose, share,
+  sendKeepHTML, post, err: () => ERR, dupErr, del, report, hide, hidden, blocked, modHTML, load, one, fit, globe, globeClose: gclose, share,
   tryHTML, onTry: (id, fn) => { TRYCB[id] = fn; }, shrink, blobB64, r1, mount};
 })();
 
