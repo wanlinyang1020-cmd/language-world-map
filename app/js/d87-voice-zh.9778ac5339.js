@@ -9,7 +9,7 @@ window.VOICE_LINE_ZH = new Set("000ab90e 000e10d2 0013ac9c 00147d31 0015cf12 001
 // 点通知 → 打开对应那一栏（今日世界 / 人 / 我的船）。
 // 「跟着我的习惯」（2026-11-05，默认）：记下每天第一次打开 App 的时间（hv.appnotify.seen，留 14 天），取最近 5 天的中间值当提醒时间；当天已经用过就不提醒。存 {t:"auto"}。
 // 什么时候问：做完今日世界的结果页（原来放网页提醒的那块）；第一次在「人」里回了一句，弹一次小卡。存：hv.appnotify = {t:"HH:MM"}，hv.appnotify.asked。
-// 对外：window.HVN = {app, hook, html, wire, ask, schedule}；主程序（template2）把打开各栏的函数交给 hook。
+// 对外：window.HVN = {app, hook, html, wire, ask, schedule, moAsk, moOn}；主程序（template2）把打开各栏的函数交给 hook。
 (function(){
 const Cap = () => window.Capacitor;
 const app = () => { try { return !!(Cap() && Cap().isNativePlatform && Cap().isNativePlatform() && Cap().Plugins && Cap().Plugins.LocalNotifications); } catch(e){ return false; } };
@@ -64,6 +64,7 @@ function kBoat(){
 // 🎪 活动（2026-11-10，用户：「活动最怕第 2 天没人回来」）：参加的活动那天开了新的一步、还没做，这条提醒先说它
 function kAct(d){ let J = {}; try { J = (JSON.parse(lsg("act.v1") || "{}").j) || {}; } catch(e){} const A = window.ACTS || [], day = ymd(d), zh = ui() === "zh";
   for (const id in J){ const a = A.find(x => x.id === id), j = J[id]; if (!a || !j || !j.d0 || j.hideToday || j.gone || j.off) continue;   // hideToday = 不在今天显示，提醒也不提
+    if (j.mo && !j.mo.skip) continue;   // ⏰ 挂了生活时刻的活动（act_week.js）有自己的提醒（下面的 moPlan），这里不再提「第 N 天开了」
     const i = Math.round((Date.parse(day) - Date.parse(j.d0)) / 864e5);
     if (i < 0 || i >= a.days || (j.done || {})[i] != null) continue; const D = a.D[i] || {}, host = (window.PTAB_INFO && window.PTAB_INFO(a.host) || {}).nm || "";
     return {tab: "acts", act: id, title: T(`🎪 ${a.t.zh} · 第 ${i + 1} 天开了`, `🎪 ${a.t.en} · Day ${i + 1} is open`), body: (host ? host + T("：", ": ") : "") + cut(zh ? (D.say || [])[1] : (D.say || [])[0], 90)}; }
@@ -75,18 +76,44 @@ function contentFor(d, i, skipToday){
   return null;
 }
 
+// ⏰ 生活时刻提醒（2026-11-15，网页那边是云函数 act-push，规矩一样）：三个一周小活动加入时选的时刻（act.v1 的 j[活动].mo = {id, at, sat, msg}），
+// 活动那几天每天在那个时间排一条本地提醒，点开直接进「说一句」那一屏（window.HV_MO_OPEN，act_week.js 读）。
+// 当天那一步已经做了（j.done / j.dt）不排；一天连上面那条最多两条，相隔不到 60 分钟只留一条；连着三条没点开也没说，改成一周一条（记在 hv.appnotify.mo）。
+const MO0 = 7100, MON = 40, MOH = "hv.appnotify.mo";
+const moHist = () => { try { return JSON.parse(lsg(MOH) || "{}"); } catch(e){ return {}; } };
+function moPlan(N, P, now){ let J = {}; try { J = (JSON.parse(lsg("act.v1") || "{}").j) || {}; } catch(e){} const A = window.ACTS || [], H0 = moHist(), td = ymd(new Date()), C = [];
+  for (const id in J){ const a = A.find(x => x.id === id), j = J[id]; if (!a || !j || !j.d0 || !j.mo || j.mo.skip || !j.mo.msg || j.gone || j.off) continue;
+    const said = Object.values(j.dt || {}), h = H0[id] || {}, sent = (h.s || []).filter(x => x < td);
+    const miss = sent.filter(x => x > (h.o || "") && !said.includes(x)).length, last = sent.sort().pop() || "";
+    const [hh, mm] = String(j.mo.at).split(":").map(Number); let nextOk = miss >= 3 && last ? (() => { const d = new Date(last + "T12:00:00"); d.setDate(d.getDate() + 7); return ymd(d); })() : "";
+    for (let i = 0; i < a.days; i++){ const d = new Date(j.d0 + "T00:00:00"); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); const day = ymd(d);
+      if (d.getTime() < now + 20e3 || (j.done || {})[i] != null || said.includes(day) || (j.mo.sat && d.getDay() !== 6)) continue;
+      if (nextOk){ if (day < nextOk) continue; const n2 = new Date(day + "T12:00:00"); n2.setDate(n2.getDate() + 7); nextOk = ymd(n2); }   // 一周一条
+      C.push({id, day, d, min: hh * 60 + mm, msg: j.mo.msg}); } }
+  C.sort((x, y) => x.d - y.d); let k = 0; const H1 = moHist();
+  for (const c of C){ if (k >= MON) break; const p = P[c.day] = P[c.day] || [];
+    if (p.length >= 2 || p.some(m => Math.abs(m - c.min) < 60)) continue; p.push(c.min);
+    N.push({id: MO0 + k++, title: String(c.msg.title || "").slice(0, 80), body: String(c.msg.body || "").slice(0, 200), schedule: {at: c.d, allowWhileIdle: true}, extra: {tab: "acts", act: c.id, mo: 1, day: c.day}});
+    const h = H1[c.id] = H1[c.id] || {}; h.s = [...new Set((h.s || []).concat(c.day))].sort().slice(-20); }
+  lss(MOH, JSON.stringify(H1)); }
+// 选时刻那一下（用户点的）：要通知权限，再重排
+async function moAsk(){ if (!app()) return "no"; try { let p = await LN().checkPermissions(); if (p.display !== "granted") p = await LN().requestPermissions(); if (p.display !== "granted") return "denied"; await schedule(); return "ok"; } catch(e){ return "fail"; } }
+async function moOn(){ if (!app()) return false; try { return (await LN().checkPermissions()).display === "granted"; } catch(e){ return false; } }
+
 // ── 排通知 ──
 let busy = null;
 async function schedule(){
   if (!app()) return; if (busy) return busy;
   busy = (async () => { try {
-    const ids = Array.from({length: DAYS}, (_, i) => ({id: ID0 + i}));
+    const ids = Array.from({length: DAYS}, (_, i) => ({id: ID0 + i})).concat(Array.from({length: MON}, (_, i) => ({id: MO0 + i})));
     try { await LN().cancel({notifications: ids}); } catch(e){}
-    const S = get(); if (!S || !S.t) return;
-    const auto = S.t === "auto", [hh, mm] = when(S.t).split(":").map(Number), now = Date.now(), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })(), N = [];
+    const S = get(), now = Date.now(), N = [], P = {};   // P：每天已经排了几点的（一天最多两条，算上每天那一条）
+    if (S && S.t){
+    const auto = S.t === "auto", [hh, mm] = when(S.t).split(":").map(Number), done = (() => { try { return !!(H.todayDone && H.todayDone()); } catch(e){ return false; } })();
     for (let i = 0; i < DAYS; i++){ const d = new Date(); d.setDate(d.getDate() + i); d.setHours(hh, mm, 0, 0); if (d.getTime() < now + 20e3) continue; if (auto && i === 0 && usedToday()) continue;   // 跟着习惯：今天已经来过，就不叫了
       const c = contentFor(d, i, i === 0 && done); if (!c) continue;
-      N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d), act: c.act || ""}}); }
+      N.push({id: ID0 + i, title: c.title, body: c.body, schedule: {at: d, allowWhileIdle: true}, extra: {tab: c.tab, day: ymd(d), act: c.act || ""}}); (P[ymd(d)] = P[ymd(d)] || []).push(hh * 60 + mm); } }
+    if (await moOn()) moPlan(N, P, now);
     if (N.length) await LN().schedule({notifications: N});
   } catch(e){ try { console.warn("提醒排不上", e); } catch(_){} } finally { busy = null; } })();
   return busy;
@@ -140,6 +167,7 @@ function ask(){
 function hook(h){
   H = h || {}; if (!app()) return;
   try { LN().addListener("localNotificationActionPerformed", e => { const x = (e && e.notification && e.notification.extra) || {}, f = H.open && H.open[x.tab];
+    if (x.mo && x.act){ window.HV_MO_OPEN = x.act; const h = moHist(); (h[x.act] = h[x.act] || {}).o = ymd(new Date()); lss(MOH, JSON.stringify(h)); }   // ⏰ 点开了：直接进「说一句」，没点开的条数归零
     if (f) setTimeout(() => { try { f(x.act); } catch(err){} }, 1200); }); } catch(e){}
   markUse();
   document.addEventListener("visibilitychange", () => { if (!document.hidden){ markUse(); schedule(); } });
@@ -152,7 +180,7 @@ const css = `.hvn-own{display:inline-flex;align-items:center;gap:6px;padding:6px
 #hvnAsk h3{margin:0 0 6px;font-size:19px}#hvnAsk p{margin:0 0 10px;font-size:15px;line-height:1.5}
 #hvnAsk .hvn-later{display:block;margin:10px auto 0;background:none;border:0;color:#6b6b80;font:inherit;font-size:15px;padding:8px 14px}`;
 try { const st = document.createElement("style"); st.textContent = css; (document.head || document.documentElement).appendChild(st); } catch(e){}
-window.HVN = {app, hook, html, wire, ask, schedule};
+window.HVN = {app, hook, html, wire, ask, schedule, moAsk, moOn};
 })();
 
 /* install_btn.js */
