@@ -11332,6 +11332,7 @@ window.addEventListener("resize", ()=>{ resize(); render(); });
 </html><script>(()=>{
  const panel=document.createElement('details');panel.open=true;panel.style='background:#fff8d9;color:#172d24;border:1px solid #ddca88;padding:12px;margin:20px auto;max-width:760px';panel.innerHTML='<summary>Voyo 语音上线验收（独立页面）</summary><button id="voiceSmoke">测试七种语言与接口校验</button><pre id="voiceProof" style="white-space:pre-wrap;font:12px/1.5 system-ui"></pre>';document.body.append(panel);
  const log=s=>{panel.querySelector('pre').textContent+=s+'\n';};
+ const originalFetch=window.fetch;window.fetch=function(url,opts){if(String(url).includes('/voyo-speech')){try{const b=JSON.parse(opts.body);log('Speech input ['+b.lang+']: '+b.text);}catch(_){}}return originalFetch.apply(this,arguments);};
  const NativeAudio=window.Audio;
  window.Audio=function(...args){const audio=new NativeAudio(...args);for(const type of ['playing','pause','ended','error'])audio.addEventListener(type,()=>log(type+' time='+audio.currentTime.toFixed(2)+' duration='+audio.duration.toFixed(2)));return audio;};
  panel.querySelector('button').onclick=async e=>{
@@ -11352,4 +11353,4 @@ window.addEventListener("resize", ()=>{ resize(); render(); });
   }catch(error){log('CHECK FAILED: '+error.message);}finally{btn.disabled=false;}
  };
 })();
-</script><script src="/app/js/voyo-chat-85e5e22125d2.js"></script>
+</script><script src="/app/js/voyo-chat-e460c2238bed.js"></script>
