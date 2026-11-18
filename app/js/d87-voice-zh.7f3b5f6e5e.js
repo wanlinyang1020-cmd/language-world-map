@@ -48317,7 +48317,47 @@ function syls(code){ const tk = [...code.matchAll(/([a-zA-Z@^])([12]?)/g)].map(m
 const ipa1 = (t, end) => t.c === "^" ? (t.s ? "ʌ" : "ə") : t.c === "R" ? (t.s ? "ɜːr" : "ər") : t.c === "E" && !t.s && end ? "i" : PH[t.c][0];
 function sylIpa(S){ return S.map((sy, k)=>sy.t.map((t, j)=>ipa1(t, k === S.length - 1 && j === sy.t.length - 1)).join("")); }
 function ipaOf(w){ const c = look(w); if (!c) return ""; const S = syls(c), A = sylIpa(S); return A.map((x, k)=>(S.length > 1 ? (S[k].s === 1 ? "ˈ" : S[k].s === 2 ? "ˌ" : "") : "") + x).join(""); }
-const say = (s, r) => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(s); u.lang = "en-US"; u.rate = r || .9; speechSynthesis.speak(u); } catch(e){} };
+// Word audio owns one cancellable player; never overlap a Voyo reply.
+let wordRun=0, wordAudio=null, wordAbort=null, wordURL=null;
+const wordCache=new Map();
+function wordNote(t){const fb=document.getElementById("entFb");if(fb)fb.textContent=t;}
+function stopWord(){wordRun++;wordAbort?.abort();wordAbort=null;if(wordAudio){wordAudio.pause();wordAudio.removeAttribute('src');wordAudio.load();wordAudio=null;}if(wordURL){URL.revokeObjectURL(wordURL);wordURL=null;}try{speechSynthesis.cancel();}catch(_){}wordNote('');}
+window.addEventListener('hv-voyo-speech',stopWord);
+window.addEventListener('pagehide',stopWord);
+async function say(s,r,onEnd){
+ stopWord();window.dispatchEvent(new Event('hv-english-speech'));const run=wordRun;
+ const text=String(s).trim(),rate=r&&r<.85?.8:1;
+ if(!text)return;
+ try{
+  const config=window.HV_CONFIG,token=window.HV?.session?.access_token;
+  if(!token){
+   // Choose an ordinary English voice explicitly, never the device's novelty default.
+   const voice=speechSynthesis.getVoices().find(v=>/^en[-_]US$/i.test(v.lang)&&/Samantha|Alex|Google US English|Microsoft (Aria|Jenny|Guy|David|Zira)/i.test(v.name));
+   if(!voice)throw {code:'not_signed_in'};
+   const u=new SpeechSynthesisUtterance(text);u.voice=voice;u.lang='en-US';u.rate=rate;u.pitch=1;u.volume=1;
+   u.onend=()=>{if(run===wordRun){wordNote('');onEnd?.();}};
+   u.onerror=()=>{if(run===wordRun)wordNote(LG==='zh'?'声音未播放，请再点一次。':'Could not play. Tap to retry.');};
+   // Bypass the site's text-only recording override, without changing it for other features.
+   SpeechSynthesis.prototype.speak.call(speechSynthesis,u);return;
+  }
+  if(!config?.url||!config?.anonKey)throw {code:'voice_not_configured'};
+  wordNote(LG==='zh'?'正在准备英语发音……':'Preparing English audio…');
+  let blob=wordCache.get(text);
+  if(!blob){
+   const controller=new AbortController();wordAbort=controller;const timer=setTimeout(()=>controller.abort(),25000);let response;
+   try{response=await fetch(config.url.replace(/\/$/,'')+'/functions/v1/voyo-speech',{method:'POST',headers:{authorization:'Bearer '+token,apikey:config.anonKey,'content-type':'application/json'},body:JSON.stringify({text,lang:'en',accent:'us'}),signal:controller.signal});}finally{clearTimeout(timer);}
+   if(!response.ok){const body=await response.json().catch(()=>({}));throw {code:body.code};}
+   if(!response.headers.get('content-type')?.startsWith('audio/'))throw new Error('Invalid audio');
+   blob=await response.blob();if(blob.size<100)throw new Error('Empty audio');
+   if(run!==wordRun)return;wordCache.set(text,blob);if(wordCache.size>80)wordCache.delete(wordCache.keys().next().value);
+  }
+  if(run!==wordRun)return;
+  const audio=new Audio();wordAudio=audio;wordURL=URL.createObjectURL(blob);audio.src=wordURL;audio.playbackRate=rate;audio.preservesPitch=true;audio.webkitPreservesPitch=true;
+  audio.onended=()=>{if(run===wordRun){stopWord();onEnd?.();}};
+  audio.onerror=()=>{if(run===wordRun){stopWord();wordNote(LG==='zh'?'声音未播放，请再点一次。':'Could not play. Tap to retry.');}};
+  await audio.play();if(run===wordRun)wordNote(LG==='zh'?'正在播放 · 美式英语':'Playing · US English');
+ }catch(error){if(run!==wordRun)return;stopWord();wordNote(error?.code==='not_signed_in'?(LG==='zh'?'登录后可听清晰的英语发音。':'Sign in for English audio.'):error?.code==='voice_limit'?(LG==='zh'?'今天的语音额度已用完。':'Today’s voice allowance is used up.'):(LG==='zh'?'英语声音暂时未播放，请点“听”重试。':'English audio unavailable. Tap Listen to retry.'));}
+}
 // ---------- 样式（跟软件一样：纸色、墨蓝描边、贴纸阴影） ----------
 const css = `
 .ent-hit{background:rgba(255,191,31,.55);border-radius:5px}
@@ -48397,13 +48437,13 @@ function open(w){ sync(); w = String(w).trim().replace(/’/g, "'"); if (!/[A-Za
     ${code ? `<button class="ent-more" data-emore>${T("more")}</button>
     <div class="ent-deep" id="entDeep"><div class="ent-parts">${S.map(sy=>sy.t.map(t=>`<button data-ego="${t.c}"><b>${ipa1(t)}</b>${PH[t.c][1]}</button>`).join("")).join("")}</div>${tips.map(h=>`<div class="ent-note">💡 <b>${PH[h[0]][0]}</b> ${LG === "zh" ? h[3] : h[2]}</div>`).join("")}</div>` : ""}`;
   CUR = {w, key, S, strong: A[Math.max(0, S.findIndex(sy=>sy.s === 1))] || ""}; sheet.classList.add("on"); say(w); }   // 打开就念一遍（2026-11-08 用户要）
-function close(){ sheet.classList.remove("on"); if (REC) REC.stop(); document.querySelectorAll(".ent-hit").forEach(x=>{ const p = x.parentNode; p.replaceChild(document.createTextNode(x.textContent), x); p.normalize(); }); }
+function close(){ stopWord(); sheet.classList.remove("on"); if (REC) REC.stop(); document.querySelectorAll(".ent-hit").forEach(x=>{ const p = x.parentNode; p.replaceChild(document.createTextNode(x.textContent), x); p.normalize(); }); }
 // 听：音节一拍一拍亮起来，重的那一拍停得久
 function hear(rate){ if (!CUR) return; say(CUR.w, rate); const el = [...sheet.querySelectorAll(".ent-sy")]; if (!el.length) return; const k = rate < .7 ? 1.8 : 1; let t = 160 * k;
   CUR.S.forEach((sy, i)=>{ const d = (sy.s === 1 ? 330 : sy.s === 2 ? 250 : 170) * k; setTimeout(()=>el[i] && el[i].classList.add("now"), t); setTimeout(()=>el[i] && el[i].classList.remove("now"), t + d); t += d; }); }
 const norm = s => String(s).toLowerCase().replace(/[^a-z' ]/g, "").trim();
 // 说：点一下或按住都行；有语音识别就告诉你听到了什么，没有就录下来放给你自己听
-function startRec(btn){ if (REC){ REC.stop(); return; } if (!CUR) return; const fb = document.getElementById("entFb"), R = window.SpeechRecognition || window.webkitSpeechRecognition, t0 = Date.now();
+function startRec(btn){ if (REC){ REC.stop(); return; } if (!CUR) return; stopWord(); window.dispatchEvent(new Event("hv-english-speech")); const fb = document.getElementById("entFb"), R = window.SpeechRecognition || window.webkitSpeechRecognition, t0 = Date.now();
   const on = () => { btn.classList.add("rec"); btn.insertAdjacentHTML("afterbegin", `<span class="ent-wv"><i></i><i></i><i></i><i></i></span>`); fb.innerHTML = `<span class="live">${T("listening")}</span>`; };
   const off = () => { btn.classList.remove("rec"); const w = btn.querySelector(".ent-wv"); if (w) w.remove(); REC = null; };
   if (R){ const rec = new R(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 5; let fin = false;
@@ -48483,7 +48523,7 @@ document.addEventListener("click", e=>{ const d = e.target.closest("[data-ex],[d
   if (ds.ecell){ d.classList.add("flash"); setTimeout(()=>d.classList.remove("flash"), 700); say(ds.word, .8); return; }
   if (ds.esay) return say(ds.esay, .9);
   if (ds.elook != null){ const v = document.getElementById("entQ").value.trim(); if (v) open(v.split(/\s+/)[0]); return; }
-  if (ds.eplay){ say(CUR.w, .9); setTimeout(()=>{ try { new Audio(ds.eplay).play(); } catch(e2){} }, 1100); return; }
+  if (ds.eplay){ say(CUR.w, .9, ()=>{ wordAudio=new Audio(ds.eplay); wordAudio.play().catch(()=>{}); }); return; }
   if (ds.eq != null){ const i = +ds.eq, m = MIX[i], j = Math.random() < .5 ? 1 : 2; d.dataset.ans = j - 1; say(m[j][0], .8); document.getElementById("eqm" + i).textContent = T("which"); d.closest(".ent-card").querySelectorAll(".ent-qpk button").forEach(b=>b.className = ""); return; }
   if (ds.eqp != null){ const i = +ds.eqp, q = d.closest(".ent-card"), ans = q.querySelector("[data-eq]").dataset.ans, m = MIX[i]; if (ans == null){ say(m[+ds.j + 1][0], .8); return; }
     const ok = +ds.j === +ans, x = m[+ans + 1]; d.className = ok ? "ok" : "no"; if (!ok) q.querySelectorAll(".ent-qpk button")[ans].className = "ok"; document.getElementById("eqm" + i).textContent = `${ok ? T("right") : T("wasIt")} ${x[0]} /${ipaOf(x[0])}/`; delete q.querySelector("[data-eq]").dataset.ans; return; }

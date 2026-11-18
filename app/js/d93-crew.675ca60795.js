@@ -987,7 +987,7 @@ function wkDates(w){ const a = new Date(w.from + "T12:00"), b = new Date(addD(w.
   return ZH() ? `${a.getMonth() + 1}月${a.getDate()}日–${b.getMonth() === a.getMonth() ? "" : (b.getMonth() + 1) + "月"}${b.getDate()}日 · ${"每周一换"}` : `${a.getDate()}${a.getMonth() === b.getMonth() ? "" : " " + a.toLocaleDateString("en-GB", {month: "short"})}–${b.getDate()} ${b.toLocaleDateString("en-GB", {month: "short"})} · new theme every Monday`; }
 
 /* ── 来自哪里（角上的小标签）── */
-const SRC = {post: ["📝 动态", "📝 Post"], breakfast: ["🍳 我的早饭", "🍳 My Breakfast"], coffee: ["☕ 你那儿的一杯咖啡", "☕ A Cup Where You Are"], closet: ["👕 你的衣柜去过几个国家", "👕 Where Has Your Wardrobe Been?"],
+const SRC = {net: ["💬 大家在聊", "💬 People are saying"], post: ["📝 动态", "📝 Post"], breakfast: ["🍳 我的早饭", "🍳 My Breakfast"], coffee: ["☕ 你那儿的一杯咖啡", "☕ A Cup Where You Are"], closet: ["👕 你的衣柜去过几个国家", "👕 Where Has Your Wardrobe Been?"],
   nobuy: ["🛍 这周你忍住没买的一样", "🛍 The Thing I Didn’t Buy"], jot: ["✍️ 记一笔", "✍️ Jotted"], moment: ["⏱ 同一刻", "⏱ Same Moment"], howabout: ["💬 你那边呢", "💬 How about you?"]};
 const tagKey = c => c.src === "week" ? "wk:" + (c.wk || "") : c.src;
 function tagLabel(k){ if (k.indexOf("wk:") === 0){ const w = wkOfId(k.slice(3)); return "🗓 " + (w ? wkUI(w) : T("这周的题", "This week")); } const s = SRC[k]; return s ? T(s[0], s[1]) : k; }
@@ -1041,13 +1041,46 @@ async function playReal(x, btn){ const S = SB(); if (btn) btn.classList.add("pl"
 /* ── 墙上的一排 ── */
 let POSTS = [];
 let FILTER = null;
-function items(){ const C = ordered(), P = POSTS, R = REAL.side === SIDE() ? REAL.list : [], own = R.filter(x => x.own), oth = R.filter(x => !x.own), out = own.map(x => ({k: "real", x}));
-  let pi = 0, ri = 0;
-  C.forEach((c, n) => { out.push({k: "card", c}); if (n % 2 === 1){ if (pi < P.length) out.push({k: "post", x: P[pi++]}); if (ri < oth.length) out.push({k: "real", x: oth[ri++]}); } });
-  while (pi < P.length) out.push({k: "post", x: P[pi++]});
+function items(){ const C = ordered(), P = POSTS, R = REAL.side === SIDE() ? REAL.list : [], own = R.filter(x => x.own), oth = R.filter(x => !x.own), TH = threads(), out = own.map(x => ({k: "real", x}));
+  let pi = 0, ri = 0, ti = 0;
+  C.forEach((c, n) => { out.push({k: "card", c}); if (n % 2 === 1){ if (pi < P.length) out.push({k: "post", x: P[pi++]}); if (ri < oth.length) out.push({k: "real", x: oth[ri++]}); } if (ti < TH.length) out.push({k: "net", x: TH[ti++]}); });
+  while (pi < P.length || ti < TH.length){ if (pi < P.length) out.push({k: "post", x: P[pi++]}); if (ti < TH.length) out.push({k: "net", x: TH[ti++]}); }
   while (ri < oth.length) out.push({k: "real", x: oth[ri++]});
   if (!FILTER) return out;
-  return out.filter(it => (it.k === "card" ? tagKey(it.c) : it.k === "post" ? "post" : (it.x.src === "week" ? "wk:" + it.x.wk : it.x.src)) === FILTER); }
+  return out.filter(it => (it.k === "card" ? tagKey(it.c) : it.k === "post" ? "post" : it.k === "net" ? "net" : (it.x.src === "week" ? "wk:" + it.x.wk : it.x.src)) === FILTER); }
+/* ── 大家在聊（2026-11-15 用户：「大家说的话挪回朋友墙」）：原来世界页「别人正在说」那些（世界的网的 NET.threads，都是 🎭 角色）——
+   在学的那种语言说的，加上用你的母语问、在等人回答的（学中文的人看到等「会说英语的人」的那几条）。点开看回话，「去那儿看看」回到世界里那一个地方 */
+const NETD = () => window.WORLD_NET || {};
+const OLg = () => ZH() ? "zh" : "en";
+const nplain = t => String(t || "").replace(/\[\[([^\]|]+)\]\]/g, "$1").replace(/[\[\]]/g, "");
+const nui = o => o == null ? "" : typeof o === "string" ? o : (o[OLg()] || o.en || o.zh || "");
+const npName = id => { const p = (NETD().people || {})[id]; return p ? nmFix(nui(p.nm)) : id; };
+const npFace = id => ((NETD().people || {})[id] || {}).face || "";
+const npCity = id => { const p = (NETD().people || {})[id]; return p && p.city ? nui(p.city) : ""; };
+function threads(){ const N = NETD(); if (!N.threads) return []; return N.threads.filter(t => t.seed && (t.lg === SIDE() || (t.open && t.lg === OLg()))).map(t => { const ph = ((N.photos || {})[t.on] || []).filter(p => !p.small)[0] || ((N.photos || {})[t.on] || [])[0];
+    const on = String(t.on).startsWith("field:") ? "" : nui(((N.nodes || {})[t.on] || {}).name);
+    return {id: t.id, t, by: t.by, text: nplain(t.text), tr: t.tr ? nui(t.tr) : "", lg: t.lg, wait: !!(t.open && t.lg === OLg() && t.lg !== SIDE()), on, ph: ph ? ph.u : "", cr: ph && ph.c ? nui(ph.c) : "", replies: t.replies || []}; }); }
+const KINDE = {ask: "❓", think: "💭", story: "📖"};
+function netHTML(x){ const S = ST();
+  return `<div class="fwl-card" data-fwl="net" data-v="${esc(x.id)}">
+   <div class="fwl-who">${npFace(x.by) ? `<img class="fwl-av" src="${esc(npFace(x.by))}" alt="" loading="lazy">` : ""}<div class="fwl-nm"><b>${esc(npName(x.by))}<span class="fwl-npc">🎭 ${esc(T("角色", "character"))}</span></b><small>${esc([npCity(x.by), x.on].filter(Boolean).join(" · "))}</small></div></div>
+   ${x.ph ? `<div class="fwl-pic" style="aspect-ratio:4/3;background-image:url('${esc(x.ph)}')"><button class="fwl-tg" data-fwl="tag" data-v="net">${esc(tagLabel("net"))}</button></div>` : ""}
+   <div class="fwl-bd">${x.ph ? "" : `<button class="fwl-tg fwl-tgi" data-fwl="tag" data-v="net">${esc(tagLabel("net"))}</button>`}${x.wait ? `<div class="fwl-q">🙋 ${esc(T("在等一个说中文的人", "Waiting for someone who speaks English"))}</div>` : ""}<div class="fwl-ln${x.lg === "zh" ? "" : " en"}" dir="auto">${esc((KINDE[x.t.kind] || "") + " " + x.text)}</div>${x.tr && x.lg !== OLg() ? `<div class="fwl-mn">${esc(x.tr)}</div>` : ""}
+    <div class="fwl-ft"><button class="fwl-ic${S.likes["n:" + x.id] ? " on" : ""}" data-fwl="like" data-v="${esc("n:" + x.id)}">${S.likes["n:" + x.id] ? "♥" : "♡"}</button><span class="fwl-tried">${x.replies.length ? "💬 " + x.replies.length : ""}</span></div></div></div>`; }
+function openNet(id){ const x = threads().find(t => t.id === id); if (!x) return; CUR = {k: "net", x}; blip(760); drawDlg(); ov().classList.add("on"); document.body.classList.add("fwl-lock"); }
+function drawNet(){ const x = CUR.x, o = ov();
+  const rep = r => { const tr = r.tr ? nui(r.tr) : ""; return `<div class="fwl-re"><img class="fwl-av" src="${esc(npFace(r.by))}" alt=""><div class="fwl-bub"><b>${esc(npName(r.by))}</b> <span class="fwl-npc">🎭</span><div class="l" dir="auto">${esc(nplain(r.text))}</div>${tr && x.lg !== OLg() ? `<div class="m">${esc(tr)}</div>` : ""}</div></div>`; };
+  o.innerHTML = `<div class="fwl-dlg${x.ph ? "" : " nopic"}" role="dialog"><button class="fwl-close" data-fwl="close" aria-label="${esc(T("关上", "Close"))}">✕</button>
+   ${x.ph ? `<div class="fwl-big" style="background-image:url('${esc(x.ph)}')">${x.cr ? `<div class="fwl-cr">📷 ${esc(x.cr)}</div>` : ""}</div>` : ""}
+   <div class="fwl-side"><div class="fwl-scr">
+    <div class="fwl-pp">${npFace(x.by) ? `<img class="fwl-av" src="${esc(npFace(x.by))}" alt="">` : ""}<div class="fwl-nm"><b>${esc(npName(x.by))}</b> <span class="fwl-npc">🎭 ${esc(T("角色", "character"))}</span><small>${esc(npCity(x.by))}</small></div></div>
+    <div><button class="fwl-tg fwl-tgi" data-fwl="tag" data-v="net">${esc(tagLabel("net"))}</button>${x.on ? ` <span class="fwl-soft">📍 ${esc(x.on)}</span>` : ""}</div>
+    <div class="fwl-txt${x.lg === "zh" ? "" : " en"}" dir="auto" style="margin-top:10px">${esc((KINDE[x.t.kind] || "") + " " + x.text)}</div>${x.tr && x.lg !== OLg() ? `<div class="fwl-dmn">${esc(x.tr)}</div>` : ""}
+    <button class="fwl-hear" data-fwl="nsay">🔊 ${esc(T("听一遍", "Listen"))}</button>
+    ${x.replies.length ? `<div class="fwl-sec"><h3>${esc(T("回话", "Replies"))}</h3>${x.replies.map(rep).join("")}</div>` : ""}
+   </div>
+   <div class="fwl-trybar"><button class="fwl-bigtry" data-fwl="netgo">🌐 ${esc(x.wait ? T("去那儿回答 TA", "Go and answer them") : T("去那儿看看，也说一句", "Go there and say yours"))}</button></div></div></div>`;
+  enMark(o); }
 function cardHTML(c){ const l = L3(c)[0], q = c.q && c.q[SIDE()] ? norm(c.q[SIDE()]) : null, S = ST(), tr = triedOf(c).map(snm).join(ZH() ? "、" : ", "), ph = PHo(c.ph);
   return `<div class="fwl-card" data-fwl="card" data-v="${esc(c.id)}">
    <div class="fwl-who">${av(c.p)}<div class="fwl-nm"><b>${esc(dname(c.p))}<span class="fwl-npc">🎭 ${esc(T("角色", "character"))}</span></b><small>${esc(whoLine(c.p))}</small></div></div>
@@ -1066,7 +1099,7 @@ function realHTML(x){ const ph = thOf(x), k = x.src === "week" ? "wk:" + x.wk : 
    ${ph ? `<div class="fwl-pic" style="aspect-ratio:4/5;background-image:url('${esc(ph)}')"><button class="fwl-tg" data-fwl="tag" data-v="${esc(k)}">${esc(tagLabel(k))}</button></div>` : ""}
    <div class="fwl-bd">${ph ? "" : `<button class="fwl-tg fwl-tgi" data-fwl="tag" data-v="${esc(k)}">${esc(tagLabel(k))}</button>`}${x.q ? `<div class="fwl-q">💬 ${esc(x.q)}</div>` : ""}<div class="fwl-ln${isZ() ? "" : " en"}" dir="auto">${esc(x.t || "📷")}</div>${isZ() && x.p ? `<div class="fwl-py">${esc(x.p)}</div>` : ""}
     <div class="fwl-ft">${x.mime ? `<button class="fwl-ic" data-fwl="rsay" data-v="${esc(x.coll + "|" + x.id)}">🔊</button>` : ""}${x.own ? "" : `<button class="fwl-ic${S.likes["r:" + x.id] ? " on" : ""}" data-fwl="like" data-v="${esc("r:" + x.id)}">${S.likes["r:" + x.id] ? "♥" : "♡"}</button>`}<span class="fwl-tried">${x.mime ? esc(x.own ? T("你的声音", "Your voice") : T("TA 自己的声音", "Their own voice")) : ""}</span></div></div></div>`; }
-const itemHTML = (it, n) => it.k === "card" ? cardHTML(it.c) : it.k === "post" ? postHTML(it.x, POSTS.indexOf(it.x)) : realHTML(it.x);
+const itemHTML = (it, n) => it.k === "card" ? cardHTML(it.c) : it.k === "post" ? postHTML(it.x, POSTS.indexOf(it.x)) : it.k === "net" ? netHTML(it.x) : realHTML(it.x);
 
 /* ── 这周大家在晒 ── */
 function weekHead(){ const w = curWeek(); if (!w) return ""; const big = wkBig(w), nx = nextWeek(), host = w.host;
@@ -1097,7 +1130,7 @@ function openCard(id){ const c = cardOf(id); if (!c) return; CUR = {k: "card", c
 function closeDlg(){ const o = document.getElementById("fwOv"); if (o) o.classList.remove("on"); document.body.classList.remove("fwl-lock"); try { A().hush(); } catch(e){} CUR = null; redraw(); }
 function hilite(t){ const B = ST().bag; return t.replace(/<u>(.*?)<\/u>/g, (m, a) => `<u data-fwl="borrow" data-v="${esc(strip(a))}" class="${B.includes(strip(a)) ? "got" : ""}">${a}</u>`); }
 function drawDlg(){ const o = ov(); if (!CUR) return;
-  if (CUR.k === "post") return drawPost(); if (CUR.k === "real") return drawReal();
+  if (CUR.k === "post") return drawPost(); if (CUR.k === "real") return drawReal(); if (CUR.k === "net") return drawNet();
   const c = CUR.c, s = c[SIDE()], S = ST(), lv = Math.min(2, S.lv), l = L3(c)[lv], q = c.q && c.q[SIDE()] ? norm(c.q[SIDE()]) : null;
   const tryOn = S.plans.some(p => p.cid === c.id && !p.done), reps = (s.re || []).map(norm4).concat(S.rep[c.id] || []), py = S.py !== false;
   o.innerHTML = `<div class="fwl-dlg" role="dialog"><button class="fwl-close" data-fwl="close" aria-label="${esc(T("关上", "Close"))}">✕</button>
@@ -1315,10 +1348,13 @@ document.addEventListener("click", e => { const ac = e.target.closest && e.targe
   const fe = e.target.closest && e.target.closest(".fwl-today [data-fest]");
   if (fe){ e.stopPropagation(); if (window.hvFestOpen) window.hvFestOpen(fe.dataset.fest); return; }
   const t0 = e.composedPath ? e.composedPath()[0] : e.target, t = t0 && t0.closest && t0.closest("[data-fwl]"); if (!t || !on()) return; const a = t.dataset.fwl, v = t.dataset.v;
-  if (["card", "post", "real", "journal", "weekf", "moment"].indexOf(a) < 0) e.stopPropagation();
+  if (["card", "post", "real", "net", "journal", "weekf", "moment"].indexOf(a) < 0) e.stopPropagation();
   switch (a){
     case "card": openCard(v); break;
     case "post": openPost(+v); break;
+    case "net": openNet(v); break;
+    case "nsay": if (CUR && CUR.k === "net") say(CUR.x.text, CUR.x.lg); break;
+    case "netgo": if (CUR && CUR.k === "net"){ const t = CUR.x.t; closeDlg(); const isL = (NETD().lines || []).some(l => l.id === t.on); if (window.WNET) window.WNET.open(isL ? {line: t.on} : {open: t.on, th: t.id}); } break;
     case "real": openReal(v); break;
     case "tag": e.stopPropagation(); FILTER = v; if (document.getElementById("fwOv") && document.getElementById("fwOv").classList.contains("on")){ ov().classList.remove("on"); document.body.classList.remove("fwl-lock"); CUR = null; } if (!BOX || BOX.hidden) goTab("people"); redraw(); if (BOX) BOX.scrollTop = 0; blip(840); break;
     case "clearf": FILTER = null; redraw(); blip(600); break;
@@ -1409,7 +1445,7 @@ const CSS = `.fwl-app,.fwl-ov,.fwl-sheet,.fwl-today,.fwl-me{--ink:#14305c;--ivor
 .fwl-npc,.fwl-real{font-size:10px;color:var(--npc);background:#efe7f6;border-radius:99px;padding:0 5px;font-weight:700;vertical-align:1px;margin-left:3px}.fwl-real{color:#2f7d70;background:#e3f3ec}
 .fwl-pic{width:100%;background:#d9cfbb center/cover;position:relative}
 .fwl-tg{border:0;position:absolute;left:7px;top:7px;background:rgba(255,255,255,.92);border-radius:99px;font-size:11px;padding:2px 8px;color:var(--ink)!important;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.12);max-width:calc(100% - 14px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fwl-tg:hover{background:#fff;color:var(--hot)!important}.fwl-tgi{position:static;display:inline-block;margin:0 0 4px;background:#f4efe3;box-shadow:none}
+.fwl-tg:hover{background:#fff;color:var(--hot)!important}.fwl-tgi{position:static;display:inline-block;margin:0 0 4px;background:#f4efe3;box-shadow:none;white-space:normal;max-width:100%}
 .fwl-tm{position:absolute;right:7px;bottom:7px;background:rgba(20,48,92,.78);color:#fff;font-size:10.5px;border-radius:6px;padding:1px 6px;font-weight:700}
 .fwl-ai{position:absolute;right:7px;top:7px;background:rgba(106,76,140,.85);color:#fff;font-size:10px;border-radius:6px;padding:1px 6px}
 .fwl-bd{padding:8px 10px 9px}
@@ -1544,196 +1580,4 @@ button.fwl-mline{border:0;background:#fff4ef;border-radius:12px;padding:9px 12px
 
 window.FWALL = {css: () => CSS, on, momTop, page, wire, redraw, todayHtml, postersHtml, meHtml, open: openCard, reload: () => loadReal(true)};
 })();
-
-const LABELS = [
-["中 国",104,35.5,1],["俄 罗 斯",95,62,1],["美 国",-99,40,1],["加 拿 大",-105,58,1],["巴 西",-52,-11,1],["澳 大 利 亚",134,-24,1],
-["印 度",79,21,1],["非 洲",20,5,1],["欧 洲",15,49.5,1],["南 美 洲",-60,-20,1],["北 美 洲",-100,48,0],
-["法 国",2.4,46.6,2],["英 国",-2,53.8,2],["意 大 利",12.5,43.3,2],["西 班 牙",-3.7,39.8,2],["德 国",10.4,51.2,2],
-["日 本",138.5,37.5,2],["韩 国",128,36.3,2],["埃 及",29.5,26.5,2],["墨 西 哥",-102,23.6,2],["阿 根 廷",-64,-34,2],
-["秘 鲁",-75,-9.5,2],["蒙 古",103,46.8,2],["土 耳 其",35,39,2],["南 非",24,-29.5,2],["新 西 兰",172,-41,2],
-["泰 国",101,15.5,2],["印 尼",117,-2,2],["伊 朗",54,32.5,2],["沙 特",45,24,2],["挪 威",9,61.5,2],["瑞 典",16,62.5,2],["芬 兰",26,63,2],
-["哈萨克斯坦",67,48,2],["阿 尔 及 利 亚",2.5,28,2],["尼 日 利 亚",8,9.5,2],["肯 尼 亚",38,0.5,2],["坦 桑 尼 亚",35,-6,2],
-["太 平 洋",-150,5,1],["大 西 洋",-35,25,1],["印 度 洋",80,-20,1],["北 冰 洋",0,80,1],
-];
-
-// ===== 自己网站的后台（Supabase + AI 中转）=====
-// 在 claude.ai 里打开时用 Claude 自带的登录、数据库和 AI；在 heyvoyo.com 上打开时用这里的实现。
-// 对外提供和 claude.ai 一样的接口：HV.user（id / isOwner / can / profiles）、HV.db（collection / doc）、HV.sample.json()。
-// HV_CONFIG 由 deploy.sh 从 ../后台/config.json 填进来；没填时整个后台不启用。
-var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": "https://pfqbskweyqyrmnrkioha.supabase.co/functions/v1/ai", "google": true, "apple": "", "ai_free": true};
-var HV = {sb: null, session: null, user: null, db: null, sample: null, ready: false};
-// 从「重设密码」邮件点回来时，网址里带着 type=recovery：记下来，登录后直接打开「设新密码」
-try { if (/type=recovery/.test(location.hash + location.search)) sessionStorage.setItem("hv.recovery", "1"); } catch(e){}
-
-function hvLoadScript(src){ return new Promise((ok, bad)=>{ const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); }); }
-
-async function hvInit(){
-  if (window.claude || !HV_CONFIG || !HV_CONFIG.url || !HV_CONFIG.anonKey) return false;
-  if (!window.supabase) await hvLoadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.js");
-  HV.sb = window.supabase.createClient(HV_CONFIG.url, HV_CONFIG.anonKey, {auth: {persistSession: true, detectSessionInUrl: true}});
-  const {data} = await HV.sb.auth.getSession();
-  HV.session = data.session;
-  HV.sb.auth.onAuthStateChange((ev, session)=>{ if (ev === "PASSWORD_RECOVERY") try { sessionStorage.setItem("hv.recovery", "1"); } catch(e){} const was = !!HV.session; HV.session = session; if (!!session !== was) location.reload(); });
-  if (!HV.session) return true;
-  const uid = HV.session.user.id, email = HV.session.user.email || "";
-  let admin = false; try { const r = await HV.sb.from("admins").select("uid").eq("uid", uid).maybeSingle(); admin = !!(r.data); } catch(e){}
-  HV.user = {
-    metaName: (HV.session.user.user_metadata || {}).name || "",   // 注册时填的昵称
-    id: async ()=>uid, isOwner: async ()=>admin, canEdit: ()=>admin, can: async ()=>true, email,
-    profiles: async ids => { const out = {}; if (!ids.length) return out;
-      const r = await HV.sb.from("docs").select("id,data").eq("coll", "profiles").in("id", ids);
-      (r.data || []).forEach(d=>{ out[d.id] = {name: d.data && d.data.name || "", avatarUrl: ""}; });
-      ids.forEach(id=>{ if (!out[id]) out[id] = {name: "", avatarUrl: ""}; }); return out; }
-  };
-  HV.db = hvDb();
-  if (HV_CONFIG.ai) HV.sample = hvSample();  // 没填 ai 地址时，网站上的 AI 功能先关着
-  HV.ready = true;
-  return true;
-}
-
-function hvBlocked(){ try { return new Set(JSON.parse(localStorage.getItem("soc.block.v1") || "[]")); } catch(e){ return new Set(); } }
-// ---- 文档数据库：模仿 claude.ai 的 collection / doc / onSnapshot 接口，背后是一张 docs 表
-function hvDb(){
-  const sb = HV.sb, uid = () => HV.session && HV.session.user.id;
-  const split = path => { const i = path.lastIndexOf("/"); return [path.slice(0, i), path.slice(i + 1)]; };
-  const snapDoc = row => ({id: row ? row.id : "", exists: !!row, data: () => row ? row.data : undefined, metadata: {fromCache: false, hasPendingWrites: false}});
-  const field = f => "data->>" + f;
-  function docRef(coll, id){
-    return {
-      id, path: coll + "/" + id,
-      async get(){ const r = await sb.from("docs").select("id,data").eq("coll", coll).eq("id", id).maybeSingle(); if (r.error) throw r.error; return snapDoc(r.data); },
-      async set(data){ const r = await sb.from("docs").upsert({coll, id, data}, {onConflict: "coll,id"}); if (r.error) throw r.error; },  // owner 新建时自动是自己，修改时保留原作者
-      async update(data){ const cur = await this.get(); if (!cur.exists) throw {code: "invalid_argument"}; return this.set({...cur.data(), ...data}); },
-      async delete(){ const r = await sb.from("docs").delete().eq("coll", coll).eq("id", id); if (r.error) throw r.error; },
-      onSnapshot(next, err){ let alive = true; const run = async ()=>{ try { const s = await this.get(); if (alive) next(s); } catch(e){ if (err) err(e); } };
-        run(); const ch = sb.channel("d:" + coll + "/" + id + ":" + Math.random()).on("postgres_changes", {event: "*", schema: "public", table: "docs", filter: "coll=eq." + coll}, p=>{ const row = p.new && p.new.id ? p.new : p.old; if (row && row.id === id) run(); }).subscribe();
-        return ()=>{ alive = false; sb.removeChannel(ch); }; },
-      collection: sub => coll2(coll + "/" + id + "/" + sub)
-    };
-  }
-  function query(coll, opts){
-    const q = {
-      where: (f, op, v) => query(coll, {...opts, where: [...(opts.where || []), [f, op, v]]}),
-      orderBy: (f, dir) => query(coll, {...opts, order: [f, dir || "asc"]}),
-      limit: n => query(coll, {...opts, limit: n}),
-      async get(){
-        let r = sb.from("docs").select("id,data,owner").eq("coll", coll);
-        (opts.where || []).forEach(([f, op, v])=>{ if (op === "==") r = r.eq(field(f), String(v)); else if (op === "in") r = r.in(field(f), v.map(String)); });
-        if (opts.order){ const f = opts.order[0], num = f === "ts"; r = r.order(num ? "created_at" : field(f), {ascending: opts.order[1] !== "desc"}); }
-        if (opts.limit) r = r.limit(opts.limit);
-        const res = await r; if (res.error) throw res.error;
-        let rows = res.data || [];
-        // 屏蔽的人：他发的东西（照片、回复、帖子、评论、私信……）一律不显示（名单在「我 → 屏蔽名单」，存 soc.block.v1）
-        const bl = hvBlocked(); if (bl.size && coll !== "profiles") rows = rows.filter(row=>{ const d = row.data || {}; return !(bl.has(row.owner) || bl.has(d.by) || bl.has(d.author) || bl.has(d.from) || bl.has(d.uid)); });
-        if (opts.order && opts.order[0] === "ts") rows.sort((a, b)=>((a.data.ts || 0) - (b.data.ts || 0)) * (opts.order[1] === "desc" ? -1 : 1));
-        const docs = rows.map(snapDoc);
-        return {docs, size: docs.length, empty: !docs.length, docChanges: ()=>[], metadata: {fromCache: false, hasPendingWrites: false}};
-      },
-      onSnapshot(next, err){ let alive = true, t = null; const run = async ()=>{ try { const s = await q.get(); if (alive) next(s); } catch(e){ if (err) err(e); } };
-        run(); const ch = sb.channel("q:" + coll + ":" + Math.random()).on("postgres_changes", {event: "*", schema: "public", table: "docs", filter: "coll=eq." + coll}, ()=>{ clearTimeout(t); t = setTimeout(run, 250); }).subscribe();
-        return ()=>{ alive = false; clearTimeout(t); sb.removeChannel(ch); }; }
-    };
-    return q;
-  }
-  function coll2(coll){
-    const q = query(coll, {});
-    q.path = coll;
-    q.doc = id => docRef(coll, id || (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "").slice(0, 20) : String(Date.now()) + Math.random().toString(36).slice(2, 8)));
-    q.add = async data => { const ref = q.doc(); await ref.set(data); return ref; };
-    return q;
-  }
-  return {collection: coll2, doc: path => { const [c, id] = split(path); return docRef(c, id); }};
-}
-
-// ---- AI：通过 Supabase 云函数（后台/functions/ai）调用，网页里不放任何密钥
-function hvSample(){
-  // 多聊档（chat）：服务器自己记对话。第一句不带 conv，服务器开一段、扣 1 🛟、回 conv；同一段后面的来回带着它（2026-11-12）。
-  // 「同一段」= 同一个人物设定 + 同一个开头那句（岛上、话题、Voyo 的多聊都是这样一路往下加消息）
-  const CONV = {}, ENDED = new Set();   // ENDED：服务器说这段已经结束（超过 6 小时 / 换了设定），不再悄悄开新的一段，由页面问用户要不要重新开始
-  const convKey = (messages, system) => { const t = String(system || "") + "\u0001" + JSON.stringify(messages[0] || ""); let h = 0x811c9dc5; for (let i = 0; i < t.length; i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16); };
-  async function call(input, opts){
-    const messages = typeof input === "string" ? [{role: "user", content: input}] : input;
-    const tier = (opts && opts.modelTier) || "default", ck = tier === "chat" && messages.length > 1 ? convKey(messages, opts && opts.system) : "";
-    if (!HV.session) throw {code: "not_signed_in", message: "请先登录"};
-    if (ck && !CONV[ck] && ENDED.has(ck)) throw {code: "chat_ended", message: "这段聊天已经结束了"};
-    const r = await fetch(HV_CONFIG.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey},
-      body: JSON.stringify(Object.assign({messages, tier, system: opts && opts.system}, ck && CONV[ck] ? {conv: CONV[ck]} : {}, (opts && opts.extra) || {}))});
-    const j = await r.json().catch(()=>({}));
-    if (tier === "chat" && j.conv){ const k0 = convKey(messages, opts && opts.system); CONV[k0] = j.conv; ENDED.delete(k0); }
-    if (j.code === "chat_ended" && ck){ delete CONV[ck]; ENDED.add(ck); }
-    if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys;
-    if (r.status === 402 && typeof lbOpen === "function") setTimeout(()=>lbOpen(true), 0);  // 🛟 不够：弹出买救生圈
-    if (!r.ok) throw {code: j.code || "ai_error", message: j.message || "AI 暂时用不了"};
-    return j;
-  }
-  const s = async (input, opts) => { const j = await call(input, opts); return {text: j.text || "", truncated: !!j.truncated}; };
-  s.json = async (input, opts) => { const j = await call(input, {...(opts || {}), json: true}); const t = String(j.text || "").trim();
-    const m = t.match(/\{[\s\S]*\}|\[[\s\S]*\]/); try { return JSON.parse(m ? m[0] : t); } catch(e){ throw {code: "bad_json", message: "AI 返回的内容看不懂"}; } };
-  return s;
-}
-
-// ---- 救生圈 🛟：余额、记录、能买的包（表和函数见 后台/lifebuoy.sql）。没装好时返回 null，界面就不显示
-async function hvLifebuoys(){
-  if (!HV.sb || !HV.session) return null;
-  const r = await HV.sb.rpc("lb_me"); if (r.error) return null;
-  HV.lifebuoys = r.data; return r.data;
-}
-async function hvLbLedger(n){
-  const r = await HV.sb.from("lifebuoy_ledger").select("delta,balance_after,reason,created_at").order("created_at", {ascending: false}).limit(n || 10);
-  return r.error ? [] : r.data;
-}
-async function hvLbPacks(){
-  const r = await HV.sb.from("lifebuoy_packs").select("id,lifebuoys,price_pence,label_en,label_zh").order("sort");
-  return r.error ? [] : r.data;
-}
-
-var HV_BOOT = hvInit().catch(e=>{ console.warn('后台没连上', e); return false; });
-
-// ---- 邮件里的链接点回来去哪：网页版回到当前页；在 App 里（capacitor://localhost）邮件链接打不开 App，就去 heyvoyo.com 网页版（在那里设好密码，回 App 用邮箱 + 密码登录）
-function hvInApp(){ try { return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); } catch(e){ return false; } }
-function hvBackUrl(){ return hvInApp() || !/^https?:$/.test(location.protocol) ? "https://heyvoyo.com/map/" : location.origin + location.pathname; }
-// ---- 删除我的账号（苹果要求 App 里能自己删）：先删自己存的家乡视频，再让后台删账号（后台/delete_account.sql），然后退出
-async function hvDeleteAccount(){
-  const uid = HV.session && HV.session.user && HV.session.user.id; if (!uid) throw {message: "not signed in"};
-  try { const l = await HV.sb.storage.from("hometown").list(uid, {limit: 100}); const names = (l.data || []).map(f=>uid + "/" + f.name); if (names.length) await HV.sb.storage.from("hometown").remove(names); } catch(e){}
-  const r = await HV.sb.rpc("hv_delete_me"); if (r.error) throw r.error;
-  try { await HV.sb.auth.signOut({scope: "local"}); } catch(e){}
-  location.reload();
-}
-// ---- 登录界面：邮箱里点一下链接就登录
-async function hvSignIn(email){
-  const r = await HV.sb.auth.signInWithOtp({email, options: {emailRedirectTo: hvBackUrl()}});
-  if (r.error) throw r.error;
-}
-async function hvSignOut(){ await HV.sb.auth.signOut(); }
-// ---- 用 Google 账号登录（2026-11-10）：跳到 Google，回来就登录了，不发邮件。要在 Supabase → Auth → Providers 里开 Google，config.json 里 google: true 才显示按钮
-async function hvSignInGoogle(){ const r = await HV.sb.auth.signInWithOAuth({provider: "google", options: {redirectTo: hvBackUrl()}}); if (r.error) throw r.error; }
-// ---- 用 Apple 账号登录（2026-11-10 备好）：iPhone App 里有 Google 登录，苹果规定也要有 Apple 登录。要先有苹果开发者账号，在 Supabase → Auth → Providers 开 Apple，config.json 里 apple: true 才显示按钮
-async function hvSignInApple(){ const r = await HV.sb.auth.signInWithOAuth({provider: "apple", options: {redirectTo: hvBackUrl()}}); if (r.error) throw r.error; }
-// ---- 邮箱 + 密码：第一次用登录链接进来，之后在「👤 我」里设密码，以后直接用密码登录（不用等邮件）
-async function hvSignInPassword(email, password){
-  const r = await HV.sb.auth.signInWithPassword({email, password});
-  if (r.error) throw r.error;
-}
-// ---- 注册（邮箱 + 密码 + 昵称）：Supabase 会发一封确认邮件，点了才算注册完
-async function hvSignUp(email, password, name){
-  const r = await HV.sb.auth.signUp({email, password, options: {data: {name}, emailRedirectTo: hvBackUrl()}});
-  if (r.error) throw r.error;
-  if (r.data && r.data.user && Array.isArray(r.data.user.identities) && !r.data.user.identities.length) throw {code: "exists", message: "already registered"};   // 邮箱已经注册过
-}
-// ---- 忘记密码：发一封重设邮件，点回来以后打开「设新密码」
-async function hvResetPassword(email){
-  const r = await HV.sb.auth.resetPasswordForEmail(email, {redirectTo: hvBackUrl()});
-  if (r.error) throw r.error;
-}
-// ---- 重新发送确认邮件
-async function hvResendSignup(email){
-  const r = await HV.sb.auth.resend({type: "signup", email, options: {emailRedirectTo: hvBackUrl()}});
-  if (r.error) throw r.error;
-}
-async function hvSetPassword(password){
-  const r = await HV.sb.auth.updateUser({password});
-  if (r.error) throw r.error;
-}
-
 
