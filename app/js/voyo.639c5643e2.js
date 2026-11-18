@@ -1384,9 +1384,11 @@ function startChat(pid){ const id = castId(pid); if (!id || !canChat(pid)) retur
     if (VISITING){ const t = ASKS[ASKS.length - 1]; if (t) t.done({i: -1, v: "", bye: true, auto: true}); }
     else if (ASKS.length) toast(T("先回完上面这句，或者点「跳过」", "Answer the one above first, or tap Skip"));
     queueGo(); return true; };
+  // 先回「今天」再关朋友页：直接关会露出底下的地图（2026-11-19 上线检查发现）
+  const onBoat = location.hash === "#boat";
+  if (!onBoat) location.hash = "#boat";
   try { if (window.PTAB_CLOSE) PTAB_CLOSE(); } catch(e){}
-  if (go()) return;
-  if (location.hash !== "#boat") location.hash = "#boat";
+  if (onBoat && go()) return;
   let n = 0; const wait = () => { if (go() || ++n > 20) return; setTimeout(wait, 200); }; setTimeout(wait, 200); }
 // 朋友页每个人的页面上（people_tab.js 叫这两个）
 const chatBtn = pid => canChat(pid) ? `<button class="pt-btn" data-vychat="${esc(pid)}">💬 ${esc(T("找 TA 聊聊", "Talk with them"))}</button>` : "";
