@@ -86121,11 +86121,11 @@ Rules:
 - Learner-centred: the goal is to be understood and to take part in a conversation, not to sound like a native speaker. Never say "a native speaker would say", "natural", "unnatural", "not authentic" or similar. No scores, no grades, no pushing, no guilt.
 - If the learner shows signs of a crisis (wanting to hurt themselves, being hurt by someone, not wanting to live), stop the language help: set "care": true and keep everything else empty.
 - Never make up facts. Never claim to be a human; if asked, you are an AI penguin companion.
-- Reply with ONLY JSON, no other text.
+- Reply with ONLY the raw JSON object: no markdown code fences, no other text.
 ${task}`; }
 const TASK = {
   how: tgN => `Task: the learner typed something in their own language. Give one simple, everyday way to say it in ${tgN}. JSON: {"say":"the ${tgN} sentence","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin with tone marks" : "IPA of the sentence, or empty"}","note":"optional, one very short tip in the learner's own language, or empty","care":false}`,
-  check: tgN => `Task: the learner wrote a sentence in ${tgN} and asks you to look at it. If people could work out the meaning, say so warmly first. If it is easy to follow, "better" is null. If the listener would have to guess (words out of order, words missing, meaning only half clear), still say warmly that you got it, and also give one clearer way to say it in "better". When you praise, say it is clear or easy to understand; never call it "natural". JSON: {"understood":true,"reply":"one short warm line in the learner's own language","better":null or {"t":"a clearer ${tgN} sentence","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin" : "empty"}"},"care":false}`,
+  check: tgN => `Task: the learner wrote a sentence in ${tgN} and asks you to look at it. If people could work out the meaning, say so warmly first. If it is easy to follow, "better" is null. If the listener would have to guess (words out of order, words missing, meaning only half clear), still say warmly that you got it, and also give one clearer way to say it in "better". When you praise, say it is clear or easy to understand; never call it "natural". JSON: {"reply":"one short warm line in the learner's own language","understood":true,"better":null or {"t":"a clearer ${tgN} sentence","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin" : "empty"}"},"care":false}`,
   why: tgN => `Task: explain briefly, in the learner's own language, why the second way may be easier for people to understand than the first. At most 3 short sentences, friendly, no grammar lecture, never say the first way is wrong or unnatural. JSON: {"why":"...","care":false}`,
   word: tgN => `Task: the learner gave ONE word or a very short phrase (in ${tgN} or in their own language) and wants to use it. Give the ${tgN} word, how to pronounce it (one short tip in the learner's own language: ${tgN === "Chinese (Mandarin)" ? "tones" : "stress and the tricky sound"}), and two short everyday chunks that use it. JSON: {"w":"the ${tgN} word","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin with tone marks" : "IPA"}","mean":"its meaning in the learner's own language","how":"one short pronunciation tip in the learner's own language","ch":[{"t":"a short ${tgN} chunk","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin" : "empty"}","mean":"meaning in the learner's own language"}],"care":false}`,
   join: tgN => `Task: the learner gave a few of their OWN words (in ${tgN}, or some in their own language) for something they want to say about their life. Join them into ONE short, simple ${tgN} sentence that keeps every one of their words (translate a word only if it is not ${tgN}), adding as few small words as possible. Do not add new facts. JSON: {"t":"the ${tgN} sentence","pron":"${tgN === "Chinese (Mandarin)" ? "pinyin with tone marks" : "empty"}","mean":"its meaning in the learner's own language","mine":["the learner's words exactly as they appear in t"],"glue":"one short line in the learner's own language naming the small words you added","care":false}`,
@@ -86139,12 +86139,34 @@ function aiErr(e){ const c = (e && e.code) || "";
   if (c === "chat_ended") return T("这段聊天已经结束了。要重新开始吗？", "This chat has ended. Start a new one?");
   if (c === "not_signed_in") return T("登录后可以用。", "Sign in to use this.");
   return T("我这边没拿到回答，等一下再试试。", "I couldn't get an answer just now. Try again in a bit."); }
-async function ask(msgs, tier, task){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
+// 边写边出（2026-11-18，用户：「要提升回复速度」）：给了 onPart 就请云函数流式回（body.stream，一行一个 JSON），
+//   一边收一边把要给人看的那段字（STREAM_KEY）交给 onPart，整段收完再解析成 JSON（拼音、意思到这时才补上）。
+//   云函数还是老版（回的是一次性的 JSON）就照用那个结果；连不上流式（claude.ai 版、没配、fetch 失败）就退回原来的一次性取法，不报错。
+const STREAM_KEY = {how: "say", check: "reply", word: "w", join: "t", chat: "say", why: "why"};
+const partField = (txt, k) => { if (!k) return ""; const m = txt.match(new RegExp('"' + k + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)')); if (!m) return ""; const v = m[1].replace(/\\u[0-9a-fA-F]{0,3}$/, "").replace(/\\$/, ""); try { return JSON.parse('"' + v + '"'); } catch(e){ return ""; } };
+const parseJ = t => { const x = String(t || "").trim(), m = x.match(/\{[\s\S]*\}|\[[\s\S]*\]/); try { return JSON.parse(m ? m[0] : x); } catch(e){ throw {code: "bad_json"}; } };
+async function aiStream(msgs, opts, onPart, key){ const c = window.HV_CONFIG, tok = window.HV && HV.session && HV.session.access_token;
+  if (window.claude || !c || !c.ai || !tok) return null;
+  let r; try { r = await fetch(c.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + tok, apikey: c.anonKey}, body: JSON.stringify(Object.assign({messages: msgs, tier: opts.modelTier, system: opts.system, stream: true}, opts.conv ? {conv: opts.conv} : {}, opts.extra || {}))}); } catch(e){ return null; }
+  if (!(r.headers.get("content-type") || "").includes("ndjson")){ const j = await r.json().catch(() => ({})); if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys; if (!r.ok) throw {code: j.code || "ai_error"}; return {j: parseJ(j.text), conv: j.conv}; }
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", txt = "", res = null, shown = "";
+  try { for (;;){ const p = await rd.read(); buf += dec.decode(p.value || new Uint8Array(), {stream: !p.done}); let e;
+      while ((e = buf.indexOf("\n")) >= 0){ const line = buf.slice(0, e); buf = buf.slice(e + 1); if (!line.trim()) continue; const ev = JSON.parse(line);
+        if (typeof ev.lifebuoys === "number" && window.HV) HV.lifebuoys = ev.lifebuoys;
+        if (ev.type === "delta"){ txt += ev.text; const t = partField(txt, key); if (t && t !== shown){ shown = t; try { onPart(t); } catch(x){} } }
+        if (ev.type === "error") throw {code: ev.code || "stream_interrupted"}; if (ev.type === "done") res = ev; }
+      if (p.done) break; } }
+  catch(e){ if (e && e.code) throw e; throw {code: "stream_interrupted"}; }
+  finally { try { rd.releaseLock(); } catch(x){} }
+  if (!res) throw {code: "stream_interrupted"}; return {j: parseJ(res.text), conv: res.conv}; }
+async function ask(msgs, tier, task, onPart, conv){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
   // 免费档：云函数不收网页送来的人物设定，按 task / 界面语言 / 在学的语言 / 三档自己写 Voyo 的提示词（后台/functions/ai/index.ts 的 voyoSys）；claude.ai 上没有云函数，才用这里的 system
   let lv = 0; try { lv = A() ? A().level() : 0; } catch(e){}
-  const j = await ai.json(msgs, {modelTier: tier, system: /^npc_/.test(task) ? npcSys(task.slice(4)) : sys(TASK[task](LN[LGV()] || "English")), cache: false, extra: tier === "free" ? {task, ui: UIL(), learn: LGV(), lv} : null}); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
+  const opts = {modelTier: tier, system: /^npc_/.test(task) ? npcSys(task.slice(4)) : sys(TASK[task](LN[LGV()] || "English")), cache: false, extra: tier === "free" ? {task, ui: UIL(), learn: LGV(), lv} : null};
+  if (onPart){ const st = await aiStream(msgs, Object.assign({conv}, opts), onPart, /^npc_/.test(task) ? "say" : STREAM_KEY[task]); if (st){ if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; Object.defineProperty(st.j, "_conv", {value: st.conv || null}); return st.j; } }
+  const j = await ai.json(msgs, opts); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
 function npcSys(id){ const P = ((window.VOYO_VIS || {}).people || {})[id] || {}, ui = LN[UIL()] || "English", zh = KL() === "zh", tg = zh ? LN.zh : LN.en;
-  return `${P.ai || ""}\nYou dropped into a learner's chat in the HeyVoyo app. The learner's own language is ${ui}; they are learning ${tg}. You asked them something and they just answered.\nRules:\n- Answer in one or two short sentences in ${tg}${zh ? " (simple, slow Chinese like a learner of four years; give pinyin with tone marks)" : " (simple British English)"}, about your own life where it fits.\n- Never correct them, never teach. Never make up facts about them. If they show signs of a crisis, set \"care\": true and leave the rest empty.\n- \"knows\": one short fact you now know about them, in ${ui}; empty if nothing.\n- Reply with ONLY JSON: {"say":"","pron":"","mean":"its meaning in ${ui}","knows":"","care":false}`; }
+  return `${P.ai || ""}\nYou dropped into a learner's chat in the HeyVoyo app. The learner's own language is ${ui}; they are learning ${tg}. You asked them something and they just answered.\nRules:\n- Answer in one or two short sentences in ${tg}${zh ? " (simple, slow Chinese like a learner of four years; give pinyin with tone marks)" : " (simple British English)"}, about your own life where it fits.\n- Never correct them, never teach. Never make up facts about them. If they show signs of a crisis, set \"care\": true and leave the rest empty.\n- \"knows\": one short fact you now know about them, in ${ui}; empty if nothing.\n- Reply with ONLY the raw JSON object (no markdown code fences): {"say":"","pron":"","mean":"its meaning in ${ui}","knows":"","care":false}`; }
 function aiChipsHTML(){ const ai = !!aiFn(), fr = freeOn();
   return `<div class="vy-chips vy-aichips">${fr ? `<button class="vy-chip" data-vyai="how">${esc(T("这个怎么说？", "How do I say…?"))}<em>${esc(T("免费", "free"))}</em></button><button class="vy-chip" data-vyai="check">${esc(T("帮我看看这句", "Check this line for me"))}<em>${esc(T("免费", "free"))}</em></button>` : ""}<button class="vy-chip" data-vyai="who">${esc(T("想找人聊", "Who could I chat with?"))}<em>${esc(T("免费", "free"))}</em></button>${ai ? `<button class="vy-chip" data-vyai="deep">${esc(T("跟我多聊几句", "Talk with me a bit longer"))}<em>🛟 1</em></button>` : ""}</div>`; }
 function wireAi(root){ const box = root.querySelector(".vy-ai"); if (!box) return;
@@ -86648,8 +86670,10 @@ function errMsg(e){ const m = add(`😶 ${esc(aiErr(e))}`);
   return m; }
 const aiOK = () => !!aiFn() && !needLogin();
 // 免费档：新 task 没部署（云函数回「不认识的请求」）就换旧的 task 再问一次；还不行交给调用的人退回
-async function askFree(content, task, old){ try { const j = await ask([{role: "user", content}], "free", task); freeAdd(); return j; }
-  catch(e){ if (old && e && e.code === "bad_request"){ const j = await ask([{role: "user", content}], "free", old); freeAdd(); j._old = old; return j; } throw e; } }
+async function askFree(content, task, old, onPart){ try { const j = await ask([{role: "user", content}], "free", task, onPart); freeAdd(); return j; }
+  catch(e){ if (old && e && e.code === "bad_request"){ const j = await ask([{role: "user", content}], "free", old, onPart); freeAdd(); j._old = old; return j; } throw e; } }
+// 「正在想」的气泡：第一段字一到就换成字
+const partTo = (el, cls) => t => { const m = el.classList.contains("vy-msg") ? el : el.querySelector(".vy-msg"); if (!m) return; m.classList.remove("vy-typing"); m.innerHTML = `<span class="${cls || "vy-tl"}" dir="auto">${esc(t)}</span>`; scrollChat(); };
 
 // ══ 客人来了又走 ══
 function door(p, out){ const P = VV().people[p]; const d = document.createElement("div"); d.className = "vy-door" + (out ? " out" : ""); d.dataset.nopy = "";
@@ -86693,12 +86717,12 @@ async function visit(id, n){ const P = VV().people[id], tg = KL(), V = P[tg], K 
     else {
       const c = careHit(a.v); if (c){ vbBody().insertAdjacentHTML("beforeend", careHTML(c)); scrollChat(); }
       else if (aiOK() && freeUsed() < FREE_MAX){ const tp = document.createElement("div"); tp.className = "vy-npcm"; tp.innerHTML = `<img src="https://img.heyvoyo.com/npc/${esc(P.face)}.webp" alt=""><div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; node(tp);
-        try { const j = await ask([{role: "user", content: `${P.nm} just asked: "${strip(lastQ[0])}"\nThe learner answered: "${a.v}"`}], "free", "npc_" + id); freeAdd(); tp.remove();
+        try { const j = await ask([{role: "user", content: `${P.nm} just asked: "${strip(lastQ[0])}"\nThe learner answered: "${a.v}"`}], "free", "npc_" + id, partTo(tp)); freeAdd(); tp.remove();
           if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); }
           else if (j.say){ reply = [String(j.say), tg === "zh" ? String(j.pron || "") : "", String(j.mean || "")]; reply.ai = 1; if (j.knows) know = ["said", [String(j.knows), String(j.knows)]]; } }
         catch(e){ tp.remove(); } }
       if (!reply){ const isQ = new RegExp(P.ask_kw || "\\?|？", "i").test(a.v); reply = isQ ? V.reQ : V.reTyped; if (!isQ) know = ["said", [TF("你说过「{v}」", "you said “{v}”", {v: a.v}), TF("你说过「{v}」", "you said “{v}”", {v: a.v})]]; demo = false; } }
-    if (reply) await npcSay(id, reply, {wait: reply.ai ? 300 : 1000, mean: reply.ai ? reply[2] : undefined});
+    if (reply) await npcSay(id, reply, {wait: reply.ai ? 0 : 1000, mean: reply.ai ? reply[2] : undefined});
     if (know) memAdd({id: id + "knows_" + know[0], g: "npc", t: ["{n} 知道：{f}", "{n} knows: {f}"], n: P.nm, f: know[1], src: ["你跟 TA 说的", "You told them"]});
     else if (a.i < 0) memAdd({id: "asked_" + id, g: "said", tz: a.v, t: ["你问 {n}：", "You asked {n}:"], n: P.nm, src: ["{n} 来聊的时候", "When {n} dropped by"]});
     memAdd({id: "met_" + id, g: "met", t: ["{n} · {c}", "{n} · {c}"], n: P.nm, c: P.city, src: ["TA 来跟你聊过", "Dropped by to chat"]});
@@ -86733,8 +86757,10 @@ async function nextDirs(id, k, lastQ){ const P = VV().people[id]; let D = null, 
     const i = VB.querySelector(".vy-in2"); i.placeholder = TN("用你自己的几个词回 {n}", "Reply to {n} in your own words", P.nm); i.focus(); scrollChat(); });
   return true; }
 // 🛟 档（chat）：设定由网页送（云函数 chat 档收 system），一次一段
-async function ai2(content, task){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
-  const j = await ai.json([{role: "user", content}], {modelTier: "chat", system: sys(TASK[task](LN[LGV()] || "English")), cache: false}); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
+async function ai2(content, task, onPart){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
+  const opts = {modelTier: "chat", system: sys(TASK[task](LN[LGV()] || "English")), cache: false};
+  const st = await aiStream([{role: "user", content}], opts, onPart || (() => {}), STREAM_KEY[task] || ""); if (st){ if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; return st.j; }
+  const j = await ai.json([{role: "user", content}], opts); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
 // 给 AI 的「你告诉过 Voyo 的事」：只用 🧠 里还在的
 const memFacts = () => memL().filter(m => m.g === "about" || m.g === "npc").map(m => m.t[1]).join("; ");
 
@@ -86746,7 +86772,7 @@ function followMic(m, want){ return new Promise(res => { if (!m.isConnected || !
   w.querySelector("[data-skip]").onclick = e => { e.currentTarget.closest(".vy-chips").remove(); m.insertAdjacentHTML("beforeend", `<div class="vy-mn">${esc(T("好，下次想说再说。", "Sure — say it whenever you like."))}</div>`); scrollChat(); res(false); }; }); }
 async function step1(v){ if (!aiOK()){ errMsg({code: "not_signed_in"}); return; } if (freeUsed() >= FREE_MAX) return tired();
   const tp = add("<i></i><i></i><i></i>", "vy-typing"); let j = null;
-  try { j = await askFree(v, "word", "how"); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
+  try { j = await askFree(v, "word", "how", partTo(tp)); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
   if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); return; }
   let w, ch = [];
   if (j._old){ if (!j.say){ errMsg({}); return; } w = null; ch = [[j.say, j.pron || "", ""]]; }
@@ -86758,7 +86784,7 @@ async function step1(v){ if (!aiOK()){ errMsg({code: "not_signed_in"}); return; 
   if (ch[0]) await followMic(m, ch[0][0]); }
 async function step2(v, toWho){ if (!aiOK()){ errMsg({code: "not_signed_in"}); return; } if (freeUsed() >= FREE_MAX) return tired();
   const tp = add("<i></i><i></i><i></i>", "vy-typing"); let j = null;
-  try { j = await askFree(v, "join", "check"); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
+  try { j = await askFree(v, "join", "check", partTo(tp)); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
   if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); return; }
   let t, py = "", mn = "", mine = [], glue = "";
   if (j._old){ t = j.better && j.better.t ? j.better.t : v; py = j.better ? j.better.pron || "" : ""; glue = j.reply || ""; mine = v.split(/[\s,，、]+/).filter(Boolean); }
@@ -86793,10 +86819,14 @@ function chipTap(k, btn){ blip(700);
   if (k === "who") userFlow(whoChat);
   if (k === "deep") userFlow(async () => { if (!aiFn()) return; btn.disabled = true; me(esc(T("跟我多聊几句", "Talk with me a bit longer"))); const ok = await spend(); btn.disabled = false; if (ok) deepStart(); }); }
 async function check(v){ const c = careHit(v); if (c){ vbBody().insertAdjacentHTML("beforeend", careHTML(c)); return; } if (!aiOK()){ errMsg({code: "not_signed_in"}); return; } if (freeUsed() >= FREE_MAX) return tired();
-  const tp = add("<i></i><i></i><i></i>", "vy-typing"); let j = null; try { j = await ask([{role: "user", content: v}], "free", "check"); freeAdd(); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
+  const tp = add("<i></i><i></i><i></i>", "vy-typing"); let j = null; try { j = await ask([{role: "user", content: v}], "free", "check", partTo(tp, "")); freeAdd(); } catch(e){ tp.remove(); errMsg(e); return; } tp.remove();
   if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); return; } const better = j.better && j.better.t ? j.better : null;
   const m = add(`${esc(j.reply || T("我听懂了！", "I understood you!"))}${better ? `<div class="vy-fine2">${esc(T("这样说，别人更容易懂：", "Said this way, it's easier to understand:"))}</div>${lineHTML([better.t, KL() === "zh" ? better.pron || "" : "", ""], {mean: ""})}${spkBtn(T("再听", "Again"))}` : ""}`);
-  if (better){ await speakWait([m.querySelector(".vy-seg")]); memAdd({id: "said_check", g: "said", tz: better.t, t: ["你的一句，更好懂的说法：", "Your line, easier to follow:"], src: ["帮我看看这句", "Check this line"]}); } }
+  if (better){ if (aiFn()){ m.insertAdjacentHTML("beforeend", `<div class="vy-chips"><button class="vy-chip" data-vywhy>${esc(T("细细说说为什么", "Tell me more"))}<em>🛟 1</em></button></div>`);
+      const wb = m.querySelector("[data-vywhy]"); wb.onclick = () => userFlow(async () => { wb.disabled = true; if (!(await spend())){ wb.disabled = false; return; } const tp2 = add("<i></i><i></i><i></i>", "vy-typing");
+        try { const w = await ai2(`First way (the learner's): ${v}\nSecond way: ${better.t}`, "why", partTo(tp2, "")); tp2.remove(); if (w.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); return; } add(`<small class="vy-cost">🛟 1</small>${esc(w.why || "")}`); }
+        catch(e){ tp2.remove(); errMsg(e); wb.disabled = false; } }); }
+    await speakWait([m.querySelector(".vy-seg")]); memAdd({id: "said_check", g: "said", tz: better.t, t: ["你的一句，更好懂的说法：", "Your line, easier to follow:"], src: ["帮我看看这句", "Check this line"]}); } }
 // 想找人聊：朋友墙上正聊着的人（卡下面回话的），点了就打开那张卡
 async function whoChat(){ me(esc(T("想找人聊", "Who could I chat with?"))); const D = FW(), k = KL(); const L = [];
   if (D && k){ const order = (D.order || {})[k] || []; for (const cid of order){ const c = (D.cards || []).find(x => x.id === cid); if (!c || !c[k]) continue; const r = (c[k].re || [])[0]; if (!r || L.some(x => x.p === r[0])) continue; const P = (D.P || {})[r[0]]; if (!P) continue; L.push({p: r[0], P, cid, t: r[1], m: r[r.length - 1]}); if (L.length >= 2) break; } }
@@ -86809,7 +86839,7 @@ function deepStart(){ const Q = (VO().deep || {})[prof()] || (VO().deep || {}).g
   add(`<small class="vy-cost">🛟 1 · ${esc(T("这一段只扣这一个", "only this one for the whole chat"))}</small><div class="vy-chips"><button class="vy-chip" data-dend>${esc(T("就聊到这", "That's enough"))}</button></div>`).querySelector("[data-dend]").onclick = deepEnd;
   VB.querySelector(".vy-in2").placeholder = T("说你在学的语言，说不出来用母语也行", "Use the language you're learning — or your own if you get stuck"); deepTurn(); }
 async function deepTurn(){ const S = DEEPS; if (!S) return; S.busy = true; const tp = add("<i></i><i></i><i></i>", "vy-typing"); let j = null;
-  try { j = await ask(S.msgs, "chat", "chat"); } catch(e){ tp.remove(); S.busy = false; errMsg(e); if (e && e.code === "chat_ended"){ deepEnd(true); } else if (S.msgs.length > 1 && S.msgs[S.msgs.length - 1].role === "user") S.msgs.pop(); return; }
+  try { j = await ask(S.msgs, "chat", "chat", partTo(tp), S.conv); if (j._conv) S.conv = j._conv; } catch(e){ tp.remove(); S.busy = false; errMsg(e); if (e && e.code === "chat_ended"){ deepEnd(true); } else if (S.msgs.length > 1 && S.msgs[S.msgs.length - 1].role === "user") S.msgs.pop(); return; }
   tp.remove(); S.busy = false; if (DEEPS !== S) return; if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); deepEnd(); return; } if (!j.say){ errMsg({}); return; }
   S.msgs.push({role: "assistant", content: JSON.stringify(j)}); const m = add(`${lineHTML([String(j.say), "", ""], {mean: String(j.mean || "")})}${spkBtn()}`); speakWait([m.querySelector(".vy-seg")]);
   if (j.end || S.turns >= 10) deepEnd(); }
