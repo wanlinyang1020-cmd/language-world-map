@@ -329,6 +329,10 @@ const needLogin = () => { try { return !!(H().aiSite && H().aiSite() && !(H().lo
 // 「我」页那一行「我的救生圈」只在网站上登录以后才有：看得到才把人指过去
 const lbRow = () => { try { return !!(H().aiSite && H().aiSite() && H().logged && H().logged()); } catch(e){ return false; } };
 const lbN = () => { try { return H().lbN ? H().lbN() : null; } catch(e){ return null; } };
+// 认识的人：每天 PEOPLE_MAX 个（跟 Voyo 帮法的 10 次分开算，云函数 people_bump，后台/ai_people.sql）
+const PEOPLE_MAX = 10;
+function peopleUsed(){ const o = ST(); return o.ppl && o.ppl.d === today() ? o.ppl.n || 0 : 0; }
+function peopleAdd(n){ const o = ST(); o.ppl = {d: today(), n: n != null ? n : peopleUsed() + 1}; SAVE(o); }
 function freeUsed(){ const o = ST(); return o.ai && o.ai.d === today() ? o.ai.n || 0 : 0; }
 function freeAdd(n){ const o = ST(); o.ai = {d: today(), n: n != null ? n : freeUsed() + 1}; SAVE(o); }
 const LN = {zh: "Chinese (Mandarin)", en: "English", fr: "French", es: "Spanish", ja: "Japanese", ar: "Arabic", pt: "Portuguese"};
@@ -390,14 +394,22 @@ async function aiStream(msgs, opts, onPart, key){ const c = window.HV_CONFIG, to
   catch(e){ if (e && e.code) throw e; throw {code: "stream_interrupted"}; }
   finally { try { rd.releaseLock(); } catch(x){} }
   if (!res) throw {code: "stream_interrupted"}; return {j: parseJ(res.text), conv: res.conv}; }
+// 一次性取法也自己发（不走 HV.sample），这样能带上、收回段编号（conv）：跟人聊天退回一次性取法时照样一段只算一次
+async function aiOnce(msgs, opts){ const c = window.HV_CONFIG, tok = window.HV && HV.session && HV.session.access_token;
+  if (window.claude || !c || !c.ai || !tok) return null;
+  let r; try { r = await fetch(c.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + tok, apikey: c.anonKey}, body: JSON.stringify(Object.assign({messages: msgs, tier: opts.modelTier, system: opts.system}, opts.conv ? {conv: opts.conv} : {}, opts.extra || {}))}); } catch(e){ return null; }
+  const j = await r.json().catch(() => ({})); if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys; if (!r.ok) throw {code: j.code || "ai_error"};
+  return {j: parseJ(j.text), conv: j.conv}; }
 async function ask(msgs, tier, task, onPart, conv){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
   // 免费档：云函数不收网页送来的人物设定，按 task / 界面语言 / 在学的语言 / 三档自己写 Voyo 的提示词（后台/functions/ai/index.ts 的 voyoSys）；claude.ai 上没有云函数，才用这里的 system
   let lv = 0; try { lv = A() ? A().level() : 0; } catch(e){}
   const opts = {modelTier: tier, system: /^npc_/.test(task) ? npcSys(task.slice(4)) : sys(TASK[task](LN[LGV()] || "English")), cache: false, extra: tier === "free" ? {task, ui: UIL(), learn: LGV(), lv} : null};
-  if (onPart){ const st = await aiStream(msgs, Object.assign({conv}, opts), onPart, /^npc_/.test(task) ? "say" : STREAM_KEY[task]); if (st){ if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; Object.defineProperty(st.j, "_conv", {value: st.conv || null}); return st.j; } }
+  const got = st => { if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; Object.defineProperty(st.j, "_conv", {value: st.conv || null}); return st.j; };
+  if (onPart){ const st = await aiStream(msgs, Object.assign({conv}, opts), onPart, /^npc_/.test(task) ? "say" : STREAM_KEY[task]); if (st) return got(st); }
+  if (conv || /^npc_/.test(task)){ const st = await aiOnce(msgs, Object.assign({conv}, opts)); if (st) return got(st); }
   const j = await ai.json(msgs, opts); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
 function npcSys(id){ const P = ((window.VOYO_VIS || {}).people || {})[id] || {}, ui = LN[UIL()] || "English", zh = KL() === "zh", tg = zh ? LN.zh : LN.en;
-  return `${P.ai || ""}\nYou dropped into a learner's chat in the HeyVoyo app. The learner's own language is ${ui}; they are learning ${tg}. You asked them something and they just answered.\nRules:\n- Answer in one or two short sentences in ${tg}${zh ? " (simple, slow Chinese like a learner of four years; give pinyin with tone marks)" : " (simple British English)"}, about your own life where it fits.\n- Never correct them, never teach. Never make up facts about them. If they show signs of a crisis, set \"care\": true and leave the rest empty.\n- \"knows\": one short fact you now know about them, in ${ui}; empty if nothing.\n- Reply with ONLY the raw JSON object (no markdown code fences): {"say":"","pron":"","mean":"its meaning in ${ui}","knows":"","care":false}`; }
+  return `${P.ai || ""}\nYou dropped into a learner's chat in the HeyVoyo app. The learner's own language is ${ui}; they are learning ${tg}. You asked them something and they just answered.\nRules:\n- Answer in one or two short sentences in ${tg}${zh ? " (simple, slow Chinese like a learner of four years; give pinyin with tone marks)" : " (simple British English)"}, about your own life where it fits.\n- Never correct them, never teach. Never make up facts about them. No professional medical, mental-health, legal or financial advice (share your own experience, suggest a professional). Never flirt or talk romance or sex, never ask for or give contact details, never arrange to meet. If they show signs of a crisis, set \"care\": true and leave the rest empty.\n- \"knows\": one short fact you now know about them, in ${ui}; empty if nothing.\n- Reply with ONLY the raw JSON object (no markdown code fences): {"say":"","pron":"","mean":"its meaning in ${ui}","knows":"","care":false}`; }
 function aiChipsHTML(){ const ai = !!aiFn(), fr = freeOn();
   return `<div class="vy-chips vy-aichips">${fr ? `<button class="vy-chip" data-vyai="how">${esc(T("这个怎么说？", "How do I say…?"))}<em>${esc(T("免费", "free"))}</em></button><button class="vy-chip" data-vyai="check">${esc(T("帮我看看这句", "Check this line for me"))}<em>${esc(T("免费", "free"))}</em></button>` : ""}<button class="vy-chip" data-vyai="who">${esc(T("想找人聊", "Who could I chat with?"))}<em>${esc(T("免费", "free"))}</em></button>${ai ? `<button class="vy-chip" data-vyai="deep">${esc(T("跟我多聊几句", "Talk with me a bit longer"))}<em>🛟 1</em></button>` : ""}</div>`; }
 function wireAi(root){ const box = root.querySelector(".vy-ai"); if (!box) return;
@@ -503,7 +515,7 @@ const CSSB = `.vy-box{display:flex;flex-direction:column;height:calc(100svh - 15
 .vy-mine{color:#e2552f;border-bottom:2px dotted #e2552f;font-weight:inherit}
 .vy-spkb{border:0;background:#f1ece0;border-radius:99px;padding:3px 9px;font-size:12px;font-weight:800;color:#14305c;margin-top:6px;cursor:pointer;font-family:inherit}
 .vy-box .vy-free{font-size:11.5px;color:#6b7488;margin-top:6px}
-.vy-tag{display:inline-block;font:800 10px/1 -apple-system,sans-serif;padding:3px 6px;border-radius:99px;background:#efe9db;color:#6b5a2e;vertical-align:1px}.vy-tag.lrn{background:#fff0ea;color:#c2451f}
+.vy-tag.nat{background:#e3eefb;color:#1f4f8b}.vy-tag{display:inline-block;font:800 10px/1 -apple-system,sans-serif;padding:3px 6px;border-radius:99px;background:#efe9db;color:#6b5a2e;vertical-align:1px}.vy-tag.lrn{background:#fff0ea;color:#c2451f}
 .vy-rc{display:flex;gap:10px;align-items:stretch;background:#fff;border-radius:16px;padding:8px;margin:8px 0;box-shadow:0 3px 12px rgba(20,48,92,.1);width:100%;border:2px solid transparent;text-align:start;cursor:pointer;font:inherit;color:inherit;animation:vypop .35s}
 .vy-rc:hover{border-color:#f3c3b1}.vy-rc .ph{width:84px;min-height:96px;border-radius:12px;background:#2a3d63 center/cover;flex:none;position:relative}.vy-rc .ph img{position:absolute;inset-inline-start:-4px;bottom:-4px;width:30px;height:30px;border-radius:50%;border:2px solid #fff;object-fit:cover}
 .vy-rc .tx{flex:1;min-width:0;font-size:12.5px;color:#6b7488}.vy-rc .tx b{color:#14305c;font-size:13px;display:block}.vy-rc .vy-tl{font-size:14px;color:#14305c}
@@ -518,6 +530,7 @@ const CSSB = `.vy-box{display:flex;flex-direction:column;height:calc(100svh - 15
 .vy-findw .vy-fchips{padding:6px 12px 0;margin:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.vy-findw .vy-fchips::-webkit-scrollbar{display:none}.vy-findw .vy-chip{flex:none;font-size:12px;padding:4px 10px;font-weight:600;background:#fbf7ee}.vy-findw.dim{opacity:.55}
 .vy-fcards{display:flex;flex-direction:column;gap:6px;margin-top:8px}.vy-fc{display:flex;gap:10px;align-items:center;width:100%;text-align:start;padding:8px;border:1px solid #e6dfcf;border-radius:14px;background:#fff;cursor:pointer;font:inherit;color:inherit}.vy-fc:hover{border-color:#f3c3b1}
 .vy-fc img,.vy-fth{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#f1ece0;display:grid;place-items:center;color:#8f7a4c}.vy-fc .tx{flex:1;min-width:0}.vy-fc small{display:block;font-size:11px;font-weight:800;color:#e2552f;margin:0}.vy-fc b{display:block;font-size:13.5px;color:#14305c;line-height:1.35}.vy-fc .why{display:block;font-size:11.5px;color:#8a6a1e;margin-top:2px}
+.vy-fcw{display:flex;flex-direction:column;gap:4px}.vy-fcw .vy-chip{align-self:flex-start;font-size:12px;padding:4px 10px}
 .vy-dup,.vy-rcw .th-x,.vy-rcw .acx-tx{display:none!important}
 .vy-memov{position:fixed;inset:0;z-index:3200;background:rgba(20,30,50,.35);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}.vy-memov.on{opacity:1}
 .vy-mpn{background:#fbf7ee;width:100%;max-width:520px;max-height:86vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;transform:translateY(40px);transition:transform .3s}.vy-memov.on .vy-mpn{transform:none}
@@ -797,7 +810,7 @@ const strip = s => String(s == null ? "" : s).replace(/<[^>]+>/g, "");
 const trEn = t => ((((window.VOYO_VIS || {}).i18n || {})[t] || {})[UIL()]) || "";
 const sideMean = L => { const k = KL(), u = UIL(); if (u === "zh") return k === "en" ? L[2] || "" : ""; if (u === "en") return k === "zh" ? L[2] || "" : ""; return k === "zh" ? trEn(L[2]) : trEn(strip(L[0])); };
 // 「也在学中文 / 英语」：阿语按人物是男是女分开（_voyo.json 的 g）
-function alsoTag(pid, lg){ const g = ((VO().g || {})[pid]) || "f", zh = lg === "zh";
+function alsoTag(pid, lg){ const g = ((CAST()[pid] || {}).g) || ((VO().g || {})[pid]) || "f", zh = lg === "zh";
   if (UIL() === "ar") return zh ? (g === "m" ? "يتعلّم الصينية أيضًا" : "تتعلّم الصينية أيضًا") : (g === "m" ? "يتعلّم الإنجليزية أيضًا" : "تتعلّم الإنجليزية أيضًا");
   return zh ? T("也在学中文", "Also learning Chinese") : T("也在学英语", "Also learning English"); }
 const bcp2 = l => { try { return A() ? A().bcp(l) : l; } catch(e){ return l; } };
@@ -866,13 +879,14 @@ function askU(box, opts, o){ o = o || {}; const my = RUN; return new Promise((re
   const me2 = {done: null, mic: o.mic || ""};
   const finish = r => { const k = ASKS.indexOf(me2); if (k >= 0) ASKS.splice(k, 1); w.querySelectorAll("[data-i],[data-skip]").forEach(b => b.disabled = true); if (o.right) w.remove(); VB.querySelector(".vy-in2").placeholder = ASKS.length ? VB.querySelector(".vy-in2").placeholder : inpPh();
     if (my !== RUN) return rej("stale");
-    if (r.skip) me(`<span style="opacity:.8">${esc(T("跳过", "Skip"))}</span>`); else { const x = r.i >= 0 ? opts[r.i] : null; me(`<span dir="auto">${esc(r.v)}</span>` + (x && (x[1] || sideMean(x)) ? `<small dir="auto">${esc([x[1], sideMean(x)].filter(Boolean).join(" · "))}</small>` : "")); }
+    if (r.bye && r.auto){} else if (r.bye) me("👋"); else if (r.skip) me(`<span style="opacity:.8">${esc(T("跳过", "Skip"))}</span>`); else { const x = r.i >= 0 ? opts[r.i] : null; me(`<span dir="auto">${esc(r.v)}</span>` + (x && (x[1] || sideMean(x)) ? `<small dir="auto">${esc([x[1], sideMean(x)].filter(Boolean).join(" · "))}</small>` : "")); }
     res(r); };
   me2.done = finish; ASKS.push(me2);
   if (o.ph) VB.querySelector(".vy-in2").placeholder = o.ph;
   w.querySelectorAll("[data-i]").forEach(b => b.onclick = () => { b.classList.add("pick"); blip(700); finish({i: +b.dataset.i, v: opts[+b.dataset.i][0]}); });
   const sk = w.querySelector("[data-skip]"); if (sk) sk.onclick = () => finish({i: -1, skip: true});
-  if (o.wire) o.wire(w); }); }
+  if (o.wire) o.wire(w);
+  if (o.right && QUEUE) setTimeout(() => finish({i: -1, v: "", bye: true, auto: true}), 0); }); }
 
 // ── 推荐：长在对话里的卡（朋友墙卡 / 你那边呢 / 你在参加的活动），点开走软件里现成的打开方式 ──
 const FW = () => window.FWALL_D || null;
@@ -907,14 +921,25 @@ async function askFree(content, task, old, onPart){ try { const j = await ask([{
 const partTo = (el, cls) => t => { const m = el.classList.contains("vy-msg") ? el : el.querySelector(".vy-msg"); if (!m) return; m.classList.remove("vy-typing"); m.innerHTML = `<span class="${cls || "vy-tl"}" dir="auto">${esc(t)}</span>`; scrollChat(); };
 
 // ══ 客人来了又走 ══
-function door(p, out){ const P = VV().people[p]; const d = document.createElement("div"); d.className = "vy-door" + (out ? " out" : ""); d.dataset.nopy = "";
-  d.innerHTML = `<img src="https://img.heyvoyo.com/npc/${esc(P.face)}.webp" alt="">${esc(out ? TN("{n} 走了", "{n} left", P.nm) : TN("{n} 从朋友墙上过来了", "{n} dropped in from the Friends wall", P.nm))}${out ? "" : " 🎭"}`; node(d); blip(out ? 440 : 880); }
-async function npcSay(p, L, o){ o = o || {}; const my = RUN, P = VV().people[p];
+// 来聊的人：Ruth 那样手写的（voyo_visits/<id>.json）优先，其余是朋友页的人（d88_voyo.js 的 cast，照片和城市从朋友页拿）
+const CAST = () => (window.VOYO_VIS || {}).cast || {};
+const CASTP = {};
+// 朋友页的 id（stars.yuriko、isle.mei……）对到 friends_cast 的人：先按 ref / speaks.json 的 ids 精确对；对不上、而且那个人没登记别的 id，才按最后一截对（避免纽约的小雨被当成杭州的小雨）
+const castId = pid => { pid = String(pid || ""); const C = CAST(); for (const k in C){ if ((C[k].pids || []).includes(pid)) return k; } const k = pid.split(".").pop(); return C[k] && !(C[k].pids || []).length ? k : (C[k] && pid === k ? k : null); };
+const canChat = pid => { const id = castId(pid), k = KL(), lv = id && k ? (CAST()[id].sp || {})[k] : ""; return !!(lv && lv !== "a_little"); };
+function castP(id, pid){ const c = CAST()[id]; if (!c) return null; let info = null; try { info = pid && window.PTAB_INFO ? PTAB_INFO(pid) : null; } catch(e){}
+  const home = (info && info.home) || c.home || "";
+  return {nm: c.nm, py: c.py || "", face: c.ph ? c.ph + "/face" : "", img: !c.ph && info ? info.img : "", city: [home, home], pr: c.g === "m" ? ["他", "he"] : ["她", "she"], learns: c.learns, g: c.g}; }
+const PP = id => VV().people[id] || CASTP[id] || null;
+const faceUrl = P => P.img || `https://img.heyvoyo.com/npc/${P.face}.webp`;
+function door(p, out, txt){ const P = PP(p); const d = document.createElement("div"); d.className = "vy-door" + (out ? " out" : ""); d.dataset.nopy = "";
+  d.innerHTML = `<img src="${esc(faceUrl(P))}" alt="">${esc(txt ? txt : out ? TN("{n} 走了", "{n} left", P.nm) : TN("{n} 从朋友墙上过来了", "{n} dropped in from the Friends wall", P.nm))}${out ? "" : " 🎭"}`; node(d); blip(out ? 440 : 880); }
+async function npcSay(p, L, o){ o = o || {}; const my = RUN, P = PP(p);
   while (BUSYN > 0 && !o.now){ await sleep(300); if (my !== RUN) throw "stale"; }
-  const fc = `<img src="https://img.heyvoyo.com/npc/${esc(P.face)}.webp" alt="">`;
+  const fc = `<img src="${esc(faceUrl(P))}" alt="">`;
   const tp = document.createElement("div"); tp.className = "vy-npcm"; tp.innerHTML = `${fc}<div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; node(tp);
   await sleep(o.wait == null ? 900 : o.wait); tp.remove(); if (my !== RUN) throw "stale";
-  const lr = P.learns === KL() ? ` <span class="vy-tag lrn">${esc(alsoTag(p, KL()))}</span>` : "";
+  const sp = ((CAST()[p] || {}).sp || {})[KL()], lr = P.learns === KL() || sp === "learning" ? ` <span class="vy-tag lrn">${esc(alsoTag(p, KL()))}</span>` : sp === "native" ? ` <span class="vy-tag nat">${esc(T("母语", "Native"))}</span>` : "";
   const m = document.createElement("div"); m.className = "vy-npcm"; m.innerHTML = `${fc}<div class="vy-msg"><span class="nm">${esc(P.nm)} 🎭 · ${esc(TT(P.city))}${lr}</span>${lineHTML(L, o)}${spkBtn()}</div>`; node(m); blip(600);
   await speakWait([m.querySelector(".vy-seg")], {rate: KL() === "zh" ? .78 : .92}); if (my !== RUN) throw "stale"; return m; }
 const visOf = id => ((ST().vis || {})[id]) || null;
@@ -943,6 +968,7 @@ async function visit(id, n){ const P = VV().people[id], tg = KL(), V = P[tg], K 
     const a = await askU(vbBody(), opts, {right: true, skip: false, ph: TN("回 {n}，几个词也行", "Reply to {n} — a few words is fine", P.nm),
       extra: `<button class="vy-chip" data-stuck>🤔 ${esc(T("接着聊什么", "What could I say?"))}${aiOK() ? "<em>🛟 1</em>" : ""}</button>`,
       wire: w => { const sb = w.querySelector("[data-stuck]"); sb.onclick = safe(async () => { sb.disabled = true; const ok = await nextDirs(id, dirs, lastQ); if (!ok) sb.disabled = false; }); }});
+    if (a.bye){ memAdd({id: "met_" + id, g: "met", t: ["{n} · {c}", "{n} · {c}"], n: P.nm, c: P.city, src: ["TA 来跟你聊过", "Dropped by to chat"]}, true); door(id, true, TN("{n} 先走了", "{n} headed off", P.nm)); return; }
     let reply = null, know = null, demo = false;
     if (a.i >= 0){ reply = re[a.i]; know = (K[kn] || [])[a.i] || null; if (kn === "wk" && a.i === 2 && homeOf() === "dorm") know = K.dormShows; }
     else {
@@ -960,7 +986,7 @@ async function visit(id, n){ const P = VV().people[id], tg = KL(), V = P[tg], K 
     VISIT_KNOW = know;
     await sleep(900); await npcSay(id, n === 1 ? V.bye : V.bye3, {wait: 900, now: true});
     await sleep(500); door(id, true);
-  } finally { VISITING = null; vbChips(); }
+  } finally { VISITING = null; vbChips(); queueGo(); }
 }
 // TA 走了，Voyo 还在：说事实，再帮你把想说的连成一句，留给 TA
 async function afterVisit(id){ const P = VV().people[id], k = VISIT_KNOW, o = {n: P.nm, p: (P.pr || ["TA"])[0], f: k ? k[1] : ""};
@@ -973,14 +999,14 @@ async function afterVisit(id){ const P = VV().people[id], k = VISIT_KNOW, o = {n
 async function loginNote(){ const m = await svy(esc(T("登录以后，我能帮你把自己的词连成一句。", "Once you sign in, I can help you join your own words into a line.")), 800);
   m.insertAdjacentHTML("beforeend", `<div class="vy-chips"><button class="vy-chip" data-vylogin>${esc(T("登录", "Sign in"))}</button></div>`); m.querySelector("[data-vylogin]").onclick = () => { try { H().login(); } catch(x){} }; }
 // 聊天时卡住了 → Voyo 小声给方向，不给句子（🛟 1，chat 档；不能用 AI 就给写好的方向，不扣）
-async function nextDirs(id, k, lastQ){ const P = VV().people[id]; let D = null, paid = false;
+async function nextDirs(id, k, lastQ){ const P = PP(id); let D = null, paid = false;
   if (aiOK()){ if (!(await spend())) return false; paid = true;
     const tp = add("<i></i><i></i><i></i>", "vy-typing");
     try { const j = await ai2(`The learner is chatting with ${P.nm} (${P.nm} is a character in the app). ${P.nm} just asked: "${strip(lastQ[0])}". What the learner has told the app about themselves: ${memFacts() || "nothing yet"}.`, "dirs"); tp.remove();
       if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); return true; }
       D = (j.dirs || []).filter(d => d && d.t).slice(0, 3).map((d, i) => ({k: "a" + i, t: [String(d.t), String(d.t)], d: [String(d.d || ""), String(d.d || "")]})); }
     catch(e){ tp.remove(); errMsg(e); return false; } }
-  if (!D || !D.length) D = (P.dirs || {})[k] || (P.dirs || {}).weekend || [];
+  if (!D || !D.length) D = (P.dirs || {})[k] || (P.dirs || {}).weekend || VO().dirs || [];
   const m = await vy(`<span class="wl">🐧 ${esc(T("Voyo 小声说", "Voyo, quietly"))}${paid ? ` <small class="vy-cost" style="display:inline">🛟 1</small>` : ""}</span>${esc(T("可以往这几个方向接，说你真的想说的：", "A few directions you could go. Say what you really think."))}<div class="vy-chips vy-dirs">${D.map(d => `<button class="vy-chip" data-dir="${esc(d.k)}"><b>${esc(TT(d.t))}</b><br><span>${esc(TT(d.d))}</span></button>`).join("")}</div>`, 700);
   m.classList.add("vy-whisper");
   m.querySelectorAll("[data-dir]").forEach(b => b.onclick = () => { m.querySelectorAll("[data-dir]").forEach(x => { x.disabled = true; }); b.classList.add("pick"); const d = D.find(x => x.k === b.dataset.dir);
@@ -1098,7 +1124,7 @@ function memOpen(){ memWall(); let ov = document.getElementById("vyMemOv"); cons
   const L = memL();
   ov.innerHTML = `<div class="vy-mpn"><div class="vy-mhd"><b>🧠 ${esc(T("Voyo 记得的事", "What Voyo remembers"))}</b><button class="vy-x" aria-label="${esc(T("关", "Close"))}">✕</button></div><div class="vy-mbd">
     <div class="vy-mnote">🐧 ${esc(T("只有你看得到。我只记你告诉我的、你说过的。哪条不想让我记，点 ✕，我就忘了。", "Only you can see this. I only keep what you told me or said. Tap ✕ on anything and I'll forget it."))}</div>
-    ${L.length ? G.map(([g, n]) => { const it = L.filter(m => m.g === g); return it.length ? `<div class="vy-mg"><small>${esc(TT(n))}</small>${it.map(m => `<div class="vy-mi" data-mid="${esc(m.id)}"><div class="t">${esc(fillM(m.t, m))}${m.tz ? ` <span class="tz" dir="auto">${esc(m.tz)}</span>` : ""}<small>${esc(fillM(m.src, m))} · ${esc(whenLbl(m.d))}</small></div><button data-del aria-label="${esc(T("忘掉这条", "Forget this"))}">✕</button></div>`).join("")}</div>` : ""; }).join("")
+    ${L.length ? G.map(([g, n]) => { const it = L.filter(m => m.g === g); if (g === "npc") it.sort((a, b) => String(a.n || "").localeCompare(String(b.n || ""))); return it.length ? `<div class="vy-mg"><small>${esc(TT(n))}</small>${it.map(m => `<div class="vy-mi" data-mid="${esc(m.id)}"><div class="t">${esc(fillM(m.t, m))}${m.tz ? ` <span class="tz" dir="auto">${esc(m.tz)}</span>` : ""}<small>${esc(fillM(m.src, m))} · ${esc(whenLbl(m.d))}</small></div><button data-del aria-label="${esc(T("忘掉这条", "Forget this"))}">✕</button></div>`).join("")}</div>` : ""; }).join("")
       + `<div class="vy-chips" style="margin-top:16px"><button class="vy-chip" data-all>${esc(T("全部忘掉", "Forget everything"))}</button></div><div class="vy-mn" style="margin-top:6px">${esc(T("下次打招呼，我和来聊的人只会提这里还在的事。", "Next time, I and anyone who drops by will only bring up what's still here."))}</div>`
       : `<div class="vy-mempty">${esc(T("还什么都没记。你告诉我的，我才记。", "Nothing yet. I only remember what you tell me."))}</div>`}</div></div>`;
   document.body.appendChild(ov); requestAnimationFrame(() => ov.classList.add("on")); ov.querySelector(".vy-mbd").scrollTop = keep;
@@ -1128,6 +1154,9 @@ function backRecs(){ const D = FW(), B = ((VO().recs || {}).back || []).filter((
   return B.length ? B : ((((VO().recs || {})[KL()]) || {})[busyOf() || "other"] || []); }
 async function recs(list, howWhy){ for (const [id, why] of list){ const c = wallCard(id, TT(why)); if (c){ await sleep(380); await snode(c); blip(620); } }
   const h = howCard(howWhy); if (h){ await sleep(380); await snode(h); blip(620); } vbDedupe(BOX); }
+// 有人排队（从朋友页点了某个人）：Voyo 那段缩成一句就让 TA 进来
+async function yieldTo(){ if (!QUEUE) return false; const q = QUEUE; if (!VV().people[q.id]) CASTP[q.id] = castP(q.id, q.pid); const P = PP(q.id);
+  await vy(esc(TN("{n} 想跟你聊聊，我让 TA 进来。", "{n} wants to chat — I'll let them in.", P ? P.nm : "")), 400); return true; }
 async function startFirst(){
   await svy(esc(T("嗨，我是 Voyo。我住在南极——不属于哪个国家，所以哪儿的人都是我的邻居。", "Hi, I'm Voyo. I live in Antarctica — no country of my own, so everyone's my neighbour.")), 500);
   const m = await svy(esc(T("先问你一件小事，好让我认识你：你现在每天主要在忙什么？", "One small thing, so I know you a little: what keeps you busy most days?")), 900);
@@ -1144,18 +1173,21 @@ async function startFirst(){
   const reL = bk === "student" && hm ? (hm === "dorm" ? ["学生，住宿舍，记下了。", "A student in a dorm — noted."] : ["学生，住家里，记下了。", "A student living at home — noted."]) : B ? B.re : ["好，不说也行。", "Sure — no need to say."];
   await svy(`${esc(TT(reL))} <small>${esc(T("（我记得的事都在右上角 🧠，哪条不想让我记都能删。）", "(Everything I remember is under 🧠 up top — delete anything you like.)"))}</small>`);
   const o = MG(); o.first = today(); MS2(o);
+  if (await yieldTo()){ const S0 = ST(); S0.gd = today(); SAVE(S0); return; }
   const R = (((VO().recs || {})[KL()]) || {})[bk || "other"] || [];
   if (R.length || window.HOWABOUT){ await svy(esc(T("这几样，我觉得你会喜欢：", "A few things I think you'd like:")), 700); await recs(R, T("今天全世界同一个问题，先看看大家", "One question for the whole world today — have a look first"));
     await svy(esc(T("点开看看就行，不用说话；挥个手也算打招呼。想学哪句，随时问我；想了解什么，告诉我，或者点下面那一排，我在软件里帮你找。", "Just have a look — no need to say anything. A wave counts as hello. Ask me for any line, any time — or tell me what you're curious about (or tap the row below) and I'll find it in the app.")), 900); }
   const ST0 = ST(); ST0.gd = today(); SAVE(ST0);
   const vd = await visits(2600);
   await held();
-  if (vd) await svy(esc(T("今天就到这儿也行。我一直在这儿，想聊随时找我。", "That's plenty for today. I'm always here — come find me whenever.")), 1200); }
+  if (vd && !QUEUE) await svy(esc(T("今天就到这儿也行。我一直在这儿，想聊随时找我。", "That's plenty for today. I'm always here — come find me whenever.")), 1200); }
 async function startBack(){
   await svy(esc(T("嗨，你回来啦。", "Hey, welcome back.")), 500);
   const rl = rememberLine(); if (rl) await svy(esc(rl), 800);
   const o = ST(); o.gd = today(); SAVE(o);
+  if (await yieldTo()) return;
   await visits(900);
+  if (await yieldTo()) return;
   await svy(esc(T("接着来的：", "Picking up where you left off:")), 800);
   const a = actCard(); if (a){ await sleep(300); await snode(a); blip(620); }
   await recs(backRecs(), T("今天全世界同一个问题", "Today's question for the whole world"));
@@ -1163,12 +1195,12 @@ async function startBack(){
   else await svy(esc(T("想了解什么，告诉我，或者点下面那一排，我在软件里帮你找。", "Tell me what you're curious about, or tap the row below — I'll find it in the app.")), 900);
   await held(); }
 // 今天已经聊过（刷新、换页回来）：不再从头演一遍，Voyo 打个招呼，推荐的东西直接摆着
-async function startQuiet(){ const rl = rememberLine(); add(esc(T("嗨。", "Hi.")) + (rl ? " " + esc(rl) : ""));
+async function startQuiet(){ const rl = rememberLine(); add(esc(T("嗨。", "Hi.")) + (rl ? " " + esc(rl) : "")); if (await yieldTo()) return;
   const a = actCard(); if (a) node(a);
   for (const [id, why] of backRecs()){ const c = wallCard(id, TT(why)); if (c) node(c); }
   const h = howCard(""); if (h) node(h); vbDedupe(BOX); add(esc(T("想学哪句，随时问我。", "Ask me for any line, any time."))); }
 // 到日子的客人（一次一个，一天最多一次）
-async function visits(wait){ const ids = Object.keys(VV().people || {}); for (const id of ids){ const n = visDue(id); if (!n) continue; const my = RUN; await sleep(wait); if (my !== RUN) return false; await visit(id, n); await afterVisit(id); return true; } return false; }
+async function visits(wait){ if (QUEUE) return false; const ids = Object.keys(VV().people || {}); for (const id of ids){ const n = visDue(id); if (!n) continue; const my = RUN; await sleep(wait); if (my !== RUN || QUEUE) return false; await visit(id, n); if (!QUEUE) await afterVisit(id); return true; } return false; }
 // 原来举起来的那件事（昨天的纸条、今天的门、一句旧话）：在对话里说一句
 async function held(){ let k = null; try { k = raiseKind(); } catch(e){} if (!k) return; await gate();
   const m = await vy(k === "slip" ? slipAskHTML() : k === "door" ? `${esc(doorTeaser())}${doorsHTML()}` : (() => { const x = oldLine(); return x ? oldHTML(x) : ""; })(), 900);
@@ -1200,7 +1232,8 @@ function vbStart(){ if (VBGO || !VB) return; VBGO = true; memWall(); vbBadge();
   const lm = memGet("learn"); if (lm && KL() && lm.k !== KL()) memAdd({id: "learn", k: KL(), g: "about", t: [KL() === "zh" ? "你在学中文" : "你在学英语", KL() === "zh" ? "You're learning Chinese" : "You're learning English"], src: ["你选的", "You chose it"]}, true);
   const f = MG().first, o = ST();
   // 「全部忘掉」以后 Voyo 什么都不记得：当新人从头聊
-  safe(!f || !memL().length ? startFirst : o.gd === today() ? startQuiet : startBack)(); }
+  const fn = !f || !memL().length ? startFirst : o.gd === today() ? startQuiet : startBack;
+  SCHED = true; safe(async () => { try { await fn(); } finally { SCHED = false; } })(); }
 
 
 // ══════════ 九、在软件全部内容里找（2026-11-18 用户「合并，以样板为主」：把另一个窗口的 voyo_today.js 并进来）══════════
@@ -1236,7 +1269,8 @@ function findCards(items){ const w = document.createElement("div"); w.className 
   items.forEach(a => { const b = document.createElement("button"); b.className = "vy-fc"; const pic = /^(https:\/\/|data:image\/|\/[^\/])/.test(a.image || "") ? a.image : "";
     b.innerHTML = `${pic ? `<img src="${esc(pic)}" alt="" loading="lazy">` : `<span class="vy-fth" aria-hidden="true">↗</span>`}<span class="tx"><small>${esc(TT(KIND_NM[a.kind]))}</small><b dir="auto">${esc(a.title.length > 68 ? a.title.slice(0, 68) + "…" : a.title)}</b>${a.reason ? `<span class="why" dir="auto">💬 ${esc(a.reason.slice(0, 95))}</span>` : ""}</span>`;
     b.onclick = () => { blip(760); hushV(); try { if (a.open() === false) toast(T("这条内容暂时打不开，换一张看看。", "This one won't open right now — try another.")); } catch(e){ toast(T("打开失败，等一下再试。", "Couldn't open it. Try again in a moment.")); } };
-    w.appendChild(b); }); return w; }
+    if (a.kind === "person" && canChat(a.id.slice(7))){ const r = document.createElement("div"); r.className = "vy-fcw"; r.appendChild(b); r.insertAdjacentHTML("beforeend", `<button class="vy-chip" data-vychat="${esc(a.id.slice(7))}">💬 ${esc(T("找 TA 聊聊", "Talk with them"))}</button>`); mountChat(r); w.appendChild(r); }
+    else w.appendChild(b); }); return w; }
 function vbFind(){ if (!VB) return; const c = VB.querySelector(".vy-findw");
   c.innerHTML = `<div class="vy-chips vy-fchips">${FIND_F.map(f => `<button class="vy-chip" data-vyf="${f[0]}">${esc(T(f[1], f[2]))}</button>`).join("")}</div>`;
   c.querySelectorAll("[data-vyf]").forEach(b => b.onclick = () => { blip(700);
@@ -1291,7 +1325,74 @@ Choose 1–4 catalogue items that really match what they asked for; if several k
     if (sel.length) m.appendChild(findCards(sel)); scrollChat(); speakWait([...m.querySelectorAll(".vy-seg")]); }
   catch(e){ tp.remove(); if (bub) bub.remove(); if (e && e.code === "no_lifebuoys") errMsg(e); return free(T("我按关键词找了这几个：", "I matched these by keywords:")); } }
 
-window.VOYO = {after, meet, meRow, meOpen: editInts, open: () => { if (VB && VB.isConnected){ VB.scrollIntoView({block: "start", behavior: "smooth"}); VB.querySelector(".vy-in2").focus(); } else openSheet(null); }, mem: memOpen, _st: ST};
+// ══════════ 十、找 TA 聊聊（2026-11-18，用户：「想认识一个人，然后让这个人来对话，ai对话，根据npc自己的角色和性格进行对话」）══════════
+// 「认识一个人」的卡上、朋友页每个人的页面上有「找 TA 聊聊」：这个人走进今天页的 Voyo 对话框，照 TA 自己的设定聊（设定只在云函数里，task npc_<id>），
+//   先打招呼问你一件小事，聊 4–6 轮后因为自己的事离开（AI 回 leave）；每一句算免费档的每天次数，不扣 🛟；用完了 TA 就说「我得走了，明天再聊」。
+//   一次只来一个人：有人在的时候点别人，先让在的那个人道别。TA 知道了你什么记进 voyo.mem（按人分组），下次先接着上次的话；删了就不提。
+//   没 AI（没登录、云函数没部署）：TA 说一句写好的招呼，再说「我得走了」。
+let QUEUE = null, SCHED = false;   // SCHED：Voyo 自己那一段（招呼、推荐、Ruth）还在走，找来的人等它走完再进来
+const meanUI = (zh, en, o) => KL() === "zh" ? (UIL() === "zh" ? "" : TF(zh, en, o)) : (UIL() === "en" ? "" : TF(zh, en, o));
+const latin = py => py.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const greetLine = P => { const py = P.py || "", en = py ? latin(py) : P.nm, zhN = P.nm;
+  return KL() === "zh" ? [`你好！我是 ${zhN}。`, `Nǐ hǎo! Wǒ shì ${py || P.nm}.`, meanUI("你好！我是 {n}。", "Hi! I'm {n}.", {n: UIL() === "zh" ? zhN : en})] : [`Hi! I'm ${en}.`, "", meanUI("你好！我是 {n}。", "Hi! I'm {n}.", {n: UIL() === "zh" ? zhN : en})]; };
+const leaveLine = () => KL() === "zh" ? ["不好意思，我得走了，明天再聊！", "Bù hǎoyìsi, wǒ děi zǒu le, míngtiān zài liáo!", meanUI("不好意思，我得走了，明天再聊！", "Sorry, I've got to go — talk tomorrow!")] : ["Sorry, I've got to go — talk tomorrow!", "", meanUI("不好意思，我得走了，明天再聊！", "Sorry, I've got to go — talk tomorrow!")];
+// 免费次数按人算（用户：「按人算，每天 10 个人」）：一段的第一句占 1 次，后面带着 conv 的来回不再占；10 个人用完，新来的人只说「明天再聊」，正在聊的那一段不受影响
+async function castTurn(id, hist, known, last, S){ if (!aiOK() || (!S.conv && peopleUsed() >= PEOPLE_MAX)) return null; const P = PP(id);
+  const tp = document.createElement("div"); tp.className = "vy-npcm"; tp.innerHTML = `<img src="${esc(faceUrl(P))}" alt=""><div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; node(tp);
+  const content = (known.length ? "What you remember about this learner from before: " + known.join("; ") + "\n" : "")
+    + (hist.length ? "Conversation so far:\n" + hist.map(([w, t]) => (w === "npc" ? "You" : "Learner") + ": " + t).join("\n") : "You just arrived.")
+    + (last ? "\nThis is your last turn: say goodbye now with a real reason from your own life for leaving, and set leave to true." : "");
+  try { const j = await ask([{role: "user", content}], "free", "npc_" + id, partTo(tp), S.conv); if (!S.conv) peopleAdd(); if (j._conv) S.conv = j._conv; tp.remove();
+    if (j.care) return {care: true}; if (!j.say) return null;
+    return {line: [String(j.say), KL() === "zh" ? String(j.pron || "") : "", String(j.mean || "")], knows: j.knows ? String(j.knows) : "", leave: !!j.leave}; }
+  catch(e){ tp.remove(); if (e && e.code === "free_limit") peopleAdd(PEOPLE_MAX); return null; } }
+async function castVisit(id, pid){ if (!VV().people[id]) CASTP[id] = castP(id, pid); const P = PP(id); if (!P || !KL()) return;
+  if (!aiOK()){ const m = await vy(esc(TN("登录以后，{n} 就能跟你聊。", "Once you sign in, {n} can chat with you.", P.nm)), 500);
+    m.insertAdjacentHTML("beforeend", `<div class="vy-chips"><button class="vy-chip" data-vylogin>${esc(T("登录", "Sign in"))}</button></div>`); m.querySelector("[data-vylogin]").onclick = () => { try { H().login(); } catch(x){} }; return; }
+  door(id); VISITING = id; vbChips();
+  const met = () => memAdd({id: "met_" + id, g: "met", t: ["{n} · {c}", "{n} · {c}"], n: P.nm, c: P.city, src: ["TA 来跟你聊过", "Dropped by to chat"]}, true);
+  const known = memL().filter(m => m.id.indexOf(id + "knows_") === 0 && m.f).map(m => m.f[1] || m.f[0]);
+  const hist = [], MAX = 4 + Math.floor(Math.random() * 3), S = {conv: null}; let turn = 0, newK = [];
+  try {
+    let j = await castTurn(id, hist, known, false, S);
+    if (!j || j.care){ if (j && j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); } else { await npcSay(id, greetLine(P), {wait: 700, now: true}); await sleep(900); await npcSay(id, leaveLine(), {wait: 900, now: true}); } await sleep(400); door(id, true); return; }
+    for (;;){
+      const nm = await npcSay(id, j.line, {wait: 0, now: true, mean: j.line[2]}); hist.push(["npc", j.line[0]]); if (!turn) met();
+      if (!turn && nm){ const left = Math.max(0, PEOPLE_MAX - peopleUsed()); nm.querySelector(".vy-msg").insertAdjacentHTML("beforeend", `<small class="vy-free">${esc(TN("今天还能认识 {n} 个人", "You can meet {n} more people today", left))}</small>`); }
+      if (j.knows){ memAdd({id: id + "knows_" + Date.now().toString(36), g: "npc", t: ["{n} 知道：{f}", "{n} knows: {f}"], n: P.nm, f: [j.knows, j.knows], src: ["你跟 TA 说的", "You told them"]}); newK.push(j.knows); }
+      if (j.leave) break;
+      const lastQ = j.line;
+      const a = await askU(vbBody(), [], {right: true, skip: false, ph: TN("回 {n}，几个词也行", "Reply to {n} — a few words is fine", P.nm),
+        extra: `<button class="vy-chip" data-stuck>🤔 ${esc(T("接着聊什么", "What could I say?"))}${aiOK() ? "<em>🛟 1</em>" : ""}</button><button class="vy-chip skip" data-wave>👋 ${esc(T("先聊到这", "That's all for now"))}</button>`,
+        wire: w => { const sb = w.querySelector("[data-stuck]"); sb.onclick = safe(async () => { sb.disabled = true; const ok = await nextDirs(id, "", lastQ); if (!ok) sb.disabled = false; });
+          w.querySelector("[data-wave]").onclick = () => { const t = ASKS[ASKS.length - 1]; if (t) t.done({i: -1, v: "", bye: true}); }; }});
+      if (a.bye && a.auto){ door(id, true, TN("{n} 先走了", "{n} headed off", P.nm)); return; }
+      if (!a.bye){ const c = careHit(a.v); if (c){ vbBody().insertAdjacentHTML("beforeend", careHTML(c)); scrollChat(); break; } }
+      hist.push(["learner", a.bye ? "(waves goodbye)" : a.v]); turn++;
+      const nj = await castTurn(id, hist, known, a.bye || turn >= MAX, S);
+      if (!nj || nj.care){ if (nj && nj.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); break; } await npcSay(id, leaveLine(), {wait: 600, now: true}); break; }
+      j = nj; if (a.bye) j.leave = true;
+    }
+    await sleep(500); door(id, true);
+    if (newK.length && !QUEUE) await vy(esc(TF("{p}走了。{n} 现在知道{f}，我也记在 🧠 里了。", "{n}'s gone — and now knows {f}. It's in 🧠 too.", {p: P.pr[0], n: P.nm, f: [newK[newK.length - 1], newK[newK.length - 1]]})), 700);
+  } finally { VISITING = null; vbChips(); queueGo(); } }
+// 有人在、或者 Voyo 在等你回答：先排着，空了再来；有人在就先让 TA 道别
+function queueGo(){ if (!QUEUE) return; const q = QUEUE; const tick = () => { if (QUEUE !== q) return; if (VISITING || SCHED || BUSYN > 0 || ASKS.length){ setTimeout(tick, 500); return; } QUEUE = null; userFlow(() => castVisit(q.id, q.pid)); }; setTimeout(tick, 400); }
+function startChat(pid){ const id = castId(pid); if (!id || !canChat(pid)) return;
+  const go = () => { if (!VB || !VB.isConnected) return false; VB.scrollIntoView({block: "start", behavior: "smooth"});
+    if (VISITING === id) return true; QUEUE = {id, pid};
+    if (VISITING){ const t = ASKS[ASKS.length - 1]; if (t) t.done({i: -1, v: "", bye: true, auto: true}); }
+    else if (ASKS.length) toast(T("先回完上面这句，或者点「跳过」", "Answer the one above first, or tap Skip"));
+    queueGo(); return true; };
+  try { if (window.PTAB_CLOSE) PTAB_CLOSE(); } catch(e){}
+  if (go()) return;
+  if (location.hash !== "#boat") location.hash = "#boat";
+  let n = 0; const wait = () => { if (go() || ++n > 20) return; setTimeout(wait, 200); }; setTimeout(wait, 200); }
+// 朋友页每个人的页面上（people_tab.js 叫这两个）
+const chatBtn = pid => canChat(pid) ? `<button class="pt-btn" data-vychat="${esc(pid)}">💬 ${esc(T("找 TA 聊聊", "Talk with them"))}</button>` : "";
+function mountChat(root){ root.querySelectorAll("[data-vychat]").forEach(b => b.onclick = e => { e.stopPropagation(); blip(760); startChat(b.dataset.vychat); }); }
+
+window.VOYO = {after, meet, meRow, meOpen: editInts, open: () => { if (VB && VB.isConnected){ VB.scrollIntoView({block: "start", behavior: "smooth"}); VB.querySelector(".vy-in2").focus(); } else openSheet(null); }, mem: memOpen, chatBtn, mountChat, startChat, _st: ST};
 })();
 
 /* desk_mag.js */
