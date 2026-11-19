@@ -645,7 +645,7 @@ const met = c => new Set(ls("hv.peoplezh." + c) || []);
 const wk = () => Math.floor(Date.now() / 6048e5) % 4;
 const img = p => window.PFACE_URL ? window.PFACE_URL({nm: p.nm, job: p.job.zh, face: p.face}) : "";
 let py = null, root = null, city = "";
-const loadPy = () => py || (py = new Promise(okk => { if (window.pinyinPro) return okk(window.pinyinPro); const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"; s.onload = () => okk(window.pinyinPro); s.onerror = () => okk(null); document.head.appendChild(s); }));
+const loadPy = () => py || (py = new Promise(okk => { if (window.pinyinPro) return okk(window.pinyinPro); const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"; s.onload = () => { try { if (typeof PY_FIX !== "undefined") window.pinyinPro.customPinyin(PY_FIX); } catch(e){} okk(window.pinyinPro); }; s.onerror = () => okk(null); document.head.appendChild(s); }));
 const ruby = t => { try { return window.pinyinPro.pinyin(t, {type: "all"}).map(c => c.isZh ? `<ruby>${esc(c.origin)}<rt>${esc(c.pinyin)}</rt></ruby>` : esc(c.origin)).join(""); } catch(e){ return esc(t); } };
 const say = (t, r) => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "zh-CN"; u.rate = r || .9; const v = speechSynthesis.getVoices().find(v => /zh[-_]CN/i.test(v.lang)); if (v) u.voice = v; speechSynthesis.speak(u); } catch(e){} };
 function cityNear(lon, lat){

@@ -827,8 +827,12 @@ async function neuralBlob(txt, l){ const k = l + "|" + txt; if (VCACHE.has(k)) r
   try { const r = await fetch(HV_CONFIG.url.replace(/\/$/, "") + "/functions/v1/voyo-speech", {method: "POST", signal: ac.signal, headers: {authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey, "content-type": "application/json"}, body: JSON.stringify({text: txt.slice(0, 440), lang: l})});
     if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio/")) throw 0; const b = await r.blob(); if (!b.size) throw 0; VCACHE.set(k, b); if (VCACHE.size > 60) VCACHE.delete(VCACHE.keys().next().value); NEURAL = true; return b; }
   catch(e){ NEURAL = false; return null; } finally { clearTimeout(tm); } }
+// 写好的句子有录好的声音（gen_voices.py，文件名 = FNV(说话的人|句子)，跟朋友页一样）：先放录音（2026-11-19，岛主的开场白）
+const recUrl = (sid, t) => { if (!sid || !window.VOICE_HAS) return ""; let h = 0x811c9dc5; const s = sid + "|" + t; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } h = ("0000000" + h.toString(16)).slice(-8); return VOICE_HAS.has(h) ? "https://img.heyvoyo.com/voice/" + h + ".mp3" : ""; };
 function ttsLine(txt, l, rate, onStart, onEnd){ try { const u = new SpeechSynthesisUtterance(txt); u.lang = bcp2(l); u.rate = rate || .9; u.onstart = onStart; u.onend = onEnd; u.onerror = onEnd; speechSynthesis.speak(u); } catch(e){ onEnd(); } }
-async function playLine(txt, l, rate, onStart, onEnd, my){ const l2 = String(l || "en").slice(0, 2);
+async function playLine(txt, l, rate, onStart, onEnd, my, sid){ const l2 = String(l || "en").slice(0, 2);
+  const pre = recUrl(sid, txt);
+  if (pre){ const a = new Audio(pre); CUR_AU = a; a.onplaying = onStart; a.onended = onEnd; a.onerror = () => ttsLine(txt, l, rate, onStart, onEnd); a.play().catch(() => ttsLine(txt, l, rate, onStart, onEnd)); return; }
   if (neuralOK()){ const b = await neuralBlob(txt, l2); if (my !== SPK) return;
     if (b){ const a = new Audio(URL.createObjectURL(b)); CUR_AU = a; a.playbackRate = rate && rate < .85 ? .9 : 1; a.onplaying = onStart; a.onended = () => { URL.revokeObjectURL(a.src); onEnd(); }; a.onerror = () => ttsLine(txt, l, rate, onStart, onEnd); a.play().catch(() => ttsLine(txt, l, rate, onStart, onEnd)); return; } }
   ttsLine(txt, l, rate, onStart, onEnd); }
@@ -839,17 +843,17 @@ function speakSeq(list, done){ hushV(); const my = SPK; let i = 0;
     let fin = false, started = false; const end = () => { if (fin) return; fin = true; it.el.classList.remove("vy-hl"); if (my === SPK) setTimeout(next, 260); };
     const est = Math.max(1100, txt.length * (/^zh/.test(l) ? 260 : 70));
     const net = !soundOff() && neuralOK();
-    if (!soundOff()) playLine(txt, l, it.rate, () => { started = true; }, end, my);
+    if (!soundOff()) playLine(txt, l, it.rate, () => { started = true; }, end, my, it.sid);
     setTimeout(() => { if (!started) end(); }, est + (net ? 8500 : 300));
     setTimeout(end, est * 2.5 + (net ? 11000 : 3000)); };
   next(); }
 // 念完（或被打断）都往下走
 function speakWait(els, o){ o = o || {}; return new Promise(res => { let ok = false; const go = () => { if (!ok){ ok = true; res(); } };
-  const L = els.filter(Boolean); if (!L.length) return go(); speakSeq(L.map(el => ({el, text: el.dataset.say, l: o.l || el.dataset.l, rate: o.rate})), go);
+  const L = els.filter(Boolean); if (!L.length) return go(); speakSeq(L.map(el => ({el, text: el.dataset.say, l: o.l || el.dataset.l, rate: o.rate, sid: el.dataset.sid})), go);
   const n = L.reduce((a, el) => a + strip(el.dataset.say).length, 0); setTimeout(go, Math.max(1500, n * (/[一-鿿]/.test(L[0].dataset.say || "") ? 290 : 80)) + 1500); }); }
 // 一句要学的话：字 + 拼音 + 意思（学英语那边没有拼音）。html = 内容里写好的（带 <u>）；AI 给的一律转义
 const lineHTML = (L, o) => { o = o || {}; const t = o.html ? L[0] : esc(L[0]), mn = o.mean != null ? o.mean : sideMean(L);
-  return `<span class="vy-seg" data-say="${esc(strip(L[0]))}" data-l="${esc(o.l || KL() || "en")}"><span class="vy-tl" dir="auto">${t}</span>${L[1] ? `<span class="vy-py" dir="ltr">${esc(L[1])}</span>` : ""}${mn ? `<span class="vy-mn" dir="auto">${esc(mn)}</span>` : ""}</span>`; };
+  return `<span class="vy-seg" data-say="${esc(strip(L[0]))}" data-l="${esc(o.l || KL() || "en")}"${o.sid ? ` data-sid="${esc(o.sid)}"` : ""}><span class="vy-tl" dir="auto">${t}</span>${L[1] ? `<span class="vy-py" dir="ltr">${esc(L[1])}</span>` : ""}${mn ? `<span class="vy-mn" dir="auto">${esc(mn)}</span>` : ""}</span>`; };
 const spkBtn = lbl => `<button class="vy-spkb" data-vyspk>🔊 ${esc(lbl || T("听", "Listen"))}</button>`;
 
 // ── 对话框 ──
@@ -1346,18 +1350,35 @@ async function castTurn(id, hist, known, last, S){ if (!aiOK() || (!S.conv && pe
     if (j.care) return {care: true}; if (!j.say) return null;
     return {line: [String(j.say), KL() === "zh" ? String(j.pron || "") : "", String(j.mean || "")], knows: j.knows ? String(j.knows) : "", leave: !!j.leave}; }
   catch(e){ tp.remove(); if (e && e.code === "free_limit") peopleAdd(PEOPLE_MAX); return null; } }
+// 🏝️ 写好的开场白（gen_voyo_visits.py 的 op[学的语言] = [[字, 拼音, 英文意思, 中文意思, 语言], …]）；意思按界面语言给
+const opOf = id => ((CAST()[id] || {}).op || {})[KL()] || [];
+const opMean = L => KL() === "zh" ? (UIL() === "zh" ? "" : L[2]) : (UIL() === "zh" ? L[3] : "");
 async function castVisit(id, pid){ if (!VV().people[id]) CASTP[id] = castP(id, pid); const P = PP(id); if (!P || !KL()) return;
-  if (!aiOK()){ const m = await vy(esc(TN("登录以后，{n} 就能跟你聊。", "Once you sign in, {n} can chat with you.", P.nm)), 500);
+  // 没登录：有写好开场白的人（岛主）先把开场白说完（有录音放录音），再提示登录（2026-11-19 检查员）
+  const OP0 = opOf(id);
+  if (!aiOK()){
+    if (OP0.length){ door(id); VISITING = id; vbChips();
+      try { for (let n = 0; n < OP0.length; n++){ const L = OP0[n]; await npcSay(id, [L[0], L[1], ""], {wait: n ? 800 : 0, now: true, mean: opMean(L), l: L[4], sid: (CAST()[id] || {}).vk}); } }
+      catch(e){ return; } finally { VISITING = null; vbChips(); } }
+    const m = await vy(esc(OP0.length ? TN("登录以后，就能接着跟 {n} 聊。", "Sign in to keep chatting with {n}.", P.nm) : TN("登录以后，{n} 就能跟你聊。", "Once you sign in, {n} can chat with you.", P.nm)), 500);
     m.insertAdjacentHTML("beforeend", `<div class="vy-chips"><button class="vy-chip" data-vylogin>${esc(T("登录", "Sign in"))}</button></div>`); m.querySelector("[data-vylogin]").onclick = () => { try { H().login(); } catch(x){} }; return; }
   door(id); VISITING = id; vbChips();
   const met = () => memAdd({id: "met_" + id, g: "met", t: ["{n} · {c}", "{n} · {c}"], n: P.nm, c: P.city, src: ["TA 来跟你聊过", "Dropped by to chat"]}, true);
   const known = memL().filter(m => m.id.indexOf(id + "knows_") === 0 && m.f).map(m => m.f[1] || m.f[0]);
   const hist = [], MAX = 4 + Math.floor(Math.random() * 3), S = {conv: null}; let turn = 0, newK = [];
   try {
-    let j = await castTurn(id, hist, known, false, S);
+    // 🏝️ 岛主第一次来：先说写好的开场（gen_voyo_visits.py 的 op：最后一句是问你的），你回了以后再交给 AI 接着聊
+    const C0 = CAST()[id] || {}, OP = OP0;
+    let j = null;
+    if (OP.length && !memHas("met_" + id) && peopleUsed() < PEOPLE_MAX){
+      const head = OP.length > 1 ? OP.slice(0, -1) : OP;
+      for (let n = 0; n < head.length; n++){ const L = head[n]; await npcSay(id, [L[0], L[1], ""], {wait: n ? 800 : 0, now: true, mean: opMean(L), l: L[4], sid: C0.vk}); hist.push(["npc", L[0]]); }
+      if (OP.length > 1){ const L = OP[OP.length - 1]; j = {line: [L[0], L[1], opMean(L)], l: L[4], sid: C0.vk, knows: "", leave: false}; }
+    }
+    if (!j) j = await castTurn(id, hist, known, false, S);
     if (!j || j.care){ if (j && j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); } else { await npcSay(id, greetLine(P), {wait: 700, now: true}); await sleep(900); await npcSay(id, leaveLine(), {wait: 900, now: true}); } await sleep(400); door(id, true); return; }
     for (;;){
-      const nm = await npcSay(id, j.line, {wait: 0, now: true, mean: j.line[2]}); hist.push(["npc", j.line[0]]); if (!turn) met();
+      const nm = await npcSay(id, j.line, {wait: 0, now: true, mean: j.line[2], l: j.l, sid: j.sid}); hist.push(["npc", j.line[0]]); if (!turn) met();
       if (!turn && nm){ const left = Math.max(0, PEOPLE_MAX - peopleUsed()); nm.querySelector(".vy-msg").insertAdjacentHTML("beforeend", `<small class="vy-free">${esc(TN("今天还能认识 {n} 个人", "You can meet {n} more people today", left))}</small>`); }
       if (j.knows){ memAdd({id: id + "knows_" + Date.now().toString(36), g: "npc", t: ["{n} 知道：{f}", "{n} knows: {f}"], n: P.nm, f: [j.knows, j.knows], src: ["你跟 TA 说的", "You told them"]}); newK.push(j.knows); }
       if (j.leave) break;

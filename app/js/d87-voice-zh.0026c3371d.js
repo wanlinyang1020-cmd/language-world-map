@@ -408,7 +408,7 @@ window.TODAYHIDE = {off, wrap, hide, show, t: T, topicOff: key => off(tKey(key))
 if (window.ZHT) return;
 const LIB = "https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js";
 let LIBP = null;   // 拼音库第一次用到时才加载（学英语的人不加载）
-const lib = () => LIBP || (LIBP = new Promise(res=>{ if (window.pinyinPro) return res(); const s = document.createElement("script"); s.src = LIB; s.onload = ()=>res(); document.head.appendChild(s); }));
+const lib = () => LIBP || (LIBP = new Promise(res=>{ if (window.pinyinPro) return res(); const s = document.createElement("script"); s.src = LIB; s.onload = ()=>{ try { if (typeof PY_FIX !== "undefined") pinyinPro.customPinyin(PY_FIX); } catch(e){} res(); }; document.head.appendChild(s); }));
 const ON = () => window.HV_LEARN ? window.HV_LEARN === "zh" : true;   // 只给学中文的人（主程序设 window.HV_LEARN）
 let LG = "en", LGFIX = false;
 const sync = () => { if (!LGFIX) LG = (document.documentElement.lang || "en").slice(0, 2) === "zh" ? "zh" : "en"; };
