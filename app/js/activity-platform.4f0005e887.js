@@ -1082,7 +1082,7 @@ const LABELS = [
 // 在 claude.ai 里打开时用 Claude 自带的登录、数据库和 AI；在 heyvoyo.com 上打开时用这里的实现。
 // 对外提供和 claude.ai 一样的接口：HV.user（id / isOwner / can / profiles）、HV.db（collection / doc）、HV.sample.json()。
 // HV_CONFIG 由 deploy.sh 从 ../后台/config.json 填进来；没填时整个后台不启用。
-var HV_CONFIG = {"url": "https://pfqbskweyqyrmnrkioha.supabase.co", "anonKey": "sb_publishable_t7_0E-MFz55eQVI71X0MEA_UQ-sTb2Y", "ai": "https://pfqbskweyqyrmnrkioha.supabase.co/functions/v1/ai", "google": true, "apple": "", "ai_free": true};
+var HV_CONFIG = {"url": "https://lavrqueozymlpisqlibl.supabase.co", "anonKey": "sb_publishable_vu6Y6Gmhgx2-qA8ak07iPA_YRHVD1kV", "ai": "https://lavrqueozymlpisqlibl.supabase.co/functions/v1/ai", "google": true, "apple": "", "ai_free": true};
 var HV = {sb: null, session: null, user: null, db: null, sample: null, ready: false};
 // 从「重设密码」邮件点回来时，网址里带着 type=recovery：记下来，登录后直接打开「设新密码」
 try { if (/type=recovery/.test(location.hash + location.search)) sessionStorage.setItem("hv.recovery", "1"); } catch(e){}
