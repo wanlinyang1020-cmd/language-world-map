@@ -432,12 +432,12 @@ HV.DR = [
  [4,"c1","道别","Saying bye","这是在道别","They're saying bye"],
  [5,"c1","道谢、回应别人的谢","Thanks & you're welcome","这是在道谢","They're saying thanks"],
  [6,"c1","道歉、回应别人的道歉","Sorry & that's OK","这是在道歉","They're saying sorry"],
- [7,"c1","祝贺、祝福","Congrats & good wishes","这是在祝贺、祝福","They're wishing someone well"],
+ [7,"c1","祝贺、夸一夸","Congrats & compliments","这是在祝贺、夸人","They're congratulating or complimenting someone"],
  [8,"c1","安慰、表示同情","Comforting someone","这是在安慰人","They're comforting someone"],
  [9,"c1","邀请、答应或推掉","Inviting, yes or no thanks","这是在约人","They're inviting someone"],
  [10,"c2","说自己的事","Talking about me","这是在说自己的日子","They're talking about their own days"],
  [11,"c2","讲一段经历、讲个故事","Telling a story","这是在讲一件发生过的事","They're telling something that happened"],
- [12,"c2","描述一样东西、一个地方","Describing a thing or place","这是在描述一样东西、一个地方","They're describing a thing or a place"],
+ [12,"c2","描述眼前的东西、地方、照片","Describing what's in front of you","这是在描述眼前的东西、地方","They're describing something in front of them"],
  [13,"c2","问事情","Asking things","这是在问事情","They're asking something"],
  [14,"c2","好奇别人的事（怎么问才不冒犯）","Curious about someone (asking nicely)","这是想了解对方","They want to know about the other person"],
  [15,"c2","纠正：「其实不是这样」","“Actually, it's not like that”","这是在轻轻纠正：其实不是这样","They're gently saying “actually, no”"],
@@ -465,7 +465,10 @@ HV.DR = [
  [37,"c5","举个例子、打个比方","Giving an example","这是在举例子","They're giving an example"],
  [38,"c5","开玩笑、接梗","Joking around","这是在开玩笑","They're joking"],
  [39,"c6","没听懂，请再说一遍、说慢一点","“Sorry, again? Slower?”","这是在说没听懂","They didn't catch it"],
- [40,"c6","不知道那个词，绕着说","Talking around a missing word","这是在绕着说一个想不起来的词","They're talking around a word they don't know"]];
+ [40,"c6","不知道那个词，绕着说","Talking around a missing word","这是在绕着说一个想不起来的词","They're talking around a word they don't know"],
+ // 2026-11-20 用户「可以，加」：41 放在 c2、42 放在 c4（号接着往后排，柜子里按柜子分）
+ [41,"c2","讲常识、说说那边的情况","Sharing how things are","这是在讲常识、说那边是怎么回事","They're sharing how things are where they are"],
+ [42,"c4","办事、点单","Getting things done at a counter","这是在点单、办事","They're ordering or getting something done"]];
 HV.dr = n => HV.DR.find(r => r[0] === +n);
 HV.drName = (n, ui) => { const r = HV.dr(n); return r ? (ui === "zh" ? r[2] : r[3]) : ""; };
 HV.drGist = (n, ui) => { const r = HV.dr(n); return r ? (ui === "zh" ? r[4] : r[5]) : ""; };

@@ -1304,7 +1304,7 @@ const TASK = {
 };
 function aiErr(e){ const c = (e && e.code) || "";
   if (!navigator.onLine || (e && (e.name === "TypeError" || /fetch|network/i.test(String(e.message || ""))))) return T("网好像断了。等网好了再来找我。", "Looks like you're offline. Come find me when you're back online.");
-  if (c === "free_limit"){ freeAdd(FREE_MAX); return T("今天先到这儿，明天再来。", "That's enough for today — come back tomorrow."); }
+  if (c === "free_limit" || c === "limit" || c === "rate_limited"){ freeAdd(FREE_MAX); if (c !== "free_limit") peopleAdd(PEOPLE_MAX); return T("今天先到这儿，明天再来。", "That's enough for today — come back tomorrow."); }
   if (c === "no_lifebuoys") return lbRow() ? T("救生圈不够了，这次没有扣。在「我」→「我的救生圈」里可以拿。", "Not enough 🛟 — nothing was used this time. You can get more in Me → My lifebuoys.") : T("🛟 不够了。", "Not enough 🛟.");
   if (c === "chat_ended") return T("这段聊天已经结束了。要重新开始吗？", "This chat has ended. Start a new one?");
   if (c === "not_signed_in") return T("登录后可以用。", "Sign in to use this.");
@@ -1318,28 +1318,45 @@ const parseJ = t => { const x = String(t || "").trim(), m = x.match(/\{[\s\S]*\}
 async function aiStream(msgs, opts, onPart, key){ const c = window.HV_CONFIG, tok = window.HV && HV.session && HV.session.access_token;
   if (window.claude || !c || !c.ai || !tok) return null;
   let r; try { r = await fetch(c.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + tok, apikey: c.anonKey}, body: JSON.stringify(Object.assign({messages: msgs, tier: opts.modelTier, system: opts.system, stream: true}, opts.conv ? {conv: opts.conv} : {}, opts.extra || {}))}); } catch(e){ return null; }
-  if (!(r.headers.get("content-type") || "").includes("ndjson")){ const j = await r.json().catch(() => ({})); if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys; if (!r.ok) throw {code: j.code || "ai_error"}; return {j: parseJ(j.text), conv: j.conv}; }
-  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", txt = "", res = null, shown = "";
-  try { for (;;){ const p = await rd.read(); buf += dec.decode(p.value || new Uint8Array(), {stream: !p.done}); let e;
-      while ((e = buf.indexOf("\n")) >= 0){ const line = buf.slice(0, e); buf = buf.slice(e + 1); if (!line.trim()) continue; const ev = JSON.parse(line);
-        if (typeof ev.lifebuoys === "number" && window.HV) HV.lifebuoys = ev.lifebuoys;
-        if (ev.type === "delta"){ txt += ev.text; const t = partField(txt, key); if (t && t !== shown){ shown = t; try { onPart(t); } catch(x){} } }
-        if (ev.type === "error") throw {code: ev.code || "stream_interrupted"}; if (ev.type === "done") res = ev; }
-      if (p.done) break; } }
-  catch(e){ if (e && e.code) throw e; throw {code: "stream_interrupted"}; }
-  finally { try { rd.releaseLock(); } catch(x){} }
-  if (!res) throw {code: "stream_interrupted"}; return {j: parseJ(res.text), conv: res.conv}; }
+  if (!(r.headers.get("content-type") || "").includes("ndjson")){ const j = await r.json().catch(() => ({})); if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys; if (!r.ok) throw {code: j.code || "ai_error"}; return {j: parseJ(j.text), conv: j.conv, limit: j.limit}; }
+  // 2026-11-20：云函数的字一出来就发；收到 done 就先回给调用的人，流后面可能还有一个 late（记账回来晚了才知道超限），在后面接着读
+  //   收到 error 时前面可能已经出了半句：调用的人在 catch 里都会把那个「正在想」的气泡（连半句）收掉，再说原来的提示
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", txt = "", res = null, shown = "", end = false;
+  const eat = ev => { if (typeof ev.lifebuoys === "number" && window.HV) HV.lifebuoys = ev.lifebuoys;
+    if (ev.type === "delta"){ txt += ev.text; const t = partField(txt, key); if (t && t !== shown){ shown = t; try { onPart(t); } catch(x){} } }
+    if (ev.type === "late") aiLate(ev, res && res.conv);
+    if (ev.type === "error" && !res) throw {code: ev.code || "stream_interrupted"}; if (ev.type === "done") res = ev; };
+  const pump = async stopAtDone => { for (;;){ const p = await rd.read(); buf += dec.decode(p.value || new Uint8Array(), {stream: !p.done}); let e;
+      while ((e = buf.indexOf("\n")) >= 0){ const line = buf.slice(0, e); buf = buf.slice(e + 1); if (!line.trim()) continue; eat(JSON.parse(line)); }
+      if (p.done){ end = true; return; } if (stopAtDone && res) return; } };
+  try { await pump(true); }
+  catch(e){ try { rd.releaseLock(); } catch(x){} if (e && e.code) throw e; throw {code: "stream_interrupted"}; }
+  if (end) { try { rd.releaseLock(); } catch(x){} }
+  else pump(false).catch(() => {}).finally(() => { try { rd.releaseLock(); } catch(x){} });
+  if (!res) throw {code: "stream_interrupted"}; return {j: parseJ(res.text), conv: res.conv, limit: res.limit}; }
 // 一次性取法也自己发（不走 HV.sample），这样能带上、收回段编号（conv）：跟人聊天退回一次性取法时照样一段只算一次
 async function aiOnce(msgs, opts){ const c = window.HV_CONFIG, tok = window.HV && HV.session && HV.session.access_token;
   if (window.claude || !c || !c.ai || !tok) return null;
   let r; try { r = await fetch(c.ai, {method: "POST", headers: {"content-type": "application/json", authorization: "Bearer " + tok, apikey: c.anonKey}, body: JSON.stringify(Object.assign({messages: msgs, tier: opts.modelTier, system: opts.system}, opts.conv ? {conv: opts.conv} : {}, opts.extra || {}))}); } catch(e){ return null; }
   const j = await r.json().catch(() => ({})); if (typeof j.lifebuoys === "number") HV.lifebuoys = j.lifebuoys; if (!r.ok) throw {code: j.code || "ai_error"};
-  return {j: parseJ(j.text), conv: j.conv}; }
-async function ask(msgs, tier, task, onPart, conv){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
+  return {j: parseJ(j.text), conv: j.conv, limit: j.limit}; }
+// 一次只发一句（2026-11-20：云函数改成先说话、后记账，次数是说完才知道的）：上一句还在路上时，下一句排在它后面；
+//   排到了再看一眼今天的次数（上一句可能刚把它用完）。最多等 70 秒（云函数 60 秒一定收尾），不会一直卡住。
+let AI_Q = Promise.resolve();
+function aiOne(run){ const prev = AI_Q; let rel; AI_Q = new Promise(r => { rel = r; });
+  return Promise.race([prev, sleep(70000)]).then(run).finally(rel); }
+// 云函数说「这一句是今天超出的那一句」（done 里的 limit）：这句照样给你，本地记成用完，下一句就拦住
+function aiLimit(l){ if (l === "free") freeAdd(FREE_MAX); else if (l === "people") peopleAdd(PEOPLE_MAX); }
+// done 以后才到的超限（late）：这一句已经给了；本地记成用完。认识的人超了，这段聊天（conv）后面不再接着聊
+let CAP_CONV = "";
+function aiLate(ev, conv){ aiLimit(ev.limit); if (ev.limit === "people" && conv) CAP_CONV = conv; if (ev.code === "limit"){ freeAdd(FREE_MAX); peopleAdd(PEOPLE_MAX); } }
+function ask(msgs, tier, task, onPart, conv){ return aiOne(() => askNow(msgs, tier, task, onPart, conv)); }
+async function askNow(msgs, tier, task, onPart, conv){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
   // 免费档：云函数不收网页送来的人物设定，按 task / 界面语言 / 在学的语言 / 三档自己写 Voyo 的提示词（后台/functions/ai/index.ts 的 voyoSys）；claude.ai 上没有云函数，才用这里的 system
+  if (tier === "free" && (/^npc_/.test(task) ? !conv && peopleUsed() >= PEOPLE_MAX : freeUsed() >= FREE_MAX)) throw {code: "free_limit"};
   let lv = 0; try { lv = A() ? A().level() : 0; } catch(e){}
   const opts = {modelTier: tier, system: /^npc_/.test(task) ? npcSys(task.slice(4)) : sys(TASK[task](LN[LGV()] || "English")), cache: false, extra: tier === "free" ? {task, ui: UIL(), learn: LGV(), lv} : null};
-  const got = st => { if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; Object.defineProperty(st.j, "_conv", {value: st.conv || null}); return st.j; };
+  const got = st => { if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; Object.defineProperty(st.j, "_conv", {value: st.conv || null}); Object.defineProperty(st.j, "_limit", {value: st.limit || null}); aiLimit(st.limit); return st.j; };
   if (onPart){ const st = await aiStream(msgs, Object.assign({conv}, opts), onPart, /^npc_/.test(task) ? "say" : STREAM_KEY[task]); if (st) return got(st); }
   if (conv || /^npc_/.test(task)){ const st = await aiOnce(msgs, Object.assign({conv}, opts)); if (st) return got(st); }
   const j = await ai.json(msgs, opts); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
@@ -1945,7 +1962,7 @@ async function visit(id, n){ const P = VV().people[id], tg = KL(), V = P[tg], K 
         try { const j = await ask([{role: "user", content: `${P.nm} just asked: "${strip(lastQ[0])}"\nThe learner answered: "${a.v}"`}], "free", "npc_" + id, partTo(tp)); freeAdd(); tp.remove();
           if (j.care){ vbBody().insertAdjacentHTML("beforeend", careHTML("self")); scrollChat(); }
           else if (j.say){ reply = [String(j.say), tg === "zh" ? String(j.pron || "") : "", String(j.mean || "")]; reply.ai = 1; if (j.knows) know = ["said", [String(j.knows), String(j.knows)]]; } }
-        catch(e){ tp.remove(); } }
+        catch(e){ tp.remove(); if (e && (e.code === "limit" || e.code === "free_limit")) aiErr(e); } }
       if (!reply){ const isQ = new RegExp(P.ask_kw || "\\?|？", "i").test(a.v); reply = isQ ? V.reQ : V.reTyped; if (!isQ) know = ["said", [TF("你说过「{v}」", "you said “{v}”", {v: a.v}), TF("你说过「{v}」", "you said “{v}”", {v: a.v})]]; demo = false; } }
     if (reply) await npcSay(id, reply, {wait: reply.ai ? 0 : 1000, mean: reply.ai ? reply[2] : undefined});
     if (know) memAdd({id: id + "knows_" + know[0], g: "npc", t: ["{n} 知道：{f}", "{n} knows: {f}"], n: P.nm, f: know[1], src: ["你跟 TA 说的", "You told them"]});
@@ -1982,9 +1999,10 @@ async function nextDirs(id, k, lastQ){ const P = PP(id); let D = null, paid = fa
     const i = VB.querySelector(".vy-in2"); i.placeholder = TN("用你自己的几个词回 {n}", "Reply to {n} in your own words", P.nm); i.focus(); scrollChat(); });
   return true; }
 // 🛟 档（chat）：设定由网页送（云函数 chat 档收 system），一次一段
-async function ai2(content, task, onPart){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
+function ai2(content, task, onPart){ return aiOne(() => ai2Now(content, task, onPart)); }
+async function ai2Now(content, task, onPart){ const ai = aiFn(); if (!ai) throw {code: "off"}; if (!navigator.onLine) throw {name: "TypeError", message: "offline"};
   const opts = {modelTier: "chat", system: sys(TASK[task](LN[LGV()] || "English")), cache: false};
-  const st = await aiStream([{role: "user", content}], opts, onPart || (() => {}), STREAM_KEY[task] || ""); if (st){ if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; return st.j; }
+  const st = await aiStream([{role: "user", content}], opts, onPart || (() => {}), STREAM_KEY[task] || ""); if (st){ if (!st.j || typeof st.j !== "object") throw {code: "bad_json"}; aiLimit(st.limit); return st.j; }
   const j = await ai.json([{role: "user", content}], opts); if (!j || typeof j !== "object") throw {code: "bad_json"}; return j; }
 // 给 AI 的「你告诉过 Voyo 的事」：只用 🧠 里还在的
 const memFacts = () => memL().filter(m => m.g === "about" || m.g === "npc").map(m => m.t[1]).join("; ");
@@ -2314,15 +2332,16 @@ const greetLine = P => { const py = P.py || "", zhN = P.nm0 || P.nm, en = py ? l
   return KL() === "zh" ? [`你好！我是 ${zhN}。`, `Nǐ hǎo! Wǒ shì ${py || P.nm}.`, meanUI("你好！我是 {n}。", "Hi! I'm {n}.", {n: UIL() === "zh" ? zhN : en})] : [`Hi! I'm ${en}.`, "", meanUI("你好！我是 {n}。", "Hi! I'm {n}.", {n: UIL() === "zh" ? zhN : en})]; };
 const leaveLine = () => KL() === "zh" ? ["不好意思，我得走了，明天再聊！", "Bù hǎoyìsi, wǒ děi zǒu le, míngtiān zài liáo!", meanUI("不好意思，我得走了，明天再聊！", "Sorry, I've got to go — talk tomorrow!")] : ["Sorry, I've got to go — talk tomorrow!", "", meanUI("不好意思，我得走了，明天再聊！", "Sorry, I've got to go — talk tomorrow!")];
 // 免费次数按人算（用户：「按人算，每天 10 个人」）：一段的第一句占 1 次，后面带着 conv 的来回不再占；10 个人用完，新来的人只说「明天再聊」，正在聊的那一段不受影响
-async function castTurn(id, hist, known, last, S){ if (!aiOK() || (!S.conv && peopleUsed() >= PEOPLE_MAX)) return null; const P = PP(id);
+//   2026-11-20 云函数先说话后记账：第 11 个人的第一句照样说完（回话里带 limit），之后 S.capped，TA 说「明天再聊」就走
+async function castTurn(id, hist, known, last, S){ if (!aiOK() || S.capped || (S.conv && S.conv === CAP_CONV) || (!S.conv && peopleUsed() >= PEOPLE_MAX)) return null; const P = PP(id);
   const tp = document.createElement("div"); tp.className = "vy-npcm"; tp.innerHTML = `<img src="${esc(faceUrl(P))}" alt=""><div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; node(tp);
   const content = (S.ctx ? S.ctx + "\n" : "") + (known.length ? "What you remember about this learner from before: " + known.join("; ") + "\n" : "")
     + (hist.length ? "Conversation so far:\n" + hist.map(([w, t]) => (w === "npc" ? "You" : "Learner") + ": " + t).join("\n") : "You just arrived.")
     + (last ? "\nThis is your last turn: say goodbye now with a real reason from your own life for leaving, and set leave to true." : "");
-  try { const j = await ask([{role: "user", content}], "free", "npc_" + id, partTo(tp), S.conv); if (!S.conv) peopleAdd(); if (j._conv) S.conv = j._conv; tp.remove();
+  try { const j = await ask([{role: "user", content}], "free", "npc_" + id, partTo(tp), S.conv); if (!S.conv) peopleAdd(); if (j._conv) S.conv = j._conv; if (j._limit) S.capped = true; tp.remove();
     if (j.care) return {care: true}; if (!j.say) return null;
     return {line: [String(j.say), KL() === "zh" ? String(j.pron || "") : "", String(j.mean || "")], knows: j.knows ? String(j.knows) : "", leave: !!j.leave}; }
-  catch(e){ tp.remove(); if (e && e.code === "free_limit") peopleAdd(PEOPLE_MAX); return null; } }
+  catch(e){ tp.remove(); if (e && (e.code === "free_limit" || e.code === "limit")) peopleAdd(PEOPLE_MAX); return null; } }
 // 🏝️ 写好的开场白（gen_voyo_visits.py 的 op[学的语言] = [[字, 拼音, 英文意思, 中文意思, 语言], …]）；意思按界面语言给
 const opOf = id => ((CAST()[id] || {}).op || {})[KL()] || [];
 const opMean = L => KL() === "zh" ? (UIL() === "zh" ? "" : L[2]) : (UIL() === "zh" ? L[3] : "");
