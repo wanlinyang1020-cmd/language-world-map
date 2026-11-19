@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>样板 · 早上跟 Voyo 说三分钟（身心照顾）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fbf7ee;--ink:#14305c;--say:#e2552f;--soft:#8a7f6a;--line:#e7dfcd;--hear:#2f6fb0;--ok:#2e9a5b}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Helvetica Neue",sans-serif}
+.en{font-family:Georgia,serif}
+.top{max-width:1120px;margin:0 auto;padding:22px 22px 6px}
+.demo{display:inline-block;font-size:12px;color:var(--soft);border:1px dashed #cdbf9f;border-radius:10px;padding:1px 9px;margin-bottom:8px}
+h1{font:700 26px/1.35 "Noto Serif SC",serif;margin:0 0 4px}
+.lead{margin:0;color:#4a5874;font-size:14.5px;max-width:760px}
+.wrap{max-width:1120px;margin:0 auto;padding:16px 22px 60px;display:flex;gap:34px;align-items:flex-start}
+.left{flex:none;position:sticky;top:12px}
+.right{flex:1;min-width:0}
+
+/* 手机 */
+.ph{width:375px;height:720px;max-height:calc(100vh - 24px);background:#fffdf8;border:9px solid #1b1b1f;border-radius:42px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 14px 30px rgba(20,48,92,.13)}
+.sb{height:28px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font:600 12px/1 -apple-system,sans-serif;color:#222}
+.hd{flex:none;display:flex;align-items:center;gap:9px;padding:6px 14px 10px;border-bottom:1px solid #f0e9da}
+.hd .nm{font:700 16px/1 Georgia,serif}
+.hd .sub{font-size:11.5px;color:var(--soft);transition:opacity .3s}
+.hd .auto{font-size:10.5px;color:var(--hear);background:#e6eef7;border-radius:9px;padding:3px 8px;margin-left:auto;border:0;cursor:pointer;font-family:inherit}
+.hd .auto.off{color:#8a7f6a;background:#f1ece0}
+.vyface{width:30px;height:30px;border-radius:50%;border:2px dashed #b9a57a;background:#fffdf6;display:grid;place-items:center;font:700 13px/1 Georgia,serif;color:#8f7a4c;flex:none;transition:transform .25s}
+.vyface.big{width:92px;height:92px;font-size:34px;border-width:3px}
+.vyface.sm{width:24px;height:24px;font-size:11px;border-width:1.5px}
+.vyface.bob{animation:bob .5s}
+@keyframes bob{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-8deg)}100%{transform:scale(1)}}
+
+.body{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:12px 13px 12px;scroll-behavior:smooth;position:relative}
+.body>*{flex-shrink:0}
+.body>.first{margin-top:auto}
+.body.hello{justify-content:center;align-items:center;gap:16px}
+.body.hello .row.vy{justify-content:center}
+.body.hello .row.vy .b{font-size:16px;border-radius:18px;max-width:86%}
+.body.hello .row.vy .vyface.sm{display:none}
+.hello-face{transition:all .4s}
+
+.ft{flex:none;display:flex;align-items:center;gap:7px;padding:9px 11px 24px;border-top:1px solid #f0e9da;background:#fffdf8;position:relative}
+.lang{flex:none;border:1.5px solid var(--hear);background:#e6eef7;border-radius:13px;font:600 11px/1 -apple-system,"PingFang SC",sans-serif;color:var(--hear);padding:6px 8px;cursor:pointer;display:flex;align-items:center;gap:3px}
+.lang b{font-size:12.5px}
+.lang.zh{border-color:var(--say);background:#fff2ec;color:var(--say)}
+.lang.flash{animation:okpop .45s cubic-bezier(.3,1.6,.5,1)}
+.wake{align-self:center;display:flex;align-items:center;gap:8px;border:0;background:var(--say);color:#fff;font:600 15px -apple-system,"PingFang SC",sans-serif;padding:12px 22px;border-radius:24px;cursor:pointer;box-shadow:0 6px 16px rgba(226,85,47,.3);animation:breathe 1.8s infinite}
+@keyframes breathe{50%{transform:scale(1.05)}}
+.inbox{flex:1;position:relative}
+.inbox input{width:100%;height:40px;border-radius:20px;border:0;background:#f4efe3;padding:0 14px;font:14px -apple-system,"PingFang SC",sans-serif;color:var(--ink);outline:none}
+.inbox input::placeholder{color:#a89d86}
+.live{position:absolute;inset:0;border-radius:20px;background:#fff2ec;display:none;align-items:center;padding:0 14px;font:14px Georgia,serif;color:var(--say);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live.on{display:flex}
+.live .hint{font:12.5px -apple-system,"PingFang SC",sans-serif;color:#c47a62}
+.send{width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:#fff;display:none;place-items:center;flex:none;cursor:pointer}
+.send.on{display:grid}
+.mic{width:44px;height:44px;border-radius:50%;border:0;background:var(--say);display:grid;place-items:center;flex:none;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .12s,box-shadow .2s}
+.mic svg{width:19px;height:19px}
+.mic .bars{display:none;gap:2px;align-items:center;height:20px}
+.mic .bars i{display:block;width:3px;height:6px;border-radius:2px;background:#fff;animation:bar .7s infinite ease-in-out}
+.mic .bars i:nth-child(2){animation-delay:.12s}.mic .bars i:nth-child(3){animation-delay:.24s}.mic .bars i:nth-child(4){animation-delay:.36s}.mic .bars i:nth-child(5){animation-delay:.48s}
+@keyframes bar{0%,100%{height:5px}50%{height:18px}}
+.mic.rec{box-shadow:0 0 0 6px rgba(226,85,47,.2);transform:scale(1.08)}
+.mic.rec svg{display:none}.mic.rec .bars{display:flex}
+.miclab{position:absolute;right:10px;bottom:6px;font-size:10.5px;color:var(--soft);background:#fffdf8;padding:0 5px;border-radius:6px}
+
+/* 消息 */
+.row{display:flex;gap:7px;align-items:flex-end;animation:rise .32s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.row.me{justify-content:flex-end}
+.b{max-width:76%;padding:9px 12px;border-radius:17px;font-size:14px;line-height:1.5}
+.vy .b{background:#f4efe3;border-bottom-left-radius:5px}
+.jh .b{background:#e9f0f8;border-bottom-left-radius:5px}
+.me .b{background:var(--say);color:#fff;border-bottom-right-radius:5px}
+.me .b .en{font-size:15px}
+.b .en{font-size:15px}
+.b .en+.en{margin-left:.25em}
+.zh-s{display:block;font-size:12px;opacity:.72;margin-top:2px}
+.old{opacity:.5;transition:opacity .4s}
+.hl{background:#fde7a6;box-shadow:0 0 0 2px #fde7a6;border-radius:4px;color:var(--ink)}
+.rs{width:26px;height:26px;border-radius:50%;background:#e6eef7;display:inline-grid;place-items:center;flex:none;align-self:center;border:0;cursor:pointer;padding:0}
+.rs svg{width:13px;height:13px;pointer-events:none}
+.typing{display:flex;gap:4px;padding:12px 14px}
+.typing i{width:6px;height:6px;border-radius:50%;background:#b9a57a;animation:dot 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,100%{opacity:.3}50%{opacity:1}}
+.ok{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok);color:#fff;font:700 12px/1 sans-serif;margin-left:6px;vertical-align:-3px;animation:okpop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes okpop{from{transform:scale(0)}to{transform:scale(1)}}
+.me .miss{opacity:.5;text-decoration:underline dotted}
+.me .retry{display:block;font:11.5px -apple-system,"PingFang SC",sans-serif;opacity:.9;margin-top:2px}
+.helper{font-size:13.5px}
+.helper.told{background:#fffdf6;border:1.5px dashed #c9b88f;color:#6d6250;font-size:12.5px}
+
+/* 递来的东西 */
+.card{background:#fff;border:1.5px solid #eadfc7;border-radius:16px;padding:12px 13px;box-shadow:0 6px 16px rgba(20,48,92,.07);animation:rise .35s ease-out;position:relative}
+.chips{display:flex;flex-direction:column;gap:7px}
+.chip{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:12px;background:#f8f4ea;position:relative;transition:background .2s}
+.chip .w{font:16px Georgia,serif;flex:1}
+.chip .w small{display:block;font:12px -apple-system,"PingFang SC",sans-serif;color:var(--soft)}
+.keep{width:30px;height:30px;display:grid;place-items:center;flex:none;border:0;background:none;cursor:pointer;padding:0}
+.keep svg{width:17px;height:17px;pointer-events:none}
+.chip.kept{background:#fff2ec;box-shadow:inset 0 0 0 1px #f4c9b7}
+.chip.kept .keep path{fill:var(--say);stroke:var(--say)}
+.pop{position:absolute;right:-4px;top:-11px;background:var(--say);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;transform:rotate(4deg);white-space:nowrap;animation:okpop .4s}
+.snd{margin-top:8px;font-size:12px;color:var(--soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.snd .pw{font:14px Georgia,serif;color:var(--ink);display:inline-flex;align-items:center;gap:4px}
+.snd .rs{width:22px;height:22px}
+.next{margin-top:9px;display:flex;justify-content:space-between;align-items:center}
+.btn{font:13px -apple-system,"PingFang SC",sans-serif;padding:6px 13px;border-radius:15px;border:1px solid #e3d8bf;background:#fff;color:var(--ink);cursor:pointer;transition:transform .1s}
+.btn.pri{background:var(--say);border-color:var(--say);color:#fff}
+.squish{animation:squish .22s}
+@keyframes squish{50%{transform:scale(.9)}}
+.pat{font:17px/1.85 Georgia,serif;display:flex;gap:8px;align-items:flex-start}
+.pat .tx{flex:1}
+.slot{display:inline-block;min-width:54px;border-bottom:2px solid var(--say);text-align:center;color:var(--say);padding:0 4px;line-height:1.3;background:#fff2ec;border-radius:4px 4px 0 0}
+.opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.opts .br{width:100%;height:0}
+.opt{font:13.5px Georgia,serif;padding:3px 11px;border-radius:12px;border:1px solid #e3d8bf;color:#6d6250;background:#fff;cursor:pointer}
+.opt.on{background:var(--say);border-color:var(--say);color:#fff}
+.patzh{font-size:12px;color:var(--soft);margin-top:6px}
+.q{font:19px/1.4 Georgia,serif;display:flex;align-items:center;gap:8px}
+.qzh{font-size:12.5px;color:var(--soft)}
+.whisper{border:1.5px dashed #c9b88f;background:#fffdf6;border-radius:14px;padding:7px 10px;font-size:12.5px;color:#6d6250;display:flex;gap:7px;align-items:center;max-width:90%;animation:rise .35s ease-out}
+.whisper .en{font-size:15px;color:var(--ink);cursor:pointer}
+.whisper .wz{display:block;font-size:11.5px;color:#a2967d}
+.whisper .alt{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:11.5px;color:#a2967d}
+.whisper .alt .en{font-size:14px}
+.whisper .alt .rs{width:22px;height:22px}
+.face{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;background:#d9e3ee}
+.join{align-self:center;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:5px 13px 5px 5px;font-size:12px;animation:rise .4s}
+.join img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.join b{font:600 13px Georgia,serif}
+.leave{align-self:center;font-size:11.5px;color:var(--soft);animation:rise .4s}
+.act{border-radius:16px;overflow:hidden;background:#14305c;color:#fbf7ee;animation:rise .4s;position:relative}
+.act .pic{height:118px;background:linear-gradient(180deg,#1f3f74 0%,#14305c 70%);position:relative;background-size:cover;background-position:center}
+.act .moon{position:absolute;right:28px;top:22px;width:34px;height:34px;border-radius:50%;box-shadow:-9px 4px 0 0 #f6e7b8}
+.act .phone{position:absolute;left:30px;bottom:18px;width:34px;height:56px;border-radius:7px;border:2.5px solid #f6e7b8;transform:rotate(-12deg);opacity:.85}
+.act .phone:after{content:"";position:absolute;left:-12px;right:-12px;top:50%;border-top:3px solid var(--say);transform:rotate(-50deg)}
+.act .host{position:absolute;left:10px;bottom:8px;font-size:11px;background:rgba(20,48,92,.75);padding:2px 8px;border-radius:9px}
+.act .tx{padding:11px 14px 13px}
+.act h4{margin:0 0 3px;font:700 17px/1.35 "Noto Serif SC",serif}
+.act p{margin:0;font-size:12.5px;opacity:.82}
+.act .bt{display:flex;gap:8px;margin-top:10px}
+.act .bt button{font:13px -apple-system,"PingFang SC",sans-serif;padding:6px 14px;border-radius:16px;cursor:pointer;border:1px solid rgba(251,247,238,.45);background:transparent;color:#fbf7ee}
+.act .bt .y{background:var(--say);border-color:var(--say)}
+.act .bt button:disabled{opacity:.45;cursor:default}
+.act .joined{position:absolute;right:12px;top:12px;border:2.5px solid #f6e7b8;color:#f6e7b8;border-radius:50%;width:64px;height:64px;display:grid;place-items:center;text-align:center;font:700 10px/1.15 Georgia,serif;transform:rotate(-12deg);animation:thunk .5s cubic-bezier(.3,1.5,.5,1)}
+.sum{background:#fff;border:1.5px solid #eadfc7;border-radius:18px;padding:14px 15px 12px;position:relative;animation:rise .4s}
+.sum .dt{font:12px Georgia,serif;color:var(--soft);letter-spacing:.06em}
+.sum h4{margin:2px 0 8px;font:700 18px/1.3 "Noto Serif SC",serif;padding-right:64px}
+.sum .said{font:16px/1.45 Georgia,serif;margin:0 0 8px;padding-right:58px;display:flex;gap:6px;align-items:flex-start}
+.sum .ln{display:flex;gap:9px;padding:7px 0;border-top:1px dashed #eadfc7;font-size:13px;align-items:flex-start}
+.sum .ln .k{color:var(--soft);width:72px;flex:none;white-space:nowrap}
+.sum .ln .v{flex:1}
+.sum .ln .v .en{font-size:14.5px}
+.sum .again{margin:2px 0 8px}
+.sum .again .k{display:block;font-size:12px;color:var(--soft);margin-bottom:2px}
+.sum .again .said{margin:0;padding-right:0}
+.whisper .en.frame{cursor:default;letter-spacing:.04em}
+.sum .drawer-note{margin:10px 0 0;font-size:12.5px;color:var(--soft)}
+.sum .w{display:inline-flex;align-items:center;gap:3px;margin:0 6px 3px 0;font:14px Georgia,serif;padding:1px 4px 1px 8px;background:#f8f4ea;border-radius:9px}
+.sum .w.kept{background:#fff2ec;box-shadow:inset 0 0 0 1px #f4c9b7}
+.sum .w .rs{width:20px;height:20px}
+.sum .w .rs svg{width:10px;height:10px}
+.drw{display:inline-block;font-size:12px;padding:2px 9px;border-radius:10px;background:#f4efe3;margin:0 4px 3px 0}
+.stamp{position:absolute;right:12px;top:10px;width:64px;height:64px;border-radius:50%;border:2.5px solid var(--say);color:var(--say);display:grid;place-items:center;text-align:center;font:700 10px/1.15 Georgia,serif;transform:rotate(-12deg);opacity:.88;animation:thunk .55s cubic-bezier(.3,1.5,.5,1)}
+@keyframes thunk{0%{transform:scale(2.4) rotate(-30deg);opacity:0}70%{transform:scale(.92) rotate(-10deg);opacity:1}100%{transform:scale(1) rotate(-12deg)}}
+.tease{display:flex;align-items:center;gap:10px;background:#f4efe3;border-radius:14px;padding:9px 12px;font-size:13px;animation:rise .5s}
+.tease .who{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#c9b88f 0 28%,transparent 29%),radial-gradient(circle at 50% 110%,#c9b88f 0 46%,#e7dfcd 47%);filter:blur(.6px);flex:none}
+.fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.fx i{position:absolute;top:-12px;width:7px;height:11px;border-radius:1px;animation:fall 2.4s ease-in forwards}
+@keyframes fall{to{transform:translateY(760px) rotate(540deg);opacity:.6}}
+.floatnote{position:absolute;font-size:16px;color:var(--say);pointer-events:none;animation:floatup 1s ease-out forwards;z-index:6}
+@keyframes floatup{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-38px)}}
+.toast{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);background:rgba(20,48,92,.92);color:#fff;font-size:12.5px;padding:6px 12px;border-radius:12px;z-index:8;white-space:nowrap;animation:rise .25s}
+
+/* 右边说明 */
+.right h2{font:700 18px/1.4 "Noto Serif SC",serif;margin:0 0 6px}
+.howto{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:16px;font-size:14px}
+.howto p{margin:0 0 6px}.howto p:last-child{margin:0}
+.howto .btn{margin-right:6px}
+.steps{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
+.steps li{border-left:3px solid #eadfc7;padding:6px 12px;border-radius:0 10px 10px 0;transition:all .3s;font-size:14px;color:#4a5874}
+.steps li b{display:block;color:var(--ink);font-size:14.5px}
+.steps li.on{border-left-color:var(--say);background:#fff;box-shadow:0 4px 12px rgba(20,48,92,.06);color:var(--ink)}
+.steps li.done b:after{content:" ✓";color:var(--ok)}
+table.tb{border-collapse:collapse;width:100%;font-size:12.5px;background:#fff;border-radius:12px;overflow:hidden}
+.tb th,.tb td{border-bottom:1px solid #f0e9da;padding:6px 8px;text-align:left;vertical-align:top}
+.tb th{background:#f4efe3;font-weight:600}
+.tb td .en{font-size:13px}
+.small{font-size:12.5px;color:var(--soft)}
+@media (max-width:860px){
+ .wrap{flex-direction:column;align-items:center;padding:10px 8px 50px;gap:22px}
+ .left{position:static}
+ .ph{width:min(375px,calc(100vw - 16px));height:min(720px,calc(100svh - 20px));border-width:7px;border-radius:34px}
+ .top{padding:16px 14px 0}
+ h1{font-size:21px}
+ .right{width:100%;max-width:520px}
+ .tb{display:block;overflow-x:auto}
+}
+.mob{display:none}
+@media (max-width:480px){
+ .top{padding:4px 10px 2px;text-align:center}
+ .top h1,.top .lead{display:none}
+ .demo{margin:0}
+ .wrap{padding:0 0 50px}
+ .ph{width:100vw;height:calc(100svh - 30px);max-height:none;border:0;border-radius:0;box-shadow:none}
+ .sb{display:none}
+ .right{padding:0 14px}
+ .mob{display:block;font:700 18px/1.45 "Noto Serif SC",serif;margin:0 0 12px}
+}
+</style>
+</head>
+<body>
+
+<section class="top">
+  <span class="demo">这是样板，不接账号</span>
+  <h1>早上一打开，就在跟 Voyo 聊天；三分钟后，你用英语说了自己昨晚睡得怎么样，还跟一位睡眠科学家聊了几句。</h1>
+  <p class="lead">左边手机能点、能听、能说。回 Voyo 的话可以打字，也可以按红色麦克风说（点一下或按住都行）。打字、说英文都行；说不出来，Voyo 会教你用中文说。</p>
+</section>
+
+<div class="wrap">
+<div class="left">
+  <div class="ph" id="ph">
+    <div class="sb"><span id="clock">8:12</span><span>●●● 5G</span></div>
+    <div class="hd"><span class="vyface" id="hdface">V</span><span class="nm">Voyo</span><span class="sub" id="hdsub">刚从南极醒来</span><button class="auto" id="auto" title="Voyo 和来聊的人说话时自动读出来">自动读 · 开</button></div>
+    <div class="body hello" id="body"></div>
+    <div class="ft">
+      <button class="lang" id="lang" title="麦克风听哪种语言">EN</button>
+      <div class="inbox"><input id="inp" placeholder="打字，或者按麦克风说" autocomplete="off"><div class="live" id="live"></div></div>
+      <button class="send" id="send" aria-label="发送"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M3 11l18-8-8 18-2-8z" fill="#fff"/></svg></button>
+      <button class="mic" id="mic" aria-label="点一下或按住说"><svg viewBox="0 0 24 24" fill="#fff"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M6 11a6 6 0 0 0 12 0" stroke="#fff" stroke-width="2" fill="none"/><rect x="11" y="17" width="2" height="4"/></svg><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></button>
+      <span class="miclab" id="miclab">点一下或按住说</span>
+    </div>
+  </div>
+</div>
+
+<div class="right">
+  <p class="mob">早上一打开，就在跟 Voyo 聊天；三分钟后，你用英语说了自己昨晚睡得怎么样，还跟一位睡眠科学家聊了几句。</p>
+  <div class="howto">
+    <p><b>怎么看：</b>把这台手机当成自己的，回 Voyo 第一句。试两次：一次说睡得不好（比如 <span class="en">Not great</span> 或「不太好，好累」），一次说睡得好（比如 <span class="en">Pretty good</span>），后面递来的词、句子、聊的人说的话都会跟着变。</p>
+    <p>打字、说英文都行；说不出来，Voyo 会教你用中文说：停一会儿，或者回「不会」，它会在旁边小声递一句，麦克风也会换成听中文。</p>
+    <p>一打开先点手机里的「点一下，听 Voyo 说」。麦克风左边的小按钮写着它现在听中文还是英文，点一下能换。</p>
+    <p><button class="btn pri" id="restart">从头再来</button><span class="small">每句英文旁边的蓝色喇叭都能点；右上角能关掉自动读。</span></p>
+  </div>
+
+  <h2>每次只递一样，下一样从你刚才的回答里长出来</h2>
+  <ol class="steps" id="steps">
+    <li data-s="0"><b>Voyo 先开口</b>屏幕上只有一句朋友早上的寒暄。没有菜单、没有今日任务，第一眼就知道该干嘛：回它。Voyo 先说自己没睡好，你就不觉得被考。</li>
+    <li data-s="1"><b>递来：几个词</b>你说累，就递「累」的三个词；你说睡得好，就递「精神好」的三个词。只有三个，每个能听，都能直接放进下一步的那句话里。点书签收下，Voyo 马上回一句，让你知道这个动作有人看见。</li>
+    <li data-s="2"><b>递来：一个说法</b>空里先放好你刚收的那个词，数字换成你自己的。说一遍或打一遍，马上一个绿勾；没说到的词变淡，再说一遍就好，不打叉。你说的是几个小时，收尾那页就记几个小时。</li>
+    <li data-s="3"><b>递来：一句问别人的话</b>不能只会回答，还要会把话抛回去。学了马上问 Voyo 一次，它真的回你。等一下跟人聊天时还会再用到。</li>
+    <li data-s="4"><b>请来一个人：Park Ji-hoon</b>首尔的睡眠科学家，自己的英语也还在学，说得简单。他在收集各地人睡前最后做的一件事，所以他问你不是考试。你把刚学的 How did you sleep? 问回去，他才说自己。聊三四个来回，他就回实验室了。你卡住时 Voyo 不打断，只在旁边用虚线小气泡递一句；想说的话不会，先用中文说，麦克风会换成听中文。</li>
+    <li data-s="5"><b>一个活动（可以不点）</b>从刚才聊的事里长出来：你说睡前看手机，就是「睡前半小时不看手机」；说别的，就是 Ji-hoon 自己在办的两周睡眠小记录。「先不用」和「我也试试」一样大。不写人数，等有了真数字再写。</li>
+    <li data-s="6"><b>今天的一页</b>只写你真做过的：你说出口的那句（按你说的词和数字）、收下或说过的词、学会的说法、聊过的人、这周在做的事，再一行收进了哪个抽屉。最后一行只露一半，留个悬念。</li>
+  </ol>
+
+  <h2>声音和高亮对照</h2>
+  <p class="small" style="margin:0 0 8px">一段声音对应一段字：哪段在读，哪段的字变黄；读完取消，下一段再亮。喇叭只是按钮，自己不变色。</p>
+  <table class="tb">
+    <tr><th>什么时候读</th><th>读什么</th><th>谁的声音</th><th>哪里亮</th><th>读完</th></tr>
+    <tr><td>Voyo 每句出现（自动读开着）/ 点旁边喇叭</td><td>气泡里的英文，分句的一句一段</td><td>Voyo（Azure Ava 多语言，美式）</td><td>正在读的那一句英文；中文小字不亮</td><td>取消高亮，Voyo 下一句才出来</td></tr>
+    <tr><td>词卡出现 / 点词旁喇叭</td><td>那个词（tired、well rested…）</td><td>示范声音（Jenny，美式）</td><td>那个词</td><td>下一个词亮；三个读完停</td></tr>
+    <tr><td>说法卡出现 / 换空 / 点喇叭</td><td>按你选的空拼好的整句（每种组合一段录音）</td><td>示范声音</td><td>整句（两小句是一段录音，一起亮）</td><td>取消，等你说</td></tr>
+    <tr><td>问句卡出现 / 点喇叭</td><td><span class="en">How did you sleep?</span></td><td>示范声音</td><td>问句的英文</td><td>取消，等你问</td></tr>
+    <tr><td>Ji-hoon 每句出现 / 点喇叭</td><td>他气泡里的英文</td><td>Ji-hoon（Azure Hyunsu 多语言，韩语口音英语）</td><td>他正在读的那句英文</td><td>取消，下一句出来或等你回</td></tr>
+    <tr><td>Voyo 小声递一句 / 点喇叭</td><td>虚线气泡里的英文</td><td>示范声音（小一点声）</td><td>虚线气泡里的英文</td><td>取消，等你照着说</td></tr>
+    <tr><td>今天的一页里点喇叭</td><td>那个词或那句</td><td>示范声音</td><td>那个词或那句</td><td>取消</td></tr>
+  </table>
+  <p class="small">样板里每一句英文都有提前录好的人声（Azure 神经网络语音）；网络打不开录音时退回浏览器朗读。</p>
+</div>
+</div>
+
+<script>
+/*LINES*/const LINES={"v_hello1": ["voyo", "Morning! I didn't sleep well — the southern lights were too bright.", "早！昨晚南极的极光太亮，我没睡好。"], "v_hello2": ["voyo", "How did you sleep?", "你昨晚睡得怎么样？"], "v_ok_bad": ["voyo", "It's OK to feel tired. Same here.", "累了也没关系，咱俩一样。"], "v_ok_good": ["voyo", "Nice! Lucky you.", "真好，羡慕你。"], "w_tired": ["you.en", "tired", "累"], "w_exhausted": ["you.en", "exhausted", "累垮了，比 tired 更累"], "w_sleepy": ["you.en", "sleepy", "困，想睡觉"], "w_rested": ["you.en", "well rested", "睡足了，精神好"], "w_energy": ["you.en", "full of energy", "精力满满"], "w_awake": ["you.en", "wide awake", "特别清醒，一点不困"], "v_keep_tired": ["voyo", "Tired! That's me today.", "tired！我今天就是这样。"], "v_keep_exhausted": ["voyo", "Exhausted! That's me today.", "exhausted！我今天就是这样。"], "v_keep_sleepy": ["voyo", "Sleepy! That's me today.", "sleepy！我今天就是这样。"], "v_keep_rested": ["voyo", "Well rested! I wish!", "睡足了！我也想啊。"], "v_keep_energy": ["voyo", "Full of energy! I wish!", "精力满满！我也想啊。"], "v_keep_awake": ["voyo", "Wide awake! I wish!", "这么清醒！我也想啊。"], "fr_tired_four": ["you.en", "I'm so tired today. I only slept four hours.", "我今天好累，只睡了四个小时。"], "fr_tired_five": ["you.en", "I'm so tired today. I only slept five hours.", "我今天好累，只睡了五个小时。"], "fr_tired_six": ["you.en", "I'm so tired today. I only slept six hours.", "我今天好累，只睡了六个小时。"], "fr_exhausted_four": ["you.en", "I'm so exhausted today. I only slept four hours.", "我今天累垮了，只睡了四个小时。"], "fr_exhausted_five": ["you.en", "I'm so exhausted today. I only slept five hours.", "我今天累垮了，只睡了五个小时。"], "fr_exhausted_six": ["you.en", "I'm so exhausted today. I only slept six hours.", "我今天累垮了，只睡了六个小时。"], "fr_sleepy_four": ["you.en", "I'm so sleepy today. I only slept four hours.", "我今天好困，只睡了四个小时。"], "fr_sleepy_five": ["you.en", "I'm so sleepy today. I only slept five hours.", "我今天好困，只睡了五个小时。"], "fr_sleepy_six": ["you.en", "I'm so sleepy today. I only slept six hours.", "我今天好困，只睡了六个小时。"], "fr_rested_seven": ["you.en", "I feel well rested today. I slept seven hours.", "我今天精神特别好，睡了七个小时。"], "fr_rested_eight": ["you.en", "I feel well rested today. I slept eight hours.", "我今天精神特别好，睡了八个小时。"], "fr_rested_nine": ["you.en", "I feel well rested today. I slept nine hours.", "我今天精神特别好，睡了九个小时。"], "fr_energy_seven": ["you.en", "I'm full of energy today. I slept seven hours.", "我今天精力特别足，睡了七个小时。"], "fr_energy_eight": ["you.en", "I'm full of energy today. I slept eight hours.", "我今天精力特别足，睡了八个小时。"], "fr_energy_nine": ["you.en", "I'm full of energy today. I slept nine hours.", "我今天精力特别足，睡了九个小时。"], "fr_awake_seven": ["you.en", "I'm wide awake today. I slept seven hours.", "我今天特别清醒，睡了七个小时。"], "fr_awake_eight": ["you.en", "I'm wide awake today. I slept eight hours.", "我今天特别清醒，睡了八个小时。"], "fr_awake_nine": ["you.en", "I'm wide awake today. I slept nine hours.", "我今天特别清醒，睡了九个小时。"], "v_said": ["voyo", "You said it! A whole sentence about you.", "说出来了！一整句，说的是你自己。"], "v_almost": ["voyo", "Almost! Let's keep going.", "差一点！咱们接着来。"], "v_turn": ["voyo", "Your turn. Ask me!", "换你问我。"], "q_how": ["you.en", "How did you sleep?", "你睡得怎么样？"], "v_answer": ["voyo", "Let me see... six hours, maybe?", "我想想……大概六个小时？"], "v_call": ["voyo", "Let me call a friend. He studies sleep.", "我叫个朋友来，他正好研究睡觉。"], "j_n_four": ["world.jihoon", "Four hours? Oh no.", "四个小时？哎呀。"], "j_n_five": ["world.jihoon", "Five hours? Oh no.", "五个小时？哎呀。"], "j_n_six": ["world.jihoon", "Six hours? Oh no.", "六个小时？哎呀。"], "j_n_seven": ["world.jihoon", "Seven hours? That's great!", "七个小时？很不错嘛！"], "j_n_eight": ["world.jihoon", "Eight hours? That's great!", "八个小时？很不错嘛！"], "j_n_nine": ["world.jihoon", "Nine hours? That's great!", "九个小时？很不错嘛！"], "j_last": ["world.jihoon", "What's the last thing you do before bed?", "你睡前最后做的一件事是什么？"], "j_phone": ["world.jihoon", "Me too, honestly. Every night.", "说实话，我也是，每天晚上都看。"], "j_book": ["world.jihoon", "A book! Nice. I wish I did that.", "看书！真好，我也想这样。"], "j_shower": ["world.jihoon", "A shower! That sounds nice.", "洗个澡！听着挺舒服。"], "j_milk": ["world.jihoon", "Some people say warm milk helps. I'm not so sure.", "有人说喝热牛奶有用，我倒不太确定。"], "j_tea": ["world.jihoon", "Tea! Herbal, I hope? Black tea has caffeine too.", "喝茶！希望是花草茶？红茶也有咖啡因。"], "j_other": ["world.jihoon", "Oh, interesting! I'll add that to my list.", "有意思！我把这个记进我的单子里。"], "wh_phone": ["you.en", "I look at my phone.", "我看手机。"], "wh_book": ["you.en", "I read a book.", "我看书。"], "wh_shower": ["you.en", "I take a shower.", "我洗个澡。"], "wh_milk": ["you.en", "I have some warm milk.", "我喝点热牛奶。"], "wh_tea": ["you.en", "I have some tea.", "我喝点茶。"], "wh_teeth": ["you.en", "I brush my teeth.", "我刷牙。"], "j_teeth": ["world.jihoon", "Good habit! Me too, right before bed.", "好习惯！我也是，睡前刷。"], "wh_no": ["you.en", "No, not really.", "不太会。"], "j_mine": ["world.jihoon", "Not great. I stayed up late at the lab.", "不太好，我在实验室待到很晚。"], "j_weekend": ["world.jihoon", "Do you sleep in on weekends?", "你周末睡懒觉吗？"], "wh_weekend": ["you.en", "Yes, I sleep in on weekends.", "会，我周末睡懒觉。"], "j_yes": ["world.jihoon", "Me too! Every Saturday.", "我也是！每个周六都睡。"], "j_no": ["world.jihoon", "Good for you. Your body clock likes that.", "真好，你的生物钟会喜欢的。"], "j_bye": ["world.jihoon", "Thanks! I'd better get back to the lab. Sleep well tonight!", "谢谢！我得回实验室了。今晚睡个好觉！"], "wh_bye": ["you.en", "Thanks! You too.", "谢谢！你也是。"], "v_act_phone1": ["voyo", "You both look at your phones before bed...", "你们俩睡前都看手机……"], "v_act_phone2": ["voyo", "Lots of people are trying a phone-free half hour this week. Want to join?", "这周好多人在试睡前半小时不碰手机，要不要一起？"], "v_act_lab": ["voyo", "Ji-hoon is running a two-week sleep check. Want to try it?", "Ji-hoon 在办一个两周的睡眠小记录，要不要试试？"], "v_join": ["voyo", "Great! See you tomorrow.", "好！明天见。"], "v_skip": ["voyo", "No problem. Maybe next time.", "没关系，下次再说。"], "v_end": ["voyo", "Nice chat! I wrote it all down for you.", "聊得真好！我都帮你记下来了。"]};const REC=new Set(["0888ac56", "0b57d2ca", "0c18a597", "0e302368", "155733ec", "1638cf21", "1dee07a2", "22a86279", "22b008de", "34f187ad", "3fb380ad", "40ee0255", "425a4789", "44bc08cc", "45593cff", "46849526", "4accd0df", "55a5a231", "5c6ca67c", "5d23f3f4", "5e74aa65", "60274beb", "68ed5d47", "69f3c3bd", "6b117ec1", "6c6fc561", "6de5046a", "6f6025f8", "6f700ada", "6f7c77b8", "73fafef7", "802820cb", "80a43474", "83cc6a24", "86207196", "87902ab3", "87a8d2c2", "8c6ed6da", "9111f6ef", "918b7f04", "95cff214", "a048a3e7", "a2675d20", "a35ea3ff", "af1f595c", "b3dd6de6", "b447fcdc", "b4f9346a", "c06d8d59", "c5944abe", "c9cd5bdd", "ca905545", "d239eefe", "d23d879c", "d3a1b269", "d5256ad7", "d70d1d88", "db280ebe", "dba8d96e", "dde66496", "defc15fe", "df85e8e5", "e0fda85a", "e60084b7", "e637a7f9", "e9837ccf", "eb7a04d2", "f39eb2b6", "f6bbc549", "f74ea87c", "f8f6b6fe", "f94e2594", "fbaafcfb", "fcb14bec"]);/*END*/
+const $ = s => document.querySelector(s);
+const body = $("#body"), inp = $("#inp"), mic = $("#mic"), live = $("#live"), ph = $("#ph");
+const SPK_SVG = '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="#2f6fb0"/><path d="M16 8a5 5 0 0 1 0 8" stroke="#2f6fb0" stroke-width="2" fill="none"/></svg>';
+const KEEP_SVG = '<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z" fill="none" stroke="#b9a57a" stroke-width="2"/></svg>';
+const JH = "https://img.heyvoyo.com/npc/jihoon/face.webp", JH_LAB = "https://img.heyvoyo.com/npc/jihoon/lab.webp";
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const en = k => LINES[k][1], zh = k => LINES[k][2];
+
+/* ── 声音：录好的人声优先（img.heyvoyo.com/voice/<FNV(说话的人|句子)>.mp3），放不出来就用浏览器朗读 ── */
+function fnv(s){ let h = 0x811c9dc5; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); }
+let SPK = 0, curAu = null, autoRead = true; const ENDS = new Set();
+function hush(){ SPK++; [...ENDS].forEach(f => f()); ENDS.clear(); try { speechSynthesis.cancel(); } catch(e){} if (curAu){ try { curAu.pause(); } catch(e){} curAu = null; } document.querySelectorAll(".hl").forEach(e => e.classList.remove("hl")); }
+function playOne(key, el, my, vol){
+  return new Promise(res => {
+    if (my !== SPK) return res();
+    const [sid, t] = LINES[key], txt = t.split(/\s+/).join(" ");
+    let fin = false; const end = () => { if (fin) return; fin = true; ENDS.delete(end); if (el) el.classList.remove("hl"); setTimeout(res, 200); };
+    ENDS.add(end); if (el) el.classList.add("hl");
+    const est = Math.max(1200, txt.length * 75);
+    let fell = false;
+    const tts = () => { if (fell) return; fell = true; if (my !== SPK) return end(); try { const u = new SpeechSynthesisUtterance(txt); u.lang = "en-US"; u.rate = .9; u.volume = vol || 1; u.onend = end; u.onerror = end; speechSynthesis.speak(u); } catch(e){ end(); } };
+    const h = fnv(sid + "|" + txt);
+    if (REC.has(h)){ const a = new Audio("https://img.heyvoyo.com/voice/" + h + ".mp3"); a.volume = vol || 1; curAu = a; a.onended = end; a.onerror = tts; a.play().catch(tts); }
+    else tts();
+    setTimeout(end, est * 2.5 + 3000);
+  });
+}
+// 一串：一段声音一段字
+async function speakSeq(pairs, o){ o = o || {}; hush(); const my = SPK; for (const [k, el] of pairs){ if (my !== SPK) return; await playOne(k, el, my, o.vol); } }
+function spkBtn(pairsFn, o){ const b = document.createElement("button"); b.className = "rs"; b.innerHTML = SPK_SVG; b.setAttribute("aria-label", "听"); b.onclick = e => { e.stopPropagation(); blip(); speakSeq(pairsFn(), o); }; return b; }
+
+/* ── 小互动：每点一下都有回应 ── */
+let AC = null;
+function blip(f){ try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f || 660; o.type = "sine"; g.gain.setValueAtTime(.06, AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + .14); o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + .15); } catch(e){} }
+function squish(el){ el.classList.remove("squish"); void el.offsetWidth; el.classList.add("squish"); }
+function floatNote(el, ch){ if (!el) return; const r = el.getBoundingClientRect(), p = ph.getBoundingClientRect(); const n = document.createElement("span"); n.className = "floatnote"; n.textContent = ch || "♪"; n.style.left = (r.left - p.left + r.width / 2 - 6) + "px"; n.style.top = (r.top - p.top - 6) + "px"; ph.appendChild(n); setTimeout(() => n.remove(), 1000); }
+function bob(){ const f = $("#hdface"); f.classList.remove("bob"); void f.offsetWidth; f.classList.add("bob"); }
+function toast(t){ const d = document.createElement("div"); d.className = "toast"; d.textContent = t; ph.appendChild(d); setTimeout(() => d.remove(), 2200); }
+function confetti(){ const fx = document.createElement("div"); fx.className = "fx"; const C = ["#e2552f", "#f2c14e", "#2f6fb0", "#2e9a5b"]; for (let i = 0; i < 42; i++){ const p = document.createElement("i"); p.style.left = Math.random() * 100 + "%"; p.style.background = C[i % 4]; p.style.animationDelay = Math.random() * .6 + "s"; p.style.transform = "rotate(" + (Math.random() * 90) + "deg)"; fx.appendChild(p); } ph.appendChild(fx); setTimeout(() => fx.remove(), 3400); }
+
+/* ── 聊天 ── */
+function scrollDown(){ requestAnimationFrame(() => { body.scrollTop = body.scrollHeight; }); }
+function put(el){ if (!body.querySelector(".first") && !body.classList.contains("hello")) el.classList.add("first"); body.appendChild(el); scrollDown(); return el; }
+function fadeOld(){ body.querySelectorAll(":scope > *:not(.old)").forEach(e => e.classList.add("old")); }
+async function typingDots(who){ const r = document.createElement("div"); r.className = "row " + (who === "jh" ? "jh" : "vy");
+  r.innerHTML = (who === "jh" ? `<img class="face" src="${JH}" alt="">` : `<span class="vyface sm">V</span>`) + `<div class="b typing"><i></i><i></i><i></i></div>`; put(r); await sleep(650); r.remove(); }
+// 一个气泡：几段英文（每段一段声音）+ 一行中文小字
+async function bubble(who, keys, o){ o = o || {}; if (!o.noDots) await typingDots(who);
+  const r = document.createElement("div"); r.className = "row " + who;
+  const head = who === "jh" ? `<img class="face" src="${JH}" alt="">` : `<span class="vyface sm">V</span>`;
+  r.innerHTML = head + `<div class="b">${keys.map(k => `<span class="en" data-k="${k}">${esc(en(k))}</span>`).join(" ")}<span class="zh-s">${esc(keys.map(zh).join(""))}</span></div>`;
+  const pairs = () => [...r.querySelectorAll("[data-k]")].map(s => [s.dataset.k, s]);
+  r.appendChild(spkBtn(pairs)); put(r); if (who === "vy") bob();
+  if (autoRead) await speakSeq(pairs()); else await sleep(500 + keys.reduce((a, k) => a + en(k).length * 25, 0));
+  return r; }
+// Voyo 帮你的话：只用中文
+async function helper(text){ await typingDots("vy"); const r = document.createElement("div"); r.className = "row vy"; r.innerHTML = `<span class="vyface sm">V</span><div class="b helper">${text}</div>`; put(r); bob(); await sleep(450); return r; }
+// 小声递一句：新的出来，上一个收掉
+function whisper(key, zhNote, o){ o = o || {};
+  body.querySelectorAll(".whisper").forEach(x => x.remove());
+  const w = document.createElement("div"); w.className = "whisper";
+  w.innerHTML = `<span class="vyface sm">V</span><span class="wt">${esc(zhNote || "小声：")}${key ? `<span class="en" data-k="${key}">${esc(en(key))}</span>` : ""}${o.wz ? `<span class="wz">${esc(o.wz)}</span>` : ""}</span>`;
+  const wire = (k, s, host) => { s.title = "点一下放进输入框"; s.onclick = () => { blip(); inp.value = en(k); syncSend(); inp.focus(); }; host.appendChild(spkBtn(() => [[k, s]], {vol: .7})); };
+  if (key) wire(key, w.querySelector(".en"), w);
+  if (o.alt){ const a = document.createElement("div"); a.className = "alt"; a.innerHTML = `${esc(o.altNote || "")}<span class="en" data-k="${o.alt}">${esc(en(o.alt))}</span>`; w.querySelector(".wt").appendChild(a); wire(o.alt, a.querySelector(".en"), a); }
+  put(w); if (key && autoRead) speakSeq([[key, w.querySelector(".en")]], {vol: .7}); return w; }
+function meBubble(html){ const r = document.createElement("div"); r.className = "row me"; r.innerHTML = `<div class="b">${html}</div>`; put(r); return r; }
+const meText = t => meBubble(hasZh(t) ? esc(t) : `<span class="en">${esc(t)}</span>`);
+
+/* ── 等你回话；久不说就小声递；你一有动作，倒数重来 ── */
+let ECHO_T = null, WAIT = null, STUCK_T = null, STUCK_MS = 13000, QUEUED = [];
+function armStuck(){ clearTimeout(STUCK_T); if (WAIT && WAIT.onStuck) STUCK_T = setTimeout(() => { if (WAIT && WAIT.onStuck){ const f = WAIT.onStuck; WAIT.onStuck = null; f(); } }, STUCK_MS); }
+function expect(onReply, onStuck, ms){ WAIT = {onReply, onStuck, tries: 0}; STUCK_MS = ms || 13000; clearTimeout(STUCK_T);
+  if (QUEUED.length){ const q = QUEUED.shift(); setTimeout(() => userSend(q.t, q.m), 0); return; }
+  armStuck(); }
+function poke(){ if (WAIT) armStuck(); else clearTimeout(STUCK_T); }
+const isStuck = t => /^(不会|不知道|不懂|忘了|不会说|help|idk|i don'?t know|\?+|？+|嗯+|呃+|uh+|um+|hmm+|啊+)[。.!！]*$/i.test(t.trim()) || t.trim().length < 2;
+const hasZh = t => /[一-鿿]/.test(t);
+let LATE = null;   /* 递过、等过时的那句英文 */
+function userSend(text, viaMic){ text = String(text || "").trim(); if (!text) return; blip(520); inp.value = ""; syncSend(); clearTimeout(STUCK_T);
+  if (LATE){ const k = LATE; LATE = null; if (!hasZh(text) && compare(en(k), text).ratio >= .75){ const r = meText(text); floatNote(r.querySelector(".b"), "♪"); return; } }
+  if (!WAIT){ QUEUED.push({t: text, m: viaMic}); return; }   /* 还在说话时你就回了：等这一段说完马上接 */
+  const w = WAIT; WAIT = null; w.onReply(text, viaMic, w); }
+
+/* ── 跟着说：对一对词，说到的就算，没说到的变淡，不打叉 ── */
+const NUMW = {"4": "four", "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "nine"};
+function normW(t){ return t.toLowerCase().replace(/[’']/g, "'").replace(/\bi'm\b/g, "i am").replace(/\bdidn't\b/g, "did not").replace(/[^a-z0-9' ]/g, " ").split(/\s+/).filter(Boolean).map(w => NUMW[w] || w); }
+function compare(target, said){ const T = target.split(/\s+/), S = new Set(normW(said)); let hit = 0;
+  const out = T.map(tok => { const ws = normW(tok); const ok = ws.every(w => S.has(w)); if (ok) hit++; return ok ? esc(tok) : `<span class="miss">${esc(tok)}</span>`; });
+  return {ratio: hit / T.length, html: out.join(" ")}; }
+function sayCheck(target, text, last){ const c = compare(target, text);
+  if (c.ratio >= .75){ const r = meBubble(`<span class="en">${esc(text)}</span><span class="ok">✓</span>`); floatNote(r.querySelector(".ok"), "✓"); blip(880); return true; }
+  meBubble(`<span class="en">${c.html}</span>` + (last ? "" : `<span class="retry">淡的那几个词，再说一遍</span>`)); return false; }
+
+/* ── 状态 ── */
+let S;
+const BAD_W = ["tired", "exhausted", "sleepy"], GOOD_W = ["rested", "energy", "awake"];
+const GOOD_LEAD = {awake: "I'm", energy: "I'm", rested: "I feel"};
+const ADJ_EN = {tired: "tired", exhausted: "exhausted", sleepy: "sleepy", rested: "well rested", energy: "full of energy", awake: "wide awake"};
+function setStep(n){ document.querySelectorAll("#steps li").forEach(li => { const s = +li.dataset.s; li.classList.toggle("on", s === n); li.classList.toggle("done", s < n); }); }
+function reset(){ LATE = null; hush(); clearTimeout(STUCK_T); clearTimeout(ECHO_T); WAIT = null; QUEUED = []; S = {branch: null, kept: [], spoken: [], words: [], adj: null, n: null, saidKey: "", path: "other", act: null};
+  body.innerHTML = ""; body.className = "body hello"; $("#hdsub").textContent = "刚从南极醒来"; setLang("en-US"); setStep(0);
+  const f = document.createElement("span"); f.className = "vyface big hello-face"; f.textContent = "V"; body.appendChild(f);
+  const go = document.createElement("button"); go.className = "wake"; go.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 9v6h4l5 4V5L8 9z" fill="#fff"/><path d="M16 8a5 5 0 0 1 0 8" stroke="#fff" stroke-width="2" fill="none"/></svg>点一下，听 Voyo 说`;
+  go.onclick = () => { blip(); go.remove(); start(); }; body.appendChild(go); }
+
+async function start(){
+  await bubble("vy", ["v_hello1", "v_hello2"], {noDots: true});
+  expect(onHow, () => { setLang("zh-CN"); whisper(null, "说不出来就用中文回，比如「不太好」或「挺好的」。麦克风现在听中文。"); }, 11000);
+}
+function leaveHello(){ if (!body.classList.contains("hello")) return; body.classList.remove("hello"); const f = body.querySelector(".hello-face"); if (f) f.remove(); const first = body.firstElementChild; if (first) first.classList.add("first"); }
+
+// ① 你睡得怎么样 → 分叉
+async function onHow(text){
+  leaveHello();
+  meText(text);
+  if (isStuck(text)){ setLang("zh-CN"); whisper(null, "没关系，用中文说一个字就行：睡得「好」还是「不好」？麦克风现在听中文。"); expect(onHow); return; }
+  const t = text.toLowerCase();
+  const bad = /不|没|累|困|差|失眠|一般|凑合|熬夜|bad|not|tired|exhaust|sleepy|couldn|can't|cannot|didn't|terrible|awful|so-so|meh|poor|late/.test(t) && !/not bad|不错|挺好|很好|还好|还行/.test(t);
+  const good = /好|香|不错|well|good|great|fine|ok|okay|baby|rested|amazing|nice|not bad|还行/.test(t);
+  if (!bad && !good){ whisper(null, "睡得「好」还是「不好」？说一个字也行。"); expect(onHow); return; }
+  S.branch = bad ? "bad" : "good"; floatNote(body.lastElementChild.querySelector(".b"), "♪");
+  body.querySelectorAll(".whisper").forEach(x => x.remove());
+  await bubble("vy", [bad ? "v_ok_bad" : "v_ok_good"]);
+  words();
+}
+
+// ② 几个词
+async function words(){
+  setStep(1); fadeOld(); setLang("en-US");
+  const bad = S.branch === "bad";
+  S.words = bad ? BAD_W : GOOD_W;
+  await helper(bad ? "说累，这几个用得上。" : "说睡得好，这几个用得上。");
+  const c = document.createElement("div"); c.className = "card";
+  c.innerHTML = `<div class="chips">${S.words.map(w => `<div class="chip" data-w="${w}"><span class="w"><span class="wt" data-k="w_${w}">${esc(en("w_" + w))}</span><small>${esc(zh("w_" + w))}</small></span><button class="keep" aria-label="收下">${KEEP_SVG}</button></div>`).join("")}</div>
+    <div class="next"><span class="small">点书签收下一个</span><button class="btn">接着来 →</button></div>`;
+  c.querySelectorAll(".chip").forEach(ch => { const t = ch.querySelector(".wt"); ch.querySelector(".w").after(spkBtn(() => [[t.dataset.k, t]])); });
+  put(c);
+  let moved = false;
+  const go = () => { if (moved) return; moved = true; c.querySelector(".next").remove(); WAIT = null; clearTimeout(STUCK_T); frame(); };
+  c.querySelectorAll(".keep").forEach(b => b.onclick = async () => { const ch = b.closest(".chip"), w = ch.dataset.w; squish(b); blip(760);
+    if (ch.classList.contains("kept")){ ch.classList.remove("kept"); S.kept = S.kept.filter(x => x !== w); return; }
+    ch.classList.add("kept"); S.kept.push(w); floatNote(b, "♪"); const p = document.createElement("span"); p.className = "pop"; p.textContent = "收好了"; ch.appendChild(p); setTimeout(() => p.remove(), 1400);
+    if (S.kept.length === 1 && !moved){ await bubble("vy", ["v_keep_" + w]); await sleep(500); go(); } });
+  c.querySelector(".next .btn").onclick = e => { squish(e.target); blip(); go(); };
+  // 打字回也行：回了就往下
+  expect(async (text) => { meText(text); const hit = S.words.find(w => text.toLowerCase().includes(ADJ_EN[w])); if (hit && !S.kept.includes(hit)) S.kept.push(hit); go(); },
+    () => whisper(null, "点一个书签收下，或者直接点「接着来」。"), 14000);
+  if (autoRead) speakSeq([...c.querySelectorAll(".wt")].map(t => [t.dataset.k, t]));
+}
+
+// ③ 一句的说法：空里先放你刚收的词
+async function frame(){
+  setStep(2); fadeOld(); setLang("en-US");
+  const bad = S.branch === "bad";
+  const A = S.words, N = bad ? ["four", "five", "six"] : ["seven", "eight", "nine"];
+  S.adj = S.kept[0] || A[0]; S.n = N[1];
+  await helper("换成你的，说一遍。");
+  const c = document.createElement("div"); c.className = "card";
+  const key = () => `fr_${S.adj}_${S.n}`;
+  const draw = () => { const tx = c.querySelector(".tx"); tx.dataset.k = key();
+    tx.innerHTML = bad ? `I'm so <span class="slot">${ADJ_EN[S.adj]}</span> today.<br>I only slept <span class="slot">${S.n}</span> hours.` : `${GOOD_LEAD[S.adj]} <span class="slot">${ADJ_EN[S.adj]}</span> today.<br>I slept <span class="slot">${S.n}</span> hours.`;
+    c.querySelector(".patzh").textContent = zh(key());
+    c.querySelectorAll(".opt").forEach(o => o.classList.toggle("on", o.dataset.v === S.adj || o.dataset.v === S.n)); };
+  c.innerHTML = `<div class="pat"><span class="tx en"></span></div><div class="patzh"></div>
+    <div class="opts">${A.map(a => `<button class="opt" data-t="a" data-v="${a}">${ADJ_EN[a]}</button>`).join("")}<span class="br"></span>${N.map(n => `<button class="opt" data-t="n" data-v="${n}">${n}</button>`).join("")}</div>`;
+  const tx = c.querySelector(".tx"); c.querySelector(".pat").appendChild(spkBtn(() => [[tx.dataset.k, tx]]));
+  c.querySelectorAll(".opt").forEach(o => o.onclick = () => { squish(o); blip(700); if (o.dataset.t === "a") S.adj = o.dataset.v; else S.n = o.dataset.v; draw(); speakSeq([[key(), tx]]); });
+  draw(); put(c);
+  // 你实际说的：从说的话里认出形容词和数字（没认出来就用卡上选的）
+  const heard = text => { const ws = " " + normW(text).join(" ") + " ";
+    const a = A.find(x => ws.includes(" " + ADJ_EN[x] + " ")) || S.adj, n = N.find(x => ws.includes(" " + x + " ")) || S.n; return [a, n]; };
+  let tries = 0;
+  const ask = () => expect(async (text) => {
+      if (hasZh(text) || isStuck(text)){ meText(text); whisper(key(), "照着说就行："); ask(); return; }
+      const [a, n] = heard(text); if (a !== S.adj || n !== S.n){ S.adj = a; S.n = n; draw(); }
+      const ok = sayCheck(en(key()), text, tries >= 1);
+      if (!ok && tries < 1){ tries++; ask(); return; }
+      S.saidKey = key(); S.saidOK = ok; if (ok) S.spoken.push(S.adj);
+      c.querySelectorAll(".opt").forEach(o => o.disabled = true); body.querySelectorAll(".whisper").forEach(x => x.remove());
+      await bubble("vy", [ok ? "v_said" : "v_almost"]); question(); },
+    () => whisper(key(), "点麦克风，照着说一遍："), 14000);
+  ask();
+  if (autoRead) speakSeq([[key(), tx]]);
+}
+
+// ④ 一句问别人的话
+async function question(){
+  setStep(3); fadeOld(); setLang("en-US");
+  await bubble("vy", ["v_turn"]);
+  const c = document.createElement("div"); c.className = "card";
+  c.innerHTML = `<div class="q"><span class="en" data-k="q_how">${esc(en("q_how"))}</span></div><div class="qzh">你睡得怎么样？早上问家人、室友都行。</div>`;
+  const q = c.querySelector("[data-k]"); c.querySelector(".q").appendChild(spkBtn(() => [["q_how", q]])); put(c);
+  let tries = 0;
+  const ask = () => expect(async (text) => {
+      if (hasZh(text) || isStuck(text)){ meText(text); whisper("q_how", "照着问："); ask(); return; }
+      const ok = sayCheck(en("q_how"), text, tries >= 1);
+      if (!ok && tries < 1){ tries++; ask(); return; }
+      body.querySelectorAll(".whisper").forEach(x => x.remove());
+      await bubble("vy", ["v_answer"]); await sleep(300); jihoon(); },
+    () => whisper("q_how", "照着问它："), 13000);
+  ask();
+  if (autoRead) speakSeq([["q_how", q]]);
+}
+
+// ⑤ 请来一个人：Park Ji-hoon（写好的分支对话）
+const asksBack = t => /how.*(sleep|you)|and you|you\?|what about you|how about you/i.test(t);
+async function jihoon(){
+  setStep(4); fadeOld(); setLang("en-US");
+  await bubble("vy", ["v_call"]);
+  const j = document.createElement("div"); j.className = "join";
+  j.innerHTML = `<img src="${JH}" alt="Park Ji-hoon"><span><b>Park Ji-hoon</b> 来了 · 首尔 · 睡眠科学家<br><span style="color:#8a7f6a">在收集各地人睡前做的最后一件事</span></span>`;
+  put(j); blip(990); $("#hdsub").textContent = "· Ji-hoon 在"; await sleep(700);
+  await bubble("jh", ["j_n_" + S.n]);
+  await bubble("jh", ["j_last"], {noDots: true});
+  // 卡住了：麦克风换成听中文，想说什么先用中文说
+  const stuckZh = () => { setLang("zh-CN"); whisper(null, "想说什么，先用中文说也行，Voyo 教你英语怎么说。麦克风现在听中文。"); };
+  // 递了英文以后：先等你照着说一遍，等不到就过几秒接着聊
+  // 只能往下走一次：你说了，或者 12 秒没动静；一按麦克风、一打字就停止计时
+  const echo = (k, next) => { setLang("en-US"); whisper(k, "英语这么说："); let went = false;
+    const once = () => { if (went) return; went = true; clearTimeout(ECHO_T); ECHO_T = null; next(); };
+    expect(async (text) => { meText(text); if (!hasZh(text)) floatNote(body.lastElementChild.querySelector(".b"), "♪"); once(); }, null);
+    clearTimeout(ECHO_T); ECHO_T = setTimeout(() => { if (went) return; WAIT = null; LATE = k; once(); }, 12000); };
+  const reply1 = async (kind, keepWhisper) => {
+      setLang("en-US"); if (!keepWhisper) body.querySelectorAll(".whisper").forEach(x => x.remove());
+      S.path = kind === "phone" ? "phone" : "other";
+      await bubble("jh", ["j_" + kind]);
+      await sleep(250); whisper("q_how", "把球传回去，问问他："); a2(0); };
+  const kindOf = t => /\bphones?\b|\bscroll(ing)?\b|\btiktok\b|\binstagram\b|\bvideos?\b|\byoutube\b|手机|刷手机|刷视频|刷抖音|视频|抖音|小红书/.test(t) ? "phone" : /刷牙|\bbrush(ing)? my teeth\b/.test(t) ? "teeth" : /\bread(ing)?\b|\bbooks?\b|\bkindle\b|书/.test(t) ? "book" : /\bshower\b|\bbath\b|洗澡|泡澡/.test(t) ? "shower" : /\bmilk\b|牛奶/.test(t) ? "milk" : /\btea\b|茶/.test(t) ? "tea" : "";
+  let zhTries = 0;
+  // 判断不出来的中文：递一个能填的架子，用你自己的话填
+  const frameWhisper = () => { body.querySelectorAll(".whisper").forEach(x => x.remove()); const w = document.createElement("div"); w.className = "whisper";
+    w.innerHTML = `<span class="vyface sm">V</span><span class="wt">小声：<span class="en frame">I ___ .</span><span class="wz">用你的话填，说不出就说中文也行</span></span>`; put(w); };
+  const a1 = () => expect(async (text) => {
+      const k = kindOf(text.toLowerCase());
+      if (isStuck(text)){ meText(text); stuckZh(); a1(); return; }
+      if (hasZh(text)){ meText(text);
+        if (k){ echo("wh_" + k, () => reply1(k)); return; }
+        if (zhTries++ < 1){ setLang("zh-CN"); frameWhisper(); a1(); return; }
+        body.querySelectorAll(".whisper").forEach(x => x.remove()); { const r = document.createElement("div"); r.className = "row vy"; r.innerHTML = `<span class="vyface sm">V</span><div class="b helper told">小声：Voyo 帮你告诉他了。</div>`; put(r); bob(); } await sleep(1200);
+        reply1("other", true); return; }
+      meText(text); floatNote(body.lastElementChild.querySelector(".b"), "♪");
+      reply1(k || "other"); },
+    () => stuckZh(), 12000);
+  // 问回去了才说自己；没问就再递一次
+  const a2 = (n) => { setLang("en-US"); expect(async (text) => {
+      if (hasZh(text) || isStuck(text)){ meText(text); setLang("en-US"); whisper("q_how", "照着问他："); a2(n); return; }
+      const back = asksBack(text);
+      meBubble(`<span class="en">${esc(text)}</span>` + (back ? '<span class="ok">✓</span>' : ""));
+      if (!back && n < 1){ await sleep(400); whisper("q_how", "再问问他，他也想说说："); a2(n + 1); return; }
+      body.querySelectorAll(".whisper").forEach(x => x.remove());
+      if (back) await bubble("jh", ["j_mine"]);
+      await bubble("jh", ["j_weekend"], {noDots: back});
+      a3(); },
+    () => { const w = body.querySelector(".whisper .en"); if (w) speakSeq([[w.dataset.k, w]], {vol: .7}); }, 12000); };
+  const a3 = () => expect(async (text) => {
+      const t = text.toLowerCase();
+      const no = /\b(no|nope|never|not|don'?t|rarely)\b|不|没/.test(t), yes = /\b(yes|yeah|yep|sure|always|sometimes|of course|sleep in|i do)\b|会|是|睡|嗯/.test(t);
+      if (isStuck(text) || (!no && !yes)){ meText(text); setLang("en-US"); whisper("wh_weekend", "小声：", {alt: "wh_no", altNote: "不睡懒觉："}); a3(); return; }
+      meText(text);
+      const after = async () => { body.querySelectorAll(".whisper").forEach(x => x.remove()); await bubble("jh", [no ? "j_no" : "j_yes"]); await sleep(300); await bubble("jh", ["j_bye"]); whisper("wh_bye", "跟他说："); a4(); };
+      if (hasZh(text)) echo(no ? "wh_no" : "wh_weekend", after); else after(); },
+    () => whisper("wh_weekend", "小声：", {alt: "wh_no", altNote: "不睡懒觉："}), 12000);
+  let gone = false;
+  const leave = async () => { if (gone) return; gone = true; WAIT = null; clearTimeout(STUCK_T); body.querySelectorAll(".whisper").forEach(x => x.remove());
+    const l = document.createElement("div"); l.className = "leave"; l.textContent = "Ji-hoon 回实验室了"; put(l); $("#hdsub").textContent = "刚从南极醒来"; await sleep(800); activity(); };
+  const a4 = () => expect(async (text) => { meText(text); floatNote(body.lastElementChild.querySelector(".b"), "♪"); await sleep(500); leave(); }, () => leave(), 12000);
+  a1();
+}
+
+// ⑥ 一个活动（可以不点）
+const ACT = {phone: "睡前半小时，不看手机", other: "两周睡眠小记录：你是早睡型还是晚睡型"};
+async function activity(){
+  setStep(5); fadeOld();
+  const phone = S.path === "phone";
+  await bubble("vy", phone ? ["v_act_phone1", "v_act_phone2"] : ["v_act_lab"]);
+  const c = document.createElement("div"); c.className = "act";
+  c.innerHTML = phone
+    ? `<div class="pic"><span class="moon"></span><span class="phone"></span></div><div class="tx"><h4>睡前半小时，不看手机</h4><p>这一周每晚睡前放下手机半小时，第二天早上用英语说一句睡得怎么样。</p><div class="bt"><button class="y">我也试试</button><button class="n2">先不用</button></div></div>`
+    : `<div class="pic" style="background-image:linear-gradient(180deg,rgba(20,48,92,.05),rgba(20,48,92,.55)),url(${JH_LAB});background-position:center 17%"><span class="host">Park Ji-hoon 办 · 14 天</span></div><div class="tx"><h4>你天生是早睡型还是晚睡型？</h4><p>两周里每天早上 30 秒：几点睡、几点醒、今天精神怎么样。最后拿到你自己的作息曲线。</p><div class="bt"><button class="y">我也试试</button><button class="n2">先不用</button></div></div>`;
+  put(c);
+  let done = false;
+  const pick = async (join, btn) => { if (done) return; done = true; WAIT = null; clearTimeout(STUCK_T); squish(btn); blip(join ? 880 : 520); c.querySelectorAll("button").forEach(b => b.disabled = true); S.act = join ? ACT[S.path] : null;
+    if (join){ const s = document.createElement("div"); s.className = "joined"; s.innerHTML = "JOINED<br>✦"; c.appendChild(s); }
+    await bubble("vy", [join ? "v_join" : "v_skip"]); await sleep(300); summary(); };
+  c.querySelector(".y").onclick = e => pick(true, e.target);
+  c.querySelector(".n2").onclick = e => pick(false, e.target);
+  expect(async (text) => { const t = text.toLowerCase(); meText(text); const y = /yes|sure|ok|join|好|试|行|可以/.test(t) && !/不|no/.test(t); pick(y, c.querySelector(y ? ".y" : ".n2")); }, null);
+}
+
+// ⑦ 今天的一页：只写你真说过、真收下的
+async function summary(){
+  setStep(6); fadeOld();
+  await bubble("vy", ["v_end"]);
+  const bad = S.branch === "bad", d = new Date();
+  const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"], MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  const can = S.words.filter(w => S.kept.includes(w) || S.spoken.includes(w)), heardW = S.words.filter(w => !can.includes(w));
+  const chip = w => `<span class="w${S.kept.includes(w) ? " kept" : ""}"><span data-k="w_${w}">${esc(en("w_" + w))}</span></span>`;
+  const c = document.createElement("div"); c.className = "sum";
+  const ok = S.saidOK, said = `<p class="said"><span class="en" data-k="${S.saidKey}">“${esc(en(S.saidKey))}”</span></p>`;
+  const pattern = bad ? "I'm so ___ today. I only slept ___ hours." : "I'm ___ today. I slept ___ hours.";
+  c.innerHTML = (ok ? `<div class="stamp">${d.getMonth() + 1}·${d.getDate()}<br>SAID<br>IT</div>` : "") + `
+    <div class="dt">${DOW[d.getDay()]} · ${d.getDate()} ${MON[d.getMonth()]}</div>
+    <h4>${ok ? (bad ? "累，但说出来了" : "睡得好，也说出来了") : (bad ? "累，但聊起来了" : "睡得好，也聊起来了")}</h4>
+    ${ok ? said : `<div class="again"><span class="k">明天再说一遍</span>${said}</div>`}
+    ${can.length ? `<div class="ln"><span class="k">会说的词</span><span class="v">${can.map(chip).join("")}</span></div>` : ""}
+    ${heardW.length ? `<div class="ln"><span class="k">听过的</span><span class="v">${heardW.map(chip).join("")}</span></div>` : ""}
+    <div class="ln"><span class="k">学会的说法</span><span class="v"><span class="en">${esc(pattern)}</span></span></div>
+    <div class="ln"><span class="k">问别人</span><span class="v vq"><span class="en" data-k="q_how">How did you sleep?</span></span></div>
+    <div class="ln"><span class="k">聊过的人</span><span class="v" style="display:flex;align-items:center;gap:6px"><img class="face" style="width:22px;height:22px" src="${JH}" alt=""> Park Ji-hoon · 首尔的睡眠科学家</span></div>
+    ${S.act ? `<div class="ln"><span class="k">这周在做</span><span class="v">${esc(S.act)}</span></div>` : ""}
+    <p class="drawer-note">这些话收进了你的语言本，下次 Voyo 会再拿出来</p>`;
+  c.querySelectorAll(".w").forEach(w => { const t = w.querySelector("[data-k]"); w.appendChild(spkBtn(() => [[t.dataset.k, t]])); });
+  const sd = c.querySelector(".said [data-k]"); c.querySelector(".said").appendChild(spkBtn(() => [[sd.dataset.k, sd]]));
+  const qq = c.querySelector('.vq [data-k]'); qq.after(spkBtn(() => [["q_how", qq]]));
+  put(c); confetti(); blip(660); setTimeout(() => blip(990), 140); setTimeout(() => blip(1320), 280);
+  await sleep(1200);
+  const t = document.createElement("div"); t.className = "tease"; t.innerHTML = `<span class="who"></span><span>明天来的人，想知道你早饭吃了什么……</span>`; put(t);
+}
+
+/* ── 输入框、发送 ── */
+function syncSend(){ $("#send").classList.toggle("on", !!inp.value.trim()); mic.style.display = inp.value.trim() ? "none" : "grid"; $("#miclab").style.visibility = inp.value.trim() ? "hidden" : "visible"; }
+inp.addEventListener("input", () => { syncSend(); poke(); clearTimeout(ECHO_T); });
+inp.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing){ e.preventDefault(); userSend(inp.value); } });
+ph.addEventListener("pointerdown", poke, true);
+$("#send").onclick = () => { squish($("#send")); userSend(inp.value); };
+$("#auto").onclick = () => { autoRead = !autoRead; blip(); $("#auto").textContent = autoRead ? "自动读 · 开" : "自动读 · 关"; $("#auto").classList.toggle("off", !autoRead); if (!autoRead) hush(); };
+let REC_LANG = "en-US";
+function setLang(l){ const ch = REC_LANG !== l; REC_LANG = l; const b = $("#lang"); b.innerHTML = l === "en-US" ? "听<b>EN</b>" : "听<b>中</b>"; b.classList.toggle("zh", l !== "en-US"); if (ch){ b.classList.remove("flash"); void b.offsetWidth; b.classList.add("flash"); } }
+$("#lang").onclick = () => { blip(); setLang(REC_LANG === "en-US" ? "zh-CN" : "en-US"); toast(REC_LANG === "en-US" ? "麦克风听英语" : "麦克风听中文"); };
+$("#restart").onclick = () => { blip(); reset(); };
+
+/* ── 麦克风：点一下（说完自己停）或按住（松开就停）；边听边出字；说完马上给回应 ── */
+let rec = null, listening = false, t0 = 0, ignoreUp = false, finalT = "", interimT = "", capT = null;
+function micUI(on){ listening = on; mic.classList.toggle("rec", on); live.classList.toggle("on", on); $("#miclab").textContent = on ? "在听……说完会自己停" : "点一下或按住说"; if (on) live.innerHTML = '<span class="hint">在听……说完会自己停</span>'; }
+function micStart(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){ toast("这个浏览器听不了，打字也一样"); inp.focus(); return false; }
+  hush(); finalT = ""; interimT = "";
+  try { rec = new SR(); } catch(e){ toast("麦克风打不开，打字也一样"); return false; }
+  rec.lang = REC_LANG; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+  rec.onresult = e => { let f = "", it = ""; for (let i = 0; i < e.results.length; i++){ const r = e.results[i]; if (r.isFinal) f += r[0].transcript; else it += r[0].transcript; } finalT = f; interimT = it; live.textContent = (f + " " + it).trim() || "…"; };
+  rec.onerror = e => { if (e.error === "not-allowed" || e.error === "service-not-allowed") toast("没拿到麦克风权限，打字也一样"); };
+  rec.onend = () => { clearTimeout(capT); const txt = (finalT || interimT).trim(); micUI(false); rec = null; if (txt) userSend(txt, true); else toast("没听到，再说一次"); };
+  try { rec.start(); } catch(e){ toast("麦克风打不开，打字也一样"); return false; }
+  micUI(true); blip(600); capT = setTimeout(micStop, 12000); return true;
+}
+function micStop(){ if (rec) try { rec.stop(); } catch(e){} }
+mic.addEventListener("pointerdown", e => { e.preventDefault(); squish(mic); clearTimeout(ECHO_T);
+  if (listening){ ignoreUp = true; micStop(); return; }
+  ignoreUp = false; t0 = Date.now(); if (!micStart()) ignoreUp = true; });
+mic.addEventListener("pointerup", () => { if (ignoreUp) return; if (listening && Date.now() - t0 > 450) micStop(); });
+mic.addEventListener("pointerleave", () => { if (!ignoreUp && listening && Date.now() - t0 > 450) micStop(); });
+
+/* 时间 */
+(() => { const d = new Date(); $("#clock").textContent = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0"); })();
+reset();
+</script>
+</body>
+</html>
