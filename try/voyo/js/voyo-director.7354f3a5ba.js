@@ -50,7 +50,8 @@ const SERVICE = /^(do|can|could|should|may|will) i\b|do i need|next time\?|how w
 const PRESUME = /\byour\b|\byou still\b|你的|你家|你那[个位]/;
 /* 问题里指着前面说过的东西（「Where do you eat it?」「那儿」）：前面没递过那样东西，单独拿出来就接不上，不递 */
 // 靠前面的话撑着的问题（「你怎么去？」「How do you get there?」）也不单独递、不拿来开场
-const DEIXIS = {en: /\b(it|them)\b|\bthere\s*\?|\bthat one\b|^how do you get (there|here)\b|^what about you\b/i, zh: /它|那儿|那里|这个呢|那个呢|^你?怎么去[？?]?$|^去哪儿?[？?]?$|^你呢[？?]?$/};
+// 2026-11-20 用户真机：路过的人一开口就问「What do you do together?」，together 指什么没说过。together / that / they / those / 那个 / 他们 这类靠前文的词也算
+const DEIXIS = {en: /\b(it|them|they|those|that|together)\b|\bthere\s*\?|^how do you get (there|here)\b|^what about you\b/i, zh: /它|那儿|那里|这个呢|那个|他们|她们|^你?怎么去[？?]?$|^去哪儿?[？?]?$|^你呢[？?]?$/};
 const deictic = (L, o) => isQ(o) && (DEIXIS[L] || DEIXIS.en).test(o.t || "");
 
 /* ---------- 是不是母语、是不是乱打的（2026-11-20 检查员：不能只看有没有汉字） ---------- */
@@ -1010,7 +1011,8 @@ function nextPair(st, g){
   const pr = guestPairs(st, g.who).filter(p => !st.used.has(p.q.id) && !st.used.has(p.a.id) && !st.usedText.has(p.q.t) && !st.usedText.has(p.a.t) && !similarQ(st, p.q) && !answered(st, p.q) && !avoid(p.q) && !seen(p.a))
     .sort((a, b) => (seen(a.q) - seen(b.q)) || (b.q.tp === st.tp) - (a.q.tp === st.tp) || st.rand() - .5);
   // 只问现在这个话题的；这个话题的问答用完，客人就道别离开（不换到别的话题）
-  return pr.filter(p => p.q.tp === st.tp)[0] || null;
+  //   第一句（刚走过来）：只挑不靠前文的问题（Claude 在的话，网页会请它用这个人的口气先接上刚才聊的事，再问）
+  return pr.filter(p => p.q.tp === st.tp && (g.turn > 1 || !deictic(st.ctx.learn, p.q)))[0] || null;
 }
 /* 配好对的问答用完了：TA 说一句能单独成立的自己的话（不是半截回答、够长、在这座岛），然后走；没有就直接走 */
 function guestLast(st, g){
@@ -1815,6 +1817,7 @@ If mode is "reply":
 - If "said" asks the speaker something ("What about you?", "你呢？", a question to them), "reply" MUST answer that question first, honestly as the speaker and about the speaker's own life (Voyo is a small penguin living in Antarctica: ice, snow, counting penguins, fish; the sun never sets from November to January and it is dark all day in winter, so no southern lights in summer; a person answers from "about"). Then you may pass the question back. Never dodge it ("That's a whole story", "Good question").
 - "reply": ONE short line in ${tgN} (at most 15 words / 25 Chinese characters; up to 25 words / 40 Chinese characters when answering their question), in the speaker's own voice, that clearly answers the specific content of "said" — name the actual thing they mentioned (e.g. they eat out with colleagues → say something about eating out with colleagues). Never empty praise ("Great job", "Well done", "Good answer", "很好", "说得好"). If "may_ask" is true you may end with ONE small follow-up question about what they just said; if it is false, do not ask anything. Simple words for their level.
 - "fix": if "said" is in the learner's own language (not ${tgN}), "fix" is REQUIRED: the WHOLE sentence they said, in simple, everyday ${tgN} (keep their meaning, add no facts) — never just one word. Else if it has a clear mistake, a more natural way to say the same thing. Otherwise null. Never call anything wrong; no grammar terms.
+- Any ${tgN} sentence you give the learner to say ("fix", "missing", "hint"): write it the way people who speak ${tgN} every day would really say it (e.g. "I just finished working overtime", not "I just finished overtime"); never translate the learner's own language word for word.
 - "missing": if they clearly lacked one word (wrote it in their own language, or left a gap), that ${tgN} word; else null.
 - "junk": true only if "said" is random keys or nonsense; then reply gently says you didn't catch it, and fix, missing and pick are null.
 - "topic_ui": only if "need_topic_name" is true: the topic name written in learner.own_language; else null.
@@ -1825,6 +1828,7 @@ If mode is "reply":
 If mode is "hook": the app opens today's chat with "material". "ask" = ONE short line in ${tgN} said by "speaker": a few words reacting to the specific thing in the material, then ONE simple, friendly question about the learner's own life that it makes natural (a friend's post about eating dinner standing up → "Dinner standing up 😅 What did you have for dinner?"; a film festival opening today → "Seen any good movies lately?"). If material.kind is "return", the speaker is a friend coming back: remind them of what they told you last time ("last_time.they_said", in your own words) and ask how it is now ("You said you only slept five hours. Better this week?"). At most 20 words / 30 Chinese characters. No greeting, no quiz about the material, no facts beyond the material. Everything else null.
 If mode is "recall": "lines" = what the learner said in a chat today (some may be in their own language). Pick the ONE concrete thing from their own life a friend would ask about next time (a plan, a place they go, something that happened, how they feel). "fact" = that thing as one short first-person ${tgN} sentence, keeping their meaning (e.g. "I only slept five hours because I was on my phone."). "ask_next" = a short, friendly question to ask about it tomorrow (may say "yesterday" or "last night"); "ask_later" = the same question with no time words, for a few days later. If nothing concrete, all three are null. Everything else null.
 If mode is "translate": DATA "texts" is a list of short ${tgN} lines the app will show. "tr" = a list of the same length, in the same order: the plain meaning of each line written in learner.own_language (no notes, no quotes, keep emoji); everything else null.
+If mode is "guest": "speaker" just walked up and overheard the chat in "history". "reply" = ONE line in ${tgN}, in the speaker's own voice, the way a real person joins in: first pick up the specific thing the learner just said (e.g. "Sorry, couldn't help overhearing — you eat out with colleagues?"), then a few words about who the speaker is (from speaker.about), then end with the question in "asked" (same meaning; you may reword it so it fits what was said). Never refer to anything nobody has mentioned. At most 30 words / 45 Chinese characters; simple words for their level. Everything else null.
 If mode is "hint": the learner is stuck on "asked". "hint" = one short, simple first-person example answer in ${tgN} about ordinary life (at most 10 words / 14 Chinese characters) that they could say; everything else null.
 JSON: {"reply":{"t":"","py":"","g":""} or null,"fix":null,"missing":null,"junk":false,"topic_ui":null,"pick":null,"pick_ui":null,"hint":null,"tr":null,"topic":null,"ask":null,"fact":null,"ask_next":null,"ask_later":null,"care":false}`
 };
@@ -2375,24 +2379,53 @@ const soundOff = () => { try { return localStorage.getItem("hv.sound") === "off"
 //   没部署、没配钥匙、没登录、用完今天的额度、网不好，就退回手机朗读，这一次打开软件不再试。
 let NEURAL = null, CUR_AU = null; const VCACHE = new Map();
 const neuralOK = () => NEURAL !== false && !!(window.HV_CONFIG && HV_CONFIG.url && HV_CONFIG.anonKey && window.HV && HV.session && HV.session.access_token);
-async function neuralBlob(txt, l){ const k = l + "|" + txt; if (VCACHE.has(k)) return VCACHE.get(k);
+// 2026-11-20 用户真机：「声音都一样，太无聊了，要睡着了」。Claude 新写的句子没有录好的 mp3，以前都用 voyo-speech 一种语言一个声音念。
+//   现在按「谁在说」把那个人自己的声音传过去（content-skeleton/voices.json → gen_voice_of.py → window.VOICE_OF）；Voyo 有自己的声音（VOICE_OF.voyo），用 express-as 让语气有起伏。
+//   谁在说：这一段带的 data-sid → 消息里头像上的人（data-pid）→ 别人的气泡就是 Voyo；你自己的气泡不算谁。
+const vkOf = id => { const V = window.VOICE_OF || {}; return V[id] ? id : ((CAST()[id] || {}).vk || id); };
+const vsidOf = el => { if (!el || !el.closest) return ""; const s0 = el.closest("[data-sid]"); if (s0 && s0.dataset.sid) return s0.dataset.sid;
+  const m = el.closest(".vy-msg"); if (!m) return ""; const f = m.querySelector(".vd-vf[data-pid]"); if (f) return vkOf(f.dataset.pid);
+  return m.classList.contains("vy-me") ? "" : "voyo"; };
+// 这个人说这门语言用什么声音：说中文有单独配的用那个；声音本身不是这门语言、又不会多种语言，就不用（退回这门语言的默认声音）
+function voiceSpec(sid, l2, txt){ const V = window.VOICE_OF || {};
+  if (sid === "voyo"){ const r = (V.voyo || {})[l2]; if (!r) return null; const up = /[?？!！]\s*$/.test(txt || "");
+    return {voice: r[0], rate: r[2] || "", pitch: r[3] || "", style: l2 === "zh" ? "cheerful" : up ? "cheerful" : "friendly", degree: l2 === "zh" ? (up ? 1.3 : .8) : (up ? 1.2 : 1)}; }
+  const r = V[sid]; if (!r || !r[0]) return null; const x = l2 === "zh" && r[4] ? r[4] : r, vl = x[0].slice(0, 2), ml = /Multilingual|Dragon/.test(x[0]), tag = x[1] || "";
+  if (vl !== l2 && !ml) return null;
+  return {voice: x[0], xml_lang: vl !== l2 ? (tag.slice(0, 2) === l2 ? tag : l2 === "zh" ? "zh-CN" : "en-US") : "", rate: x[2] || "", pitch: x[3] || ""}; }
+// 念过的句子存在手机上（Cache API）：同一句、同一个声音不再请求
+const vfnv = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ("0000000" + h.toString(16)).slice(-8); };
+const VC_NAME = "hv-voice-v1", vcUrl = k => location.origin + "/__hv_voice/" + vfnv(k) + vfnv(k + "#") + ".mp3";
+async function vcGet(k){ try { if (!window.caches || !/^https?:/.test(location.protocol)) return null; const c = await caches.open(VC_NAME), r = await c.match(vcUrl(k)); return r ? await r.blob() : null; } catch(e){ return null; } }
+async function vcPut(k, b){ try { if (!window.caches || !/^https?:/.test(location.protocol)) return; const c = await caches.open(VC_NAME); await c.put(vcUrl(k), new Response(b, {headers: {"content-type": b.type || "audio/mpeg"}}));
+    if (Math.random() < .05){ const ks = await c.keys(); if (ks.length > 600) for (const q of ks.slice(0, ks.length - 500)) await c.delete(q); } } catch(e){} }
+const vKey = (txt, l2, sp) => [l2, sp ? [sp.voice, sp.xml_lang, sp.rate, sp.pitch, sp.style, sp.degree].join("/") : "", txt].join("|");
+async function vCached(txt, l2, sp){ const k = vKey(txt, l2, sp); if (VCACHE.has(k)) return VCACHE.get(k); const b = await vcGet(k); if (b && b.size){ VCACHE.set(k, b); return b; } return null; }
+async function neuralBlob(txt, l, sp){ const k = vKey(txt, l, sp); if (VCACHE.has(k)) return VCACHE.get(k);
   const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 8000);
-  try { const r = await fetch(HV_CONFIG.url.replace(/\/$/, "") + "/functions/v1/voyo-speech", {method: "POST", signal: ac.signal, headers: {authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey, "content-type": "application/json"}, body: JSON.stringify({text: txt.slice(0, 440), lang: l})});
-    if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio/")) throw 0; const b = await r.blob(); if (!b.size) throw 0; VCACHE.set(k, b); if (VCACHE.size > 60) VCACHE.delete(VCACHE.keys().next().value); NEURAL = true; return b; }
+  const go = x => fetch(HV_CONFIG.url.replace(/\/$/, "") + "/functions/v1/voyo-speech", {method: "POST", signal: ac.signal, headers: {authorization: "Bearer " + HV.session.access_token, apikey: HV_CONFIG.anonKey, "content-type": "application/json"}, body: JSON.stringify(Object.assign({text: txt.slice(0, 440), lang: l}, x || {}))});
+  try { let r = await go(sp);
+    // 云函数不认这个声音（还没部署新版、白名单里没有）：用这门语言的默认声音再要一次，不因为这个就整个不用
+    if (sp && r.status === 400) r = await go(null);
+    if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio/")) throw 0; const b = await r.blob(); if (!b.size) throw 0; VCACHE.set(k, b); if (VCACHE.size > 60) VCACHE.delete(VCACHE.keys().next().value); NEURAL = true; vcPut(k, b); return b; }
   catch(e){ NEURAL = false; return null; } finally { clearTimeout(tm); } }
 // 写好的句子有录好的声音（gen_voices.py，文件名 = FNV(说话的人|句子)，跟朋友页一样）：先放录音（2026-11-19，岛主的开场白）
 const recUrl = (sid, t) => { if (!sid || !window.VOICE_HAS) return ""; let h = 0x811c9dc5; const s = sid + "|" + t; for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } h = ("0000000" + h.toString(16)).slice(-8); return VOICE_HAS.has(h) ? "https://img.heyvoyo.com/voice/" + h + ".mp3" : ""; };
-function ttsLine(txt, l, rate, onStart, onEnd){ try { const u = new SpeechSynthesisUtterance(txt); u.lang = bcp2(l); u.rate = rate || .9; u.onstart = onStart; u.onend = onEnd; u.onerror = onEnd; speechSynthesis.speak(u); } catch(e){ onEnd(); } }
-async function playLine(txt, l, rate, onStart, onEnd, my, sid){ const l2 = String(l || "en").slice(0, 2);
+// 手机朗读（没登录、云函数不在）：也按说话的人换一点音高，Voyo 高一点，不至于全是同一个人
+const ttsPitch = sid => { if (sid === "voyo") return 1.3; if (!sid) return 1; let h = 0; for (const c of sid) h = (h * 31 + c.charCodeAt(0)) >>> 0; return [.8, .9, 1.05, 1.15][h % 4]; };
+function ttsLine(txt, l, rate, onStart, onEnd, sid){ try { const u = new SpeechSynthesisUtterance(txt); u.lang = bcp2(l); u.rate = rate || .9; u.pitch = ttsPitch(sid); u.onstart = onStart; u.onend = onEnd; u.onerror = onEnd; speechSynthesis.speak(u); } catch(e){ onEnd(); } }
+async function playLine(txt, l, rate, onStart, onEnd, my, sid){ const l2 = String(l || "en").slice(0, 2), tts = () => ttsLine(txt, l, rate, onStart, onEnd, sid);
   const pre = recUrl(sid, txt);
-  if (pre){ const a = new Audio(pre); CUR_AU = a; a.onplaying = onStart; a.onended = onEnd; a.onerror = () => ttsLine(txt, l, rate, onStart, onEnd); a.play().catch(() => ttsLine(txt, l, rate, onStart, onEnd)); return; }
-  if (neuralOK()){ const b = await neuralBlob(txt, l2); if (my !== SPK) return;
-    if (b){ const a = new Audio(URL.createObjectURL(b)); CUR_AU = a; a.playbackRate = rate && rate < .85 ? .9 : 1; a.onplaying = onStart; a.onended = () => { URL.revokeObjectURL(a.src); onEnd(); }; a.onerror = () => ttsLine(txt, l, rate, onStart, onEnd); a.play().catch(() => ttsLine(txt, l, rate, onStart, onEnd)); return; } }
-  ttsLine(txt, l, rate, onStart, onEnd); }
+  if (pre){ const a = new Audio(pre); CUR_AU = a; a.onplaying = onStart; a.onended = onEnd; a.onerror = tts; a.play().catch(tts); return; }
+  const sp = voiceSpec(sid, l2, txt);
+  let b = await vCached(txt, l2, sp); if (my !== SPK) return;
+  if (!b && neuralOK()){ b = await neuralBlob(txt, l2, sp); if (my !== SPK) return; }
+  if (b){ const a = new Audio(URL.createObjectURL(b)); CUR_AU = a; a.playbackRate = rate && rate < .85 ? .9 : 1; a.onplaying = onStart; a.onended = () => { URL.revokeObjectURL(a.src); onEnd(); }; a.onerror = tts; a.play().catch(tts); return; }
+  tts(); }
 function hushV(){ SPK++; try { speechSynthesis.cancel(); } catch(e){} if (CUR_AU){ try { CUR_AU.pause(); } catch(e){} CUR_AU = null; } try { A() && A().hush(); } catch(e){} if (VB) VB.querySelectorAll(".vy-hl").forEach(e => e.classList.remove("vy-hl")); }
 function speakSeq(list, done){ hushV(); const my = SPK; let i = 0;
   const next = () => { if (my !== SPK) return; if (i >= list.length){ if (done) done(); return; }
-    const it = list[i++], txt = strip(it.text).replace(/\s+/g, " ").trim(), l = it.l || KL() || "en"; if (!txt){ next(); return; } it.el.classList.add("vy-hl");
+    const it = list[i++], txt = strip(it.text).replace(/\s+/g, " ").trim(), l = it.l || KL() || "en"; if (!it.sid) it.sid = vsidOf(it.el); if (!txt){ next(); return; } it.el.classList.add("vy-hl");
     let fin = false, started = false; const end = () => { if (fin) return; fin = true; it.el.classList.remove("vy-hl"); if (my === SPK) setTimeout(next, 260); };
     const est = Math.max(1100, txt.length * (/^zh/.test(l) ? 260 : 70));
     const net = !soundOff() && neuralOK();
@@ -3412,13 +3445,13 @@ async function vdTrFetch(st){ vdTrLoad(); if (!vdAiOK()) return;
 const vdPic = id => { const vp = ((window.VDIR_DATA || {}).people || {})[id] || {}; if (vp.face) return "https://img.heyvoyo.com/npc/" + vp.face + ".webp";
   try { const i = window.PTAB_INFO && window.PTAB_INFO(id); if (i && i.img) return i.img; } catch(e){} try { const P0 = PP(id); if (P0) return faceUrl(P0); } catch(e){} return ""; };
 // 没头像：用名字的首字母（中文名用第一个字）做一个圆章，不放 🙂
-const vdPFace = id => { const u = vdPic(id); if (u) return `<span class="vd-vf" aria-hidden="true"><img src="${esc(u)}" alt=""></span>`;
+const vdPFace = id => { const u = vdPic(id); if (u) return `<span class="vd-vf" data-pid="${esc(id)}" aria-hidden="true"><img src="${esc(u)}" alt=""></span>`;
   const p = ((window.VDIR_DATA || {}).people || {})[id] || {};
   // 画的脸（npc_faces.json，d37_money.js 里的 NPC_FACES 和 npcFace）
   //   没写 npc_face 的，按编号最后一段去找（isle.minjun → minjun）
-  try { const fk = p.npc_face || String(id).split(".").pop().replace(/-/g, "_"); if (typeof NPC_FACES !== "undefined" && NPC_FACES[fk] && typeof npcFace === "function") return `<span class="vd-vf" aria-hidden="true">${npcFace(NPC_FACES[fk], 26)}</span>`; } catch(e){}
+  try { const fk = p.npc_face || String(id).split(".").pop().replace(/-/g, "_"); if (typeof NPC_FACES !== "undefined" && NPC_FACES[fk] && typeof npcFace === "function") return `<span class="vd-vf" data-pid="${esc(id)}" aria-hidden="true">${npcFace(NPC_FACES[fk], 26)}</span>`; } catch(e){}
   const n = String(p.pyn && KL() === "en" ? p.pyn : (p.nm || vdName(id) || "?")).replace(/^(Dr|Teacher|Auntie|Uncle|Master)\s+/, "").trim();
-  return `<span class="vd-vf vd-ini" aria-hidden="true">${esc([...n][0] || "?")}</span>`; };
+  return `<span class="vd-vf vd-ini" data-pid="${esc(id)}" aria-hidden="true">${esc([...n][0] || "?")}</span>`; };
 async function vdVoyo(x, o){ o = o || {}; if (!x || !x.t) return null;
   const m = await svy(`${vdFace()}${o.whisper ? `<span class="wl">${esc(T("Voyo 小声说", "Voyo, quietly"))}</span>` : ""}${vdSegX(x)}${o.extra || ""}`, o.wait == null ? 550 : o.wait);
   m.classList.add("vd-vo"); if (o.whisper) m.classList.add("vy-whisper");
@@ -3552,6 +3585,12 @@ async function vdStep(st, s){
       await vdVoyo(s.say); return {tap: 0}; }
     case "guest": case "deep": {
       if (s.say) await vdVoyo(s.say);
+      // 2026-11-20 用户真机：路过的人一开口就问「What do you do together?」，太突兀。刚走过来的第一句：有 Claude 就请它用这个人的口气，
+      //   先接上他刚才说的事、带一点自己是谁，再问导演挑的那个问题；没有 Claude，导演第一句只挑不靠前文的问题
+      if (s.turn === 1 && VDHIST.some(h => h[0] === "Learner")){ const q = VDIR.item(L, s.ids[0]) || {};
+        const ai = await vdAsk(st, s, {text: ""}, "guest", q.t || "", true);
+        if (ai){ const r0 = {text: "", free: true}; await vdShowAI(st, s, r0, ai);
+          return vdWait(ai.msg, {mic: true, autoStuck: 45000, chips: [VD_STUCK()], ph: TN("回 {n}，几个词也行", "Reply to {n} — a few words is fine", "\u2068" + vdName(s.who) + "\u2069")}); } }
       if (s.ai){ const o = VDIR.item(L, s.ids[0]) || {}; const m = await svy(`${vdPFace(s.who)}<span class="vd-who">${vdWho(s.who)}</span>${vdSeg(s.ids[0])}`, 600); m.classList.add("vd-pp", "vd-vo"); await speakWait([m.querySelector(".vy-seg")]);
         return vdWait(m, {mic: true, autoStuck: 45000, chips: [VD_STUCK()], ph: TN("回 {n}，几个词也行", "Reply to {n} — a few words is fine", "\u2068" + vdName(s.who) + "\u2069")}); }
       const m = await vdPerson(s.who, s.ids);
@@ -3665,9 +3704,9 @@ async function vdAsk(st, step, r, mode, asked0, mayAsk){
     candidates: C.map(c => ({id: c.id, kind: c.kind, text: String(c.text || "").slice(0, 160), mean: String(c.mean || "").slice(0, 120)}))};
   // 等的时候：说话的人在打字（三个点）；第一段字一到就换成字
   let tp = null, shown = false;
-  if (mode === "reply"){ tp = document.createElement("div"); tp.className = "vd-aim" + (who ? " vd-g" : ""); tp.innerHTML = `<div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; tp.dataset.who = who ? who.id : ""; node(tp); }
+  if (mode === "reply" || mode === "guest"){ tp = document.createElement("div"); tp.className = "vd-aim" + (who ? " vd-g" : ""); tp.innerHTML = `<div class="vy-msg vy-typing"><i></i><i></i><i></i></div>`; tp.dataset.who = who ? who.id : ""; node(tp); }
   // 两种都走流式（一次性取法在网站上不带 task）；示范回答不边写边出，只记下「字来了」
-  const onPart = t => { shown = true; if (mode !== "reply") return; const m = tp && tp.querySelector(".vy-msg"); if (!m) return; m.classList.remove("vy-typing"); m.innerHTML = `<span class="vy-tl" dir="auto">${esc(t)}</span>`; scrollChat(); };
+  const onPart = t => { shown = true; if (mode !== "reply" && mode !== "guest") return; const m = tp && tp.querySelector(".vy-msg"); if (!m) return; m.classList.remove("vy-typing"); m.innerHTML = `<span class="vy-tl" dir="auto">${esc(t)}</span>`; scrollChat(); };
   airAdd();
   const settle = ask([{role: "user", content: "DATA:\n" + JSON.stringify(data)}], "free", "reply", onPart).then(j => ({j}), e => ({e}));
   // 他反问说话的人时，Claude 要先答他的问题，回话长一点：多等一会儿（8 秒），不要退回规则版
@@ -3685,7 +3724,7 @@ async function vdAsk(st, step, r, mode, asked0, mayAsk){
   const tk = typeof j.topic === "string" ? j.topic.split(/\s*=\s*/)[0].trim() : "";
   const o = {reply: vdObj(j.reply), fix: vdObj(j.fix), missing: vdObj(j.missing), hint: vdObj(j.hint), junk: j.junk === true, topic: tps ? (tk && tps.some(x => x.startsWith(tk + " =")) ? tk : null) : undefined,
     pick: typeof j.pick === "string" && C.some(c => c.id === j.pick) ? j.pick : null, tp};
-  if (mode === "reply" && !o.reply) return out(null);
+  if ((mode === "reply" || mode === "guest") && !o.reply) return out(null);
   if (mode === "hint" && !o.hint) return out(null);
   return o; }
 const VD_ASKBACK = /[?？؟]|what about you|how about you|and you\b|你呢|你觉得呢|y tú|et toi|e você/i;
@@ -3842,10 +3881,14 @@ async function vdHookShow(st, h){
   if (h.k === "own"){ await vdVoyo(g(h.say), {wait: 300}); vdHist("Voyo", h.say.t); const m = await vdVoyo(h.ask); vdHist("Voyo", h.ask.t); return m; }
   return null; }
 // 开场：挑一个钩子、等他回；点「换一个」就收掉这个、换下一种
+// 现在显示的是第几个钩子存在手机上（今天、这门语言）：点过「换一个」再刷新，接着显示换过之后的那个，不回到第一个
+const VD_HK = "vy.hk";
 async function vdHookRun(st, s){ let i = 0, own = 0, miss = 0;
+  try { const o = JSON.parse(localStorage.getItem(VD_HK) || "null"); if (o && o.d === today() && o.l === KL()){ i = +o.i || 0; own = +o.own || 0; } } catch(e){}
   while (miss < VD_HOOKS.length * 2){
-    const k = VD_HOOKS[i % VD_HOOKS.length], h = await vdHookMake(st, k, own); i++;
+    const i0 = i, own0 = own, k = VD_HOOKS[i % VD_HOOKS.length], h = await vdHookMake(st, k, own); i++;
     if (!h){ miss++; continue; } miss = 0; if (k === "own") own++;
+    try { localStorage.setItem(VD_HK, JSON.stringify({d: today(), l: KL(), i: i0, own: own0})); } catch(e){}
     const b = vbBody(), n0 = b.children.length, m = await vdHookShow(st, h); if (!m) continue;
     s.ask = h.ask; VDIR.hookTopic(st, h.tp); VDPOST = null;
     const chips = (h.k === "back" && !h.ai ? h.ops.map((o, oi) => ({t: o.t, sub: vdMean(o) || o.g || "", py: KL() === "zh", r: () => ({text: o.t, tap: oi, chip: 1}), echo: `<span dir="auto">${esc(o.t)}</span>`})) : [])
