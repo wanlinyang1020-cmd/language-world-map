@@ -309,6 +309,8 @@ const HOWSAY = {en: ["How do you say this in English?", "这个用英文怎么�
  * 现在用规则：多长、是不是用母语说的、有没有卡住、说对没说对、是不是说「没有 / 不」、有没有说到别的话题。
  * 【AI】以后这一步交给 Claude（ai 云函数）：读懂自由回答——他想说什么、什么心情、缺哪个词、要不要换话题，
  *       返回同样的 sig 结构；拿不到（没网、没 🛟）就退回这里的规则。 */
+/* 他反问说话的人（What about you? / 你呢？ / 带问号）：有 Claude 时 Claude 用说话人的身份答；没有就老实说下次告诉你，不拿「这是一整个故事」这种话搪塞 */
+const ASKBACK = /[?？؟]|what about you|how about you|and you\b|你呢|你觉得呢|y tú|et toi|e você/i;
 function readReply(st, r){
   r = r || {};
   const t = (r.text || "").trim(), L = st.ctx.learn;
@@ -323,7 +325,7 @@ function readReply(st, r){
     long: r.long != null ? !!r.long : n >= 9,
     ok: r.ok == null ? null : !!r.ok,
     neg: /^(no\b|nope|not really|never|i don'?t|i haven'?t)/i.test(t) || /^(没有|不会|不太|不是|没)[。，,.!！]?$|^(没有|不)[，,。]/.test(t),
-    answered: !!r.answered, more: (r.more || []).map(x => String(x || "").trim()).filter(Boolean), keep: r.keep || [], pick: r.pick || null, fill: r.fill, tap: r.tap, join: r.join};
+    answered: !!r.answered, asksBack: !junk && !!t && ASKBACK.test(t) && !((st.steps[st.steps.length - 1] || {}).own), more: (r.more || []).map(x => String(x || "").trim()).filter(Boolean), keep: r.keep || [], pick: r.pick || null, fill: r.fill, tap: r.tap, join: r.join};
   if (r.pick || r.tap != null) sig.stuck = false;
   sig.shift = null;
   if (t && !sig.stuck && !native && !sig.prefer) sig.shift = shiftTopic(st, t);
@@ -590,6 +592,8 @@ function scoreKinds(st, sig){
     if (k === last) add(k, -8);
   }
   if (st.due.length && S.review > -50) add("review", 5, "有 " + st.due.length + " 样到期了");
+  // 刚答了他的反问：这一步不请人来（不换话头），接着聊这件事
+  if (st.calm){ ["guest", "deep", "topic"].forEach(k => add(k, -30, "刚答了他的反问，先不换人")); st.calm = false; }
   if (st.needAsk.length && !st.hasAsked) add("know_self", 2, "这个话题有一道好题要先知道你有没有");
   // 一次三分钟里必有的只有两样：一样语言的东西、一次跟人来往（快到时间才往前推）
   const famPick = ks => ks.filter(k => S[k] > -50 && !had(k)).sort((a, b) => S[b] - S[a])[0];
@@ -775,7 +779,7 @@ function xWord(st, t){ const L = st.ctx.learn, sh = shelf(L), tl = String(t || "
 const NOPE = /[?？]|same here|me too|我也是|我也/i;
 function reactLine(st, sig){
   const L = st.ctx.learn, t = sig.text || "", R = D().react, ui = st.ctx.ui; st.reactUsed = st.reactUsed || new Set();
-  if (sig.native) return null;
+  if (sig.native || sig.asksBack) return null;
   const k0 = sig.junk ? "junk" : sig.stuck ? "stuck" : sig.ok === false ? "almost" : sig.long ? "long" : "right";
   // 只有西、日、阿界面才另给意思（中文、英文界面的意思就是 g）
   const uOf = o => ["ar", "es", "ja"].includes(ui) ? o[ui] || (L === "zh" ? o.en : "") : "";
@@ -1048,6 +1052,8 @@ const VDIR = {
       if (step){ /* 收尾的送给世界 */ }
       else if (st.pendingAsk && sig.answered){ st.asked.push(st.pendingAsk); st.pendingAsk = null; }
       else if (st.pendingAsk) step = answerBack(st);
+      // 他反问了：Claude 答了，这一步就不换来路过的人；Claude 不在，又不是在跟请来的人聊（请来的人会说 TA 自己的回答），老实说下次告诉你
+      if (!step && sig.asksBack){ if (sig.answered) st.calm = true; else if (!st.guest) step = {kind: "answer", ids: [], say: tpl("later", st), why: ["他反问了「" + sig.text + "」，Claude 不在：老实说下次告诉你"]}; }
       if (step){ /* 上面已经定了 */ }
       else if (st.guest) step = guestNext(st, sig);
       // 用母语说了、Claude 给了在学的语言怎么说：先请他跟着说这一句；Claude 不在：老实说帮不上，给选项
@@ -1666,8 +1672,9 @@ const TASK = {
 DATA fields: "mode"; "said" = what the learner just typed or said (speech recognition may garble it); "asked" = the line they were answering; "speaker" = who answers them now (Voyo, or a person, with "about"); "topic"; "history" = the last few lines; "candidates" = things the app could show next (id, kind, text, mean).
 Every ${tgN} text you give is an object {"t": the ${tgN} text, "py": ${tgN === "Chinese (Mandarin)" ? "pinyin with tone marks" : "\"\""}, "g": its meaning written in learner.own_language — the app's interface language (Arabic, Spanish, Japanese, Chinese or English) — never in any other language}.
 If mode is "reply":
-- "reply": ONE short line in ${tgN} (at most 15 words / 25 Chinese characters), in the speaker's own voice, that clearly answers the specific content of "said" — name the actual thing they mentioned (e.g. they eat out with colleagues → say something about eating out with colleagues). Never empty praise ("Great job", "Well done", "Good answer", "很好", "说得好"). If "may_ask" is true you may end with ONE small follow-up question about what they just said; if it is false, do not ask anything. Simple words for their level.
-- "fix": if "said" is in the learner's own language (not ${tgN}), how they could say exactly that in simple, everyday ${tgN} (keep their meaning, add no facts). Else if it has a clear mistake, a more natural way to say the same thing. Otherwise null. Never call anything wrong; no grammar terms.
+- If "said" asks the speaker something ("What about you?", "你呢？", a question to them), "reply" MUST answer that question first, honestly as the speaker and about the speaker's own life (Voyo is a small penguin living in Antarctica: ice, snow, the southern lights, counting penguins, fish; a person answers from "about"). Then you may pass the question back. Never dodge it ("That's a whole story", "Good question").
+- "reply": ONE short line in ${tgN} (at most 15 words / 25 Chinese characters; up to 25 words / 40 Chinese characters when answering their question), in the speaker's own voice, that clearly answers the specific content of "said" — name the actual thing they mentioned (e.g. they eat out with colleagues → say something about eating out with colleagues). Never empty praise ("Great job", "Well done", "Good answer", "很好", "说得好"). If "may_ask" is true you may end with ONE small follow-up question about what they just said; if it is false, do not ask anything. Simple words for their level.
+- "fix": if "said" is in the learner's own language (not ${tgN}), "fix" is REQUIRED: the WHOLE sentence they said, in simple, everyday ${tgN} (keep their meaning, add no facts) — never just one word. Else if it has a clear mistake, a more natural way to say the same thing. Otherwise null. Never call anything wrong; no grammar terms.
 - "missing": if they clearly lacked one word (wrote it in their own language, or left a gap), that ${tgN} word; else null.
 - "junk": true only if "said" is random keys or nonsense; then reply gently says you didn't catch it, and fix, missing and pick are null.
 - "topic_ui": only if "need_topic_name" is true: the topic name written in learner.own_language; else null.
@@ -1979,6 +1986,7 @@ const V18 = {
 // 2026-11-20 导演那一段的按钮和说明（阿语界面露出来的英文），上线前请母语的人看一遍
 "Read more": {es: "Ver más", ja: "続きを読む", ar: "اقرأ المزيد"},
 "Listen": {es: "Escuchar", ja: "聞く", ar: "استمع"},
+"One more word:": {es: "Una palabra más:", ja: "ことばをもうひとつ：", ar: "كلمة أخرى:"},
 "Answer — a few words is fine": {es: "Responde; con unas palabras basta", ja: "答えてみて。ひとことでもOK", ar: "أجب، تكفي كلمات قليلة"},
 "Voyo, quietly": {es: "Voyo, en voz baja", ja: "Voyo（小声で）", ar: "Voyo بصوت خافت"},
 "Reply to Voyo — a few words is fine": {es: "Contesta a Voyo; con unas palabras basta", ja: "Voyo に返事しよう。ひとことでもOK", ar: "ردّ على Voyo، تكفي كلمات قليلة"},
@@ -3489,7 +3497,9 @@ async function vdAsk(st, step, r, mode, asked0, mayAsk){
   const onPart = t => { shown = true; if (mode !== "reply") return; const m = tp && tp.querySelector(".vy-msg"); if (!m) return; m.classList.remove("vy-typing"); m.innerHTML = `<span class="vy-tl" dir="auto">${esc(t)}</span>`; scrollChat(); };
   airAdd();
   const settle = ask([{role: "user", content: "DATA:\n" + JSON.stringify(data)}], "free", "reply", onPart).then(j => ({j}), e => ({e}));
-  const WAIT1 = ["zh", "en"].includes(UIL()) && KL() === "en" ? 4500 : 6500;
+  // 他反问说话的人时，Claude 要先答他的问题，回话长一点：多等一会儿（8 秒），不要退回规则版
+  const askBack = mode === "reply" && VD_ASKBACK.test(String(r.text || ""));
+  const WAIT1 = askBack ? 8000 : ["zh", "en"].includes(UIL()) && KL() === "en" ? 4500 : 6500;
   let res = await Promise.race([settle, sleep(WAIT1).then(() => null)]);   // 真测第一个字：中文界面学英语 0.8–2.4 秒；阿 / 西界面、学中文 2–4.1 秒
   if (!res && shown) res = await Promise.race([settle, sleep(9000).then(() => null)]);
   const out = j => { if (!j) { if (tp) tp.remove(); return null; } return j; };
@@ -3504,17 +3514,23 @@ async function vdAsk(st, step, r, mode, asked0, mayAsk){
   if (mode === "reply" && !o.reply) return out(null);
   if (mode === "hint" && !o.hint) return out(null);
   return o; }
+const VD_ASKBACK = /[?？؟]|what about you|how about you|and you\b|你呢|你觉得呢|y tú|et toi|e você/i;
+// 用母语回答、Claude 只给了一个词（missing）没给整句（fix）：再用「这个怎么说」（task how）要整句；拿不到就算了（词放在下面当补充）
+async function vdFixWhole(text){ try { const j = await Promise.race([ask([{role: "user", content: String(text).slice(0, 300)}], "free", "how"), sleep(8000).then(() => null)]);
+    if (j && typeof j.say === "string" && j.say.trim()) return {t: j.say.trim().slice(0, 240), py: KL() === "zh" && typeof j.pron === "string" ? j.pron : "", g: String(text).slice(0, 240), u: String(text).slice(0, 240)}; } catch(e){} return null; }
 // 显示 Claude 的回应：先 reply（说话的人的气泡，念出来）；有更顺的说法、缺的词，放在下面（不打叉）
 async function vdShowAI(st, step, r, ai){
   const m = ai.tp.querySelector(".vy-msg") || ai.tp; m.classList.remove("vy-typing");
   let h = vdSegX(ai.reply);
   const nat = vdNative(r.text);
   if (ai.fix && !nat && !ai.junk) h += `<div class="vd-fix"><span class="vy-mn">${esc(T("这样说更顺：", "Smoother this way:"))}</span>${vdSegX(ai.fix)}</div>`;
-  if (ai.missing && !ai.junk) h += `<div class="vd-fix"><span class="vy-mn">${esc(T("你要的那个词：", "The word you wanted:"))}</span>${vdSegX(ai.missing)}</div>`;
+  // 用母语说的：整句在下一步请他跟着说，这里的词只是补充
+  if (ai.missing && !ai.junk) h += `<div class="vd-fix"><span class="vy-mn">${esc(nat ? T("补充一个词：", "One more word:") : T("你要的那个词：", "The word you wanted:"))}</span>${vdSegX(ai.missing)}</div>`;
   const wid = ai.tp.dataset.who; m.innerHTML = (wid ? `${vdPFace(wid)}<span class="vd-who">${vdWho(wid)}</span>` : vdFace()) + h + spkBtn(); m.classList.add("vd-vo"); if (wid) m.classList.add("vd-pp"); scrollChat();
   vdHist(vdSpeaker(st, step) ? vdSpeaker(st, step).name : "Voyo", ai.reply.t);
   ai.msg = m;
-  await speakWait([...m.querySelectorAll(".vy-seg")].slice(0, 1)); }
+  // 以问句结尾（接下来要等他回答）：一边念一边就让他能回，不然念的时候打的字会落到别处
+  const p = speakWait([...m.querySelectorAll(".vy-seg")].slice(0, 1)); if (!(r.free && /[?？؟]\s*$/.test(ai.reply.t))) await p; }
 // 规则版接话：没有 Claude 时也接一句（说对了 / 说了一半 / 用母语 / 说了自己的事 / 乱打的）
 async function vdReact(st, step, r){ let x = null; try { x = VDIR.react(st, r); } catch(e){} if (!x || !x.t) return;
   const who = vdSpeaker(st, step);
@@ -3578,6 +3594,7 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
         vdHist("Learner", r.text);
         const ai = await vdAsk(st, step, r, "reply");
         // Claude 接了：他刚才要是反问了一句，这就算有人答了（收尾「你问了」才列它）
+        if (ai && !ai.fix && !ai.junk && vdNative(r.text)) ai.fix = await vdFixWhole(r.text);
         if (ai){ await vdShowAI(st, step, r, ai); r.prefer = ai.pick; r.fix = ai.fix; r.junk = ai.junk; r.answered = true;
           // Claude 的接话以问句结尾：停下来等他回答，回答再交给 Claude 接，接完才往下递（同一件事最多追问两轮；点「接着来」就跳过）
           //   用母语说的（下一步要请他跟着说在学的语言那一句）、乱打的，不追问
