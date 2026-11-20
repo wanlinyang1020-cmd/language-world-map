@@ -3468,8 +3468,20 @@ async function vdOwn(s, id, wantOf){ const x0 = vdIt(id); if (!x0) return {tap: 
     chips: [VD_STUCK()].concat(/…|_{2,}/.test(want()) ? [] : [{t: T("不方便说，直接发", "Can't talk now — just send"), cls: "skip", r: () => ({text: want(), ok: true, fill, skip: true}), echo: () => `<span dir="auto">${esc(want())}</span>`}]),
     heard: t => ({text: t, ok: vdOkSay(want(), t, loose), fill}), typed: t => ({text: t, ok: vdOkSay(want(), t, loose), fill})});
   m.classList.add("vd-used"); m.querySelectorAll("button").forEach(b => b.disabled = true);
+  if (r && typeof r === "object") r.want = want();
   if (r.ok) sparks(m, 12);
   return r; }
+// 跟着说的时候说了另一句（跟要跟的那句，词重合不到一半）：他在说自己的事，不是没跟上
+function vdOffLine(r){ if (!r || !r.free || !r.text || r.skip || r.stuck || !r.want || vdNative(r.text)) return false;
+  const zh = KL() === "zh", w = v => zh ? [...String(v || "").replace(/[^一-鿿]/g, "")] : (String(v || "").toLowerCase().match(/[a-z']+/g) || []);
+  const a = w(r.want), b = w(r.text), B = new Set(b); if (!a.length || !b.length) return false;
+  return a.filter(x => B.has(x)).length / a.length < .5; }
+// 当成一句新的回答交给 Claude 接（接完照样可以追问）；没有 Claude 就规则版接一句。跟着说这一步算跳过，不再催
+async function vdOffAns(st, step, r, s, q){ vdHist("Learner", s.text); if (s !== r) (r.more = r.more || []).push(s.text);
+  const a = await vdAsk(st, step, s, "reply", q && q.t ? q.t : "", true);
+  if (!a){ await vdReact(st, step, s); return; }
+  await vdShowAI(st, step, s, a); if (a.topic && !r.topic) r.topic = a.topic;
+  await vdFollow(st, step, s, a, 0); }
 // 「了解」的卡：常识（可以猜）、一个人的动态、关于你的问题
 // 2026-11-20 检查员：标题下面还要有正文（ten / tzh）；学中文的人正文也配拼音
 function vdKnowHTML(o){ const L = KL(), zh = L === "zh";
@@ -3688,7 +3700,9 @@ function vdLastQ(x){ const sp = v => String(v || "").match(/[^.!?。！？؟]+[.
 // 请他跟着说一句 Claude 给的整句（「小声说：In English, you can say: …」）
 async function vdSayAlong(st, fix){ let id; try { id = VDIR.dyn(fix); } catch(e){ return null; }
   try { await vdVoyo(VDIR.say(st, KL() === "en" ? "native_say" : "native_say_zh"), {whisper: true}); } catch(e){ if (e === "stale") throw e; }
-  const r = await vdOwn({kind: "line"}, id); if (r && r.ok && r.text && !/[?？؟]\s*$/.test(r.text)) VDLINE = VDLINE || r.text; return r; }
+  const r = await vdOwn({kind: "line"}, id);
+  if (vdOffLine(r)){ r.ok = false; r.off = true; return r; }
+  if (r && r.ok && r.text && !/[?？؟]\s*$/.test(r.text)) VDLINE = VDLINE || r.text; return r; }
 // 追问：Claude 的接话以问句结尾就等他回答，回答再交给 Claude 接（同一件事最多追问两次；点「接着来」就跳过）。
 //   在追问里用母语回答：接一句以后，跟别处一样请他跟着说整句；说完（或点「接着来」）再把 Claude 刚才的问句问一遍
 async function vdFollow(st, step, r, last, k0){ let k = k0 || 0;
@@ -3702,7 +3716,9 @@ async function vdFollow(st, step, r, last, k0){ let k = k0 || 0;
     if (nat && !a2.fix && !a2.junk) a2.fix = await vdFixWhole(r2.text);
     await vdShowAI(st, step, r2, a2); if (a2.pick) r.prefer = a2.pick; if (a2.topic && !r.topic) r.topic = a2.topic;
     if (!a2.junk){ if (nat){ if (a2.fix && a2.fix.t) VDFACTS.push({t: a2.fix.t, g: r2.text}); } else VDFACTS.push({t: r2.text, g: ""}); }
-    if (nat && a2.fix && !a2.junk){ const q = vdLastQ(a2.reply), s2 = await vdSayAlong(st, a2.fix); if (s2 && s2.ok && s2.text && !s2.skip) r.more.push(s2.text);
+    if (nat && a2.fix && !a2.junk){ const q = vdLastQ(a2.reply), s2 = await vdSayAlong(st, a2.fix);
+      if (s2 && s2.off){ VDFACTS.push({t: s2.text, g: ""}); await vdOffAns(st, step, r, s2, q); break; }
+      if (s2 && s2.ok && s2.text && !s2.skip) r.more.push(s2.text);
       if (!q || k >= 2) break;
       const m = await vdVoyo(q); last = Object.assign({}, a2, {reply: q, msg: m}); continue; }
     last = a2; } }
@@ -3918,6 +3934,8 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
       const chose = !r.free && !r.skip && !!r.text && (r.pick != null || r.tap != null) && (!!st.guest || !!step.inGuest || ["open", "know_self", "guest", "deep"].includes(step.kind) || step.sub === "choose");
       // 小声递的那一句（跟着说）是练习，不交给 Claude 接话
       const along = !!(step.whisper && step.own);
+      // 跟着说的时候说了另一句：当成新的回答交给 Claude 接；悬着的问句不再问一遍（Claude 接着他这句聊）
+      const off = along && vdOffLine(r); if (off){ r.ok = false; r.off = true; const q = reAsk; reAsk = null; await vdOffAns(st, step, r, r, q); }
       if (((r.free && r.text && !r.skip) || chose) && !along){
         vdHist("Learner", r.text);
         const ai = await vdAsk(st, step, r, "reply");
