@@ -340,7 +340,7 @@ window.PTAB_WALL = n => { try { const K = known(), kSet = new Set(K.map(p => p.i
     // 编出来的地方（语言小镇）不上墙：作者、动态、评论里有的都去掉
     const FAKE = /语言小镇|Language Town/i, fakeP = p => FAKE.test([p.home, p.job, p.story].join(" "));
     return items.filter(([p, i]) => !fakeP(p) && !FAKE.test(String(p.posts[i][4] || "") + String(p.posts[i][5] || ""))).sort((a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]])).slice(0, n || 12).map(([p, i, k]) => { const x = p.posts[i], so = subOk(p), r = o.r[p.id + "." + i];
-      return {id: p.id, i, nm: p.nm, img: p.img, home: placeOf(p, x), job: p.job || "", lang: p.lang, known: !!k, when: dLabel(x[12]) + " " + hm(postAt(x)), ts: postAt(x), t: x[4] || "", sub: so ? x[5] || "" : "",
+      return {id: p.id, i, nm: p.nm, img: p.img, home: placeOf(p, x), job: p.job || "", lang: p.lang, known: !!k, when: dLabel(x[12]) + " " + hm(postAt(x)), ts: postAt(x), d: x[12] || "", topic: x[13] || "", t: x[4] || "", sub: so ? x[5] || "" : "",
         photo: x[3] ? pic(x[3][0]) : "", by: x[3] ? x[3][1] : "", pid: x[3] ? x[3][0] : 0, note: noteOf(p, x),
         cm: (x[9] || []).filter(c => !FAKE.test(String(c[1] || "") + String(c[2] || ""))).map(c => { const q = P(c[0]); return q && !fakeP(q) ? {id: q.id, nm: q.nm, img: q.img, home: q.home, t: c[1], sub: so ? c[2] || "" : ""} : null; }).filter(Boolean),
         rep: (x[10] || []).map(r0 => [r0[0], so ? r0[1] || "" : ""]), back: x[11] ? [x[11][0], so ? x[11][1] || "" : ""] : null, mine: r ? {text: r.text, back: r.day < dayN()} : null}; }); } catch(e){ return []; } };
