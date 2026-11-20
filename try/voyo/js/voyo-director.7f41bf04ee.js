@@ -1286,6 +1286,8 @@ const VDIR = {
   react(st, r){ return reactLine(st, readReply(st, r)); },
   isNative, isJunk, sig(st, r){ return readReply(st, r); },
   curQ(st){ const q = st.curQ && shelf(st.ctx.learn).all[st.curQ]; return q ? {id: q.id, t: q.t, g: q.g, py: q.py || ""} : null; },
+  /* 网页要用的两个小口子：Claude 给的整句做成这一场临时的一条（不进货架）；Voyo 的固定说法 */
+  dyn(x){ return dyn(x).id; }, say(st, k, vars){ return tpl(k, st, vars); },
   needsOf, KINDS: ["open"].concat(ALLK, ["guest_bye"]), LANGK, KNOW, addDays, dgap, fillText
 };
 window.VDIR = VDIR;
@@ -3518,6 +3520,31 @@ const VD_ASKBACK = /[?？؟]|what about you|how about you|and you\b|你呢|你�
 // 用母语回答、Claude 只给了一个词（missing）没给整句（fix）：再用「这个怎么说」（task how）要整句；拿不到就算了（词放在下面当补充）
 async function vdFixWhole(text){ try { const j = await Promise.race([ask([{role: "user", content: String(text).slice(0, 300)}], "free", "how"), sleep(8000).then(() => null)]);
     if (j && typeof j.say === "string" && j.say.trim()) return {t: j.say.trim().slice(0, 240), py: KL() === "zh" && typeof j.pron === "string" ? j.pron : "", g: String(text).slice(0, 240), u: String(text).slice(0, 240)}; } catch(e){} return null; }
+// Claude 那句里最后的问句（连同拼音、意思里对应的那一句）；拆不开意思就不带意思
+function vdLastQ(x){ const sp = v => String(v || "").match(/[^.!?。！？؟]+[.!?。！？؟]+["”」»]?\s*/g) || [String(v || "")];
+  const A = sp(x.t), i = A.length - 1; if (i < 0 || !/[?？؟]/.test(A[i])) return null;
+  const at = v => { const B = sp(v); return B.length === A.length ? B[i].trim() : ""; };
+  return {t: A[i].trim(), py: x.py ? at(x.py) : "", g: at(x.g), u: x.u ? at(x.u) : ""}; }
+// 请他跟着说一句 Claude 给的整句（「小声说：In English, you can say: …」）
+async function vdSayAlong(st, fix){ let id; try { id = VDIR.dyn(fix); } catch(e){ return null; }
+  try { await vdVoyo(VDIR.say(st, KL() === "en" ? "native_say" : "native_say_zh"), {whisper: true}); } catch(e){ if (e === "stale") throw e; }
+  return vdOwn({kind: "line"}, id); }
+// 追问：Claude 的接话以问句结尾就等他回答，回答再交给 Claude 接（同一件事最多追问两次；点「接着来」就跳过）。
+//   在追问里用母语回答：接一句以后，跟别处一样请他跟着说整句；说完（或点「接着来」）再把 Claude 刚才的问句问一遍
+async function vdFollow(st, step, r, last, k0){ let k = k0 || 0;
+  while (last && !last.junk && /[?？؟]\s*$/.test(last.reply.t) && k < 2){ k++;
+    const r2 = await vdWait(last.msg, {mic: true, autoStuck: 45000, chips: [VD_GO()], ph: T("回答一下，几个词也行", "Answer — a few words is fine")});
+    if (!r2 || !r2.free || !r2.text || r2.stuck) break;
+    vdHist("Learner", r2.text); (r.more = r.more || []).push(r2.text);
+    const a2 = await vdAsk(st, step, r2, "reply", last.reply.t, k < 2);
+    if (!a2){ await vdReact(st, step, r2); break; }
+    const nat = vdNative(r2.text);
+    if (nat && !a2.fix && !a2.junk) a2.fix = await vdFixWhole(r2.text);
+    await vdShowAI(st, step, r2, a2); if (a2.pick) r.prefer = a2.pick;
+    if (nat && a2.fix && !a2.junk){ const q = vdLastQ(a2.reply), s2 = await vdSayAlong(st, a2.fix); if (s2 && s2.ok && s2.text && !s2.skip) r.more.push(s2.text);
+      if (!q || k >= 2) break;
+      const m = await vdVoyo(q); last = Object.assign({}, a2, {reply: q, msg: m}); continue; }
+    last = a2; } }
 // 显示 Claude 的回应：先 reply（说话的人的气泡，念出来）；有更顺的说法、缺的词，放在下面（不打叉）
 async function vdShowAI(st, step, r, ai){
   const m = ai.tp.querySelector(".vy-msg") || ai.tp; m.classList.remove("vy-typing");
@@ -3583,14 +3610,16 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
   if (["ar", "es", "ja"].includes(UIL())) await Promise.race([vdTrFetch(st), sleep(2500)]);
   try { step = VDIR.next(st, null); } catch(e){ try { console.warn("[Voyo 导演] 开不了场，照原来的走", e); } catch(_){} return false; }
   if (!step) return false;
-  VDGO = true; VDAUTO = 0; VDACT = null; VDHIST = []; let n = 0;
+  VDGO = true; VDAUTO = 0; VDACT = null; VDHIST = []; let n = 0, reAsk = null;
   try {
     while (step && n++ < 80){
       vdHist((vdSpeaker(st, step) || {}).name || "Voyo", step.ask ? step.ask.t : (step.ids && step.ids[0] && (vdIt(step.ids[step.ids.length - 1]) || {}).t) || (step.say || {}).t);
       const r = (await vdStep(st, step)) || {tap: 0};
       // 点了一个选项回答（关于你的问题、跟来的人聊时挑的回答）：也要有人接一句（有 Claude 交给 Claude；没有，规则版挑一句不是问句的）
       const chose = !r.free && !r.skip && !!r.text && (r.pick != null || r.tap != null) && (!!st.guest || !!step.inGuest || ["open", "know_self", "guest", "deep"].includes(step.kind) || step.sub === "choose");
-      if ((r.free && r.text && !r.skip) || chose){
+      // 小声递的那一句（跟着说）是练习，不交给 Claude 接话
+      const along = !!(step.whisper && step.own);
+      if (((r.free && r.text && !r.skip) || chose) && !along){
         vdHist("Learner", r.text);
         const ai = await vdAsk(st, step, r, "reply");
         // Claude 接了：他刚才要是反问了一句，这就算有人答了（收尾「你问了」才列它）
@@ -3598,16 +3627,13 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
         if (ai){ await vdShowAI(st, step, r, ai); r.prefer = ai.pick; r.fix = ai.fix; r.junk = ai.junk; r.answered = true;
           // Claude 的接话以问句结尾：停下来等他回答，回答再交给 Claude 接，接完才往下递（同一件事最多追问两轮；点「接着来」就跳过）
           //   用母语说的（下一步要请他跟着说在学的语言那一句）、乱打的，不追问
-          let last = ai, k = 0;
-          while (last && r.free && !last.junk && !(last.fix && vdNative(r.text)) && /[?？]\s*$/.test(last.reply.t) && k < 2){ k++;
-            const r2 = await vdWait(last.msg, {mic: true, autoStuck: 45000, chips: [VD_GO()], ph: T("回答一下，几个词也行", "Answer — a few words is fine")});
-            if (!r2 || !r2.free || !r2.text || r2.stuck) break;
-            vdHist("Learner", r2.text); (r.more = r.more || []).push(r2.text);
-            const a2 = await vdAsk(st, step, r2, "reply", last.reply.t, k < 2);
-            if (!a2){ await vdReact(st, step, r2); break; }
-            await vdShowAI(st, step, r2, a2); if (a2.pick) r.prefer = a2.pick; last = a2; } }
+          //   用母语说的：下一步导演会请他跟着说整句；Claude 末尾的问句先记着，跟着说完再问一遍（问题不丢）
+          if (vdNative(r.text) && ai.fix){ const q = vdLastQ(ai.reply); if (q) reAsk = q; }
+          else if (r.free) await vdFollow(st, step, r, ai, 0); }
         else await vdReact(st, step, r);
       }
+      // 刚才 Claude 的问句因为要先跟着说而悬着：跟着说完这一步，再问一遍，接着聊（同样最多追问两次）
+      if (reAsk && step.whisper){ const q = reAsk; reAsk = null; const m = await vdVoyo(q); await vdFollow(st, step, r, {reply: q, msg: m, junk: false}, 0); }
       // 卡住了、在等他回答一个问题（不是「你来说」的那一句）：请 Claude 按这个问题写一句短的示范回答，导演从这一句递
       if (r.stuck && VDIR.curQ(st) && !step.own){ const ai = await vdAsk(st, step, r, "hint"); if (ai && ai.hint) r.hint = ai.hint; }
       step = VDIR.next(st, r);
