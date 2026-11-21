@@ -125,7 +125,8 @@ const placeOf = (p, x) => { if (!x[2]) return p.home; const C = (ZH_C.includes(x
 const noteOf = (p, x) => x[7] ? (p.learn === "zh" ? x[7][0] : ZHUI() ? x[7][1] : x[7][0]) : "";
 function postHtml(p, i, extra){
   const x = p.posts[i], so = subOk(p);
-  const line = (t, s) => `<div class="pt-en" dir="auto">${esc(t)}</div>${so && s ? `<div class="pt-zh pt-hide" dir="auto">${esc(s)}</div>` : ""}`;
+  // 🧺 动态里提到的社会文化（cg.js）：一条最多画一道线，点开小卡（2026-11-21）
+  const line = (t, s) => `<div class="pt-en" dir="auto">${window.CGK ? window.CGK.mark(t, p.id) : esc(t)}</div>${so && s ? `<div class="pt-zh pt-hide" dir="auto">${esc(s)}</div>` : ""}`;
   return `<div class="pt-post" data-p="${esc(p.id)}" data-i="${i}"><div class="pt-ph"><img src="${p.img}" alt="" data-open="${esc(p.id)}"><div><b data-open="${esc(p.id)}">${esc(p.nm)}</b><span class="pt-tag">🎭 ${T("角色", "character")}</span>${extra || ""}<div class="pt-mut">${esc(placeOf(p, x))} · ${esc(dLabel(x[12]))} ${esc(tPart(ZHUI() ? x[1] || x[0] : x[0] || x[1]))}</div></div></div>` +
     (x[3] ? `<div class="pt-pw"><img class="pt-pic" src="${pic(x[3][0])}" alt="" loading="lazy"><a class="pt-cr" href="https://www.pexels.com/photo/${x[3][0]}/" target="_blank" rel="noopener">📷 ${esc(x[3][1])} · Pexels</a></div>` : "") +
     `<div class="pt-body"><div class="pt-cm pt-first" data-who="0"><div>${line(x[4], x[5])}</div></div>` +
@@ -340,7 +341,7 @@ window.PTAB_WALL = n => { try { const K = known(), kSet = new Set(K.map(p => p.i
     // 编出来的地方（语言小镇）不上墙：作者、动态、评论里有的都去掉
     const FAKE = /语言小镇|Language Town/i, fakeP = p => FAKE.test([p.home, p.job, p.story].join(" "));
     return items.filter(([p, i]) => !fakeP(p) && !FAKE.test(String(p.posts[i][4] || "") + String(p.posts[i][5] || ""))).sort((a, b) => postAt(b[0].posts[b[1]]) - postAt(a[0].posts[a[1]])).slice(0, n || 12).map(([p, i, k]) => { const x = p.posts[i], so = subOk(p), r = o.r[p.id + "." + i];
-      return {id: p.id, i, nm: p.nm, img: p.img, home: placeOf(p, x), job: p.job || "", lang: p.lang, known: !!k, when: dLabel(x[12]) + " " + hm(postAt(x)), ts: postAt(x), t: x[4] || "", sub: so ? x[5] || "" : "",
+      return {id: p.id, i, nm: p.nm, img: p.img, home: placeOf(p, x), job: p.job || "", lang: p.lang, known: !!k, when: dLabel(x[12]) + " " + hm(postAt(x)), ts: postAt(x), d: x[12] || "", topic: x[13] || "", t: x[4] || "", sub: so ? x[5] || "" : "",
         photo: x[3] ? pic(x[3][0]) : "", by: x[3] ? x[3][1] : "", pid: x[3] ? x[3][0] : 0, note: noteOf(p, x),
         cm: (x[9] || []).filter(c => !FAKE.test(String(c[1] || "") + String(c[2] || ""))).map(c => { const q = P(c[0]); return q && !fakeP(q) ? {id: q.id, nm: q.nm, img: q.img, home: q.home, t: c[1], sub: so ? c[2] || "" : ""} : null; }).filter(Boolean),
         rep: (x[10] || []).map(r0 => [r0[0], so ? r0[1] || "" : ""]), back: x[11] ? [x[11][0], so ? x[11][1] || "" : ""] : null, mine: r ? {text: r.text, back: r.day < dayN()} : null}; }); } catch(e){ return []; } };
@@ -349,6 +350,18 @@ window.PTAB_SETK = (id, on) => { setK(id, on); };
 //   在学的那种语言里没有这个节日的内容（现在节日都是英语的），就不出这张卡：学中文的人不会看到学英语的岛
 window.PTAB_FEST = () => { try { const X = fest(); if (!X) return ""; const zhT = s => /[\u4e00-\u9fff]/.test(s || ""); if (learn() === "zh" ? !(X.F.posts || []).some(p => zhT(p.text)) : !(X.F.posts || []).some(p => p.text && !zhT(p.text))) return "";
     if (!document.getElementById("ptCss")){ const st = document.createElement("style"); st.id = "ptCss"; st.textContent = CSS; document.head.appendChild(st); } return festHtml(); } catch(e){ return ""; } };
+// 🎬 Voyo 的导演（voyo.js，2026-11-20 用户「post 没有 npc 的头像」）：对话里递一条动态，用这里的动态卡（头像、名字和城市、照片、日期、🔊），点头像进认识 TA。
+//   text = 那条动态的字（总目录里的 en / zh），找不到这条就返回 ""（导演照原来的字画）。返回的卡用 PTAB_CARDWIRE(el) 接上点按。
+//   o：{listen: 「听」按钮的字, ui: 界面语言}——西、日、阿界面上按钮和日期跟着界面语言（2026-11-20 检查员）
+window.PTAB_CARD = (id, text, o) => { try { o = o || {}; const p = P(id); if (!p) return ""; const t = String(text || "").trim(), i = p.posts.findIndex(x => (x[4] || "").trim() === t || (x[5] || "").trim() === t); if (i < 0) return "";
+    if (!document.getElementById("ptCss")){ const st = document.createElement("style"); st.id = "ptCss"; st.textContent = CSS; document.head.appendChild(st); }
+    const x = p.posts[i], so = subOk(p);
+    return `<div class="pt-post pt-card1" data-p="${esc(p.id)}" data-i="${i}" data-nopy><div class="pt-ph"><img src="${p.img}" alt="" data-open="${esc(p.id)}"><div><b data-open="${esc(p.id)}">${esc(p.nm)}</b><span class="pt-tag">🎭 ${T("角色", "character")}</span><div class="pt-mut">${esc(placeOf(p, x))} · ${esc(o.ui && !["zh", "en"].includes(o.ui) && x[12] ? (() => { try { return new Date(x[12] + "T12:00:00").toLocaleDateString(o.ui, {month: "long", day: "numeric"}); } catch(e){ return dLabel(x[12]); } })() : dLabel(x[12]))}</div></div></div>` +
+      (x[3] ? `<div class="pt-pw"><img class="pt-pic" src="${pic(x[3][0])}" alt="" loading="lazy"><a class="pt-cr" href="https://www.pexels.com/photo/${x[3][0]}/" target="_blank" rel="noopener">📷 ${esc(x[3][1])} · Pexels</a></div>` : "") +
+      `<div class="pt-body"><div class="pt-cm pt-first"><div><div class="pt-en" dir="auto">${window.CGK ? window.CGK.mark(x[4], p.id) : esc(x[4])}</div>${so && x[5] ? `<div class="pt-zh" dir="auto">${esc(x[5])}</div>` : ""}</div></div><button class="pt-btn pri" data-say1>🔊 ${esc(o.listen || T("听", "Listen"))}</button></div></div>`; } catch(e){ return ""; } };
+window.PTAB_CARDWIRE = el => { try { el.querySelectorAll(".pt-card1").forEach(po => { const p = P(po.dataset.p), x = p && p.posts[+po.dataset.i]; if (!x) return;
+    po.querySelectorAll("[data-open]").forEach(b => b.onclick = e => { e.stopPropagation(); person(b.dataset.open, true); });
+    const b = po.querySelector("[data-say1]"); if (b) b.onclick = () => { stop(); say(x[4], p.lang, p.nm, null, p.id); }; }); } catch(e){} };
 window.PTAB_INFO = id => { const p = P(id); return p ? {nm: p.nm, img: p.img, job: p.job, home: p.home, lang: p.lang} : null; };   // 🎪 活动（activities.js）用：主持人和交作业的人的名字、照片
 // 岛上群聊里的人 = 朋友页里的人（2026-11-08）：posts_more/isle_<岛>.json 里的人，id 是 more.isle_<岛>.<群聊里的名字>；一屏接一屏里「认识 TA」「明天 TA 还会发」用
 window.PTAB_FIND = (nid, isle) => { const M = D.isle || {}; if (isle && M[isle.replace(/_club$/, "") + "|" + nid]) return M[isle.replace(/_club$/, "") + "|" + nid]; const k = Object.keys(M).find(x => x.endsWith("|" + nid)); return k ? M[k] : null; };

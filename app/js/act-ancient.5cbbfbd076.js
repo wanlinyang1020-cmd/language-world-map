@@ -2460,16 +2460,22 @@ const micHTML = (o) => `<div class="ak-mic"><button class="ak-micb" aria-label="
 function mic(box, o){ if (!box || box._ak) return; box._ak = 1; const b = box.querySelector(".ak-micb"), live = box.querySelector(".ak-live"); let st = "idle", hd = null, hold = false, t0 = 0, auto = null, idle = null, sim = null, txt = "";
   const set = s => { st = s; box.classList.toggle("rec", s === "rec"); };
   const want = () => typeof o.want === "function" ? o.want() : o.want;
-  const finish = v => { if (st !== "rec") return; set("done"); clearTimeout(auto); clearTimeout(idle); clearInterval(sim); const text = (v && v.text) || txt || want() || "";
+  const finish = v => { if (st !== "rec") return; b.querySelectorAll(".ak-ring").forEach(x => x.remove()); set("done"); clearTimeout(auto); clearTimeout(idle); clearInterval(sim); const text = (v && v.text) || txt || want() || "";
     live.innerHTML = `✓ <span${LA(o.l || LG())}>${esc(text)}</span> ${(v && v.sim) || !((v && v.text) || txt) ? sample() : ""}`; blip(1040); o.onDone && o.onDone(Object.assign({text}, v || {})); };
   const stop = () => { if (hd && hd.stop) hd.stop(); else finish({sim: true}); };
   const start = async () => { const w = want(); if (!w && !o.free){ toast(T("先把空填上 ↑", "Fill in the blanks first ↑")); return; } set("rec"); txt = ""; t0 = Date.now(); live.textContent = hold ? T("在听……松开就停", "Listening… let go to stop") : T("在听……说完会自己停", "Listening… stops when you're done");
     const h = H(), words = String(w || "").split(o.l === "zh" || LG() === "zh" ? "" : " "), dur = Math.min(12000, 2200 + words.length * (LG() === "zh" ? 260 : 420));
-    if (h.recStart && h.canRec){ hd = await h.recStart({lang: bcp(o.l || LG()), onText: x => { txt = x; live.textContent = x; clearTimeout(idle); idle = setTimeout(() => { if (!hold) stop(); }, 1500); }, onDone: v => finish(v), onError: () => { hd = null; finish({sim: true}); }});
-      if (!hd){ finish({sim: true}); return; } }
+    // 2026-11-20 用户真机「我正在停顿，软件就以为我说完了」：开过口以后安静 3 秒才停（照着说一句 2 秒），话筒周围一圈跟着走完，再开口重新计时；一直没开口 8 秒停；按住就一直听到松手
+    if (h.recStart && h.canRec){ const SIL = w && !o.free ? 2000 : 3000;
+      hd = await h.recStart({lang: bcp(o.l || LG()), onText: x => { txt = x; live.textContent = x; clearTimeout(idle); clearTimeout(auto); ring(0); if (hold || !String(x || "").trim()) return; idle = setTimeout(() => { if (!hold) stop(); }, SIL); ring(SIL); }, onDone: v => finish(v), onError: () => { hd = null; finish({sim: true}); }});
+      if (!hd){ finish({sim: true}); return; }
+      if (!hold) auto = setTimeout(() => { if (!hold && !txt) stop(); }, 8000); return; }
     else { let k = 0; sim = setInterval(() => { k += LG() === "zh" ? 2 : 1; live.textContent = words.slice(0, k).join(LG() === "zh" ? "" : " "); if (k >= words.length) clearInterval(sim); }, 160); }
     if (!hold) auto = setTimeout(stop, dur); };
-  b.addEventListener("pointerdown", e => { e.preventDefault(); if (st === "rec"){ stop(); return; } hold = false; t0 = Date.now(); b._hold = setTimeout(() => { hold = true; live.textContent = T("在听……松开就停", "Listening… let go to stop"); clearTimeout(auto); }, 380); start(); });
+  // 安静下来到停之前：话筒周围一圈慢慢走完（ms = 0 收掉）
+  const ring = ms => { b.querySelectorAll(".ak-ring").forEach(x => x.remove()); if (!ms || st !== "rec") return; b.style.position = "relative";
+    b.insertAdjacentHTML("beforeend", `<svg class="ak-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18.5" pathLength="100" style="animation-duration:${ms}ms"/></svg>`); };
+  b.addEventListener("pointerdown", e => { e.preventDefault(); if (st === "rec"){ stop(); return; } hold = false; t0 = Date.now(); b._hold = setTimeout(() => { hold = true; live.textContent = T("在听……松开就停", "Listening… let go to stop"); clearTimeout(auto); clearTimeout(idle); ring(0); }, 380); start(); });
   const up = () => { clearTimeout(b._hold); if (hold && st === "rec") stop(); hold = false; };
   b.addEventListener("pointerup", up); b.addEventListener("pointerleave", () => { if (hold) up(); }); b.addEventListener("pointercancel", up);
   box._reset = () => { set("idle"); live.textContent = (o && o.hint) || T("点一下或按住说", "Tap or hold to speak"); }; }
@@ -2644,6 +2650,7 @@ const CSS = `body.ak-on{overflow:hidden}
 .ak-mic{text-align:center;margin-top:12px}.ak-micb{width:66px;height:66px;border-radius:50%;border:0;background:#e2552f;color:#fff!important;font-size:28px;box-shadow:0 6px 16px rgba(226,85,47,.35);touch-action:none;-webkit-user-select:none;user-select:none}
 .ak-mic.rec .ak-micb{background:#c0392b;animation:akpulse 1s infinite}@keyframes akpulse{50%{box-shadow:0 0 0 14px rgba(226,85,47,.15)}}
 .ak-bars{display:none;justify-content:center;gap:3px;height:22px;align-items:center;margin-top:6px}.ak-mic.rec .ak-bars{display:flex}.ak-bars i{width:4px;border-radius:2px;background:#e2552f;animation:akbar .5s infinite alternate}.ak-bars i:nth-child(2){animation-delay:.1s}.ak-bars i:nth-child(3){animation-delay:.2s}.ak-bars i:nth-child(4){animation-delay:.3s}.ak-bars i:nth-child(5){animation-delay:.15s}@keyframes akbar{from{height:4px}to{height:20px}}
+.ak-ring{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);pointer-events:none;overflow:visible;transform:rotate(-90deg)}.ak-ring circle{fill:none;stroke:#e2552f;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:0;animation:akRing linear forwards}@keyframes akRing{to{stroke-dashoffset:100}}
 .ak-live{font-size:13.5px;color:#14305c;min-height:20px;margin-top:5px;overflow-wrap:anywhere}
 .ak-choose{display:flex;gap:8px;margin-top:12px}.ak-choose button{flex:1;min-width:0;border-radius:14px;padding:10px 8px;font-weight:800;border:1.5px solid #e6dfcf;background:#fff;color:#14305c;line-height:1.3}.ak-choose button small{display:block;font-weight:500;font-size:11.5px;color:#6b7488}.ak-choose button.w{background:#e2552f;color:#fff;border-color:#e2552f}.ak-choose button.w small{color:#ffe1d6}
 .ak-link{border:0;background:none;color:#6b7488;text-decoration:underline;font-size:12px;padding:0}
