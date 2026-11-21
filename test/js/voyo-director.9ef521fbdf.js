@@ -1349,7 +1349,9 @@ const VDIR = {
   /* 🧺 社会文化：挑一条递出去（2026-11-21，样板 样板/Voyo递个东西样板.html）。o：{topic, need, x（已经挑好的那一条）}
    *   返回 {x, give（智慧点 / 一句话，在学的语言 + 意思）, ask（you 或站队题，只问看法）, ops（站队题的选项）, tp}；没有就 null */
   cgGive(st, o){ const C = window.CGK; if (!C) return null; o = o || {}; const L = st.ctx.learn; st.cgNot = st.cgNot || new Set();
-    const x = o.x || C.pick({l: L, level: lv(st), topic: o.topic || "", need: o.need || "", not: st.cgNot, text: (st.rec && st.rec.lastSaid) || ""}); if (!x) return null;
+    // media：视频类的卡放不了视频（还没配、YouTube 打不开又没有 B 站）就不递（cg.js 的 vOK，2026-11-22）
+    const x = o.x || C.pick({l: L, level: lv(st), topic: o.topic || "", need: o.need || "", not: st.cgNot, text: (st.rec && st.rec.lastSaid) || "", media: true}); if (!x) return null;
+    if (C.vOK && !C.vOK(x)) return null;
     st.cgNot.add(x.id);
     // 学中文的：内容编辑写好的拼音（aha.py、one_line_py、you_py）跟着带上，没有才现算
     const two = v => v && v.zh && v.en ? (L === "en" ? {t: v.en, g: v.zh} : Object.assign({t: v.zh, g: v.en}, v.py ? {py: v.py} : {})) : null;
@@ -3819,7 +3821,7 @@ async function vdStep(st, s){
       return vdWait(card, {chips: [VD_GO()], ph: TN("想跟 {n} 说点什么也行", "Say something to {n} if you like", "\u2068" + vdName(who) + "\u2069")}); }
     case "know_self": {
       // 🧺 追问（2026-11-21）：先递社会文化的一点，再问 you 或站队题；站队的选项做成按钮，点了记进 cg.v1（跟小卡、开场站的是同一边）
-      if (s.sub === "cg"){ await vdVoyo(s.give, {wait: 300}); vdHist("Voyo", s.give.t); const m = await vdVoyo(s.ask);
+      if (s.sub === "cg"){ vdCgVid(s.x); await vdVoyo(s.give, {wait: 300}); vdHist("Voyo", s.give.t); const m = await vdVoyo(s.ask);
         try { window.CGK.seen(s.x.id); } catch(e){}
         const chips = (s.ops || []).map((o, oi) => ({t: o.t, sub: vdGx(o.g), py: L === "zh", r: () => ({text: o.t, tap: oi, chip: 1, side: oi}), echo: `<span dir="auto">${esc(o.t)}</span>`}));
         const r = await vdWait(m, {mic: true, heard: t => ({text: t, mic: true}), autoStuck: 45000, chips, ph: T("或者，说说你那边的事", "Or tell me how it is where you are")});
@@ -3997,7 +3999,7 @@ async function vdNames(){ const P = (window.VDIR_DATA || {}).people || {}, C = (
 // 今天的聊天记录：刷新以后不丢（2026-11-20 检查员，中文界面刷新后没了）。存一份去掉按钮、麦克风的样子，只存今天的
 const VD_SNAP = "vy.chat";
 function vdSnap(){ try { const b = vbBody(); if (!b) return; const c = b.cloneNode(true);
-    c.querySelectorAll(".vd-rp,.vy-typing,.vy-chips,button,.vd-mic,.ak-mic,.vy-old-note").forEach(e => e.remove()); c.querySelectorAll(".vy-old").forEach(e => e.remove());
+    c.querySelectorAll(".vd-rp,.vy-typing,.vy-chips,button,.vd-mic,.ak-mic,.vy-old-note,.vd-cgvid,.cg-vid").forEach(e => e.remove()); c.querySelectorAll(".vy-old").forEach(e => e.remove());
     const h = c.innerHTML; if (h.length > 300000) return; localStorage.setItem(VD_SNAP, JSON.stringify({d: today(), l: KL(), h})); } catch(e){} }
 function vdRestore(){ try { const o = JSON.parse(localStorage.getItem(VD_SNAP) || "null"); if (!o || o.d !== today() || o.l !== KL() || !o.h) return false; const b = vbBody(); if (!b || b.querySelector(".vy-old")) return false;
     const w = document.createElement("div"); w.className = "vy-old"; w.innerHTML = o.h; w.querySelectorAll(".py-on.done").forEach(e => { e.classList.remove("done"); e.textContent = e.dataset.py || e.textContent; }); b.insertBefore(w, b.firstChild); scrollChat(); return true; } catch(e){ return false; } }
@@ -4081,6 +4083,8 @@ async function vdHookShow(st, h){
     if (h.give){ await vdVoyo(h.give, {wait: 400}); vdHist("Voyo", h.give.t); }
     const m = await vdVoyo(h.ask); vdHist("Voyo", h.ask.t); return m; }
   if (h.k === "cg"){ await vdVoyo(g(h.intro), {wait: 300}); vdHist("Voyo", h.intro.t);
+    // 视频类的卡：先放那一段视频，下面再出卡的字和那句话
+    vdCgVid(h.x);
     add(vdCgCard(h), "vm-wide vd-card vd-cgc"); vdHist("Voyo (shared)", h.x.t);
     await vdVoyo(h.give, {wait: 500}); vdHist("Voyo", h.give.t);
     const m = await vdVoyo(h.ask); vdHist("Voyo", h.ask.t); return m; }
@@ -4092,14 +4096,20 @@ async function vdHookShow(st, h){
     const m = await vdVoyo(g(h.ask)); vdHist("Voyo", h.ask.t); return m; }
   if (h.k === "own"){ await vdVoyo(g(h.say), {wait: 300}); vdHist("Voyo", h.say.t); const m = await vdVoyo(h.ask); vdHist("Voyo", h.ask.t); return m; }
   // 🌍 地区卡（一桌菜的开胃）：关注的人的动态 + 卡的正面（对得上的真实照片 / 短片），再用 voyo.open 问；几天后那条（later）是 TA 又发的动态 + 底下问大家
+  // 还没问过这个地方：先递一张卡的正面，再顺口问一句「想听听那边的事吗？」（region.js inviteHook；答应了才往下递）
+  // 2026-11-22 检查员：问之前不先放卡的正文，只说一句引子 + 问；答应了（vdRgInvAns）才放卡的正面
+  if (h.k === "rg" && h.invite){ vdRgCss(); await vdVoyo(h.intro, {wait: 300}); vdHist("Voyo", h.intro.t);
+    const m = await vdVoyo(h.inv, {wait: 450}); vdHist("Voyo", h.inv.t); return m; }
   if (h.k === "rg"){ const R = window.RGN; vdRgCss(); try { VB.classList.add("vd-feast"); } catch(e){} await vdVoyo(h.intro, {wait: 300}); vdHist("Voyo", h.intro.t);
     if (h.later){ try { R.laterShown(h.x.id); } catch(e){}
       h.fills = h.mine ? [{t: h.mine}] : h.kept && h.borrow ? [h.borrow] : [];
       return vdRgSay(R.who(h.x, h.x.person.who), h.lp, {kd: T("刚刚 · 又发了一条", "Just now · a new post"), cls: "vd-rgpost",
         extra: `<div class="vd-rgask"><span class="vm-kd">${esc(T("底下在问大家", "Asking everyone below"))}</span>${vdSegX(h.q)}</div>${vdRgFill(h.fills, h.mine ? T("你上次说的那句，正好用得上", "The line you said last time fits here") : T("你上次收下的那句", "The line you kept last time"))}`}); }
     h.fills = [R.patOf(h.x, 0).P.l1].filter(Boolean);
+    // 有照片 / 短片的卡：画面放在最前面（先看画面再听人说），下面的事实卡不再重复
+    const F0 = {usedS: new Set(), lastMedia: ""}; vdRgPic(h, F0);
     await vdRgSay(R.who(h.x, h.x.post.who), h.post, {kd: T("动态", "Post"), cls: "vd-rgpost"});
-    vdRgFact(h); vdHist("Voyo (shared)", h.fact.t);
+    vdRgFact(h, F0); vdHist("Voyo (shared)", h.fact.t);
     const m = await vdVoyo(h.ask, {wait: 450, extra: vdRgFill(h.fills)}); vdHist("Voyo", h.ask.t); return m; }
   return null; }
 // 🧺 开场递的那一条（cg 钩子，或者朋友动态 / 话题问句里带出来的社会文化）：交给 Claude 的 material
@@ -4205,6 +4215,7 @@ async function vdCgStay(st, x, step){ const C = window.CGK; if (!C || !x) return
   if (where) return;
   const m = await vdVoyo(q, {wait: 450}); vdHist("Voyo", q.t); try { VDIR.noteForm(st, q.t); } catch(e){}
   const r = await vdWait(m, {mic: true, autoStuck: 60000, chips: [{t: T("先不说了", "Not now"), r: () => ({skip: true, tap: 0})}], ph: T("或者，说说你那边的事", "Or tell me how it is where you are")});
+  st.cgQuit = !!(r && (r.skip || r.stuck));
   if (r && r.free && r.text && !r.skip){ vdHist("Learner", r.text);
     st.echoCtx = x.ms && x.ms.o && x.ms.o.length >= 2 ? "fight" : "like";
     // 「你那边有没有类似的」之后他反问「你呢？」：问的是 Voyo（2026-11-21 第五轮）。先接住他说的事，Voyo 用南极自嘲答一句；不重放这道题的站边句
@@ -4244,15 +4255,37 @@ function vdPyFix(){ if (VD_PYFIXED || KL() !== "zh") return; VD_PYFIXED = true;
     P.customPinyin(Object.assign(gen, VD_PYFIX)); } catch(e){} };
   if (window.pinyinPro){ apply(window.pinyinPro); return; }
   try { let v; Object.defineProperty(window, "pinyinPro", {configurable: true, get: () => v, set: P => { delete window.pinyinPro; window.pinyinPro = P; v = P; if (P && P.customPinyin) apply(P); }}); } catch(e){} }
+// 「送你一句」卡顶上那一行：这是关于哪件事（2026-11-22，用户看到「6-7 到底什么意思？」问「送了个什么东西啊？」——没有上下文看不懂）
+//   名字跟界面语言走（中文界面中文名，别的界面英文名）+ 一句话来历（太长截到第一句）；学中文的人另给汉字名，带拼音
+const vdCJK = v => /[一-鿿]/.test(String(v || ""));
+const vdFirstS = v => { const t = String(v || "").trim(); if (t.length <= 70) return t; const m = t.match(/^.+?(?:[。！？]|[.!?](?=\s|$))/); const f = m ? m[0] : t; return f.length > 90 ? f.slice(0, 88) + "…" : f; };
+function vdGiftHead(x){ if (!x) return ""; const ui = UIL() === "zh", nm = ui ? ([x.t, x.tt].find(vdCJK) || x.t || "") : ([x.t, x.tt].find(v => v && !vdCJK(v)) || x.t || ""), ol = x.ol ? vdFirstS(ui ? x.ol.zh || x.ol.en : x.ol.en || x.ol.zh) : "";
+  if (!nm) return ""; const zt = KL() === "zh" && vdCJK(x.t) && x.t !== nm ? ` <span dir="auto">${zhPy(x.t)}</span>` : "";
+  return `<div class="vd-gfhd" dir="auto" style="font-size:12.5px;line-height:1.55;color:#6b7488;margin:0 0 6px">${esc(T("这是关于", "This is about"))} <b style="color:#24303a">${esc(/^[「“"'《]/.test(nm) ? nm : ui ? "「" + nm + "」" : "\u201c" + nm + "\u201d")}</b>${zt}${ol ? esc(T("——", " — ")) + esc(ol) : ""}</div>`; }
+// 🎬 视频类的小卡（cg.js 的 vidFor：YouTube 或 B 站，只放那一段）：单独一块放在卡前面；放不了返回 null
+//   📷 不是视频、配了照片的小卡（CG_MEDIA.p）：照片单独一块放在卡前面，下面一行说明 + 小字署名；加载失败整块收起
+function vdCgVid(x){ const C = window.CGK; let v = null; try { v = C && C.vidFor ? C.vidFor(x) : null; } catch(e){}
+  if (!v){ let p = null; try { p = v == null && C && C.photoFor ? C.photoFor(x) : null; } catch(e){} if (!p) return null;
+    const el = add(C.picHTML(p), "vm-wide vd-card vd-cgpic"); vdHist("Voyo (photo)", p.cap || ""); return el; }
+  const el = add(C.vidHTML(v), "vm-wide vd-card vd-cgvid"); try { C.vidWire(el, x); } catch(e){} vdHist("Voyo (video)", v.t || v.id); return el; }
+// 送句卡上的「▶ 看那一段」：点一下在卡里放出那一段，再点收起（挂在 document 上，卡里的字后来重画也不丢）
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-cgplay]"); if (!b || !window.CGK) return; e.stopPropagation();
+  const c = b.closest(".vd-cggift"), x = window.CGK.item(b.dataset.cgplay); if (!c || !x) return; try { tapFx(b); } catch(_){}
+  const f = c.querySelector(".cg-vid"); if (f){ f.remove(); return; }
+  let v = null; try { v = window.CGK.vidFor(x); } catch(_){} if (!v) return;
+  const ch = b.closest(".vy-chips"); ch.insertAdjacentHTML("beforebegin", window.CGK.vidHTML(v)); try { window.CGK.vidWire(c, x); } catch(_){} });
 // 送一张小卡：能借走的那一句（点了念），下面一个「收下」
 // 送的那一句按他站的那一边挑（2026-11-21 检查员：选了「先倒牛奶」不能收到「Milk first? Who hurt you?」）：cg.js 的 CGK.lineFor 看他点的那一边（cg.v1）和他说的话
-async function vdCgGift(st, said){ const C = VDCG; if (!C || C.gifted) return; C.gifted = true; const x = C.x; let b = null; try { b = window.CGK.lineFor(x, {said: said || ""}); } catch(e){} if (!b) return;
+async function vdCgGift(st, said){ const C = VDCG; if (!C || C.gifted) return; C.gifted = true; const x = C.x; let b = null;
+  // 视频类、又放不了视频的卡：不送句（2026-11-22）。放得了的，卡上多一个「▶ 看那一段」
+  let vd = null; try { vd = window.CGK.vidFor ? window.CGK.vidFor(x) : null; } catch(e){} if (vd === false) return; try { b = window.CGK.lineFor(x, {said: said || ""}); } catch(e){} if (!b) return;
   // 送过的这句记给导演：后面「换成你的」不再拿同一句
   try { st.usedText.add(b.t); } catch(e){}
   const G0 = "Here's one line you can use straight away.", gl = VDIR.say(st, "cg_gift") || {t: KL() === "zh" ? "送你一句，拿去就能用。" : G0, g: KL() === "zh" ? G0 : "送你一句，拿去就能用。"};
   await vdVoyo(gl.u ? gl : Object.assign(gl, vdU(T("送你一句，拿去就能用。", "Here's one line you can use straight away."), G0)), {wait: 450});
   const zh = KL() === "zh", mean = b.m && ["zh", "en"].includes(UIL()) ? (UIL() === "zh" ? b.m.zh || b.m.en : b.m.en || b.m.zh) : "";
-  const c = add(`<span class="vm-kd">🎁 ${esc(T("送你的", "For you"))}</span><div class="vd-cgln">${vdSegX({t: b.t, py: zh ? b.py || "" : "", g: b.g || ""})}</div>${mean ? `<span class="vd-note" dir="auto">${esc(mean)}</span>` : ""}<div class="vy-chips"><button class="vy-chip" data-cgkeep>＋ ${esc(T("收下这句", "Keep this line"))}</button><button class="vy-chip" data-cgopen="${esc(x.id)}">${esc(x.k === "debate" ? T("看看大家怎么吵", "See how people argue it") : T("看看它的来历", "Where it comes from"))}</button></div>`, "vm-wide vd-card vd-cggift");
+  const c = add(`${vdGiftHead(x)}<span class="vm-kd">🎁 ${esc(T("送你一句能用的话", "A line you can use"))}</span><div class="vd-cgln">${vdSegX({t: b.t, py: zh ? b.py || "" : "", g: b.g || ""})}</div>${mean ? `<span class="vd-note" dir="auto">${esc(T("什么时候用：", "When to use it: "))}${esc(mean)}</span>` : ""}<div class="vy-chips"><button class="vy-chip" data-cgkeep>＋ ${esc(T("收下这句", "Keep this line"))}</button>${vd ? `<button class="vy-chip" data-cgplay="${esc(x.id)}">▶ ${esc(T("看那一段", "Watch the clip"))}</button>` : ""}<button class="vy-chip" data-cgopen="${esc(x.id)}">${esc(x.k === "debate" ? T("看看大家怎么吵", "See how people argue it") : T("看看它的来历", "Where it comes from"))}</button></div>`, "vm-wide vd-card vd-cggift");
+
   try { sparks(c, 10); } catch(e){}
   const kb = c.querySelector("[data-cgkeep]"); if (kb) kb.onclick = () => { tapFx(kb); try { window.CGK.keep(x, {t: b.t, py: zh ? b.py || "" : "", g: b.g || "", sd: typeof b.sd === "number" ? b.sd : undefined, via: "voyo"});} catch(e){} kb.textContent = "✓ " + T("收好了", "Kept"); kb.disabled = true; sparks(kb, 8); };
   vdHist("Voyo (gift card)", b.t); }
@@ -4266,6 +4299,41 @@ async function vdCgGift(st, said){ const C = VDCG; if (!C || C.gifted) return; C
 let VDRGEND = false;
 const VDRG_STOP = () => ({t: T("今天先到这儿", "That's enough for today"), cls: "vd-swap", r: () => ({stop: true})});
 const vdRgHeard = t => ({text: t, mic: true});
+// ── 先问一句（2026-11-22，用户：「先问一句，不硬塞……点『想』才开始递，点『不了』就不再问」；region.js 的 door / inviteHook）──
+//   VDRGDOOR：这一场已经递过 / 问过地区的事了（开场就是地区卡也算），一场只一次
+let VDRGDOOR = false;
+const vdRgInvChips = h => (h.ops || []).map(o => ({t: o.t, sub: vdGx(o.g), py: KL() === "zh", cls: o.a === "yes" ? "hot vd-invbtn" : "vd-invbtn", r: () => ({inv: o.a, chip: 1}), echo: `<span dir="auto">${esc(o.t)}</span>`}));
+// 问的那一屏：「想听 / 不用了」两个按钮是主角，不放大话筒（底下输入框的小话筒、打字照样能回）
+const vdRgInvWait = (m, h) => vdWait(m, {mic: false, chips: vdRgInvChips(h), ph: T("点下面，或者打一句", "Tap below, or type a reply")});
+// 他怎么回的：想听 → 记下，接着问这张卡的那一句，等他回（返回他的回答）；直接说了、打了一句 → 也算想听，这句就是回答；
+//   不了（点的、或者打「不用了」）→ 记下，Voyo 说「好，那我们聊别的」，返回 "no"；没回 → "quiet"
+//   2026-11-22 检查员：打的 / 说的话先看是不是推掉（region.js ynOf：不用谢谢、下次吧、I'm good、not interested……）；
+//   拿不准（不是想听也不是不用、也没说到这个地方）→ 再问一句；再拿不准就当没回答（不记想听，不往下递）
+async function vdRgInvAns(h, r, again){ const R = window.RGN;
+  if (!r || r.stuck || r.skip || r.swap) return "quiet";
+  let a = r.inv || "";
+  if (!a && r.text){ try { a = R.ynOf ? R.ynOf(r.text) : (R.nope(r.text) ? "no" : ""); } catch(e){} if (!a) try { if (R.kwHit && R.kwHit(h.rid, r.text)) a = "yes"; } catch(e){} }
+  if (!a){ if (again) return "quiet"; const m = await vdVoyo(h.again || h.inv, {wait: 350}); vdHist("Voyo", (h.again || h.inv).t); return vdRgInvAns(h, await vdRgInvWait(m, h), true); }
+  if (a === "no"){ try { R.optSet(h.rid, "no"); } catch(e){} await vdVoyo(h.no, {wait: 350}); vdHist("Voyo", h.no.t); return "no"; }
+  try { R.optSet(h.rid, "yes"); } catch(e){}
+  try { VB.classList.add("vd-feast"); } catch(e){}
+  // 答应了：这时才放卡的正面（画面在最前面），再问卡上那一句
+  vdRgFact(h); vdHist("Voyo (shared)", h.fact.t);
+  h.fills = [R.patOf(h.x, 0).P.l1].filter(Boolean);
+  const m = await vdVoyo(h.ask, {wait: 450, extra: vdRgFill(h.fills)}); vdHist("Voyo", h.ask.t);
+  return (await vdWait(m, {mic: true, heard: vdRgHeard, chips: [VDRG_STOP()], ph: T("说说你的，几个词也行", "Say yours — a few words is fine")})) || {skip: true}; }
+// 这张卡的地方现在能不能主动递（「再来一道」用）
+const vdRgPush = c => { const R = window.RGN; try { return !R.canPush || R.canPush(R.rid(c.id)); } catch(e){ return true; } };
+// 聊着聊着到了合适的空档（how = cg 一张社会文化小卡刚聊完 / kw 他刚说了一句）：该问就问、该递就递，递了就整桌走完（返回 "ran"）
+async function vdRgDoor(st, how, text){ const R = window.RGN; if (!R || !R.door || VDRGDOOR || (st && st.guest)) return "";
+  let d = null; try { d = R.door({after: how, said: text || ""}); } catch(e){} if (!d) return "";
+  VDRGDOOR = true; let h = null; try { h = d.k === "invite" ? R.inviteHook(d.c, how, d.w) : R.feastHook(d.c, how, d.w); } catch(e){} if (!h) return "";
+  const m = await vdHookShow(st, h); if (!m) return "";
+  let r;
+  if (h.invite){ r = await vdRgInvWait(m, h);
+    const a = await vdRgInvAns(h, r); if (a === "no" || a === "quiet") return a; r = a; }
+  else r = await vdWait(m, {mic: true, heard: vdRgHeard, chips: [VDRG_STOP()], ph: T("说说你的，几个词也行", "Say yours — a few words is fine")});
+  await vdRgRun(st, h, r); return "ran"; }
 // 借来的起头：点了放进输入框，改成你的再发；原样发出去的不算你自己的话
 const vdRgFill = (arr, lab) => (arr || []).filter(x => x && x.t).length ? `<div class="vd-rgfl"><span class="vd-note">${esc(lab || T("借一句起头，改成你的再发", "Borrow a starter, make it yours, then send"))}</span><div class="vy-chips">${arr.filter(x => x && x.t).map(x => `<button class="vy-chip" data-rgfill="${esc(x.t)}"><span dir="auto">${zhPy(x.t)}</span>${x.g && vdMean(x) ? `<span class="sub" dir="auto">${esc(vdMean(x))}</span>` : ""}</button>`).join("")}</div></div>` : "";
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-rgfill]"); if (!b || !VB) return; const inp = VB.querySelector(".vy-in2"); if (!inp) return;
@@ -4282,7 +4350,9 @@ const vdRgFace = P => P.img ? `<span class="vd-vf"${P.fid ? ` data-pid="${esc(P.
 async function vdRgSay(P, x, o){ o = o || {}; if (!x || !x.t) return null;
   const m = await svy(`${vdRgFace(P)}<span class="vd-who">${esc(P.nm)}${P.fol ? ` <span class="vd-rgfol">${esc(T("你关注的", "You follow"))}</span>` : ""}${P.desc ? `<small class="vd-rgdesc" dir="auto">${esc(P.desc)}</small>` : ""}</span>${o.kd ? `<span class="vm-kd">${esc(o.kd)}</span>` : ""}${vdSegX(x)}${o.extra || ""}${spkBtn()}`, o.wait == null ? 600 : o.wait);
   m.classList.add("vd-pp", "vd-vo"); if (o.cls) m.classList.add(o.cls); vdHist(P.nm, x.t); await speakWait([m.querySelector(".vy-seg")]); return m; }
-const vdRgMedia = m => !m ? "" : `<figure class="vd-rgm">${m.clip ? `<video src="${esc(m.clip)}" poster="${esc(m.poster)}" muted loop playsinline autoplay preload="metadata"></video>` : `<img src="${esc(m.img)}" alt="" loading="lazy">`}<figcaption dir="auto">${esc(m.cap)}${m.by ? ` <small>${m.page ? `<a href="${esc(m.page)}" target="_blank" rel="noopener">${esc(m.by)}</a>` : esc(m.by)}</small>` : ""}</figcaption></figure>`;
+// 🎬 YouTube 那一段：用小卡的 vidHTML（静音自动播、只放 start–end）；照片加载失败整块收起，不留破图
+const vdRgMk = m => !m ? "" : m.clip || m.img || (m.yt ? "yt:" + m.yt.id : "");
+const vdRgMedia = m => !m ? "" : m.yt ? (window.CGK && window.CGK.vidHTML ? window.CGK.vidHTML(m.yt) : "") : `<figure class="vd-rgm">${m.clip ? `<video src="${esc(m.clip)}" poster="${esc(m.poster)}" muted loop playsinline autoplay preload="metadata"></video>` : `<img src="${esc(m.img)}" alt="" onerror="var f=this.closest('figure');if(f)f.remove()">`}<figcaption dir="auto">${esc(m.cap)}${m.by ? ` <small>${m.page ? `<a href="${esc(m.page)}" target="_blank" rel="noopener">${esc(m.by)}</a>` : esc(m.by)}</small>` : ""}</figcaption></figure>`;
 // 一段话里没给他看过的句子（两种语言句数一样才一起删）；全看过了就原样给。给了的记进 F.usedS
 // max：最多给几句（「为什么」四句以上时主菜只给前两句，后面的留给配菜当「顺便知道」，不重复）
 function vdRgFresh(x, F, max){ const R = window.RGN; if (!x || !x.t || !F) return x; const a = R.splitS(x.t), b = R.splitS(x.g || ""), keep = a.map(s => !F.usedS.has(s));
@@ -4302,10 +4372,17 @@ function vdPyWords(t){ try { const P = window.pinyinPro; if (!P || !P.pinyin) re
       else out += (out && !/[\s“(—]$/.test(out) ? " " : "") + w; }
     return out.replace(/(^|[.!?]\s+|[.!?]”\s*)([a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ])/g, (m, a, b) => a + b.toUpperCase()); } catch(e){ return ""; } }
 // 开胃那张事实卡：正常字号的正文 + 按词连写的拼音一行 + 意思，不用大号红字、不逐字注音；同一段短片相邻两道不重复
-const vdRgFact = (h, F) => { const m = h.media, mk = m ? (m.clip || m.img) : ""; const md = mk && F && F.lastMedia === mk ? null : m; if (F && mk) F.lastMedia = mk;
+// 画面单独一块（一桌菜开头：先看画面再听人说）；之后的事实卡不再重复这一段
+const vdRgPic = (h, F) => { const m = h.media, mk = vdRgMk(m), html = vdRgMedia(m); if (!mk || !html) return null; if (F) F.lastMedia = mk;
+  const el = add(html, "vm-wide vd-card vd-rgc vd-rgpic"); if (m.yt) try { window.CGK.vidWire(el); } catch(e){}
+  // 照片没加载出来：figure 被收起，这块空卡也一起收
+  const im = el.querySelector("img"); if (im) im.addEventListener("error", () => { try { el.remove(); } catch(e){} });
+  vdHist("Voyo (picture)", m.cap || ""); return el; };
+const vdRgFact = (h, F) => { const m = h.media, mk = vdRgMk(m); const md = mk && F && F.lastMedia === mk ? null : m; if (F && mk) F.lastMedia = mk;
   if (F) try { window.RGN.splitS(h.fact.t).forEach(x => F.usedS.add(x)); } catch(e){}
   const zh = KL() === "zh", py = zh ? (h.fact.py || vdPyWords(h.fact.t)) : "";
-  return add(`<span class="vm-kd">${esc(h.kd)}</span>${vdRgMedia(md)}<div class="vd-rgtx" dir="auto">${esc(h.fact.t)}</div>${py ? `<div class="vd-rgpy" dir="ltr" data-nopy>${esc(py)}</div>` : ""}${h.fact.g ? `<div class="vd-rgg" dir="auto">${esc(h.fact.g)}</div>` : ""}`, "vm-wide vd-card vd-rgc vd-rgfact"); };
+  const el = add(`${vdRgMedia(md)}<span class="vm-kd">${esc(h.kd)}</span><div class="vd-rgtx" dir="auto">${esc(h.fact.t)}</div>${py ? `<div class="vd-rgpy" dir="ltr" data-nopy>${esc(py)}</div>` : ""}${h.fact.g ? `<div class="vd-rgg" dir="auto">${esc(h.fact.g)}</div>` : ""}`, "vm-wide vd-card vd-rgc vd-rgfact");
+  if (md && md.yt) try { window.CGK.vidWire(el); } catch(e){} return el; };
 // 他说了一句：在学的语言说的，抓一个他真说出口的词，接卡里带着这个词的一句；用母语说的，说一声也算
 async function vdRgEcho(c, a, F){ const R = window.RGN; if (!a || !a.t) return false;
   if (a.native){ const x = KL() === "zh" ? {t: "先用英文说也算，中文可以慢慢换。", g: "Saying it in English first is fine — swap in Chinese bit by bit."} : {t: "Saying it in Chinese first is fine — swap in English bit by bit.", g: UIL() === "zh" ? "先用中文说也算，英文可以慢慢换。" : ""}; await vdVoyo(x, {wait: 400}); vdHist("Voyo", x.t); return false; }
@@ -4326,10 +4403,9 @@ async function vdRgMain(c, h, a0, F){ const R = window.RGN;
   const hit0 = await vdRgEcho(c, a0, F);
   try { R.flip(c.id); } catch(e){}
   const src = (c.src || []).map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join(" · ");
-  // 引子几种说法轮着用，不每道都是同一句
-  const LEADS = [["这背后是有原因的。", "There's a reason behind it."], ["这事是有来历的。", "This one has a history."], ["先说说为什么。", "First, the why."], ["为什么会这样？有个说法。", "Why is it like that? Here's how it came about."]], ld = LEADS[(F.lead = (F.lead || 0) + 1) % LEADS.length];
-  const lead = KL() === "zh" ? {t: ld[0], g: ld[1]} : {t: ld[1], g: UIL() === "zh" ? ld[0] : ""};
-  await vdVoyo(hit0 || !a0.t ? lead : vdMm(lead), {wait: 350}); vdHist("Voyo", lead.t);
+  // 2026-11-22 检查员：不说固定的引子（「这事是有来历的」会被听成在评论他的话）。抓到了他真说的词 = 上面 vdRgEcho 已经接了；
+  //   没抓到、他又说了话：只说一声「嗯。」，然后直接上
+  if (!hit0 && a0.t && !a0.native){ const mm = KL() === "zh" ? {t: "嗯。", g: UIL() === "zh" ? "" : "Mm.", py: "Ńg."} : {t: "Mm.", g: UIL() === "zh" ? "嗯。" : ""}; await vdVoyo(mm, {wait: 300}); vdHist("Voyo", mm.t); }
   // 为什么那一段：前面已经给他看过的句子（比如配菜的小知识）不再放；放过的句子记下来，后面接话、小知识都不再重复
   const why = vdRgFresh(h.why, F, 2), ctr = h.contrast && h.contrast.t ? vdRgFresh(h.contrast, F) : null;
   add(`<span class="vm-kd">${esc(T("为什么", "Why"))}</span>${vdSegX(why)}${ctr && ctr.t ? `<span class="vm-kd vd-rgels">🌍 ${esc(T("别处呢", "Elsewhere"))}</span>${vdSegX(ctr)}` : ""}${spkBtn()}<span class="vd-src">${esc(T("出处", "Sources"))} ${src}</span>`, "vm-wide vd-card vd-rgc vd-rgwhy");
@@ -4338,7 +4414,7 @@ async function vdRgMain(c, h, a0, F){ const R = window.RGN;
   if (!F.tabled.has(c.id)) await vdRgSay(R.who(c, c.person.who), h.says, {kd: T("TA 碰到的", "What happened to them")});
   for (const tb of R.table(c, new Set([...F.used, ...F.tabled]))){ F.tabled.add(tb.from); await vdRgSay(tb.p, tb.x, {kd: T(`也碰到过相关的事 · ${tb.sec}`, `A related story · ${tb.sec}`)}); }
   // 站一边，说为什么
-  const P = R.patOf(c, 0).P, f2 = [P.l2].filter(Boolean);
+  const f2 = [];  // 2026-11-22 检查员：起头句答的是开场那道题，接不上这里的问题 → 这里不放起头
   const m2 = await vdVoyo(h.q, {wait: 400, extra: vdRgFill(f2)}); vdHist("Voyo", h.q.t);
   const a2 = await vdRgWait(m2, f2); if (a2.stop) return F.stop = true; vdRgOwn(c, a2, F);
   const hit2 = await vdRgEcho(c, a2, F);
@@ -4353,7 +4429,9 @@ async function vdRgMain(c, h, a0, F){ const R = window.RGN;
   const b = h.borrow; if (b && b.t){ const done = R.kept(c.id);
     const g0 = KL() === "zh" ? {t: "送你一句，拿去就能用。", g: "Here's one line you can use straight away.", py: "Sòng nǐ yí jù, ná qù jiù néng yòng."} : Object.assign({t: "Here's one line you can use straight away.", g: UIL() === "zh" ? "送你一句，拿去就能用。" : ""}, vdU(T("送你一句，拿去就能用。", "Here's one line you can use straight away."), "Here's one line you can use straight away."));
     await vdVoyo(hm ? vdMm(g0) : g0, {wait: 400});
-    const cc = add(`<span class="vm-kd">🎁 ${esc(T("能借走的一句", "A line to borrow"))}</span><div class="vd-cgln">${vdSegX(b)}</div><div class="vy-chips"><button class="vy-chip" data-rgkeep${done ? " disabled" : ""}>${done ? "✓ " + esc(T("收好了", "Kept")) : "＋ " + esc(T("收下这句", "Keep this line"))}</button><button class="vy-chip" data-rgopen="${esc(c.id)}" data-rgflip="1">${esc(T("看整张卡", "See the whole card"))}</button></div>`, "vm-wide vd-card vd-cggift");
+    // 顶上一行跟小卡的送句卡一样（2026-11-22 检查员）：「这是关于「小节」——一句来历」，句子下面「什么时候用：」一个真场景（有人问你卡上那个问题的时候）
+    const q0 = c.q ? String(UIL() === "zh" ? c.q.zh || c.q.en : c.q.en || c.q.zh) : "", qq = q0 ? (q0.match(/^.+?[?？]/) || [q0])[0] : "", when = qq ? T(`有人问你「${qq}」的时候，可以这样接。`, `When someone asks you "${qq}" — you can answer like this.`) : "";
+    const cc = add(`${vdGiftHead({t: (c.sec || {}).zh || "", tt: (c.sec || {}).en || "", ol: c.fact || null})}<span class="vm-kd">🎁 ${esc(T("送你一句能用的话", "A line you can use"))}</span><div class="vd-cgln">${vdSegX(b)}</div>${when ? `<span class="vd-note" dir="auto">${esc(T("什么时候用：", "When to use it: "))}${esc(when)}</span>` : ""}<div class="vy-chips"><button class="vy-chip" data-rgkeep${done ? " disabled" : ""}>${done ? "✓ " + esc(T("收好了", "Kept")) : "＋ " + esc(T("收下这句", "Keep this line"))}</button><button class="vy-chip" data-rgopen="${esc(c.id)}" data-rgflip="1">${esc(T("看整张卡", "See the whole card"))}</button></div>`, "vm-wide vd-card vd-cggift");
     try { sparks(cc, 10); } catch(e){} await speakWait([cc.querySelector(".vy-seg")]);
     const kb = cc.querySelector("[data-rgkeep]"); if (kb && !done) kb.onclick = () => { tapFx(kb); try { R.keep(c.id, "voyo"); } catch(e){} kb.textContent = "✓ " + T("收好了", "Kept"); kb.disabled = true; sparks(kb, 8); };
     vdHist("Voyo (gift card)", b.t); }
@@ -4376,7 +4454,7 @@ async function vdRgSides(c, h, F){ const R = window.RGN, zh = KL() === "zh";
     const wseg = card.querySelector(".vd-rgw .vy-seg"); if (wseg) wseg.dataset.say = w.say; await sleep(250); await speakWait([wseg]);
     const r = await vdWait(card, {mic: true, want: w.say, micHint: T("说一次", "Say it once"), heard: vdRgHeard, chips: [{t: i < W.length - 1 ? T("下一个", "Next") : T("好了", "Done"), r: () => ({next: true})}, {t: T("先不练，接着聊", "Skip, keep chatting"), r: () => ({skip: true})}, VDRG_STOP()], ph: T("说一次就过，或者点「下一个」", "Say it once, or tap Next")});
     if (r && r.stop) return F.stop = true;
-    if (r && r.text){ const ok = vdRgN(r.text).includes(vdRgN(w.say)); card.insertAdjacentHTML("beforeend", `<div class="vd-rgok">✓ ${esc(ok ? T(`听出来是「${w.say}」了`, `Heard "${w.say}"`) : T("听到了", "Heard you"))}</div>`); try { sparks(card, 8); } catch(e){} }
+    if (r && r.text){ const ok = vdRgN(r.text).includes(vdRgN(w.say)); card.insertAdjacentHTML("beforeend", `<div class="vd-rgok">✓${r.mic ? " " + esc(ok ? T(`听出来是「${w.say}」了`, `Heard "${w.say}"`) : T("听到了", "Heard you")) : ""}</div>`); try { sparks(card, 8); } catch(e){} }
     const fun = R.funOf(c, i, F.usedS);
     if (fun){ F.usedS.add(fun.t); card.insertAdjacentHTML("beforeend", `<div class="vd-rgfun"><span class="vm-kd">💡 ${esc(T("顺便知道", "Did you know"))}</span>${vdSegX(fun)}${(fun.srcs || []).length ? `<span class="vd-src">${esc(T("出处", fun.srcs.length > 1 ? "Sources" : "Source"))} ${fun.srcs.map(x => `<a href="${esc(x.url || "")}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join(" · ")}</span>` : ""}</div>`); scrollChat(); await sleep(700); }
     if (r && r.skip) return false; }
@@ -4391,7 +4469,7 @@ async function vdRgSides(c, h, F){ const R = window.RGN, zh = KL() === "zh";
     await speakWait([seg], {rate: .7}); await speakWait([seg], {rate: .9});
     const r = await vdWait(card, {mic: true, want: p.say, heard: vdRgHeard, chips: [{t: T("往下", "Next"), r: () => ({next: true})}, VDRG_STOP()], ph: T("说一次就过，也可以直接往下", "Say it once, or just go on")});
     if (r && r.stop) return F.stop = true;
-    if (r && r.text){ const ok = vdRgN(r.text).includes(vdRgN(p.say)); card.insertAdjacentHTML("beforeend", `<div class="vd-rgok${ok ? "" : " soft"}">${ok ? "✓ " + esc(p.heard) : esc(p.retry || T("先点「慢一点听」，跟着拍子说。", "Tap Slow and say it along with the beat."))}</div>`); if (ok) try { sparks(card, 8); } catch(e){} } }
+    if (r && r.text){ const ok = vdRgN(r.text).includes(vdRgN(p.say)); card.insertAdjacentHTML("beforeend", `<div class="vd-rgok${ok ? "" : " soft"}">${ok ? "✓" + (r.mic ? " " + esc(p.heard) : "") : esc(p.retry || T("先点「慢一点听」，跟着拍子说。", "Tap Slow and say it along with the beat."))}</div>`); if (ok) try { sparks(card, 8); } catch(e){} } }
   // 一个说法：按他今天说的长短挑一级（三级都能换），用自己的话说一句；只抓真正换进去的那段
   const all = (F.by[c.id] || []), PT = R.patOf(c, R.ownLen(all)); let lv = PT.lv;
   const LVN = {l1: T("刚开始", "Just starting"), l2: T("能聊日常", "Everyday chat"), l3: T("比较流利", "Fairly fluent")};
@@ -4425,19 +4503,24 @@ async function vdRgOffer(c, F){ const R = window.RGN;
   const act = R.actOf(c); if (act && act.why && act.why.t && !F.acts.has(act.id)){ F.acts.add(act.id);
     const m = await vdVoyo(act.why, {wait: 400}); vdHist("Voyo", act.why.t);
     // 按钮上的字照活动自己的数据写（几天、谁带、你是不是已经在参加），不写死「这周有个活动」
-    const M = act.m || {}, bits = [act.t, M.days ? T(`${M.days} 天`, `${M.days} days`) : "", M.host && M.host.nm ? T(`${M.host.nm} 带`, `with ${M.host.nm}`) : ""].filter(Boolean).join(" · ");
+    const M = act.m || {}, bits = [act.t, M.days ? T(`${M.days} 天`, M.days === 1 ? "1 day" : `${M.days} days`) : "", M.host && M.host.nm ? T(`${M.host.nm} 带`, `with ${M.host.nm}`) : ""].filter(Boolean).join(" · ");
     const b = document.createElement("div"); b.className = "vy-chips"; b.innerHTML = `<button class="vy-chip">🎪 ${esc(M.joined ? T("你在参加 · 接着玩", "You're in · carry on") : T("去看看", "Have a look"))}${bits ? ` · ${esc(bits)}` : ""}</button>`; m.appendChild(b);
     b.firstChild.onclick = e => { tapFx(e.currentTarget); try { window.ACT.open(act.id); } catch(x){} }; }
+  // 「再来一道」也是主动递：只给答应了、没在暂停的人（说「不了」的人自己说到这个地方，只递那一张）
+  if (!vdRgPush(c)) return null;
   const nx = R.nextAfter(c, (F.by[c.id] || []).join(" "), F.used); if (!nx) return null;
   await vdVoyo(nx.why, {wait: 450}); vdHist("Voyo", nx.why.t);
   const h = R.feastOf(nx.c);
-  const m = await vdRgSay(R.who(nx.c, nx.c.post.who), h.post, {kd: T("动态", "Post"), cls: "vd-rgpost"});
+  // 动态还没到日子（h.post = null）：不说它发了，直接放卡的正面
+  const m = h.post ? await vdRgSay(R.who(nx.c, nx.c.post.who), h.post, {kd: T("动态", "Post"), cls: "vd-rgpost"}) : vdRgFact(h, F);
   // 他在这里直接说话或打字 = 接着聊这一道：这句就当这道菜的第一句回答（不结束整桌）
   const r = await vdWait(m, {mic: true, heard: vdRgHeard, ph: T("说说你的看法，或者点下面", "Say what you think, or tap below"), chips: [{t: T("接着聊这个", "Talk about this"), cls: "hot", r: () => ({go: true})}, VDRG_STOP()]});
+  // 已经认真走完一整桌，在「再来一道」这里停：不算跳过（不加 sk），这张也不算看过，下次还可以递
   if (r && r.stop) return F.stop = true, null;
   const a = r && !r.go ? vdRgAns(r, []) : null;
+  if (r && (r.go || (a && a.t))) try { R.engaged(nx.c.id); } catch(e){}
   if (!r || (!r.go && !(a && a.t))) return F.stop = true, null;
-  F.used.add(nx.c.id); try { R.seen(nx.c.id); } catch(e){} return {c: nx.c, h, a}; }
+  F.used.add(nx.c.id); try { R.seen(nx.c.id); } catch(e){} return {c: nx.c, h, a, shown: !h.post}; }
 // ── 几天后：TA 又发了一条，他在评论里回，TA 接一句 ──
 async function vdRgLater(h, a, F){ const R = window.RGN, c = h.x;
   if (a.stop) return F.stop = true; if (!a.t) return false;
@@ -4465,7 +4548,7 @@ function vdRgCss(){ if (document.getElementById("vdRgCss")) return; const s = do
 .vd-feast .vd-rp .vy-chips,.vd-rgfl .vy-chips{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}.vd-feast .vd-rp .vy-chips::-webkit-scrollbar,.vd-rgfl .vy-chips::-webkit-scrollbar{display:none}
 .vd-feast .vd-rp .vy-chip,.vd-rgfl .vy-chip{flex:none;white-space:nowrap}.vd-rgfl{margin-top:6px}.vd-rgfl .vy-chip{max-width:none}
 .vd-rgfol{font-size:10.5px;font-weight:700;color:#e2552f;border:1px solid #f3c3b1;border-radius:99px;padding:0 6px;margin-inline-start:4px}.vd-rgdesc{display:block;font-weight:400;color:#8b8f99;font-size:11px}
-.vd-rgm{margin:6px 0 8px;border-radius:12px;overflow:hidden;background:#efe7d4}.vd-rgm video,.vd-rgm img{display:block;width:100%;max-height:220px;object-fit:cover}.vd-rgm figcaption{font-size:11.5px;color:#6b7488;padding:5px 8px;background:#fffdf6}.vd-rgm figcaption small{color:#a0a4ad}.vd-rgm a{color:inherit}
+.vd-rgm{margin:6px 0 8px;border-radius:12px;overflow:hidden;background:#efe7d4}.vd-rgm video,.vd-rgm img{display:block;width:100%;max-width:100%;aspect-ratio:16/10;height:auto;max-height:260px;object-fit:contain;background:#efe7d4}.vd-rgm figcaption{font-size:11.5px;color:#6b7488;padding:5px 8px;background:#fffdf6}.vd-rgm figcaption small{color:#a0a4ad}.vd-rgm a{color:inherit}
 .vd-rgels{margin-top:8px}.vd-rgfrom{font-size:13.5px;color:#4a5160;margin:2px 0 6px}.vd-rgfrom u{text-decoration:none;background:#ffe3d6;border-radius:4px;padding:0 2px}
 .vd-rgw .vy-tl{font:700 19px/1.4 -apple-system,"PingFang SC",sans-serif!important;color:#e2552f!important}.vd-rgok{margin-top:6px;font-size:13px;font-weight:700;color:#2f7d70}.vd-rgok.soft{color:#6b7488;font-weight:500}
 .vd-rgfun{margin-top:8px;padding-top:6px;border-top:1px dashed #e6dfcf}.vd-rgfun .vy-tl{font:400 14px/1.55 -apple-system,"PingFang SC",sans-serif!important;color:#24303a!important}
@@ -4473,21 +4556,23 @@ function vdRgCss(){ if (document.getElementById("vdRgCss")) return; const s = do
 .vd-rgbt.t1{border-top:3px solid #2c64b8}.vd-rgbt.t2{border-top:3px solid #2f7d70}.vd-rgbt.t3{border-top:3px solid #b8892f}.vd-rgbt.t4{border-top:3px solid #e2552f}
 .vd-rgtip{font-size:13px;color:#4a5160;background:#f6f1e4;border-radius:8px;padding:6px 8px;margin:4px 0 6px}
 .vd-rglv{display:flex;gap:6px;margin:4px 0 6px;overflow-x:auto}.vd-rglv button{flex:none;border:1.5px solid #e6dfcf;background:#fff;border-radius:99px;padding:2px 10px;font-size:12px;cursor:pointer;color:#14305c}.vd-rglv button.on{border-color:#e2552f;color:#e2552f;font-weight:700}
+.vy-chip.vd-invbtn{font-size:15.5px;padding:9px 18px;font-weight:700}.vy-chip.vd-invbtn.hot{box-shadow:0 3px 10px rgba(226,85,47,.25)}.vy-chip.vd-invbtn.hot .sub{color:#fff;opacity:.85}
 .vd-rgtk{border:1.5px dashed #e2552f;border-radius:12px;padding:8px 10px;background:#fff8f3}.vd-rgmine{font:600 16px/1.5 -apple-system,"PingFang SC",sans-serif;color:#14305c;margin:4px 0}.vd-rgkept .vd-rgtk{border-style:solid;background:#fff1e8}
 .vd-rgask{margin-top:8px;padding-top:6px;border-top:1px dashed #e6dfcf}.vy-msg.vd-rgcmt{margin-inline-start:52px;font-size:14px}
 .vd-rgstamp{display:inline-block;transform:rotate(-6deg);border:3px double #e2552f;color:#e2552f;font:900 15px "Noto Serif SC",serif;padding:4px 12px;border-radius:8px;background:#fffdf7;animation:rgpop .35s}.vd-rgstamp small{display:block;font:600 10.5px -apple-system,sans-serif;color:#b8892f}`; document.head.appendChild(s); }
 async function vdRgRun(st, h, r){ const R = window.RGN; if (!R || !h || !h.x) return; vdRgCss();
   VDRGEND = true; VB.classList.add("vd-feast");
-  const F = {own: [], by: {}, hits: [], hitW: new Set(), usedS: new Set(), used: new Set([h.x.id]), tabled: new Set(), acts: new Set(), stop: false, lastMedia: h.media && !h.later ? (h.media.clip || h.media.img) : ""};
+  const F = {own: [], by: {}, hits: [], hitW: new Set(), usedS: new Set(), used: new Set([h.x.id]), tabled: new Set(), acts: new Set(), stop: false, lastMedia: h.media && !h.later ? vdRgMk(h.media) : ""};
   try { try { R.seen(h.x.id); } catch(e){}
     // 开胃那张小知识卡刚整段给他看过：接他的话时不再原样念一遍里面的句子
     try { if (!h.later && h.fact && h.fact.t) R.splitS(h.fact.t).forEach(x => F.usedS.add(x)); } catch(e){}
     let c = h.x, cur = h, a = vdRgAns(r, h.fills);
+    try { if (a.stop) R.skip(c.id); else if (a.t) R.engaged(c.id); } catch(e){}
     if (h.later) await vdRgLater(h, a, F);
     else if (a.stop) F.stop = true;
     else { vdRgOwn(c, a, F); await vdRgMain(c, cur, a, F); if (!F.stop) await vdRgSides(c, cur, F); }
     while (!F.stop){ const nx = await vdRgOffer(c, F); if (!nx) break; c = nx.c; cur = nx.h; let a1 = nx.a;
-      vdRgFact(cur, F); vdHist("Voyo (shared)", cur.fact.t);
+      if (!nx.shown) vdRgFact(cur, F); vdHist("Voyo (shared)", cur.fact.t);
       // 他在「再来一道」那里已经说了一句：不再问开场那句，直接拿他这句往下聊
       if (!a1){ const f1 = [R.patOf(c, 0).P.l1].filter(Boolean), m = await vdVoyo(cur.ask, {wait: 450, extra: vdRgFill(f1)}); vdHist("Voyo", cur.ask.t);
         a1 = await vdRgWait(m, f1); if (a1.stop){ F.stop = true; break; } }
@@ -4514,13 +4599,21 @@ async function vdHookRun(st, s){ let i = 0, own = 0, miss = 0, saved = false;
     const b = vbBody(), n0 = b.children.length, hd0 = VDHEARD.length, m = await vdHookShow(st, h); if (!m) continue;
     s.ask = h.ask; VDIR.hookTopic(st, h.tp); VDPOST = null; try { VDIR.noteForm(st, h.ask && h.ask.t); } catch(e){}
     VDCG = vdCgOf(h); if (VDCG) try { window.CGK.seen(VDCG.x.id); } catch(e){}
-    VDRG = h.k === "rg" ? h : null;
+    VDRG = h.k === "rg" ? h : null; if (VDRG) VDRGDOOR = true;
     // 吵架卡上已经放出来的两个人：后面「听听别人怎么说」不再放同一句
     if (VDCG) try { const sh = h.mode === "side" ? vdCgSides(VDCG.x.sd || []) : []; VDCG.shown = new Set(sh.map(p => p.t)); VDCG.shownWho = new Set(sh.map(p => p.who).filter(Boolean)); sh.forEach(p => { const nm = window.CGK.sideName(p); if (nm) VDHEARD.push(nm); }); } catch(e){}
-    const chips = (h.k === "back" && !h.ai ? h.ops.map((o, oi) => ({t: o.t, sub: vdMean(o) || o.g || "", py: KL() === "zh", r: () => ({text: o.t, tap: oi, chip: 1}), echo: `<span dir="auto">${esc(o.t)}</span>`}))
+    const chips = h.invite ? vdRgInvChips(h) : (h.k === "back" && !h.ai ? h.ops.map((o, oi) => ({t: o.t, sub: vdMean(o) || o.g || "", py: KL() === "zh", r: () => ({text: o.t, tap: oi, chip: 1}), echo: `<span dir="auto">${esc(o.t)}</span>`}))
       : h.k !== "back" && h.ops ? h.ops.map((o, oi) => ({t: o.t, sub: vdGx(o.g), py: KL() === "zh", r: () => ({text: o.t, tap: oi, chip: 1, side: oi}), echo: `<span dir="auto">${esc(o.t)}</span>`})) : [])
-      .concat([{t: "⇄ " + T("换一个", "Something else"), cls: "vd-swap", r: () => ({swap: true})}]);
-    const r = await vdWait(m, {mic: true, heard: t => ({text: t, mic: true}), autoStuck: 45000, chips, ph: T("或者，说说你那边的事", "Or tell me how it is where you are")});
+      .concat(h.invite ? [] : [{t: "⇄ " + T("换一个", "Something else"), cls: "vd-swap", r: () => ({swap: true})}]);
+    // 问「想听吗」的那一屏：两个按钮是主角，不放大话筒（vdRgInvWait 一样）
+    let r = await vdWait(m, {mic: !h.invite, heard: t => ({text: t, mic: true}), autoStuck: 45000, chips, ph: h.invite ? T("点下面，或者打一句", "Tap below, or type a reply") : T("或者，说说你那边的事", "Or tell me how it is where you are")});
+    // 问过「想听听吗？」：想听 → 接着递这张卡；不了 → 记下，不再问，换下一种开场；没回（45 秒）→ 收掉，换下一种（过几天还可以再问一次）
+    if (h.invite){ const a = await vdRgInvAns(h, r); if (a === "no" || a === "quiet"){ VDRG = null;
+        if (a === "quiet"){ const els = [...b.children].slice(n0); els.forEach(e => { e.style.transition = "opacity .25s"; e.style.opacity = 0; }); await sleep(260); els.forEach(e => e.remove()); }
+        continue; }
+      r = a; }
+    // 地区卡开胃那步就「换一个」：记一张跳过（连着两张 → 7 天不主动递）
+    if (r && r.swap && VDRG && !VDRG.invite) try { window.RGN.skip(VDRG.x.id); } catch(e){}
     // 换一张：这张卡上听到的人也不算「听了谁」
     if (r && r.swap){ try { VB.classList.remove("vd-feast"); } catch(e){} VDCG = null; VDRG = null; VDHEARD.length = Math.min(VDHEARD.length, hd0); const els = [...b.children].slice(n0); els.forEach(e => { e.style.transition = "opacity .25s"; e.style.opacity = 0; }); await sleep(260); els.forEach(e => e.remove()); continue; }
     // 站队题点了一边：盖一个章（存在 cg.v1，跟小卡里站的是同一边）
@@ -4616,7 +4709,7 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
   if (["ar", "es", "ja"].includes(UIL())) await Promise.race([vdTrFetch(st), sleep(2500)]);
   try { step = VDIR.next(st, null); } catch(e){ try { console.warn("[Voyo 导演] 开不了场，照原来的走", e); } catch(_){} return false; }
   if (!step) return false;
-  VDGO = true; VDAUTO = 0; VDACT = null; VDHIST = []; VDQ = []; VDPOST = null; VDLINE = ""; VDFACTS = []; VDCG = null; VDRG = null; VDRGEND = false; let n = 0, reAsk = null;
+  VDGO = true; VDAUTO = 0; VDACT = null; VDHIST = []; VDQ = []; VDPOST = null; VDLINE = ""; VDFACTS = []; VDCG = null; VDRG = null; VDRGEND = false; VDRGDOOR = false; let n = 0, reAsk = null;
   vdPyFix(); VDHEARD = [];
   try {
     while (step && n++ < 80){
@@ -4652,7 +4745,11 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
       if (step.kind === "open" && VDCG && !VDCG.gifted && !r.stuck) await vdCgGift(st, r.free && !r.chip ? r.text : "");
       // Claude 不在：社会文化这一段聊完就留在这道题上，然后自然结束（2026-11-21 检查员：不接不相干的知识卡、发音卡、词卡、「想聊聊这几个吗」）
       const cgx = vdCgX(step);
-      if (cgx && !vdAiOK() && !r.stuck && !r.swap){ if (r.free && r.text && !r.skip && !vdNative(r.text)) VDFACTS.push({t: r.text, g: ""}); st.cgSaid = r.free && !r.chip ? r.text || "" : ""; await vdCgStay(st, cgx, step); try { rec.today = VDIR.today(st); all[L] = rec; vdSave(all); } catch(e){} break; }
+      if (cgx && !vdAiOK() && !r.stuck && !r.swap){ if (r.free && r.text && !r.skip && !vdNative(r.text)) VDFACTS.push({t: r.text, g: ""}); st.cgSaid = r.free && !r.chip ? r.text || "" : ""; await vdCgStay(st, cgx, step);
+        // 小卡聊完了：正好是个空档，还没问过法国的事就顺口问一句（他刚才说到法国就直接从那儿接）
+        //   他刚点了「先不说了」或者没回：不问
+        try { if (!st.cgQuit) await vdRgDoor(st, "cg", st.cgSaid); } catch(e){ if (e === "stale") throw e; }
+        try { rec.today = VDIR.today(st); all[L] = rec; vdSave(all); } catch(e){} break; }
       // 他说过的事（下次「接着上次」用）：用母语说的记 Claude 给的整句。递给他、他说出口的那一句（跟着说的、借来的）发到朋友动态底下用
       if (r.free && r.text && !r.junk && !r.skip){ if (vdNative(r.text)){ if (r.fix && r.fix.t) VDFACTS.push({t: r.fix.t, g: r.text}); } else VDFACTS.push({t: r.text, g: ""}); }
       if (r.free && r.text && !r.skip) await vdDorm(r.text);
@@ -4663,6 +4760,9 @@ async function vdirGo(o){ o = o || {}; if (!vdOK() || VDGO || !VB) return false;
       if (r.stuck && VDIR.curQ(st) && !step.own){ const ai = await vdAsk(st, step, r, "hint"); if (ai && ai.hint) r.hint = ai.hint; }
       // 从朋友动态开的场：他说出口了一句，问要不要发到 TA 的动态底下（一场一次）
       if (VDPOST && !VDPOST.done && VDLINE && !st.guest) await vdPostOffer(st);
+      // 他自己说到了法国（巴黎、法棍……；没问过的，旅行、葡萄酒这种沾边的也行）：问一句 / 递一张，递了就整桌走完，这一场到这儿
+      if (r.free && r.text && !r.skip && !r.stuck && !st.guest){ let g = ""; try { g = await vdRgDoor(st, "kw", r.text); } catch(e){ if (e === "stale") throw e; }
+        if (g === "ran"){ try { rec.today = VDIR.today(st); all[L] = rec; vdSave(all); } catch(e){} break; } }
       step = VDIR.next(st, r);
       // 同一天刷新算同一场：今天问过、递过的存下来（rec.today），重开时不再问
       try { rec.today = VDIR.today(st); all[L] = rec; vdSave(all); } catch(e){}

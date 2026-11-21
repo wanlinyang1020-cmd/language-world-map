@@ -108,15 +108,24 @@ function score(c, st, said){ let s = 0; if (folWho(c)) s += 10;
 //   当天的还要到点（跟朋友页一样：when.en 里的「8:10 am」，没写就早上 9 点），免得朋友页还没出现，Voyo 先说发了
 const postMin = po => { const m = String(((po || {}).when || {}).en || "").match(/(\d{1,2}):(\d{2})\s*(am|pm)/i); if (!m) return 9 * 60; let h = +m[1] % 12; if (/pm/i.test(m[3])) h += 12; return h * 60 + +m[2]; };
 //   朋友页上排了日子的（gen_region.py 算好的 post.days[在学的语言]）跟着朋友页走；朋友页上没有这个人的，写了 date 用 date，没写算早就发过
+//   2026-11-22 检查员：没到日子的只是那条动态不出（开胃跳过，直接上主菜），卡照常可以递——不然先端出来的是后面的章
+const postDay = c => { const po = c && c.post; return po ? (po.days || {})[L()] || po.date || "" : ""; };
+// 动态发了几天了（没写日子的算早就发过）：超过 2 天，Voyo 说「前几天发了一条」，不说「刚发了一条」
+const postAge = c => { const pd = postDay(c); return pd ? dgap(pd, today()) : 99; };
 const posted = c => { const po = c && c.post; if (!po) return true; const pd = (po.days || {})[L()] || po.date; if (!pd) return true; const d = today(); if (pd !== d) return pd < d; const n = new Date(); return n.getHours() * 60 + n.getMinutes() >= postMin(po); };
-function next(rid, o){ o = o || {}; const rs = rid ? [rid] : regions(); const st = ST(); let best = null, bs = -1;
+// 章的先后（2026-11-22，用户：「就是法国的风土人情，有人也会喜欢的，但是法国过日子大家没那么喜欢了」）：
+//   先递风土人情的章（1 土地和来历、7 大家都知道的、6 一年和一辈子），再别的章；同一章里照上面的分（关注的人、刚说的词、rel、入门）。
+//   他刚说的话里正好有这张卡的词：不管哪一章都先递它（他自己说到的事最相关）。某一章还没写出来就是没有卡，自动跳过
+const CH_FIRST = [1, 7, 6];
+const chRank = (c, said) => said && hitIn(c, said) ? -1 : CH_FIRST.indexOf(+c.ch) >= 0 ? CH_FIRST.indexOf(+c.ch) : CH_FIRST.length;
+function next(rid, o){ o = o || {}; const rs = rid ? [rid] : regions(); const st = ST(); let best = null, bs = -1, br = 99;
   rs.forEach(r => { const R = ALL()[r]; if (!R) return; const order = (R.starter || []).concat((R.cards || []).map(c => c.id));
-    const fresh = (R.cards || []).filter(c => !st.s[c.id] && !(o.not && o.not.has(c.id)) && posted(c));
-    fresh.forEach(c => { const v = score(c, st, o.said) - order.indexOf(c.id) / 1000; if (v > bs){ bs = v; best = c; } }); });
+    const fresh = (R.cards || []).filter(c => c && c.id && !st.s[c.id] && !(o.not && o.not.has(c.id)));
+    fresh.forEach(c => { const rk = chRank(c, o.said), v = score(c, st, o.said) - order.indexOf(c.id) / 1000; if (rk < br || (rk === br && v > bs)){ br = rk; bs = v; best = c; } }); });
   return best; }
 // 再来一道：顺着这张卡的 rel（没有就同一节、同一章），优先你关注的人讲的、带着你刚说过的词的；一句话说明为什么递它
 function nextAfter(c, said, not){ const st = ST(), R = regOf(c.id); not = not || new Set();
-  const pool = new Map(); const put = (x, base) => { if (x && x.id !== c.id && !not.has(x.id) && !st.y[x.id] && !pool.has(x.id) && posted(x)) pool.set(x.id, {x, base}); };
+  const pool = new Map(); const put = (x, base) => { if (x && x.id !== c.id && !not.has(x.id) && !st.y[x.id] && !pool.has(x.id)) pool.set(x.id, {x, base}); };
   (c.rel || []).forEach((id, i) => put(card(id), 3 - i * .3));
   if (!pool.size) (R.cards || []).filter(x => x.ch === c.ch && (x.sec || {}).zh === (c.sec || {}).zh).forEach(x => put(x, 1));
   if (!pool.size) (R.cards || []).filter(x => x.ch === c.ch && !st.s[x.id]).forEach(x => put(x, .5));
@@ -236,15 +245,20 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && document.g
 /* ── Voyo：开场跟社会文化小卡轮着来（第一次是小卡，下一次地区卡……），轮到地区卡又没有新卡就退回小卡 ── */
 function voyoTurn(){ const st = ST(), d = today(); const v = st.vt && st.vt.d === d ? st.vt : {d, n: (st.vt && st.vt.n) || 0}; const mine = v.n % 2 === 1; v.n++; st.vt = v; SAVE(st); return mine; }
 function voyoHook(o){ o = o || {}; const lt = laterDue(); if (lt) return laterHook(lt);
-  let c = null; try { c = next("", o); } catch(e){} if (!c) return null;
-  const R = regOf(c.id), nm = R.name || {}, fw = folWho(c), lg = L();
-  const intro = fw ? (lg === "zh" ? {t: `你关注的${nmIn(R, fw, "zh")}发了一条。`, g: `${nmIn(R, fw, "en")}, who you follow, just posted.`} : {t: `${nmIn(R, fw, "en")}, who you follow, just posted.`, g: UI() === "zh" ? `你关注的${nmIn(R, fw, "zh")}发了一条。` : ""})
+  let d = null; try { d = door({after: "open", said: o.said}); } catch(e){} if (!d) return null;
+  return d.k === "invite" ? inviteHook(d.c, "open", d.w) : feastHook(d.c, "open", d.w); }
+// 递一张卡的开胃（开场轮到地区卡、他自己说到这个地方）：how = open 开场 / kw 他说到了 w / cg 社会文化小卡聊完
+function feastHook(c, how, w){ const R = regOf(c.id), nm = R.name || {}, fw = posted(c) ? folWho(c) : "", lg = L(), old = postAge(c) > 2;
+  if (w && !fw){ const z = `说到「${w}」——我刚好读到一件${nm.zh || ""}的事。`, e = `Speaking of "${w}" — I just read something about ${nm.en || ""}.`;
+    return Object.assign(feastOf(c), {k: "rg", x: c, intro: lg === "zh" ? {t: z, g: e} : {t: e, g: UI() === "zh" ? z : ""}, fol: ""}); }
+  const fz = fw ? `你关注的${nmIn(R, fw, "zh")}${old ? "前几天" : ""}发了一条。` : "", fe = fw ? `${nmIn(R, fw, "en")}, who you follow, ${old ? "posted a few days ago" : "just posted"}.` : "";
+  const intro = fw ? (lg === "zh" ? {t: fz, g: fe} : {t: fe, g: UI() === "zh" ? fz : ""})
     : lg === "zh" ? {t: `我刚读到一件${nm.zh || ""}的事。`, g: `I just read something about ${nm.en || ""}.`} : {t: `I just read something about ${nm.en || ""}.`, g: UI() === "zh" ? `我刚读到一件${nm.zh || ""}的事。` : ""};
   return Object.assign(feastOf(c), {k: "rg", x: c, intro, fol: fw}); }
 // 一张卡端上桌要的东西（Voyo 用）
 function feastOf(c){ const R = regOf(c.id), nm = R.name || {};
   return {x: c, fact: two(c.fact), why: two(c.why), contrast: two(c.contrast), ask: two(c.voyo.open), q: two(c.q), follow: (c.voyo.follow || []).map(two), borrow: two(c.borrow),
-    post: Object.assign(two(c.post), {who: c.post.who}), says: Object.assign(two(c.person.says), {who: c.person.who}), media: mediaOf(c), tp: "",
+    post: posted(c) ? Object.assign(two(c.post), {who: c.post.who}) : null, says: Object.assign(two(c.person.says), {who: c.person.who}), media: mediaOf(c), tp: "",
     kd: T(`${R.flag || ""} ${(chOf(R, c.ch) || {}).zh || ""} · ${(c.sec || {}).zh || ""}`, `${R.flag || ""} ${(chOf(R, c.ch) || {}).en || ""} · ${(c.sec || {}).en || ""}`)}; }
 // 人：名字（跟界面语言走）、简介、照片、朋友页编号（声音）、是不是你关注的
 function who(c, w){ const R = regOf(c.id), P = person(R, w); return Object.assign(P, {fol: isFol(R, w), id: w}); }
@@ -259,9 +273,16 @@ function table(c, skip){ const out = [], seen = new Set([c.person.who]);
   if (rels[0]) out.push({p: who(rels[0], rels[0].person.who), x: two(rels[0].person.says), from: rels[0].id, sec: tx(rels[0].sec)});
   return out; }
 // 配图：media.json 里写好的才放（图里就是卡上说的东西）；贴纸照片拿不到（claude.ai 精简版）就不放
+//   2026-11-22 加两种（用户：「语言老师的课堂上也总是会有一段视频的……还有图片 画面」）：
+//   yt = {id, start, end, channel, title}：YouTube 只放 start–end（cg.js 的 vidHTML / vidWire，这台手机放不了就跳过它）
+//   img = {src, by, page}：Wikimedia Commons 直链照片，署名 by 点开 page
+//   一张卡写了好几种：先 yt，放不了再 img、clip、stk
 function mediaOf(c){ const m = c.media; if (!m) return null; const cap = tx(m.cap);
+  if (m.yt && m.yt.id){ let ok = false; try { ok = !!(window.CGK && window.CGK.ytCan && window.CGK.ytCan()); } catch(e){}
+    if (ok) return {yt: {src: "yt", id: m.yt.id, s: m.yt.start, e: m.yt.end, ch: m.yt.channel || "", t: m.yt.title || "", cap}, cap}; }
+  if (m.img && m.img.src) return {img: m.img.src, cap, by: m.img.by || "", page: m.img.page || ""};
   if (m.clip) return {clip: m.clip, poster: m.clip.replace(/\.mp4$/, ".webp"), cap, by: m.by || ""};
-  let P = null; try { P = typeof STICKER_PHOTOS !== "undefined" ? STICKER_PHOTOS[m.stk] : null; } catch(e){}
+  let P = null; try { P = typeof STICKER_PHOTOS !== "undefined" && m.stk ? STICKER_PHOTOS[m.stk] : null; } catch(e){}
   if (!P || !(P.r2 || P.src)) return null; return {img: P.r2 || P.src, cap, by: [P.artist, P.license].filter(Boolean).join(" · "), page: P.page || ""}; }
 // 这张卡挂着、这位用户能参加的活动（_cards.json）
 function actOf(c){ const A = window.ACT; if (!A || !A.list || !c.acts) return null; let ids; try { ids = new Set(A.list().map(a => a.id)); } catch(e){ return null; }
@@ -317,10 +338,74 @@ function swapOf(pat, text){ const lg = L(), zh = lg === "zh";
   return x0 >= m / 2 ? {k: "half"} : x1 < m - 1 ? {k: "mid"} : {k: "own"}; }
 const ownLen = arr => arr.reduce((n, t) => n + (L() === "en" ? (String(t).match(/[A-Za-z']+/g) || []).length : String(t).replace(/[^一-鿿]/g, "").length), 0);
 
+/* ── 先问一句（2026-11-22，用户：「有些用户不想知道法国人的」「先问一句，不硬塞。聊到合适的时候，Voyo 问一次：『想看看法国人怎么过日子吗？』
+     点『想』才开始递，点『不了』就不再问。自然一点儿，就是法国的风土人情」）
+   rg.v1 里：opt = {地区: {a: "yes" | "no", d: 那天}}；inv = {地区: 问过那天}（问了没回答的，7 天后才可以再问；他自己说到这个地方时，不是同一天就可以再问）；
+     sk = {地区: 连着跳过几张}；pz = {地区: 暂停主动递到哪天（不含）}。
+   答应了：开场轮到地区卡就递；连着两张在开胃那步就跳过（「换一个」/「今天先到这儿」）→ 7 天不主动递。
+   「不了」：不再问、不再主动递；他自己说到这个地方（下面 KW 的 strong）或在朋友页点了「原来如此 →」（RGN.open，跟以前一样）才递，一次一张。
+   关键词先写在这里（以后地区多了可以搬进 region.json）：strong = 一说就是这个地方；soft = 沾边的（旅行、葡萄酒……），只用来自然地问那一句 ── */
+const KW = {fr: {
+  strong: ["France", "French", "Paris", "Parisian", "Lyon", "Marseille", "Bordeaux", "Provence", "Normandy", "Brittany", "Breton", "baguette", "croissant", "Eiffel",
+    "法国", "法語", "法语", "法式", "巴黎", "里昂", "马赛", "波尔多", "普罗旺斯", "诺曼底", "布列塔尼", "法棍", "可颂", "羊角面包", "埃菲尔"],
+  soft: ["wine", "cheese", "travel", "travelling", "traveling", "trip", "holiday", "vacation", "旅行", "旅游", "葡萄酒", "红酒", "奶酪", "芝士", "度假"]}};
+const KWSKIP = /\bfrench\s+(?:fries|fry|toast|press|horn|kiss)\b/gi;
+function kwHit(rid, text){ const K = KW[rid]; let t = String(text || ""); if (!K || !t.trim()) return null; t = t.replace(KWSKIP, " ");
+  const find = a => { for (const k of a){ const m = /[一-鿿]/.test(k) ? (t.includes(k) ? k : null) : ((t.match(new RegExp("\\b" + reEsc(k) + "(?:s|es)?\\b", "i")) || [])[0] || null); if (m) return m; } return null; };
+  const s = find(K.strong); if (s) return {w: s, strong: true}; const f = find(K.soft); return f ? {w: f, strong: false} : null; }
+const sub = (st, k) => (st[k] = st[k] && typeof st[k] === "object" ? st[k] : {});
+const optOf = rid => { const o = (ST().opt || {})[rid]; return o && (o.a === "yes" || o.a === "no") ? o.a : ""; };
+function optSet(rid, a){ const st = ST(); sub(st, "opt")[rid] = {a: a === "yes" ? "yes" : "no", d: today()}; sub(st, "sk")[rid] = 0; SAVE(st); }
+const plusDays = (d, n) => { const x = new Date(d + "T12:00"); x.setDate(x.getDate() + n); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
+const paused = rid => { const p = (ST().pz || {})[rid]; return !!(p && today() < p); };
+// 能不能主动递（开场、再来一道、几天后 TA 又发一条）：答应了、又没在暂停
+const canPush = rid => optOf(rid) === "yes" && !paused(rid);
+// 开胃那步就跳过了这张：连着两张 → 暂停 7 天；他接了一句（说了、打了、点了「接着聊这个」）就从头数
+//   跳过的这张也算看过了（下次换一张递，不把同一张再端上来）
+function skip(id){ const R = regOf(id); if (!R) return; const st = ST(), sk = sub(st, "sk"); sk[R.id] = (+sk[R.id] || 0) + 1;
+  if (!st.s[id]){ st.s[id] = today(); (st.d[today()] = st.d[today()] || []).push(id); }
+  if (sk[R.id] >= 2){ sub(st, "pz")[R.id] = plusDays(today(), 7); sk[R.id] = 0; } SAVE(st); }
+function engaged(id){ const R = regOf(id); if (!R) return; const st = ST(); if (!(st.sk || {})[R.id]) return; st.sk[R.id] = 0; SAVE(st); }
+// 这会儿该不该递、递什么：after = open（开场轮到地区卡）/ cg（一张社会文化小卡刚聊完）/ kw（他刚说了一句话）；said = 他刚说的
+//   → {k: "invite" 先问一句 | "feast" 直接递, rid, c 那张卡, w 他说到的那个词}；不该递返回 null
+function door(o){ o = o || {}; const said = String(o.said || ""), d = today(), st = ST(), inv = st.inv || {};
+  for (const rid of regions()){ const a = optOf(rid), k = kwHit(rid, said), pick = () => next(rid, {said});
+    // 他自己说到了：没问过的 → 问一句（沾边的词也行）；答应了的、说「不了」的 → 他说到这个地方本身才递
+    if (k && (a === "" || k.strong)){ if (a === "" && inv[rid] === d) continue; const c = pick(); if (!c) continue; return {k: a === "" ? "invite" : "feast", rid, c, w: k.w}; }
+    if (o.after === "kw") continue;
+    if (a === "" && (!inv[rid] || dgap(inv[rid], d) >= 7)){ const c = pick(); if (c) return {k: "invite", rid, c}; }
+    if (o.after === "open" && canPush(rid)){ const c = pick(); if (c) return {k: "feast", rid, c}; } }
+  return null; }
+// 按钮写「不用了」不写「不了」：拼音工具会把单独的「不了」注成 bù liǎo
+// 问的那一句：先递一张卡的正面（一件让人一愣的真事），再像朋友顺口一样问「想听听那边的事吗？」；按钮「想听」/「不了」，直接说、打字接着聊也算「想听」
+function inviteHook(c, how, w){ const R = regOf(c.id), nm = R.name || {}, lg = L(); const st = ST(); sub(st, "inv")[R.id] = today(); SAVE(st);
+  const pair = (z, e) => lg === "zh" ? {t: z, g: e} : {t: e, g: UI() === "zh" ? z : ""};
+  // 2026-11-22 检查员：问之前不先放一整段卡的正文，只说一句引子。他刚说到这个地方的词 → 接他的词；接不上就用中性的「顺便问一句」
+  const intro = how === "kw" && w ? pair(`说到「${w}」，我想起${nm.zh || ""}那边的一些事。`, `Speaking of "${w}" — that reminds me of a few things from ${nm.en || ""}.`)
+    : pair("顺便问一句。", "By the way —");
+  const inv = pair(`想听听${nm.zh || ""}的风土人情吗？`, `Want to hear about the land and customs of ${nm.en || ""}?`);
+  const again = pair(`想听${nm.zh || ""}那边的事吗？点下面就行。`, `Do you want to hear about ${nm.en || ""}? Just tap below.`);
+  const ops = [Object.assign(pair("想听", "Sure, tell me"), {a: "yes"}), Object.assign(pair("不用了", "Not really"), {a: "no"})];
+  const no = pair("好，那我们聊别的。", "Sure — something else, then.");
+  return Object.assign(feastOf(c), {k: "rg", invite: true, rid: R.id, x: c, intro, inv, again, ops, no, fol: ""}); }
+// 打字 / 说出来的回答：想听（yes）/ 不用了（no）/ 拿不准（""，Voyo 再问一句，不默认当想听）
+//   2026-11-22 检查员：「不用，谢谢」「不感兴趣」「下次吧」「I'm good」「not interested」都被当成了想听——句子里有否定、推掉的意思就算不用了
+//   先看「其实是好」的固定说法（why not、没问题、不错），再看否定，最后看肯定
+const YN_YES_FIRST = /(?:why\s+not|no\s+problem|没问题|不错|何乐而不为|por\s*qu[ée]\s+no|もちろん|ぜひ)/i;
+const YN_NO = new RegExp([
+  "不(?:用|要|想|了|太想|感兴趣|必|需要|听)", "没(?:什么)?兴趣", "下次", "改天", "以后再", "算了", "免了", "别了", "先不", "不啦",
+  "\\b(?:no|nope|nah|not|never|don'?t|dont|pass|skip|later)\\b", "i'?m\\s+(?:good|ok(?:ay)?|fine|alright)", "maybe\\s+(?:later|another)",
+  "\\b(?:paso|luego|despu[eé]s|otro\\s+d[ií]a|ahora\\s+no|no\\s+gracias|nada)\\b",
+  "いいえ", "いや", "結構です", "けっこう", "大丈夫です", "また今度", "遠慮", "いらない", "興味(?:が)?ない", "やめ",
+  "(?:^|\\s)لا(?:\\s|$|،|\\.)", "لاحق", "مش", "مو\\s", "ليس", "غير\\s+مهتم", "مرة\\s+ثانية"].join("|"), "i");
+const YN_YES = /(?:想|好|要|行|可以|当然|愿意|听听|说吧|讲讲|来吧|嗯+|对|\b(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|go\s+on|tell\s+me|love\s+to|i'?d\s+love|definitely|absolutely|sounds\s+(?:good|great|fun|interesting))\b|\b(?:si|vale|dale|bueno|claro|of\s+course)\b|(?:^|[\s¡¿,])sí(?![a-záéíóúñ])|はい|うん|いいね|聞きたい|نعم|أكيد|اكيد|طيب|ماشي|حسنا|أيوه|ايوه)/i;
+function ynOf(t){ t = String(t || "").trim(); if (!t) return ""; if (YN_YES_FIRST.test(t)) return "yes"; if (YN_NO.test(t)) return "no"; if (YN_YES.test(t)) return "yes"; return ""; }
+const nope = t => ynOf(t) === "no";
+
 /* ── 甜点：几天后（第 3 天起）卡里的人用 later 再发一条，底下问大家（卡的 q），你在评论里回；一张卡只发一次 ── */
 const dgap = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
 function laterDue(){ const st = ST(), d = today(), lp = st.lp || {};
-  const ids = Object.keys(st.y).filter(id => { const c = card(id), t0 = talkedOn(st, id); return c && c.later && t0 && !lp[id] && dgap(t0, d) >= 3; });
+  const ids = Object.keys(st.y).filter(id => { const c = card(id), t0 = talkedOn(st, id); return c && c.later && t0 && !lp[id] && dgap(t0, d) >= 3 && canPush(regOf(id).id); });
   ids.sort((a, b) => (folWho(card(b)) ? 1 : 0) - (folWho(card(a)) ? 1 : 0)); return ids.length ? card(ids[0]) : null; }
 function laterShown(id){ const st = ST(); st.lp = st.lp && typeof st.lp === "object" ? st.lp : {}; st.lp[id] = today(); SAVE(st); }
 function laterHook(c){ const R = regOf(c.id), lg = L(), w = c.later && c.person.who, nZ = nmIn(R, w, "zh"), nE = nmIn(R, w, "en");
@@ -355,7 +440,8 @@ const CSS = `.rg-wrap{position:fixed;inset:0;z-index:100050;pointer-events:none}
 button.pt-rg{display:block;margin-top:6px;border:0;background:none;color:#e2552f!important;font-weight:700;cursor:pointer;padding:2px 0;font-size:13.5px}`;
 
 window.RGN = {regions, splitS, catchFor, card, next, newToday, seen, flip, said, keep, kept, keptToday, prog, open, close, two, voyoTurn, voyoHook, whereOf, st: ST, L, T, css,
-  nextAfter, hitIn, sentWith, funOf, feastOf, who, table, mediaOf, actOf, wordsOf, pron, patOf, swapOf, ownLen, laterDue, laterShown, laterHook, ownKeep, folWho};
+  nextAfter, hitIn, sentWith, funOf, feastOf, who, table, mediaOf, actOf, wordsOf, pron, patOf, swapOf, ownLen, laterDue, laterShown, laterHook, ownKeep, folWho,
+  rid: id => (regOf(id) || {}).id || "", door, kwHit, optOf, optSet, canPush, paused, skip, engaged, inviteHook, feastHook, nope, ynOf};
 // 朋友页动态里的「原来如此 →」要样式：一开始就把样式放上
 try { css(); } catch(e){}
 })();
