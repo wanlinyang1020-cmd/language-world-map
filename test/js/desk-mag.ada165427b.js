@@ -3438,6 +3438,7 @@ function render(opt){
    <div class="sec" id="drSec"><h3>${esc(UT("我的语言抽屉", "My language drawers"))}</h3><p class="sub" dir="auto">${esc(UT("六个柜子装着不同的说话目的。说过的会留下来；也可以先点一个空抽屉，看看怎么开始。", "Six cabinets organize what you want to say. Your own lines collect here; open an empty drawer to get a gentle starting prompt."))}</p><div class="ycabs">${cabinetHtml}</div></div>
    ${pkHtml}
    ${keptSection()}
+   ${window.YOU ? window.YOU.meHtml() : ""}
    ${shapeSection()}
    ${soundSection()}
    ${un.length ? `<div class="sec"><h3>${esc(T.shelfH)}</h3><p class="sub" dir="auto">${esc(T.shelfS2)}</p><div class="shelf">${shelf}</div></div>` : ""}

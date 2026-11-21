@@ -117,20 +117,27 @@ const posted = c => { const po = c && c.post; if (!po) return true; const pd = (
 //   先递风土人情的章（1 土地和来历、7 大家都知道的、6 一年和一辈子），再别的章；同一章里照上面的分（关注的人、刚说的词、rel、入门）。
 //   他刚说的话里正好有这张卡的词：不管哪一章都先递它（他自己说到的事最相关）。某一章还没写出来就是没有卡，自动跳过
 const CH_FIRST = [1, 7, 6];
+// 🔒 开着的章（2026-11-22 创意总监：先只开放风土人情；第 5 章「过日子」还没按新规矩改好，用户也说「内容的事情先放一放」）：
+//   next / nextAfter / rel / 同桌的人 / 几天后又发一条 / 记得你（you_mem.js）/ 复习词选卡，都只在开着的章里挑。第 5 章的数据还在页面里，只是不递；改好了把 5 加进来就行。
+//   地区不在这里 = 所有章都开着
+const ACTIVE = {fr: [1, 6, 7]};
+const on = c => { if (!c) return false; const R = regOf(c.id), a = R && ACTIVE[R.id]; return !a || a.includes(+c.ch); };
 const chRank = (c, said) => said && hitIn(c, said) ? -1 : CH_FIRST.indexOf(+c.ch) >= 0 ? CH_FIRST.indexOf(+c.ch) : CH_FIRST.length;
 function next(rid, o){ o = o || {}; const rs = rid ? [rid] : regions(); const st = ST(); let best = null, bs = -1, br = 99;
   rs.forEach(r => { const R = ALL()[r]; if (!R) return; const order = (R.starter || []).concat((R.cards || []).map(c => c.id));
-    const fresh = (R.cards || []).filter(c => c && c.id && !st.s[c.id] && !(o.not && o.not.has(c.id)));
+    const fresh = (R.cards || []).filter(c => c && c.id && on(c) && !st.s[c.id] && !(o.not && o.not.has(c.id)));
     fresh.forEach(c => { const rk = chRank(c, o.said), v = score(c, st, o.said) - order.indexOf(c.id) / 1000; if (rk < br || (rk === br && v > bs)){ br = rk; bs = v; best = c; } }); });
   return best; }
 // 再来一道：顺着这张卡的 rel（没有就同一节、同一章），优先你关注的人讲的、带着你刚说过的词的；一句话说明为什么递它
 function nextAfter(c, said, not){ const st = ST(), R = regOf(c.id); not = not || new Set();
-  const pool = new Map(); const put = (x, base) => { if (x && x.id !== c.id && !not.has(x.id) && !st.y[x.id] && !pool.has(x.id)) pool.set(x.id, {x, base}); };
+  const pool = new Map(); const put = (x, base) => { if (x && on(x) && x.id !== c.id && !not.has(x.id) && !st.y[x.id] && !pool.has(x.id)) pool.set(x.id, {x, base}); };
   (c.rel || []).forEach((id, i) => put(card(id), 3 - i * .3));
   if (!pool.size) (R.cards || []).filter(x => x.ch === c.ch && (x.sec || {}).zh === (c.sec || {}).zh).forEach(x => put(x, 1));
   if (!pool.size) (R.cards || []).filter(x => x.ch === c.ch && !st.s[x.id]).forEach(x => put(x, .5));
   let best = null, bs = -1;
-  pool.forEach(({x, base}) => { const fw = folWho(x), h = hitIn(x, said); const v = base + (fw ? 10 : 0) + (h ? 5 : 0) - (st.s[x.id] ? 2 : 0); if (v > bs){ bs = v; best = {c: x, who: fw, hit: h}; } });
+  // 🧠 大家都记得你（2026-11-22）：群聊里有你该回来的词（YOU.due，第 1、3、7 天）的卡往前排
+  const yd = x => { try { return window.YOU && window.YOU.dueIn(x) ? 4 : 0; } catch(e){ return 0; } };
+  pool.forEach(({x, base}) => { const fw = folWho(x), h = hitIn(x, said); const v = base + (fw ? 10 : 0) + (h ? 5 : 0) + yd(x) - (st.s[x.id] ? 2 : 0); if (v > bs){ bs = v; best = {c: x, who: fw, hit: h}; } });
   if (!best) return null;
   const lg = L(), x = best.c, nm = best.who ? nmIn(R, best.who, lg) : "", nmO = best.who ? nmIn(R, best.who, OTHER(lg)) : "", w = best.hit ? best.hit.said : "";
   const LN = {
@@ -259,13 +266,21 @@ function feastHook(c, how, w){ const R = regOf(c.id), nm = R.name || {}, fw = po
 function feastOf(c){ const R = regOf(c.id), nm = R.name || {};
   return {x: c, fact: two(c.fact), why: two(c.why), contrast: two(c.contrast), ask: two(c.voyo.open), q: two(c.q), follow: (c.voyo.follow || []).map(two), borrow: two(c.borrow),
     post: posted(c) ? Object.assign(two(c.post), {who: c.post.who}) : null, says: Object.assign(two(c.person.says), {who: c.person.who}), media: mediaOf(c), tp: "",
+    // 💬 群聊（2026-11-22）：有 chat 的卡，主菜是一段群聊（chat 最后一条 ask 问他，他答了放 chat2）；没有就是 null，照原来的走
+    chat: chatOf(c.chat), chat2: chatOf(c.chat2),
     kd: T(`${R.flag || ""} ${(chOf(R, c.ch) || {}).zh || ""} · ${(c.sec || {}).zh || ""}`, `${R.flag || ""} ${(chOf(R, c.ch) || {}).en || ""} · ${(c.sec || {}).en || ""}`)}; }
+// 群聊的一条：{who（cast 里的人或 voyo）, t, g, py, photo, ask}
+//   video = {yt, start, end, channel, title}：这个人转发的一段 YouTube（只放 start–end）；放不放得了到显示时再看（voyo.js vdGcMsg）
+//   alt = {some, none, idk}（chat2 第一条，2026-11-22）：没有自己的 zh，按他的回答挑一句（voyo.js vdRgChat2 用 ansKind 挑）
+const altOf = A => { const o = {}; ["some", "none", "idk"].forEach(k => { if (A[k] && A[k][L()]) o[k] = two(A[k]); }); return Object.keys(o).length ? o : null; };
+const chatOf = a => Array.isArray(a) && a.length ? a.filter(x => x && x.who && (x[L()] || (x.alt && typeof x.alt === "object" && altOf(x.alt)))).map(x => !x[L()] ? {who: x.who, t: "", alt: altOf(x.alt), photo: false, ask: false} : Object.assign(two(x), {who: x.who, photo: !!x.photo, ask: !!x.ask},
+  x.video && x.video.yt ? {video: {src: "yt", id: x.video.yt, s: x.video.start, e: x.video.end, ch: x.video.channel || "", t: x.video.title || "", cap: ""}} : {})) : null;
 // 人：名字（跟界面语言走）、简介、照片、朋友页编号（声音）、是不是你关注的
 function who(c, w){ const R = regOf(c.id), P = person(R, w); return Object.assign(P, {fol: isFol(R, w), id: w}); }
 // 同桌的人：卡的 person，post 的人（不是同一个时），再从 rel 卡里挑一个别的人（关注的优先），用那张卡的 person.says
 //   skip = 这一桌已经聊过的卡（那张卡的人刚说过，不再请来重复一遍）
 function table(c, skip){ const out = [], seen = new Set([c.person.who]);
-  const ok = x => x && x.id !== c.id && !(skip && skip.has(x.id)) && !seen.has(x.person.who) && x.person.who !== c.post.who && x.person.says;
+  const ok = x => x && on(x) && x.id !== c.id && !(skip && skip.has(x.id)) && !seen.has(x.person.who) && x.person.who !== c.post.who && x.person.says;
   let rels = (c.rel || []).map(card).filter(ok);
   // rel 里的卡还没写出来：从同一节、再同一章里请一个别的人（同桌至少两个人）
   if (!rels.length){ const RR = regOf(c.id).cards || []; rels = RR.filter(x => ok(x) && x.ch === c.ch && (x.sec || {}).zh === (c.sec || {}).zh); if (!rels.length) rels = RR.filter(x => ok(x) && x.ch === c.ch); }
@@ -382,7 +397,7 @@ function inviteHook(c, how, w){ const R = regOf(c.id), nm = R.name || {}, lg = L
   const pair = (z, e) => lg === "zh" ? {t: z, g: e} : {t: e, g: UI() === "zh" ? z : ""};
   // 2026-11-22 检查员：问之前不先放一整段卡的正文，只说一句引子。他刚说到这个地方的词 → 接他的词；接不上就用中性的「顺便问一句」
   const intro = how === "kw" && w ? pair(`说到「${w}」，我想起${nm.zh || ""}那边的一些事。`, `Speaking of "${w}" — that reminds me of a few things from ${nm.en || ""}.`)
-    : pair("顺便问一句。", "By the way —");
+    : null;  // 2026-11-22 检查员：前面什么都没聊就说「顺便」不通 → 没有接得上的词就只问那一句
   const inv = pair(`想听听${nm.zh || ""}的风土人情吗？`, `Want to hear about the land and customs of ${nm.en || ""}?`);
   const again = pair(`想听${nm.zh || ""}那边的事吗？点下面就行。`, `Do you want to hear about ${nm.en || ""}? Just tap below.`);
   const ops = [Object.assign(pair("想听", "Sure, tell me"), {a: "yes"}), Object.assign(pair("不用了", "Not really"), {a: "no"})];
@@ -401,16 +416,29 @@ const YN_NO = new RegExp([
 const YN_YES = /(?:想|好|要|行|可以|当然|愿意|听听|说吧|讲讲|来吧|嗯+|对|\b(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|go\s+on|tell\s+me|love\s+to|i'?d\s+love|definitely|absolutely|sounds\s+(?:good|great|fun|interesting))\b|\b(?:si|vale|dale|bueno|claro|of\s+course)\b|(?:^|[\s¡¿,])sí(?![a-záéíóúñ])|はい|うん|いいね|聞きたい|نعم|أكيد|اكيد|طيب|ماشي|حسنا|أيوه|ايوه)/i;
 function ynOf(t){ t = String(t || "").trim(); if (!t) return ""; if (YN_YES_FIRST.test(t)) return "yes"; if (YN_NO.test(t)) return "no"; if (YN_YES.test(t)) return "yes"; return ""; }
 const nope = t => ynOf(t) === "no";
+// 他回答群里那一问：some 说了一件具体的事或一个看法 / none 没有、没去过、没吃过 / idk 不知道、想不出来。拿不准算 some
+//   短的回答才认「没有」「不知道」（「我没去过，不过我觉得……」后面还说了自己的看法，算 some）
+const AK_IDK = new RegExp(["不知道", "不清楚", "想不出", "想不起", "说不上来", "不确定", "没想过", "\\b(?:i\\s+)?(?:don'?t|do\\s+not|dunno)\\s+know\\b", "\\bdunno\\b", "\\bidk\\b", "no\\s+idea", "not\\s+sure", "can'?t\\s+think", "no\\s+clue",
+  "no\\s+(?:lo\\s+)?s[eé]", "ni\\s+idea", "no\\s+estoy\\s+segur", "no\\s+se\\s+me\\s+ocurre", "わから", "分から", "知らない", "思いつかない", "لا\\s*أعرف", "لا\\s*اعرف", "مش\\s*عارف", "ما\\s*بعرف", "لا\\s*أدري", "ما\\s*أدري", "ما\\s*اعرف"].join("|"), "i");
+const AK_NONE = new RegExp(["没有", "没去过", "没吃过", "没见过", "没试过", "没听说", "从没", "从来没", "没怎么", "\\b(?:no|nope|never|none|nothing|haven'?t|have\\s+not|didn'?t|not\\s+really|not\\s+yet)\\b",
+  "\\bnunca\\b", "\\bno\\s+he\\b", "\\bningun[oa]?\\b", "\\btodav[ií]a\\s+no\\b", "\\bnada\\b", "ない", "ありません", "ことがない", "まだ", "لم\\s", "أبدا", "ابدا", "ولا\\s*مرة", "ما\\s*رحت", "ما\\s*جربت", "(?:^|\\s)لا(?:\\s|$|،|\\.)"].join("|"), "i");
+function ansKind(t){ t = String(t || "").trim(); if (!t) return "some";
+  const n = /[一-鿿぀-ヿ]/.test(t) ? t.replace(/[\s\p{P}]/gu, "").length : (t.match(/\S+/g) || []).length, short = /[一-鿿぀-ヿ]/.test(t) ? n <= 14 : n <= 8;
+  // 「没去过，不过……」「No, but…」：后面接着说了自己的事，算 some
+  if (/不过|但是|可是|\b(?:but|though|although|pero|aunque)\b|でも|けど|لكن|بس\s/i.test(t)) return "some";
+  if (short && AK_IDK.test(t)) return "idk"; if (short && AK_NONE.test(t)) return "none"; return "some"; }
 
 /* ── 甜点：几天后（第 3 天起）卡里的人用 later 再发一条，底下问大家（卡的 q），你在评论里回；一张卡只发一次 ── */
 const dgap = (a, b) => Math.round((new Date(b + "T12:00") - new Date(a + "T12:00")) / 864e5);
 function laterDue(){ const st = ST(), d = today(), lp = st.lp || {};
-  const ids = Object.keys(st.y).filter(id => { const c = card(id), t0 = talkedOn(st, id); return c && c.later && t0 && !lp[id] && dgap(t0, d) >= 3 && canPush(regOf(id).id); });
+  const ids = Object.keys(st.y).filter(id => { const c = card(id), t0 = talkedOn(st, id); return c && on(c) && c.later && t0 && !lp[id] && dgap(t0, d) >= 3 && canPush(regOf(id).id); });
   ids.sort((a, b) => (folWho(card(b)) ? 1 : 0) - (folWho(card(a)) ? 1 : 0)); return ids.length ? card(ids[0]) : null; }
 function laterShown(id){ const st = ST(); st.lp = st.lp && typeof st.lp === "object" ? st.lp : {}; st.lp[id] = today(); SAVE(st); }
 function laterHook(c){ const R = regOf(c.id), lg = L(), w = c.later && c.person.who, nZ = nmIn(R, w, "zh"), nE = nmIn(R, w, "en");
   const intro = lg === "zh" ? {t: `${nZ}又发了一条，底下在问大家。`, g: `${nE} posted again — and is asking everyone below.`} : {t: `${nE} posted again — and is asking everyone below.`, g: UI() === "zh" ? `${nZ}又发了一条，底下在问大家。` : ""};
-  const st = ST(); return Object.assign(feastOf(c), {k: "rg", later: true, x: c, intro, lp: two(c.later), mine: (st.o && st.o[c.id]) || st.y[c.id] || "", kept: !!st.k[c.id]}); }
+  // 你在「大家记得你的事」里删掉的那句，TA 不再提（YOU.gone）
+  const st = ST(), m0 = (st.o && st.o[c.id]) || st.y[c.id] || "", mine = m0 && window.YOU && (window.YOU.gone(m0) || (window.YOU.meaty && !window.YOU.meaty(m0))) ? "" : m0;
+  return Object.assign(feastOf(c), {k: "rg", later: true, x: c, intro, lp: two(c.later), mine, kept: !!st.k[c.id]}); }
 // 他在配菜里收下的、自己说的那一句（几天后人物发动态时递回来）
 function ownKeep(id, t){ const st = ST(); st.o = st.o && typeof st.o === "object" ? st.o : {}; st.o[id] = String(t || "").trim(); SAVE(st); return said(id, t, "pattern"); }
 
@@ -441,9 +469,259 @@ button.pt-rg{display:block;margin-top:6px;border:0;background:none;color:#e2552f
 
 window.RGN = {regions, splitS, catchFor, card, next, newToday, seen, flip, said, keep, kept, keptToday, prog, open, close, two, voyoTurn, voyoHook, whereOf, st: ST, L, T, css,
   nextAfter, hitIn, sentWith, funOf, feastOf, who, table, mediaOf, actOf, wordsOf, pron, patOf, swapOf, ownLen, laterDue, laterShown, laterHook, ownKeep, folWho,
-  rid: id => (regOf(id) || {}).id || "", door, kwHit, optOf, optSet, canPush, paused, skip, engaged, inviteHook, feastHook, nope, ynOf};
+  rid: id => (regOf(id) || {}).id || "", door, kwHit, optOf, optSet, canPush, paused, skip, engaged, inviteHook, feastHook, nope, ynOf, ansKind, on};
 // 朋友页动态里的「原来如此 →」要样式：一开始就把样式放上
 try { css(); } catch(e){}
+})();
+
+/* you_mem.js */
+// 🧠 大家都记得你 · 第一步（2026-11-22 用户：「npc 是可以围绕着用户的，我就不信这么多有身份的 npc 教不会一个用户的一门语言」；
+//   创意总监：要教会，得「大家都记得你」——所有人物共用一份关于你的记忆；你会的词过几天由不同的人再说起；按你的水平说话。用户：「有道理！」）
+// 不另起炉灶：读已有的记录，合成一个统一的视图（window.YOU）。
+//   你说过的话 = hv.mylang.v1（《你的语言》那一本：地区卡、小卡、世界的网……你亲口说的、打的）+ npc_mem 里你回人物的话（howabout.v1 / npcmem.v1）
+//     + voyo.mem 里 g = said 的（你跟 Voyo 说的）。只算你亲口说的、打的字，不记点了什么、看了多久（跟 npc_mem 一个规矩）。
+//   关于你的事 = 你自己填的（迎新的名字、城市，发音页选的母语）+ voyo.mem 里你告诉 Voyo 的（g = about / npc）。能确定的才记，不猜。
+//   你在学的词 = 地区卡里的词，你自己的话里真用上了的（RGN.hitIn 认词）；等级 = 说过它的不同日子数；上次哪天说过。
+// 自己的一本 you.v1（同步，template2 的 SYNC_KEYS）= {del: {键: {ts, t}} 你删掉的, rv: {词: [复习的日子]}, rc: {键: 提起那天}, rcd 今天提过了, rcw 谁提的}
+// 对外 window.YOU：
+//   said() 你说过的话 · about() 关于你的事 · words() 你在学的词 · lastSaid(卡或话题) · due() 该回来的词（第 1、3、7 天）· knows(词) · level() 三档
+//   recall(卡) 进法国群开新话题之前，有人提起你上次那句（一天最多一次，一句只提一次）· recallShown(x) · light(气泡, 卡, 人) 气泡里该回来的词标亮
+//   dueIn(卡) 这张卡的群聊里有没有该回来的词（region.js nextAfter 加权）· gone(一句) 这句你删掉了没有 · del(键) · meHtml() 「我」页那一块
+(function(){
+"use strict";
+if (window.YOU) return;
+const KEY = "you.v1";
+const ls = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k) || "null"); localStorage.setItem(k, JSON.stringify(v)); } catch(e){ return null; } };
+const mark = k => { try { window.hvSyncMark && window.hvSyncMark(k); } catch(e){} };
+const ST = () => { const o = ls(KEY) || {}; ["del", "rv", "rc"].forEach(k => { o[k] = o[k] && typeof o[k] === "object" ? o[k] : {}; }); return o; };
+const SAVE = o => { ls(KEY, o); mark(KEY); };
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = () => ymd(new Date());
+const dayOf = t => { const d = new Date(t || 0); return isNaN(d) || !t ? "" : ymd(d); };
+const dgap = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+const norm = s => String(s || "").toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, "");
+const hasHan = s => /[一-鿿]/.test(String(s || ""));
+// 在学的语言：跟地区卡同一套（RGN.L），没有就主程序的
+const LG = () => { try { if (window.RGN && window.RGN.L) return window.RGN.L(); } catch(e){} const l = (window.HVI && window.HVI.LEARN) || window.HV_LEARN || "en"; return l === "zh" ? "zh" : "en"; };
+const UI = () => (document.documentElement.lang || "zh").slice(0, 2);
+// 界面字：中文界面中文；西、日、阿先查 UI_L10N，没有就英文（HVML.tr 的办法，会进翻译缺口清单）
+const UT = (zh, en) => window.HVML && window.HVML.tr ? window.HVML.tr(zh, en, UI() === "zh" ? "zh" : "en") : (UI() === "zh" ? zh : en);
+const fd = d => { if (!d) return ""; const x = new Date(d + "T12:00:00"); return UI() === "zh" ? `${x.getMonth() + 1}月${x.getDate()}日` : x.toLocaleDateString("en-GB", {day: "numeric", month: "short"}); };
+
+/* ── 你说过的话 ── */
+const fillT = (m, i) => { const t = (m.t || [])[i] || ""; return String(t).replace(/\{(\w)\}/g, (x, k) => { const v = m[k]; return v == null ? "" : Array.isArray(v) ? (v[i] || v[0] || "") : String(v); }); };
+// 能拿来提起、列在「我」页的，只算讲自己的那种话（2026-11-22 检查员：Maëlle 引了「不用了」）：
+//   去掉标点后中文至少 6 个字、英文至少 4 个词，而且 RGN.ansKind 判为 some（不是「没有」「不知道」）。「想听」「是」、yes / no、按钮、推掉练词时打的字都不算
+function meaty(t){ t = String(t || ""); const n = hasHan(t) ? t.replace(/[^一-鿿]/g, "").length : (t.match(/[A-Za-z0-9']+/g) || []).length;
+  if (hasHan(t) ? n < 6 : n < 4) return false; try { const R = window.RGN; if (R && R.ansKind && R.ansKind(t) !== "some") return false; } catch(e){} return true; }
+// o.all：不过滤（认词用：短的话里也可能用上了在学的词）
+function said(o){ o = o || {}; const st = ST(), out = [], seen = new Set();
+  const push = e => { if (!e.t || st.del[e.k] || (!o.all && !meaty(e.t))) return; const sig = e.d + "|" + norm(e.t); if (seen.has(sig)) return; seen.add(sig); out.push(e); };
+  // 《你的语言》那一本（地区卡、社会文化小卡、世界的网、地图上的线、「我」页……你说的、打的；收下的别人的话不算）
+  try { (window.HVML ? window.HVML.load().items : []).forEach(x => { if (!x || x.kept || !x.t) return; const d = dayOf(x.when);
+    push({k: "ml:" + x.id, via: x.via || (x.src && x.src.via) || "", t: String(x.t), lg: x.lg || (hasHan(x.t) ? "zh" : "en"), d, ts: +new Date(x.when) || 0, page: x.page || (x.src && x.src.page) || "", id: (x.src && x.src.id) || "", where: x.where || null, to: ""}); }); } catch(e){}
+  // 你回人物的话（npc_mem：你那边呢、跟 TA 聊天、回 TA 的新鲜事）
+  try { const P = (window.HA_DATA || {}).people || {}, N = window.NPCMEM; if (N && N._mems) Object.keys(P).forEach(id => (N._mems(id) || []).forEach(m => { if (!m || !m.quote || !m.quote.t) return;
+    const nm = String(P[id].nm || id); push({k: "nm:" + m.mk, mk: m.mk, t: m.quote.t, lg: hasHan(m.quote.t) ? "zh" : "en", d: m.date || dayOf(m.ts), ts: m.ts || 0, page: "npc", id: "npc:" + id, to: nm,
+      where: {zh: (m.when || [])[0] || "", en: (m.when || [])[1] || ""}}); })); } catch(e){}
+  // 你跟 Voyo 说的（voyo.mem 里 g = said）
+  try { ((ls("voyo.mem") || {}).items || []).forEach(m => { if (!m || m.g !== "said" || !m.tz) return;
+    push({k: "vm:" + m.id, vm: m.id, t: String(m.tz), lg: hasHan(m.tz) ? "zh" : "en", d: m.d || "", ts: m.d ? +new Date(m.d + "T12:00:00") : 0, page: "voyo", id: "voyo", to: "Voyo", where: {zh: "🐧 " + fillT(m, 0).replace(/[：:]\s*$/, ""), en: "🐧 " + fillT(m, 1).replace(/[：:]\s*$/, "")}}); }); } catch(e){}
+  return out.sort((a, b) => (b.ts || 0) - (a.ts || 0) || String(b.d).localeCompare(String(a.d))); }
+// 你删掉的那句（按字对）：人物不再提（region.js 的「你上次说的那句」也问它）
+const gone = t => { const k = norm(t); if (!k) return false; return Object.values(ST().del).some(v => v && norm(v.t) === k); };
+
+/* ── 关于你的事：你自己填的、你告诉 Voyo 的。能确定的才记 ── */
+const LANGN = {zh: ["中文", "Chinese"], en: ["英语", "English"], es: ["西班牙语", "Spanish"], ja: ["日语", "Japanese"], ar: ["阿拉伯语", "Arabic"], fr: ["法语", "French"], de: ["德语", "German"], ko: ["韩语", "Korean"], pt: ["葡萄牙语", "Portuguese"], ru: ["俄语", "Russian"], it: ["意大利语", "Italian"], hi: ["印地语", "Hindi"]};
+function about(){ const st = ST(), out = [], push = e => { if (!st.del[e.k]) out.push(e); };
+  const W = ls("wel.v1") || {};
+  if (W.name) push({k: "set:name", zh: `你叫 ${W.name}`, en: `Your name is ${W.name}`, src: [UT("你在迎新时说的", "You said it when you arrived")], set: 1});
+  if (W.city) push({k: "set:city", zh: `你住在 ${W.city}`, en: `You live in ${W.city}`, src: [UT("你在迎新时选的", "You picked it when you arrived")], set: 1});
+  let nat = null; try { nat = localStorage.getItem("hv.native"); } catch(e){}
+  if (nat && LANGN[nat]) push({k: "set:native", zh: `你的母语是${LANGN[nat][0]}`, en: `Your first language is ${LANGN[nat][1]}`, src: [UT("你在发音页选的", "You picked it on the sounds page")], set: 1});
+  try { ((ls("voyo.mem") || {}).items || []).forEach(m => { if (!m || (m.g !== "about" && m.g !== "npc")) return; const z = fillT(m, 0), e = fillT(m, 1); if (!z && !e) return;
+    push({k: "vm:" + m.id, vm: m.id, zh: z, en: e, src: [UT("你告诉 Voyo 的", "You told Voyo")], d: m.d || ""}); }); } catch(e){}
+  return out; }
+
+/* ── 你在学的词：地区卡里的词，你自己的话里真用上了的 ── */
+function words(){ const R = window.RGN, lg = LG(), st = ST(), W = {}; if (!R || !R.card || !R.hitIn) return [];
+  said({all: true}).forEach(e => { if (e.page !== "rg" || !e.id || e.lg !== lg) return; const c = R.card(e.id); if (!c || (R.on && !R.on(c))) return; const skip = new Set();
+    for (let i = 0; i < 8; i++){ let h = null; try { h = R.hitIn(c, e.t, skip); } catch(x){} if (!h) break; const k = h.w[lg]; if (!k) break; skip.add(k);
+      const o = W[k] || (W[k] = {k, w: h.w, days: new Set(), cards: [], said: []}); if (e.d) o.days.add(e.d); if (!o.cards.includes(e.id)) o.cards.push(e.id); o.said.push(h.said); } });
+  return Object.values(W).map(o => { (st.rv[o.k] || []).forEach(d => o.days.add(d)); const ds = [...o.days].sort();
+    return {k: o.k, w: o.w, show: o.said[0] || o.k, first: ds[0] || "", last: ds[ds.length - 1] || "", days: ds, lv: Math.min(4, ds.length), cards: o.cards}; }); }
+// 该回来的词：第一次说过以后第 1、3、7 天（中间又说过一天就往下一档走；三档都走完就不再催）。今天说过、复习过的不算
+const STEPS = [1, 3, 7];
+function due(){ const d = today(); return words().filter(o => { const n = o.days.length - 1; if (!o.first || n >= STEPS.length || o.last === d) return false; return dgap(o.first, d) >= STEPS[n]; })
+  .sort((a, b) => dgap(b.first, d) - dgap(a.first, d)); }
+// 认得这个词吗：说过（地区卡的词）、或者基础词块到了「说得出」
+function knows(w){ const k = norm(w); if (!k) return false; if (words().some(o => norm(o.k) === k || norm(o.show) === k)) return true;
+  try { const zl = LG() === "zh", L0 = zl ? (typeof CKZ !== "undefined" ? CKZ : null) : (typeof CK !== "undefined" ? CK : null), D = ls(zl ? "ckzh.v1" : "ck.v1") || {};
+    if (L0) for (const i in D){ const c = L0[+i]; if (c && norm(c[0]) === k && (D[i].lv || 0) >= 4) return true; } } catch(e){}
+  return false; }
+// 上次你在这儿说的话：x = 卡（{id}）或卡的编号、话题的 key
+function lastSaid(x){ const id = x && typeof x === "object" ? x.id : x; if (!id) return null; return said().find(e => e.id === id || e.id === "npc:" + id) || null; }
+// 三档：刚开始 / 能聊日常 / 比较流利。依据：你在学的语言说过几句、平均多长、用上了几个在学的词、有没有自己写的句子
+const LV = [["刚开始", "Just starting"], ["能聊日常", "Can chat about daily life"], ["比较流利", "Fairly fluent"]];
+function level(){ const lg = LG(), L0 = said().filter(e => e.lg === lg && e.page !== "npc");
+  const len = t => lg === "zh" ? String(t).replace(/[^一-鿿]/g, "").length : (String(t).match(/[A-Za-z']+/g) || []).length;
+  const n = L0.length, avg = n ? L0.reduce((s, e) => s + len(e.t), 0) / n : 0, nw = words().length;
+  const long = lg === "zh" ? 20 : 12, mid = lg === "zh" ? 8 : 5;
+  const k = !n ? 0 : (n >= 5 && avg >= long && nw >= 5) ? 2 : (n >= 3 && avg >= mid) ? 1 : 0;
+  return {k, zh: LV[k][0], en: LV[k][1], n, avg: Math.round(avg * 10) / 10, words: nw}; }
+
+/* ── 有人记得你：进群开新话题之前，群里一个人提起你上次那句 ── */
+// 今天这个人已经来找过你（npc_mem 的「想起你了」/ 已经见过）就换一个人，同一天同一个人不来两次
+function busyToday(w, c){ const d = today(), o = ls("npcmem.v1") || {}, ids = [w];
+  try { const R = window.RGN, P = R && R.who && c ? R.who(c, w) : null; if (P && P.fid) ids.push(String(P.fid).split(".").pop()); } catch(e){}
+  if (ids.some(id => o.met && o.met[id] && o.met[id].d === d)) return true;
+  try { const N = window.NPCMEM; if (N && N._items && N._items().some(it => ids.includes(it.id))) return true; } catch(e){}
+  return false; }
+const pair = (z, e) => LG() === "zh" ? {t: z, g: UI() === "zh" ? "" : e} : {t: e, g: UI() === "zh" ? z : ""};
+function recall(c){ const R = window.RGN; if (!R || !c || !R.rid) return null; const st = ST(), d = today(); if (st.rcd === d) return null;
+  const rid = R.rid(c.id), lg = LG();
+  // 只引你在群聊里回答问题时讲自己的那句（via voyo = 群里说的；小卡上打的、按钮不算），而且那张卡在开着的章里
+  const L0 = said().filter(e => e.page === "rg" && e.via === "voyo" && e.lg === lg && e.id && e.d && e.d < d && !st.rc[e.k] && R.rid(e.id) === rid);
+  for (const e of L0){ const oc = R.card(e.id); if (!oc || (R.on && !R.on(oc))) continue;
+    // 先是你回答那张卡里的人，再是这张新卡群里的人
+    const cand = [oc.person && oc.person.who, oc.post && oc.post.who].concat((oc.chat || []).map(x => x && x.who), (c.chat || []).map(x => x && x.who)).filter(w => w && w !== "voyo");
+    const who = [...new Set(cand)].find(w => !busyToday(w, c)); if (!who) continue;
+    // 写好的接话（卡上的 recall：{zh, en, py}）以后内容编辑可以加；现在没有就用通用的
+    const q = e.t, rcx = oc.recall && oc.recall[lg] ? oc.recall : null;
+    // 不说「这句我还记得」（不像真人）：几句轮着用，都带出下一步；「后来呢？」只在你那句是讲一件事的时候用
+    const ev = lg === "zh" ? /昨天|上次|那天|那次|有一次|去年|前年|小时候|以前|去过|吃过|见过|看过|住过|了一/.test(q) : /\b(?:went|was|were|did|had|got|saw|met|made|took|used to|yesterday|last|ago|once)\b|\w{3,}ed\b/i.test(q);
+    const V = [pair(`上次你说「${q}」——我后来还想起这句。`, `Last time you said "${q}" — I kept thinking about that afterwards.`),
+      pair(`还记得你说「${q}」，今天这个话题你可能也有话说。`, `I remember you said "${q}" — you might have something to say about today's topic too.`)];
+    if (ev) V.push(pair(`你上次说「${q}」，后来呢？`, `Last time you said "${q}" — so what happened after that?`));
+    const ln = rcx ? pair(`你上次说「${q}」——${rcx.zh}`, `Last time you said "${q}" — ${rcx.en}`) : V[Object.keys(st.rc).length % V.length];
+    let fid = ""; try { fid = (R.who(c, who) || {}).fid || ""; } catch(x){}
+    return Object.assign(ln, {who, rc: 1, _k: e.k, _from: e.id, _nid: fid ? String(fid).split(".").pop() : who}); }
+  return null; }
+function recallShown(x){ if (!x || !x._k) return; const st = ST(), d = today(); st.rc[x._k] = d; st.rcd = d; st.rcw = x.who; SAVE(st);
+  // 告诉 npc_mem 这个人今天来过了（它的「想起你了」今天就不再叫这个人）。同一个人 = 朋友页编号的最后一段（more.zh_multilingual.emma → emma）
+  try { const P = (window.HA_DATA || {}).people || {}, id = x._nid || x.who; if (P[id]){ const o = ls("npcmem.v1") || {}; o.met = o.met || {}; if (!o.met[id] || o.met[id].d !== d){ o.met[id] = {d, ck: "you.recall"}; ls("npcmem.v1", o); mark("npcmem.v1"); } } } catch(e){} }
+
+/* ── 你的词回来了：气泡里该回来的词轻轻标亮，点一下听这个人说、再请你说一次 ── */
+function dueIn(c){ const D = due(), R = window.RGN; if (!D.length || !c || !R) return false; const lg = LG();
+  const text = [].concat(c.chat || [], c.chat2 || []).map(x => x && (x[lg] || "")).join(" \n "); try { return !!R.hitIn({words: D.map(o => o.w)}, text); } catch(e){ return false; } }
+function wrapIn(seg, said0, key, attrs){ const lg = LG(), tw = document.createTreeWalker(seg, NodeFilter.SHOW_TEXT); let n;
+  while ((n = tw.nextNode())){ if (n.parentElement && n.parentElement.closest("ruby,.you-w")) continue;
+    const i = lg === "en" ? n.data.toLowerCase().indexOf(said0.toLowerCase()) : n.data.indexOf(said0); if (i < 0) continue;
+    const mk = document.createElement("mark"); mk.className = "you-w"; Object.entries(attrs).forEach(([a, v]) => mk.setAttribute(a, v)); mk.setAttribute("data-nopy", "");
+    const pe = n.parentElement;
+    if (pe && pe.classList.contains("py-on") && !pe.classList.contains("done") && pe.childNodes.length === 1){
+      // 学中文的：整段 py-on 拆成三段（前 / 词 / 后），各自配拼音，不然配拼音时会把标亮冲掉
+      const mkPy = t => { const s = document.createElement("span"); s.className = "py-on"; s.dataset.py = t; s.textContent = t; return s; };
+      const a = n.data.slice(0, i), b = n.data.slice(i, i + said0.length), z = n.data.slice(i + said0.length), f = document.createDocumentFragment();
+      if (a) f.appendChild(mkPy(a)); mk.removeAttribute("data-nopy"); mk.appendChild(mkPy(b)); f.appendChild(mk); if (z) f.appendChild(mkPy(z)); pe.replaceWith(f); return true; }
+    const mid = n.splitText(i); mid.splitText(said0.length); mid.parentNode.replaceChild(mk, mid); mk.appendChild(mid); return true; }
+  return false; }
+function light(el, c, who){ const D = due(), R = window.RGN; if (!el || !D.length || !R || !R.hitIn) return 0; const seg = el.querySelector(".vy-tl"); if (!seg) return 0;
+  const lg = LG(), fake = {words: D.map(o => o.w)}, skip = new Set(); let n = 0;
+  for (let i = 0; i < 3; i++){ let h = null; try { h = R.hitIn(fake, seg.textContent, skip); } catch(e){} if (!h) break; const k = h.w[lg]; skip.add(k);
+    if (wrapIn(seg, h.said, k, {"data-youw": k, "data-yous": h.said, "data-yousent": (el.querySelector(".vy-seg") || {dataset: {}}).dataset.say || "", "data-youc": (c && c.id) || "", "data-youwho": who || ""})) n++; }
+  if (n) css(); return n; }
+
+// 点开：小卡片（手机上从下面起来）。先听这个人说这个词，再用话筒说一次；真听到这个词才算复习
+let POP = null;
+// 声音：地区群里的人用自己的录音（gen_voices.py，key = rg.<地区>.<who>|句子，文件名 = FNV）。单个词一般没录：放 TA 说的那一整句；整句也没有就手机朗读这个词
+const recUrl = (sid, t) => { const H = window.VOICE_HAS; if (!sid || !t || !H) return ""; let h = 0x811c9dc5; const s0 = sid + "|" + t; for (let i = 0; i < s0.length; i++){ h ^= s0.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } h = ("0000000" + h.toString(16)).slice(-8); return H.has(h) ? "https://img.heyvoyo.com/voice/" + h + ".mp3" : ""; };
+let AU = null;
+function sayAs(t, url){ try { speechSynthesis.cancel(); } catch(e){} if (AU){ try { AU.pause(); } catch(e){} AU = null; }
+  if (url){ const a = AU = new Audio(url); a.play().catch(() => {}); return; }
+  try { const u = new SpeechSynthesisUtterance(t); u.lang = LG() === "zh" ? "zh-CN" : "en-GB"; u.rate = .85; speechSynthesis.speak(u); } catch(e){} }
+const hit = (heard, w) => { const lg = LG(), a = String(heard || ""), b = String(w || ""); if (!a || !b) return false;
+  if (lg === "zh") return norm(a).includes(norm(b)); const k = b.toLowerCase().replace(/[^a-z' ]/g, "").trim(), stem = k.length > 4 ? k.replace(/(e|s|es|ed|ing)$/, "") : k; return a.toLowerCase().includes(stem); };
+function review(k){ const st = ST(), d = today(); const a = st.rv[k] = Array.isArray(st.rv[k]) ? st.rv[k] : []; if (!a.includes(d)) a.push(d); if (a.length > 12) a.splice(0, a.length - 12); SAVE(st); }
+function closePop(){ if (POP){ POP.remove(); POP = null; } try { speechSynthesis.cancel(); } catch(e){} if (AU){ try { AU.pause(); } catch(e){} AU = null; } }
+function openPop(mk){ css(); closePop(); const k = mk.dataset.youw, s = mk.dataset.yous || k, lg = LG(), R = window.RGN, o = words().find(x => x.k === k) || {w: {}};
+  let P = {nm: "", fid: ""}; try { const c = R.card(mk.dataset.youc); if (c && mk.dataset.youwho) P = R.who(c, mk.dataset.youwho); } catch(e){}
+  const g = UI() === "zh" ? (lg === "zh" ? "" : o.w.zh || "") : (lg === "zh" ? o.w.en || "" : ""), py = lg === "zh" ? o.w.py || "" : "";
+  const nm = P.nm || UT("TA", "they");
+  let sid = ""; try { sid = mk.dataset.youwho && R.rid ? "rg." + R.rid(mk.dataset.youc) + "." + mk.dataset.youwho : ""; } catch(e){}
+  const wu = recUrl(sid, s) || recUrl(sid, k), su = wu ? "" : recUrl(sid, mk.dataset.yousent || ""), au = wu || su;
+  const hearL = wu ? UT(`听 ${nm} 说`, `Hear ${nm} say it`) : su ? UT(`听 ${nm} 说这句`, `Hear ${nm} say the line`) : UT("听一听", "Listen");
+  POP = document.createElement("div"); POP.className = "you-pop"; POP.innerHTML = `<div class="you-dim"></div><div class="you-card" role="dialog"><button class="you-x" aria-label="${esc(UT("关上", "Close"))}">✕</button>
+    <div class="you-k">🔁 ${esc(UT("你的词回来了", "Your word is back"))}</div>
+    <div class="you-big" lang="${lg}" dir="auto"${py ? " data-nopy" : ""}>${esc(s)}</div>${py ? `<div class="you-py" dir="ltr" data-nopy>${esc(py)}</div>` : ""}${g ? `<div class="you-g" dir="auto">${esc(g)}</div>` : ""}
+    <div class="you-sub" dir="auto">${esc(UT(`${nm} 刚才说到它。你 ${fd(o.first)} 说过这个词。先听一遍，再说一次。`, `${nm} just used it. You said it on ${fd(o.first)}. Listen once, then say it.`))}</div>
+    <button class="you-hear">🔊 ${esc(hearL)}</button>
+    <div class="you-mic">${window.AK && window.AK.micHTML ? window.AK.micHTML({hint: UT("点一下或按住说", "Tap or hold to speak")}) : ""}</div>
+    <div class="you-res" dir="auto"></div></div>`;
+  document.body.appendChild(POP);
+  const res = POP.querySelector(".you-res"), box = POP.querySelector(".ak-mic");
+  POP.querySelector(".you-dim").onclick = closePop; POP.querySelector(".you-x").onclick = closePop;
+  POP.querySelector(".you-hear").onclick = () => sayAs(s, au);
+  try { window.AK && window.AK.mount && window.AK.mount(); } catch(e){}
+  if (box && window.AK && window.AK.mic) window.AK.mic(box, {free: true, l: lg, want: s, hint: UT("点一下或按住说", "Tap or hold to speak"),
+    onDone: v => { const t = String((v && !v.sim && v.text) || "").trim();
+      if (!t){ res.textContent = v && v.sim ? UT("这里听不到你的声音，换个地方再试。", "We can't hear you here. Try again somewhere else.") : UT("没听清，再说一次。", "Didn't catch that. Say it once more."); setTimeout(() => { try { box._reset && box._reset(); } catch(e){} }, 1200); return; }
+      if (!hit(t, s) && !hit(t, k)){ res.textContent = UT(`听到的是「${t}」。再说一次「${s}」。`, `Heard “${t}”. Say “${s}” once more.`); setTimeout(() => { try { box._reset && box._reset(); } catch(e){} }, 1200); return; }
+      review(k); const n = (words().find(x => x.k === k) || {days: []}).days.length;
+      res.innerHTML = `<b>✓ ${esc(UT("说出来了，记下了", "You said it — noted"))}</b><br><small>${esc(UT(`这个词你已经在 ${n} 天里说过。过几天还会有人再说起它。`, `You've said this word on ${n} different days. Someone will bring it up again in a few days.`))}</small>`;
+      document.querySelectorAll(`.you-w[data-youw="${CSS.escape(k)}"]`).forEach(x => x.classList.add("done")); } });
+  setTimeout(() => sayAs(s, au), 250); }
+document.addEventListener("click", e => { const mk = e.target.closest && e.target.closest(".you-w"); if (!mk) return; e.stopPropagation(); e.preventDefault(); openPop(mk); }, true);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && POP) closePop(); });
+
+/* ── 删一条：所有人物都不再提 ── */
+function del(k){ const st = ST(), e = said().find(x => x.k === k) || about().find(x => x.k === k); if (!e) return false;
+  st.del[k] = {ts: Date.now(), t: e.t || ""}; SAVE(st);
+  // npc_mem 那条也删（TA 不再来找你说这件事）
+  if (e.mk) try { const o = ls("npcmem.v1") || {}; o.del = o.del || {}; o.del[e.mk] = Date.now(); ls("npcmem.v1", o); mark("npcmem.v1"); } catch(x){}
+  // Voyo 记得的那条也删（跟 Voyo 自己的「删掉」一样：拿掉，记进 gone）
+  if (e.vm) try { const o = ls("voyo.mem") || {}; o.items = (o.items || []).filter(m => m.id !== e.vm); o.gone = o.gone || []; if (!o.gone.includes(e.vm)) o.gone.push(e.vm); ls("voyo.mem", o); mark("voyo.mem"); } catch(x){}
+  return true; }
+
+/* ── 「我」页：大家记得你的事（每条能删）。自己一个 Shadow DOM 的小元素，放进《你的语言》那一页就自己画出来 ── */
+const SHOWN = 6;
+// 「删掉吗？」「还有 N 句」放在外面：《你的语言》那一页一点就整页重画，元素会换成新的
+const MS = {conf: null, all: false};
+class YouMem extends HTMLElement {
+  connectedCallback(){ if (!this.shadowRoot){ this.attachShadow({mode: "open"}); this.shadowRoot.addEventListener("click", e => this.click(e)); } this.draw(); }
+  click(e){ const t = e.target.closest("button"); if (!t) return;
+    e.stopPropagation(); if (t.dataset.del){ MS.conf = t.dataset.del; return this.draw(); }
+    if (t.hasAttribute("data-no")){ MS.conf = null; return this.draw(); }
+    if (t.dataset.yes){ const row = t.closest(".it"); if (row) row.classList.add("gone"); setTimeout(() => { del(t.dataset.yes); MS.conf = null; this.draw(); }, 300); return; }
+    if (t.hasAttribute("data-all")){ MS.all = true; return this.draw(); }
+    if (t.hasAttribute("data-set")){ try { const me = document.querySelector("#mlPg"); const b = me && me.shadowRoot && me.shadowRoot.querySelector('[data-mego="set"]'); if (b) b.click(); } catch(x){} } }
+  row(k, main, sub, canDel){ const c = MS.conf === k;
+    return `<div class="it"><div class="mt"><b dir="auto">${esc(main)}</b><small dir="auto">${esc(sub)}</small>${c ? `<div class="conf" dir="auto">${esc(UT("删掉以后，所有人物都不会再提。", "Once deleted, no one will bring it up again."))}<div class="row"><button class="y" data-yes="${esc(k)}">${esc(UT("删掉", "Delete"))}</button><button class="n" data-no>${esc(UT("算了", "Keep it"))}</button></div></div>` : ""}</div>${c ? "" : canDel ? `<button class="del" data-del="${esc(k)}">${esc(UT("删掉", "Delete"))}</button>` : `<button class="del" data-set>${esc(UT("去设置改", "Change in Settings"))}</button>`}</div>`; }
+  draw(){ const zh = UI() === "zh", A = about(), S = said(), n = MS.all ? S.length : SHOWN;
+    const src = e => [e.where ? (zh ? e.where.zh : e.where.en || e.where.zh) : e.to ? UT("跟 " + e.to, "with " + e.to) : "", fd(e.d)].filter(Boolean).join(" · ");
+    this.shadowRoot.innerHTML = `<style>${MCSS}</style><div class="sec"><h3>💭 ${esc(UT("大家记得你的事", "What everyone remembers about you"))}</h3>
+      <p class="sub" dir="auto">${esc(UT("人物只记得你亲口说过、打过的字，不记你点了什么、看了多久。删掉一条，所有人物都不会再提。", "Characters only remember what you said or typed yourself — never what you tapped or how long you looked. Delete one and no one will bring it up again."))}</p>
+      <h4>${esc(UT("关于你", "About you"))}</h4>${A.length ? A.map(a => this.row(a.k, zh ? a.zh : a.en, (a.src || []).concat(a.d ? [fd(a.d)] : []).join(" · "), !a.set)).join("") : `<p class="sub" dir="auto">${esc(UT("现在什么都没记着。", "Nothing remembered right now."))}</p>`}
+      <h4>${esc(UT("你说过的话", "Things you said"))}</h4>${S.length ? S.slice(0, n).map(e => this.row(e.k, "「" + e.t + "」", src(e), true)).join("") : `<p class="sub" dir="auto">${esc(UT("你说的第一句，大家都会记得。", "Everyone will remember the first thing you say."))}</p>`}
+      ${S.length > n ? `<button class="more" data-all>${esc(zh ? `还有 ${S.length - n} 句` : UT(`还有 ${S.length - n} 句`, `${S.length - n} more`))}</button>` : ""}</div>`; } }
+try { if (!customElements.get("hv-you-mem")) customElements.define("hv-you-mem", YouMem); } catch(e){}
+const meHtml = () => `<hv-you-mem${document.documentElement.dir === "rtl" ? ' dir="rtl"' : ""}></hv-you-mem>`;
+
+const MCSS = `:host{display:block;--ink:#14305c;--hot:#e2552f;--soft:#6b7488;--line:#e6dfcf}*{box-sizing:border-box}button{font:inherit;cursor:pointer}
+.sec{background:#fffdf7;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin:14px 0;color:#24303a;font:14.5px/1.5 -apple-system,"PingFang SC",sans-serif}
+h3{margin:0 0 2px;font:900 17px/1.4 "Noto Serif SC",Georgia,serif;color:var(--ink)}h4{margin:12px 0 2px;font-size:12px;letter-spacing:.06em;color:#b8892f}
+.sub{font-size:12.5px;color:var(--soft);margin:2px 0 6px}
+.it{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);transition:transform .3s,opacity .3s}.it.gone{transform:translateX(110%);opacity:0}
+.mt{flex:1;min-width:0}.mt b{display:block;color:var(--ink);font-weight:700;overflow-wrap:anywhere}.mt small{display:block;color:var(--soft);font-size:11.5px}
+.del{border:1px solid var(--line);background:#fff;border-radius:99px;padding:3px 10px;font-size:12px;color:var(--soft);flex:none}
+.conf{margin-top:6px;font-size:12.5px;color:#a4321a}.row{display:flex;gap:8px;margin-top:6px}.y{border:0;border-radius:99px;padding:4px 12px;background:var(--hot);color:#fff;font-weight:800;font-size:12px}.n{border:1px solid var(--line);border-radius:99px;padding:4px 12px;background:#fff;font-size:12px}
+.more{border:0;background:none;color:var(--ink);text-decoration:underline;font-size:12.5px;padding:6px 0 0}`;
+
+function css(){ if (document.getElementById("youCss")) return; const s = document.createElement("style"); s.id = "youCss"; s.textContent = `
+mark.you-w{background:linear-gradient(transparent 55%,#ffe08a 55%);color:inherit;border-radius:3px;cursor:pointer;padding:0 1px;box-shadow:none}mark.you-w.done{background:linear-gradient(transparent 55%,#cdeed9 55%)}
+.you-pop{position:fixed;inset:0;z-index:100060}.you-dim{position:absolute;inset:0;background:rgba(20,24,30,.38)}
+.you-card{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:460px;background:#fbf7ee;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.18);color:#14305c;font:15px/1.55 -apple-system,"PingFang SC",sans-serif;animation:youup .22s ease}
+@media (min-width:861px){.you-card{bottom:auto;top:50%;transform:translateY(-50%);border-radius:18px;animation:none}}
+@keyframes youup{from{transform:translateY(100%)}}
+.you-x{position:absolute;top:10px;inset-inline-end:12px;border:0;background:#f3ecdc;width:30px;height:30px;border-radius:50%;cursor:pointer;color:#6b5a36}
+.you-k{font-size:12px;font-weight:800;color:#b8892f;letter-spacing:.06em}.you-big{font:800 26px/1.4 "Noto Serif SC",Georgia,serif;color:#e2552f;margin:6px 0 0}
+.you-py{font:15px Georgia,serif;color:#e2552f;opacity:.8}.you-g{font:italic 14px/1.5 Georgia,"PingFang SC",serif;color:#6b7a93}
+.you-sub{font-size:13px;color:#6b7488;margin:8px 0}.you-hear{border:1.5px solid #e6dcc6;background:#fff;color:#14305c;border-radius:99px;padding:6px 14px;font-size:13.5px;cursor:pointer}
+.you-mic .ak-mic{margin-top:10px}.you-res{margin-top:8px;font-size:13.5px;min-height:18px}.you-res b{color:#2f7d70}.you-res small{color:#6b7488}`;
+  document.head.appendChild(s); }
+
+window.YOU = {said, meaty, about, words, due, knows, lastSaid, level, recall, recallShown, light, dueIn, gone, del, review, meHtml, st: ST};
 })();
 
 /* d88_nets.js */
