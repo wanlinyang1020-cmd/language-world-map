@@ -4075,7 +4075,7 @@ async function vdHookMake(st, k, n){
   if (k === "cg"){ const R = window.RGN, rg = () => { try { return R && R.voyoHook ? R.voyoHook({}) : null; } catch(e){ return null; } }, cg = () => { try { return VDIR.hookGive(st, n); } catch(e){ return null; } };
     // 🌍 社会文化小卡和地区卡轮着来（RGN.voyoTurn：第一次小卡，下一次地区卡……）；轮到的那种没有，就递另一种
     //   几天前聊过的那张卡，TA 又发了一条（RGN.laterDue）：这一次先递它
-    let rgFirst = false; try { rgFirst = !!(R && ((R.laterDue && R.laterDue()) || (R.voyoTurn && R.voyoTurn()))); } catch(e){}
+    let rgFirst = VD_RGFIRST; VD_RGFIRST = false; try { rgFirst = rgFirst || !!(R && ((R.laterDue && R.laterDue()) || (R.voyoTurn && R.voyoTurn()))); } catch(e){}
     return rgFirst ? (rg() || cg()) : (cg() || rg()); }
   return null; }
 // 画一个钩子：返回最后那条问话的消息（等他回答挂在它下面）
@@ -4758,11 +4758,14 @@ document.addEventListener("click", e => { const b = e.target.closest && e.target
 const VD_HK = "vy.hk";
 // 第一次来（startFirst）：开场直接走 cg 钩子先递一样东西（2026-11-21，不再先问「你每天在忙什么」）
 let VD_CGFIRST = false;
+let VD_RGFIRST = false;  // 这一次开场先递地区群聊
 // 选项下面的小字意思只在界面语言对得上时给（跟 cg.js 的 gx 一样：西、日、阿界面不放中文或英文的意思）
 const vdGx = g => { try { return window.CGK && CGK.gx ? CGK.gx(g || "") : g || ""; } catch(e){ return g || ""; } };
 async function vdHookRun(st, s){ let i = 0, own = 0, miss = 0, saved = false;
   try { const o = JSON.parse(localStorage.getItem(VD_HK) || "null"); if (o && o.d === today() && o.l === KL()){ i = +o.i || 0; own = +o.own || 0; saved = true; } } catch(e){}
   if (VD_CGFIRST && !saved) i = Math.max(0, VD_HOOKS.indexOf("cg")); VD_CGFIRST = false;
+  // 2026-11-22 用户：「现在咋都是 voyo 在聊啊」→ 地区群聊（法国）没被拒绝、今天还有可聊的，打开 Voyo 先出群聊（或先问一句要不要进群）
+  try { const R = window.RGN; if (R && R.optOf && R.optOf("fr") !== "no"){ i = Math.max(0, VD_HOOKS.indexOf("cg")); VD_RGFIRST = true; } } catch(e){}
   while (miss < VD_HOOKS.length * 2){
     const i0 = i, own0 = own, k = VD_HOOKS[i % VD_HOOKS.length], h = await vdHookMake(st, k, own); i++;
     if (!h){ miss++; continue; } miss = 0; if (k === "own") own++;
