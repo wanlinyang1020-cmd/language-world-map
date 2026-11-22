@@ -2307,6 +2307,11 @@ body.vy-meet-on{overflow:hidden}body.vy-meet-on #galTabs{display:none!important}
 
 // 西、日、阿（按英文原文找）。2026-11-12 工程师写的，上线前请母语的人看一遍
 const V18 = {
+// 2026-11-22 群聊念出来、轮到你插一句（工程师写的，上线前请母语的人看一遍）
+"Slower": {es: "Más despacio", ja: "ゆっくり", ar: "أبطأ"},
+"Your turn — jump in": {es: "Te toca: di algo", ja: "あなたの番：ひとこと入ろう", ar: "دورك: شارك بكلمة"},
+"Hold to speak, or tap a line": {es: "Mantén pulsado para hablar o toca una frase", ja: "長押しで話すか、フレーズをタップ", ar: "اضغط مطولًا لتتكلم، أو اختر جملة"},
+"Say something, or tap a line above": {es: "Di algo o toca una frase de arriba", ja: "何か言うか、上のフレーズをタップ", ar: "قل شيئًا، أو اختر جملة من الأعلى"},
 // 2026-11-21 旧话里的「收下的」别人的话（工程师写的，上线前请母语的人看一遍）
 "You kept this line {n} weeks ago. Listen, then say it?": {es: "Hace {n} semanas guardaste esta frase. ¿La escuchas y la dices?", ja: "{n}週間前にこのフレーズをもらったね。聞いてから、言ってみる？", ar: "احتفظت بهذه الجملة قبل {n} أسابيع. استمع إليها ثم قلها؟"},
 "You kept this line a while ago. Listen, then say it?": {es: "Hace un tiempo guardaste esta frase. ¿La escuchas y la dices?", ja: "前にこのフレーズをもらったね。聞いてから、言ってみる？", ar: "احتفظت بهذه الجملة منذ مدة. استمع إليها ثم قلها؟"},
@@ -2608,14 +2613,18 @@ async function playLine(txt, l, rate, onStart, onEnd, my, sid){ const l2 = Strin
   if (b){ const a = new Audio(URL.createObjectURL(b)); CUR_AU = a; a.playbackRate = pr; a.onplaying = onStart; a.onended = () => { URL.revokeObjectURL(a.src); onEnd(); }; a.onerror = tts2(a); a.play().catch(tts2(a)); return; }
   tts(); }
 function hushV(){ SPK++; try { speechSynthesis.cancel(); } catch(e){} if (CUR_AU){ try { CUR_AU.pause(); } catch(e){} CUR_AU = null; } try { A() && A().hush(); } catch(e){} if (VB) VB.querySelectorAll(".vy-hl").forEach(e => e.classList.remove("vy-hl")); }
+// 手机上有没有这门语言的朗读声音：声音列表还没出来 = null（不知道）
+const ttsHas = l => { try { const V = speechSynthesis.getVoices(); if (!V.length) return null; const p = String(bcp2(l) || l).slice(0, 2).toLowerCase(); return V.some(v => String(v.lang || "").toLowerCase().startsWith(p)); } catch(e){ return false; } };
+// 2026-11-22 检查员：没有录音、也不走线上语音时（只能手机朗读），手机朗读一直没开口最多等 3 秒；手机上根本没有这门语言的声音就不念，亮一下（最多 3 秒）就往下
+const ttsWait = (txt, l, sid, net, est) => { if (recUrl(sid, txt) || net) return {nv: false, ms: est + (net ? 8500 : 300)}; const nv = ttsHas(l) === false; return {nv, ms: Math.min(est + 300, 3000)}; };
 function speakSeq(list, done){ hushV(); const my = SPK; let i = 0;
   const next = () => { if (my !== SPK) return; if (i >= list.length){ if (done) done(); return; }
     const it = list[i++], txt = strip(it.text).replace(/\s+/g, " ").trim(), l = it.l || KL() || "en"; if (!it.sid) it.sid = vsidOf(it.el); if (!txt){ next(); return; } it.el.classList.add("vy-hl");
     let fin = false, started = false; const end = () => { if (fin) return; fin = true; it.el.classList.remove("vy-hl"); if (my === SPK) setTimeout(next, 260); };
     const est = Math.max(1100, txt.length * (/^zh/.test(l) ? 260 : 70));
-    const net = !soundOff() && neuralOK();
-    if (!soundOff()) playLine(txt, l, it.rate, () => { started = true; }, end, my, it.sid);
-    setTimeout(() => { if (!started) end(); }, est + (net ? 8500 : 300));
+    const net = !soundOff() && neuralOK(), tw = ttsWait(txt, l, it.sid, net, est);
+    if (!soundOff() && !tw.nv) playLine(txt, l, it.rate, () => { started = true; }, end, my, it.sid);
+    setTimeout(() => { if (!started) end(); }, tw.ms);
     setTimeout(end, est * 2.5 + (net ? 11000 : 3000)); };
   next(); }
 // 念完（或被打断）都往下走
@@ -4414,29 +4423,80 @@ function vdRgCatch(c, F){ if (!F.hits.length) return null; try { return window.R
 //   卡上有 chat：主菜换成一段群聊，不再念事实卡、不挂「TA 碰到的」标签。一条一条出来，前面「正在输入…」（按字数停 0.6–1.6 秒，点一下就不等）；
 //   同一个人连着说不重复头像；photo 那条把卡的图当 TA 发的照片放进气泡；每个气泡能点 🔊 听。
 //   chat 最后一条（ask）停下来等他回答，他的话作为「我」的气泡进群；Voyo 只在他话里抓到卡上的词时引用那个词，然后放 chat2，最后一行小字出处。
+// ── 🔊 群聊念出来（2026-11-22，用户：「npc 的句子一条一条往外送特别快，也没有发音……要让用户有参与感」）──
+//   每条出来就用这个人自己的声音念（录好的 rg.<地区>.<人> → 线上语音 → 手机朗读），字跟着声音一块块亮（卡拉 OK）；念完停 0.5 秒再出下一条。
+//   声音关了（hv.sound）：照原来按字数停。顶上「慢一点」（hv.gcslow，只存在这台手机上）= 0.7 倍。
+//   点一个已经出来的气泡 = 用这个人的声音重放那一句；点空白处 = 跳过正在念的这一句，直接出下一条（用 click，手机上划着看不算点）。
+const GC_SLOW = "hv.gcslow";
+const vdGcSlow = () => { try { return localStorage.getItem(GC_SLOW) === "1"; } catch(e){ return false; } };
+const vdGcRate = () => vdGcSlow() ? .7 : .9;
+let GCR = null;
+// 空白处：不在气泡、按钮、链接、视频、输入、话筒上
+const vdGcBlank = t => !(t && t.closest && t.closest(".vd-gc:not(.vd-gctp),.vd-gme,button,a,input,textarea,video,iframe,.vd-rp,.ak-mic"));
 const vdGcWait = ms => new Promise(res => { const b = vbBody(); let t = null;
-  const go = () => { clearTimeout(t); if (b) b.removeEventListener("pointerdown", go, true); res(); };
-  t = setTimeout(go, ms); if (b) b.addEventListener("pointerdown", go, true); });
+  const go = e => { if (e && !vdGcBlank(e.target)) return; clearTimeout(t); if (b) b.removeEventListener("click", go, true); res(); };
+  t = setTimeout(go, ms); if (b) b.addEventListener("click", go, true); });
+// 一段字拆成一小块一小块（中文一个字、英文一个词），好跟着声音一块块亮；只拆一次，里面已有的标记（你的词回来了）不动
+function vdKk(el){ if (!el || el.dataset.kk) return; el.dataset.kk = "1"; const W = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), L = []; while (W.nextNode()) L.push(W.currentNode);
+  L.forEach(n => { const ps = n.nodeValue.match(/\s+|[㐀-鿿]|[^\s㐀-鿿]+/g); if (!ps) return; const f = document.createDocumentFragment();
+    ps.forEach(p => { if (/^\s+$/.test(p)){ f.appendChild(document.createTextNode(p)); return; } const s = document.createElement("span"); s.className = "vk"; s.textContent = p; f.appendChild(s); }); n.replaceWith(f); }); }
+// 念一个气泡（或一个选项按钮）里的那句，字跟着亮；念完、被打断都 resolve（念完 true）
+function vdGcSay(m, o){ o = o || {}; return new Promise(res => { const seg = m && m.querySelector(".vy-seg"); if (!seg || soundOff()) return res(false);
+  const txt = strip(seg.dataset.say).replace(/\s+/g, " ").trim(); if (!txt) return res(false);
+  hushV(); const my = SPK, l = seg.dataset.l || KL() || "en", rate = o.rate || vdGcRate(); let fin = false, started = false, t0 = 0, raf = 0, au = null;
+  [seg.querySelector(".vy-tl"), seg.querySelector(".vy-py")].forEach(vdKk);
+  const K = [[...seg.querySelectorAll(".vy-tl .vk")], [...seg.querySelectorAll(".vy-py .vk")]];
+  const est = Math.max(900, txt.length * (/^zh/.test(l) ? 230 : 62)) / (rate < .85 ? rate : 1);
+  const lite = f => K.forEach(A => { const k = Math.ceil(f * A.length); A.forEach((s, i) => s.classList.toggle("on", i < k)); });
+  const end = () => { if (fin) return; fin = true; cancelAnimationFrame(raf); clearInterval(poll); m.classList.remove("vd-gcon"); K.forEach(A => A.forEach(s => s.classList.remove("on"))); res(my === SPK); };
+  const tick = () => { if (fin) return; const f = au && au.duration && isFinite(au.duration) ? au.currentTime / au.duration : (Date.now() - t0) / est; lite(Math.min(1, f)); raf = requestAnimationFrame(tick); };
+  m.classList.add("vd-gcon");
+  // 别处叫了 hushV（点了别的气泡、点空白跳过）：录音暂停不会触发 onended，这里自己看
+  const poll = setInterval(() => { if (my !== SPK) end(); }, 150);
+  const sid = seg.dataset.sid || vsidOf(seg), net = neuralOK(), tw = ttsWait(txt, l, sid, net, est);
+  if (tw.nv){ t0 = Date.now(); tick(); }
+  else playLine(txt, l, rate, () => { if (started) return; started = true; t0 = Date.now(); au = CUR_AU; tick(); }, end, my, sid);
+  setTimeout(() => { if (!started) end(); }, tw.ms);
+  setTimeout(end, est * 2.5 + (net ? 11000 : 3000)); }); }
+// 重放一个气泡：群聊自己在走的时候，等重放念完再出下一条
+function vdGcReplay(m){ const p = vdGcSay(m); GCR = p; p.then(() => { if (GCR === p) GCR = null; }); return p; }
+// 一条出来以后：念 + 停 0.5 秒；念的时候点空白处 = 跳过这一句
+async function vdGcAfter(m){ if (soundOff()) return; const b = vbBody(); let skip = false;
+  const tap = e => { if (!vdGcBlank(e.target)) return; skip = true; hushV(); };
+  if (b) b.addEventListener("click", tap, true);
+  try { await vdGcSay(m); while (GCR) await GCR; if (!skip) await vdGcWait(500); } finally { if (b) b.removeEventListener("click", tap, true); } }
+// 「慢一点」开关：放在 Voyo 框顶上（群聊开着才显示，vd-feast）
+function vdGcSlowBtn(){ const hd = VB && VB.querySelector(".vy-shd"); if (!hd || hd.querySelector(".vd-slow")) return; const b = document.createElement("button"); b.type = "button"; b.className = "vd-slow";
+  const draw = () => { const on = vdGcSlow(); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); b.textContent = "🐢 " + T("慢一点", "Slower"); };
+  draw(); b.onclick = () => { try { localStorage.setItem(GC_SLOW, vdGcSlow() ? "0" : "1"); } catch(e){} draw(); tapFx(b); };
+  hd.insertBefore(b, hd.querySelector(".vy-memb")); }
+// 点气泡重放（🔊 小按钮也走这里）
+function vdGcWire(){ if (!VB || VB._gcw) return; VB._gcw = 1;
+  VB.addEventListener("click", e => { const m = e.target.closest(".vd-gc:not(.vd-gctp),.vd-gme"); if (!m || !m.querySelector(".vy-seg")) return;
+    if (e.target.closest("a,video,iframe,figure,.vd-gcvid,input") || (e.target.closest("button") && !e.target.closest(".vd-gcspk"))) return;
+    e.stopPropagation(); vdGcReplay(m); }); }
 const vdGcWho = (c, w) => { if (w === "voyo") return {nm: "Voyo", voyo: true}; try { return window.RGN.who(c, w); } catch(e){ return {nm: w}; } };
 // 发一条：x = {who, t, g, py, photo, ask}；返回那个气泡
 async function vdGcMsg(c, h, x, o){ o = o || {}; if (!x || !x.t) return null; await gate(); const my = RUN;
   const P = vdGcWho(c, x.who), prev = vbBody().lastElementChild, same = !!(prev && prev.classList.contains("vd-gc") && prev.dataset.who === x.who);
   const face = same ? "" : P.voyo ? vdFace() : vdRgFace(P), nm = same ? "" : `<span class="vd-who">${esc(P.nm)}</span>`;
-  const n = [...String(x.t)].length, ms = Math.max(600, Math.min(1600, 450 + n * (KL() === "zh" ? 30 : 9)));
+  // 有声音：「正在输入…」短一点（每条都要念完才出下一条）；声音关了照原来按字数停。有人在重放别的气泡就先等它念完
+  while (GCR) await GCR;
+  const n = [...String(x.t)].length, snd = !soundOff() && !o.mute, ms = snd ? Math.max(350, Math.min(700, 250 + n * (KL() === "zh" ? 15 : 4))) : Math.max(600, Math.min(1600, 450 + n * (KL() === "zh" ? 30 : 9)));
   const tp = add(`${face}${nm}<span class="vd-gcdots" aria-label="${esc(T("正在输入…", "typing…"))}"><i></i><i></i><i></i></span>`, "vd-vo vd-gc vd-gctp" + (same ? " vd-gcsame" : ""));
   await vdGcWait(o.wait || ms); tp.remove(); if (my !== RUN) throw "stale";
   const md = x.photo && h && h.media ? vdRgMedia(h.media) : "";
   // 转发的一段视频（2026-11-22，用户：群里分享视频、分享想法、两个人争起来，都很正常）：上面一句话，下面视频卡；YouTube 放不了就只留字
   let vd = ""; if (x.video) try { if (window.CGK && CGK.ytCan && CGK.ytCan()) vd = CGK.vidHTML(x.video) || ""; } catch(e){}
-  const m = add(`${face}${nm}${md}${vdSegX(x)}${vd ? `<div class="vd-gcvid">${vd}</div>` : ""}<button class="vy-spkb vd-gcspk" data-vyspk aria-label="${esc(T("听", "Listen"))}">🔊</button>`, "vd-vo vd-gc" + (same ? " vd-gcsame" : "") + (md || vd ? " vd-gcph" : "") + (x.ask ? " vd-gcask" : ""));
+  const m = add(`${face}${nm}${md}${vdSegX(x)}${vd ? `<div class="vd-gcvid">${vd}</div>` : ""}<button class="vy-spkb vd-gcspk" aria-label="${esc(T("听", "Listen"))}">🔊</button>`, "vd-vo vd-gc" + (same ? " vd-gcsame" : "") + (md || vd ? " vd-gcph" : "") + (x.ask ? " vd-gcask" : ""));
   m.dataset.who = x.who; m.dataset.sid = P.voyo ? "voyo" : "rg." + ((window.RGN && RGN.rid && RGN.rid(c.id)) || "fr") + "." + x.who;  // 群聊录音的 key = rg.<地区>.<人>（gen_voices.py）
   if ((md && h.media.yt) || vd) try { window.CGK.vidWire(m); } catch(e){}
   const im = m.querySelector(".vd-rgm img"); if (im) im.addEventListener("error", () => m.classList.remove("vd-gcph"));
   // 🧠 你的词回来了（you_mem.js）：这条里有你该回来的词（第 1、3、7 天），轻轻标亮，点了听 TA 说、再请你说一次。提起你原话的那条不标
   if (!x.rc) try { window.YOU && window.YOU.light(m, c, x.who); } catch(e){}
-  blip(560); vdHist(P.nm, x.t); return m; }
+  blip(560); vdHist(P.nm, x.t); if (snd) await vdGcAfter(m); if (my !== RUN) throw "stale"; return m; }
 // 开头一段：一条小标题 + chat，停在 ask 那条；返回放话筒、按钮的那一块（在 ask 气泡下面，不挤在 80% 宽的气泡里）
-async function vdRgChat(c, h){ vdRgCss(); try { VB.classList.add("vd-feast"); } catch(e){}
+async function vdRgChat(c, h){ vdRgCss(); try { VB.classList.add("vd-feast"); } catch(e){} vdGcSlowBtn(); vdGcWire();
   await gate(); node(Object.assign(document.createElement("div"), {className: "vd-gchd", textContent: "💬 " + (h.kd || "")}));
   // 🧠 有人记得你（you_mem.js）：你在这个地方的群里回答过、至少过了一天，群聊标题下面第一条，群里一个人引你上次那句（一天最多一次，一句只提一次，删掉的不提）
   let rx = null; try { rx = window.YOU && window.YOU.recall(c); } catch(e){}
@@ -4445,9 +4505,36 @@ async function vdRgChat(c, h){ vdRgCss(); try { VB.classList.add("vd-feast"); } 
   const q = (h.chat || []).find(x => x.ask); if (q) h.ask = {t: q.t, g: q.g || "", py: q.py || ""};
   // 2026-11-22 检查员：群聊还没放到问你的那条时你打的字（还有 Voyo 问活动时你回的话），已经作为「我」的气泡进了群，但不算这一问的回答：
   //   问你的那条一出来，就把之前排着队的话清掉，等你看到问题再答一次（问题出来以后、还在念的时候打的字照常算回答）
-  let m = null; for (const x of h.chat || []){ m = await vdGcMsg(c, h, x); if (x.ask){ VDQ.length = 0; break; } }
-  if (m && m.classList.contains("vd-gcask")) await speakWait([m.querySelector(".vy-seg")]);
+  //   每条都在 vdGcMsg 里念完才往下（问你的那条也是）；走到 you 项停下来轮到你插一句（vdGcYou）
+  let m = null; for (const x of h.chat || []){ if (x.you){ await vdGcYou(c, h, x); continue; } m = await vdGcMsg(c, h, x); if (x.ask){ VDQ.length = 0; break; } }
   const w = document.createElement("div"); w.className = "vd-gcrp"; node(w); return w; }
+// ── 🙋 轮到你插一句（2026-11-22）：chat 里的 you 项 = 群聊停下来，下面 2–3 句你可以说的（字 + 拼音 + 小字意思）+ 话筒（按住说或点一下说）。
+//   点一句：先用示范的声音念一遍（you.<语言>，gen_voices.py 的 YOU），算你在群里说了，出一个「我」的气泡；
+//   说出来 / 打字：你的话进「我」的气泡，跟选项比（选项里的字词有六成以上说到了就算那一句）。
+//   然后放那个选项的 reply（每条都念）；说了选项以外的话放 other。插的话不记成这张卡的回答、不进《你的语言》（现成的短句，不是你自己的话）
+const vdGcMatch = (t, ops) => { const zh = KL() === "zh", tok = s => zh ? [...String(s || "").replace(/[^㐀-鿿]/g, "")] : (String(s || "").toLowerCase().match(/[a-z']+/g) || []);
+  const b = new Set(tok(t)); let best = -1, bs = 0;
+  //   只说了半句（「那是哪儿」对「等一下，那是哪儿？」）：你说的字词几乎都在这一句里、又不止一两个，也算
+  ops.forEach((o, i) => { const a = [...new Set(tok(o.t))]; if (!a.length || !b.size) return; const n = a.filter(x => b.has(x)).length;
+    const s = Math.max(n / a.length, n >= (zh ? 3 : 2) ? .9 * n / b.size : 0); if (s > bs){ bs = s; best = i; } });
+  return bs >= .6 ? best : -1; };
+async function vdGcYou(c, h, x){ const ops = x.you || []; if (!ops.length) return; await gate(); const my = RUN, sid = "you." + (KL() || "en");
+  const lineOf = o => lineHTML([o.t, KL() === "zh" ? o.py || "" : "", o.g || ""], {mean: vdMean(o), sid});
+  const w = document.createElement("div"); w.className = "vd-gcrp vd-gcyou"; node(w);
+  let busy = false;
+  const r = await vdWait(w, {mic: true, micHint: T("按住说，或点一句", "Hold to speak, or tap a line"), heard: vdRgHeard, ph: T("说一句，或点上面一句", "Say something, or tap a line above"),
+    wire: (box, fin) => { box.insertAdjacentHTML("afterbegin", `<div class="vd-gcyhd">🙋 ${esc(T("轮到你插一句", "Your turn — jump in"))}</div><div class="vd-gcops">${ops.map((o, i) => `<button type="button" class="vd-gcop" data-gcop="${i}">${lineOf(o)}</button>`).join("")}</div>`);
+      // 2026-11-22 检查员：选项里的句子带 data-say，冒泡上去全局的「点了就朗读」也会响，两个声音叠在一起 → 不往上冒
+      box.querySelectorAll("[data-gcop]").forEach(b => b.onclick = async e => { e.stopPropagation(); if (busy) return; busy = true; tapFx(b); box.querySelectorAll("[data-gcop]").forEach(z => { if (z !== b) z.disabled = true; }); b.classList.add("pick");
+        await vdGcSay(b); fin({pick: +b.dataset.gcop}); }); scrollChat(); }});
+  if (my !== RUN) throw "stale";
+  w.remove(); let op = null, said = "";
+  if (r && r.pick != null){ op = ops[r.pick]; said = op.t; const mb = me(lineOf(op)); mb.classList.add("vd-gme"); }
+  else if (r && r.text){ said = String(r.text).trim(); const mb = [...vbBody().querySelectorAll(".vy-me")].pop(); if (mb) mb.classList.add("vd-gme"); const i = vdGcMatch(said, ops); op = i >= 0 ? ops[i] : null; }
+  if (!said) return;
+  // 2026-11-22 创意总监：插的这句是现成的短句，不是你自己的话 → 不记成这张卡的回答（不写 rg.v1、不进《你的语言》）；只留在这次聊天的记录里
+  vdHist("Learner", said);
+  for (const y of op ? op.reply || [] : x.other ? [x.other] : []) await vdGcMsg(c, h, y); }
 // 他回答以后：他的话变成群里「我」的气泡；抓到卡上的词 Voyo 引一下（抓不到什么都不加）；chat2；出处
 async function vdRgChat2(c, h, a0, F){ const R = window.RGN;
   if (a0 && a0.t){ const mb = [...vbBody().querySelectorAll(".vy-me")].pop(); if (mb) mb.classList.add("vd-gme"); }
@@ -4633,6 +4720,11 @@ function vdRgCss(){ if (document.getElementById("vdRgCss")) return; const s = do
 .vy-msg.vd-gc{max-width:80%;width:fit-content;padding:7px 11px;margin:8px 0 0;margin-inline-start:32px}.vy-msg.vd-gc.vd-gcsame{margin-top:3px}.vy-msg.vd-gc.vd-gcph{width:80%}
 .vd-gc .vd-who{margin-bottom:1px}.vd-gcvid{margin:6px 0 2px}.vd-gc .vd-rgm{margin:3px 0 6px}.vd-gc .vy-seg .vy-mn{font-size:12.5px}
 .vy-spkb.vd-gcspk{padding:1px 7px;font-size:11px;margin-top:3px;opacity:.8}
+.vd-slow{display:none}.vy-box.vd-feast .vd-slow{display:inline-flex;align-items:center;gap:3px;border:1.5px solid #e6dfcf;background:#fff;color:#14305c;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;margin-inline-end:6px;white-space:nowrap}.vy-box.vd-feast .vd-slow.on{border-color:#2f7d70;background:#e8f4f1;color:#2f7d70}
+.vd-gc:not(.vd-gctp),.vy-msg.vd-gme{cursor:pointer}.vd-gcon{box-shadow:0 0 0 2px #ffd36b}.vd-gcon .vk{transition:color .12s}.vd-gcon .vy-tl .vk{color:#8b8f99}.vd-gcon .vy-tl .vk.on{color:#d9480f}.vd-gcon .vy-py .vk.on{color:#d9480f}.vy-me.vd-gcon .vy-tl .vk{color:#9fb0cc}.vy-me.vd-gcon .vy-tl .vk.on{color:#ffd36b}
+.vd-gcyou{margin-top:6px}.vd-gcyhd{font-size:11.5px;font-weight:600;color:#c98a6a;margin:0 0 4px}.vd-gcops{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:2px}
+.vd-gcop{display:block;text-align:start;border:1px solid #efd9cc;background:#fffaf6;border-radius:12px;padding:3px 10px;cursor:pointer;font:inherit;color:#4a5160;max-width:100%;line-height:1.35}.vd-gcop .vy-seg{margin:0;padding:0}.vd-gcop .vy-tl{font-weight:400!important;font-size:14px!important;color:#3a4658!important}.vd-gcop .vy-py,.vd-gcop .vy-mn{display:inline;font-size:11px;color:#a59a86}.vd-gcop .vy-mn{color:#a0a4ad}.vd-gcop .vy-py+.vy-mn::before{content:" · "}.vd-gcop.pick{border-color:#e2552f;background:#fff1e8}.vd-gcop:disabled{opacity:.45;cursor:default}
+.vd-gcyou .ak-mic{margin:2px 0 0!important;display:flex;align-items:center;gap:8px;flex-wrap:nowrap}.vd-gcyou .ak-micb{width:34px!important;height:34px!important;font-size:15px!important;flex:none}.vd-gcyou .ak-live{font-size:12px;text-align:start;margin:0;flex:1;min-width:0;color:#8b8f99}.vd-gcyou .ak-bars{display:none}.vd-gcyou .ak-mic.rec .ak-bars{display:flex}
 .vd-gcdots{display:inline-flex;gap:4px;padding:4px 2px}.vd-gcdots i{width:6px;height:6px;border-radius:50%;background:#b9a57a;animation:vyblink 1s infinite}.vd-gcdots i:nth-child(2){animation-delay:.2s}.vd-gcdots i:nth-child(3){animation-delay:.4s}
 .vy-msg.vy-me.vd-gme{max-width:80%;margin-top:8px}
 .vd-gcsrc{font-size:11px;color:#8b8f99;margin:6px 0 10px;margin-inline-start:32px;line-height:1.5}.vd-gcsrc a{color:inherit;text-decoration:underline}

@@ -273,8 +273,12 @@ function feastOf(c){ const R = regOf(c.id), nm = R.name || {};
 //   video = {yt, start, end, channel, title}：这个人转发的一段 YouTube（只放 start–end）；放不放得了到显示时再看（voyo.js vdGcMsg）
 //   alt = {some, none, idk}（chat2 第一条，2026-11-22）：没有自己的 zh，按他的回答挑一句（voyo.js vdRgChat2 用 ansKind 挑）
 const altOf = A => { const o = {}; ["some", "none", "idk"].forEach(k => { if (A[k] && A[k][L()]) o[k] = two(A[k]); }); return Object.keys(o).length ? o : null; };
-const chatOf = a => Array.isArray(a) && a.length ? a.filter(x => x && x.who && (x[L()] || (x.alt && typeof x.alt === "object" && altOf(x.alt)))).map(x => !x[L()] ? {who: x.who, t: "", alt: altOf(x.alt), photo: false, ask: false} : Object.assign(two(x), {who: x.who, photo: !!x.photo, ask: !!x.ask},
-  x.video && x.video.yt ? {video: {src: "yt", id: x.video.yt, s: x.video.start, e: x.video.end, ch: x.video.channel || "", t: x.video.title || "", cap: ""}} : {})) : null;
+// 🙋 轮到你插一句（2026-11-22，用户：「要让用户有参与感」）：chat 里的 {you: [选项 {zh, py, en, reply: [群里接的几条]}…], other: 说了选项以外的话时群里接的那条}
+//   → {you: [{t, g, py, reply}], other}（voyo.js vdGcYou 用）；一个选项都没有就整项去掉
+const youOf = x => { const ops = (x.you || []).filter(o => o && o[L()]).map(o => Object.assign(two(o), {reply: chatOf(o.reply) || []}));
+  const ot = x.other && x.other.who && x.other[L()] ? Object.assign(two(x.other), {who: x.other.who}) : null; return ops.length ? {you: ops, other: ot} : null; };
+const chatOf = a => Array.isArray(a) && a.length ? a.filter(x => x && (Array.isArray(x.you) || (x.who && (x[L()] || (x.alt && typeof x.alt === "object" && altOf(x.alt)))))).map(x => Array.isArray(x.you) ? youOf(x) : !x[L()] ? {who: x.who, t: "", alt: altOf(x.alt), photo: false, ask: false} : Object.assign(two(x), {who: x.who, photo: !!x.photo, ask: !!x.ask},
+  x.video && x.video.yt ? {video: {src: "yt", id: x.video.yt, s: x.video.start, e: x.video.end, ch: x.video.channel || "", t: x.video.title || "", cap: ""}} : {})).filter(Boolean) : null;
 // 人：名字（跟界面语言走）、简介、照片、朋友页编号（声音）、是不是你关注的
 function who(c, w){ const R = regOf(c.id), P = person(R, w); return Object.assign(P, {fol: isFol(R, w), id: w}); }
 // 同桌的人：卡的 person，post 的人（不是同一个时），再从 rel 卡里挑一个别的人（关注的优先），用那张卡的 person.says
